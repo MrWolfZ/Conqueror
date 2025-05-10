@@ -43,7 +43,7 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
 
     private static SignalTypeDescriptor? GetSignalTypesDescriptor(GeneratorSyntaxContext context, CancellationToken ct)
     {
-        if (context.SemanticModel.GetDeclaredSymbol(context.Node) is not INamedTypeSymbol signalTypeSymbol)
+        if (context.SemanticModel.GetDeclaredSymbolSafe(context.Node) is not INamedTypeSymbol signalTypeSymbol)
         {
             // weird, we couldn't get the symbol, ignore it
             return null;

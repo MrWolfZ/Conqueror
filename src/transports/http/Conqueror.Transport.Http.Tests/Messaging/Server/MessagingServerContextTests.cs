@@ -1,10 +1,9 @@
-using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using static Conqueror.ConquerorTransportHttpConstants;
+using static Conqueror.Transport.Http.Tests.HttpTestContextData;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
@@ -13,26 +12,6 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server;
 [TestFixture]
 public sealed partial class MessagingServerContextTests
 {
-    private static readonly Dictionary<string, string> ContextData = new()
-    {
-        { "key1", "value1" },
-        { "key2", "value2" },
-        { "keyWith,Comma", "value" },
-        { "key4", "valueWith,Comma" },
-        { "keyWith=Equals", "value" },
-        { "key6", "valueWith=Equals" },
-        { "keyWith|Pipe", "value" },
-        { "key8", "valueWith|Pipe" },
-        { "keyWith:Colon", "value" },
-        { "key10", "valueWith:Colon" },
-    };
-
-    private static readonly Dictionary<string, string> InProcessContextData = new()
-    {
-        { "key11", "value1" },
-        { "key12", "value2" },
-    };
-
     private DisposableActivity? activity;
 
     [Test]
@@ -322,7 +301,7 @@ public sealed partial class MessagingServerContextTests
             }));
         }, app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
-        using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandler));
+        using var a = DisposableActivity.Create(nameof(GivenTraceIdInTraceParentWithActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandler));
         activity = a;
 
         using var request = ConstructHttpRequest(testCase);
@@ -475,23 +454,6 @@ public sealed partial class MessagingServerContextTests
         }
     }
 
-    private static DisposableActivity CreateActivity(string name)
-    {
-        var activitySource = new ActivitySource(name);
-
-        var activityListener = new ActivityListener
-        {
-            ShouldListenTo = _ => true,
-            SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
-            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
-        };
-
-        ActivitySource.AddActivityListener(activityListener);
-
-        var a = activitySource.CreateActivity(name, ActivityKind.Server)!;
-        return new(a, activitySource, activityListener, a);
-    }
-
     [Message<NestedTestMessageResponse>]
     public sealed partial record NestedTestMessage
     {
@@ -514,23 +476,6 @@ public sealed partial class MessagingServerContextTests
             cancellationToken.ThrowIfCancellationRequested();
             testObservations.ReceivedTraceIds.Add(contextAccessor.ConquerorContext?.GetTraceId());
             return new() { Payload = message.Payload + 1 };
-        }
-    }
-
-    private sealed class DisposableActivity(Activity activity, params IDisposable[] disposables) : IDisposable
-    {
-        private readonly IReadOnlyCollection<IDisposable> disposables = disposables;
-
-        public Activity Activity { get; } = activity;
-
-        public string TraceId => Activity.TraceId.ToString();
-
-        public void Dispose()
-        {
-            foreach (var disposable in disposables.Reverse())
-            {
-                disposable.Dispose();
-            }
         }
     }
 }

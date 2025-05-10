@@ -56,7 +56,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
             ReadResponseHeaders(conquerorContext, response.Headers);
 
-            var responseSerializer = TMessage.HttpResponseSerializer ?? HttpResponseBodySerializer<TMessage, TResponse>.Default;
+            var responseSerializer = TMessage.HttpMessageResponseSerializer ?? HttpMessageResponseBodySerializer<TMessage, TResponse>.Default;
 
             return await responseSerializer.Deserialize(serviceProvider, response.Content, cancellationToken).ConfigureAwait(false);
         }
@@ -71,7 +71,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
         }
     }
 
-    public IHttpMessageSender<TMessage, TResponse> WithHttpClient(HttpClient? httpClient)
+    public IHttpMessageSender<TMessage, TResponse> WithHttpClient(HttpClient httpClient)
     {
         configuredHttpClient = httpClient;
         return this;
@@ -91,7 +91,10 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
     private void SetHeaders(ConquerorContext conquerorContext, HttpRequestHeaders headers)
     {
-        if (Activity.Current is null && conquerorContext.GetTraceId() is { } traceId)
+        // since we send the trace ID already separately, we don't need to include it in the context data
+        var traceId = conquerorContext.RemoveTraceId();
+
+        if (Activity.Current is null)
         {
             headers.Add(ConquerorTransportHttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
         }

@@ -114,12 +114,13 @@ public static class ConquerorSignallingServiceCollectionExtensions
     internal static IServiceCollection AddConquerorSignalling(this IServiceCollection services)
     {
         services.TryAddTransient<ISignalPublishers, SignalPublishers>();
+        services.TryAddTransient<ISignalReceivers, SignalReceivers>();
         services.TryAddSingleton<ISignalIdFactory, DefaultSignalIdFactory>();
         services.TryAddSingleton<SignalHandlerRegistry>();
         services.TryAddSingleton<ISignalHandlerRegistry>(p => p.GetRequiredService<SignalHandlerRegistry>());
         services.TryAddSingleton<InProcessSignalReceiver>();
 
-        return services.AddConquerorContext();
+        return services.AddConquerorContext().AddConquerorSingletons();
     }
 
     private static IServiceCollection AddSignalHandlerInternalGeneric<THandler>(

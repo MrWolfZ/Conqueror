@@ -18,7 +18,7 @@ public readonly record struct LocationDescriptor(
     public static LocationDescriptor? CreateFrom(SyntaxToken? token)
         => CreateFrom(token?.GetLocation());
 
-    private static LocationDescriptor? CreateFrom(Location? location)
+    public static LocationDescriptor? CreateFrom(Location? location)
     {
         if (location?.SourceTree is null)
         {

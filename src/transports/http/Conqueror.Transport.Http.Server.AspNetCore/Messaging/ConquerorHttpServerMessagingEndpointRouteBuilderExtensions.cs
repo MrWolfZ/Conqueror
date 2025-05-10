@@ -13,6 +13,7 @@ using Conqueror;
 using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
@@ -171,7 +172,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 return;
             }
 
-            if (TMessage.HttpResponseSerializer is { } rs)
+            if (TMessage.HttpMessageResponseSerializer is { } rs)
             {
                 await rs.Serialize(httpContext.RequestServices, httpContext.Response.Body, response, httpContext.RequestAborted).ConfigureAwait(false);
                 return;
@@ -185,14 +186,13 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             static string? GetTraceId(HttpContext httpContext)
             {
-                string? traceParent = null;
-
-                if (httpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues))
+                var activity = httpContext.Features.Get<IHttpActivityFeature>()?.Activity ?? Activity.Current;
+                if (activity?.TraceId.ToString() is { } s)
                 {
-                    traceParent = traceParentValues.FirstOrDefault();
+                    return s;
                 }
 
-                if (Activity.Current is null && traceParent is not null)
+                if (httpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues) && traceParentValues is [{ } traceParent])
                 {
                     using var a = new Activity(string.Empty);
                     return a.SetParentId(traceParent).TraceId.ToString();
@@ -227,7 +227,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                                  ApiGroupName = TMessage.ApiGroupName,
                                  HttpMethod = TMessage.HttpMethod,
                                  MessageContentType = TMessage.HttpMessageSerializer?.ContentType ?? MediaTypeNames.Application.Json,
-                                 ResponseContentType = TMessage.HttpResponseSerializer?.ContentType ?? MediaTypeNames.Application.Json,
+                                 ResponseContentType = TMessage.HttpMessageResponseSerializer?.ContentType ?? MediaTypeNames.Application.Json,
                                  MessageType = typeof(TMessage),
                                  HasPayload = hasPayload,
                                  QueryParams = TMessage.HttpMethod == ConquerorTransportHttpConstants.MethodGet ? GetQueryParams() : [],

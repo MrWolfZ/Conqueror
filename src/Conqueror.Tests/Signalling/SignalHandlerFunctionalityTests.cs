@@ -145,8 +145,10 @@ public abstract partial class SignalHandlerFunctionalityTests
         await handler2.Handle(signal);
 
         Assert.That(observations.ServiceProviders, Has.Count.EqualTo(3));
-        Assert.That(observations.ServiceProviders[0], Is.SameAs(observations.ServiceProviders[1])
-                                                        .And.Not.SameAs(observations.ServiceProviders[2]));
+        Assert.That(
+            observations.ServiceProviders[0],
+            Is.SameAs(observations.ServiceProviders[1])
+              .And.Not.SameAs(observations.ServiceProviders[2]));
     }
 
     [Signal]
@@ -161,6 +163,8 @@ public abstract partial class SignalHandlerFunctionalityTests
         public List<IServiceProvider> ServiceProviders { get; } = [];
 
         public List<IServiceProvider> ServiceProvidersFromTransportFactory { get; } = [];
+
+        public int ConfigurationCount { get; set; }
     }
 }
 
@@ -290,6 +294,26 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
         await handler.Handle(signal);
 
         Assert.That(observations.Signals, Is.EqualTo(new object[] { signal, signal }));
+    }
+
+    [Test]
+    public async Task GivenHandlerWithInProcessReceiverConfiguration_WhenHandlerIsCalledMultipleTimes_TheInProcessReceiverIsOnlyConfiguredOnce()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddSignalHandler<TestSignalHandlerWithInProcessReceiverConfiguration>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ISignalPublishers>()
+                              .For(TestSignal.T);
+
+        await handler.Handle(new(10));
+        await handler.Handle(new(10));
+
+        Assert.That(observations.ConfigurationCount, Is.EqualTo(1));
     }
 
     [Test]
@@ -439,7 +463,25 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
         static void ISignalHandler.ConfigureInProcessReceiver(IInProcessSignalReceiver receiver) => receiver.Disable();
     }
 
-    private sealed partial class DisposableSignalHandler(DisposalObservation observation) : TestSignal.IHandler, IDisposable
+    private sealed partial class TestSignalHandlerWithInProcessReceiverConfiguration(TestObservations observations) : TestSignal.IHandler
+    {
+        public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+
+            observations.Signals.Add(signal);
+            observations.CancellationTokens.Add(cancellationToken);
+        }
+
+        static void ISignalHandler.ConfigureInProcessReceiver(IInProcessSignalReceiver receiver)
+        {
+            var observations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
+            observations.ConfigurationCount += 1;
+        }
+    }
+
+    private sealed partial class DisposableSignalHandler(DisposalObservation observation) : TestSignal.IHandler,
+                                                                                            IDisposable
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -592,6 +634,7 @@ public abstract class SignalHandlerFunctionalityPublisherTests : SignalHandlerFu
         var existingOptions = services.Select(d => d.ImplementationInstance).OfType<TestSignalPublisherOptions>().FirstOrDefault();
         _ = services.Replace(ServiceDescriptor.Singleton(new TestSignalPublisherOptions(existingOptions?.HandlerCount + 1 ?? 1)));
         services.TryAddSingleton(typeof(TestSignalPublisher<>));
+
         return services.AddConqueror();
     }
 
@@ -609,10 +652,11 @@ public abstract class SignalHandlerFunctionalityPublisherTests : SignalHandlerFu
     {
         public string TransportTypeName => "test";
 
-        public async Task Publish(TSignal signal,
-                                  IServiceProvider serviceProvider,
-                                  ConquerorContext conquerorContext,
-                                  CancellationToken cancellationToken)
+        public async Task Publish(
+            TSignal signal,
+            IServiceProvider serviceProvider,
+            ConquerorContext conquerorContext,
+            CancellationToken cancellationToken)
         {
             await Task.Yield();
 
@@ -645,6 +689,7 @@ public sealed class SignalHandlerFunctionalityPublisherWithSyncTransportFactoryT
         return builder.WithTransport(b =>
         {
             b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+
             return baseConfigure?.Invoke(b) ?? b.ServiceProvider.GetRequiredService<TestSignalPublisher<TestSignal>>();
         });
     }
@@ -661,6 +706,7 @@ public sealed class SignalHandlerFunctionalityPublisherWithAsyncTransportFactory
         {
             await Task.Delay(1);
             b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+
             return baseConfigure?.Invoke(b) ?? b.ServiceProvider.GetRequiredService<TestSignalPublisher<TestSignal>>();
         });
     }

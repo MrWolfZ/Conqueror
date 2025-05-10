@@ -1,7 +1,7 @@
-using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging;
+using static Conqueror.Transport.Http.Tests.HttpTestContextData;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Client;
@@ -9,27 +9,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Client;
 [TestFixture]
 public sealed class MessagingClientContextTests : IDisposable
 {
-    private static readonly Dictionary<string, string> ContextData = new()
-    {
-        { "key1", "value1" },
-        { "key2", "value2" },
-        { "keyWith,Comma", "value" },
-        { "key4", "valueWith,Comma" },
-        { "keyWith=Equals", "value" },
-        { "key6", "valueWith=Equals" },
-        { "keyWith|Pipe", "value" },
-        { "key8", "valueWith|Pipe" },
-        { "keyWith:Colon", "value" },
-        { "key10", "valueWith:Colon" },
-    };
-
-    private static readonly Dictionary<string, string> InProcessContextData = new()
-    {
-        { "key11", "value1" },
-        { "key12", "value2" },
-    };
-
-    private DisposableActivity? activity;
+    private DisposableActivity? clientActivity;
     private string? seenMessageIdOnServer;
     private string? seenTraceIdOnServer;
 
@@ -76,12 +56,13 @@ public sealed class MessagingClientContextTests : IDisposable
         serverTestObservations.ShouldAddUpstreamData = hasUpstream;
         serverTestObservations.ShouldAddBidirectionalData = hasBidirectional;
 
-        using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
-
         if (hasActivity)
         {
-            activity = CreateActivity(nameof(GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned));
+            clientActivity = DisposableActivity.Create(nameof(GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned));
+            _ = clientActivity.Activity.Start();
         }
+
+        using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
 
         if (hasDownstream)
         {
@@ -118,9 +99,9 @@ public sealed class MessagingClientContextTests : IDisposable
         Assert.That(seenMessageIdOnServer, Is.EqualTo(seenMessageIdOnClient));
         Assert.That(seenTraceIdOnServer, Is.EqualTo(seenTraceIdOnClient));
 
-        if (activity is not null)
+        if (clientActivity is not null)
         {
-            Assert.That(seenTraceIdOnServer, Is.EqualTo(activity.TraceId));
+            Assert.That(seenTraceIdOnServer, Is.EqualTo(clientActivity.TraceId));
         }
 
         Assert.That(conquerorContext.UpstreamContextData.WhereScopeIsAcrossTransports(), hasUpstream ? Is.EquivalentTo(ContextData) : Is.Empty);
@@ -153,7 +134,7 @@ public sealed class MessagingClientContextTests : IDisposable
 
     public void Dispose()
     {
-        activity?.Dispose();
+        clientActivity?.Dispose();
     }
 
     private static IEnumerable<TestCaseData> GenerateContextDataTestCases()
@@ -190,30 +171,7 @@ public sealed class MessagingClientContextTests : IDisposable
                 // a lot of churn on the disk as well as the CI infra, so we increase the minimal log level
                 _ = services.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Information));
             },
-            app =>
-            {
-                _ = app.Use(async (ctx, next) =>
-                {
-                    if (activity is not null)
-                    {
-                        _ = activity.Activity.Start();
-
-                        try
-                        {
-                            await next();
-                            return;
-                        }
-                        finally
-                        {
-                            activity.Activity.Stop();
-                        }
-                    }
-
-                    await next();
-                });
-
-                configure(app);
-            });
+            configure);
     }
 
     private static void ObserveAndSetContextData(TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)
@@ -246,40 +204,6 @@ public sealed class MessagingClientContextTests : IDisposable
             foreach (var item in InProcessContextData)
             {
                 conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
-            }
-        }
-    }
-
-    private static DisposableActivity CreateActivity(string name)
-    {
-        var activitySource = new ActivitySource(name);
-
-        var activityListener = new ActivityListener
-        {
-            ShouldListenTo = _ => true,
-            SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
-            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
-        };
-
-        ActivitySource.AddActivityListener(activityListener);
-
-        var a = activitySource.CreateActivity(name, ActivityKind.Server)!;
-        return new(a, activitySource, activityListener, a);
-    }
-
-    private sealed class DisposableActivity(Activity activity, params IDisposable[] disposables) : IDisposable
-    {
-        private readonly IReadOnlyCollection<IDisposable> disposables = disposables;
-
-        public Activity Activity { get; } = activity;
-
-        public string TraceId => Activity.TraceId.ToString();
-
-        public void Dispose()
-        {
-            foreach (var disposable in disposables.Reverse())
-            {
-                disposable.Dispose();
             }
         }
     }

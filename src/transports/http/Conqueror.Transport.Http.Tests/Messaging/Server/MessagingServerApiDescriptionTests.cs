@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Swagger;
-using static Conqueror.ConquerorTransportHttpConstants;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Server;

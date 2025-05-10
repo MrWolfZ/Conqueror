@@ -16,12 +16,21 @@ internal sealed class SignalReceiverHandlerInvoker<TTypesInjector>(
 
     public TTypesInjector TypesInjector { get; } = typesInjector;
 
-    public Task Invoke<TSignal>(TSignal signal,
-                                IServiceProvider serviceProvider,
-                                string transportTypeName,
-                                CancellationToken cancellationToken)
-        where TSignal : class, ISignal<TSignal>
+    public Task Invoke(
+        object signal,
+        IServiceProvider serviceProvider,
+        string transportTypeName,
+        CancellationToken cancellationToken)
     {
-        return registration.Invoker.Invoke(serviceProvider, signal, transportTypeName, cancellationToken);
+        if (!signal.GetType().IsAssignableTo(SignalType))
+        {
+            throw new InvalidOperationException($"the signal type was expected to be assignable to '{SignalType}', but was '{signal.GetType()}' instead");
+        }
+
+        return registration.Invoker.Invoke(
+            signal,
+            serviceProvider,
+            transportTypeName,
+            cancellationToken);
     }
 }

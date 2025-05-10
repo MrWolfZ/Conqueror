@@ -4,77 +4,113 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Signalling;
 
-internal sealed class InProcessSignalReceiver(SignalHandlerRegistry registry, IServiceProvider serviceProviderField)
+internal sealed class InProcessSignalReceiver(IServiceProvider serviceProviderField)
 {
-    private readonly ConcurrentDictionary<Type, List<IInvoker>> invokersBySignalType = new();
+    private readonly Lazy<List<Receiver>> allActiveReceivers = new(
+        () => GetActiveReceivers(serviceProviderField),
+        LazyThreadSafetyMode.ExecutionAndPublication);
 
-    public async Task Broadcast<TSignal>(TSignal signal,
-                                         IServiceProvider serviceProvider,
-                                         ISignalBroadcastingStrategy broadcastingStrategy,
-                                         CancellationToken cancellationToken)
+    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<Delegate>> receiversBySignalType = new();
+
+    public async Task Broadcast<TSignal>(
+        TSignal signal,
+        IServiceProvider serviceProvider,
+        ISignalBroadcastingStrategy broadcastingStrategy,
+        CancellationToken cancellationToken)
         where TSignal : class, ISignal<TSignal>
     {
-        var relevantInvokers = invokersBySignalType.GetOrAdd(signal.GetType(), GetSignalInvokers);
+        var fns = receiversBySignalType.GetOrAdd(signal.GetType(), GetSignalHandlerFnsForSignalType<TSignal>);
 
-        await broadcastingStrategy.BroadcastSignal(relevantInvokers.ConvertAll<SignalHandlerFn<TSignal>>(i => i.Invoke),
-                                                   serviceProvider,
-                                                   signal,
-                                                   cancellationToken)
+        await broadcastingStrategy.BroadcastSignal(
+                                      (IReadOnlyCollection<SignalHandlerFn<TSignal>>)fns,
+                                      serviceProvider,
+                                      signal,
+                                      cancellationToken)
                                   .ConfigureAwait(false);
     }
 
-    private List<IInvoker> GetSignalInvokers(Type signalType)
-    {
-        return registry.GetReceiverHandlerInvokers<ICoreSignalHandlerTypesInjector>()
-                       .Where(i => signalType.IsAssignableTo(i.TypesInjector.SignalType))
-                       .Select(i => i.TypesInjector.Create(new Injectable(i, serviceProviderField)))
-                       .OfType<IInvoker>()
-                       .ToList();
-    }
-
-    private interface IInvoker
-    {
-        Task Invoke(object signal, IServiceProvider serviceProvider, CancellationToken cancellationToken);
-    }
-
-    private sealed class Invoker<TSignal>(ISignalReceiverHandlerInvoker invoker) : IInvoker
+    /// <summary>
+    ///     <c>TSignal</c> is the type of the signal that the handler observes, while
+    ///     <c>signalType</c> is the type of the concrete signal that is being broadcasted,
+    ///     which may be a sub-type of <c>TSignal</c>.
+    /// </summary>
+    private List<SignalHandlerFn<TSignal>> GetSignalHandlerFnsForSignalType<TSignal>(Type signalType)
         where TSignal : class, ISignal<TSignal>
     {
-        public Task Invoke(object signal, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        return allActiveReceivers.Value
+                                 .SelectMany(r => r.GetSignalHandlerFns<TSignal>(signalType))
+                                 .ToList();
+    }
+
+    private static List<Receiver> GetActiveReceivers(IServiceProvider serviceProvider)
+    {
+        var receiverByHandlerType = new Dictionary<Type, Receiver>();
+
+        return serviceProvider.GetRequiredService<SignalHandlerRegistry>()
+                              .GetReceiverHandlerInvokers<ICoreSignalHandlerTypesInjector>()
+                              .Select(i => i.TypesInjector.Create(new Injectable(serviceProvider, i, receiverByHandlerType)))
+                              .OfType<Receiver>()
+                              .Distinct()
+                              .ToList();
+    }
+
+    private sealed class Injectable(
+        IServiceProvider serviceProvider,
+        ISignalReceiverHandlerInvoker invoker,
+        Dictionary<Type, Receiver> receiverByHandlerType)
+        : ICoreSignalHandlerTypesInjectable<Receiver?>
+    {
+        Receiver? ICoreSignalHandlerTypesInjectable<Receiver?>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
         {
-            return invoker.Invoke((TSignal)signal,
-                                  serviceProvider,
-                                  ConquerorConstants.InProcessTransportName,
-                                  cancellationToken);
+            if (!receiverByHandlerType.TryGetValue(typeof(THandler), out var receiver))
+            {
+                receiverByHandlerType.Add(typeof(THandler), receiver = new(serviceProvider));
+                THandler.ConfigureInProcessReceiver(receiver);
+            }
+
+            if (!receiver.IsEnabled)
+            {
+                return null;
+            }
+
+            receiver.AddInvoker(invoker);
+
+            return receiver;
         }
     }
 
-    private sealed class Injectable(ISignalReceiverHandlerInvoker invoker, IServiceProvider serviceProvider) : ICoreSignalHandlerTypesInjectable<IInvoker?>
+    private sealed class Receiver(IServiceProvider serviceProvider) : IInProcessSignalReceiver
     {
-        IInvoker? ICoreSignalHandlerTypesInjectable<IInvoker?>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
-        {
-            var receiver = new Receiver<TSignal>(serviceProvider);
-            THandler.ConfigureInProcessReceiver(receiver);
-            return !receiver.IsEnabled ? null : new Invoker<TSignal>(invoker);
-        }
-    }
-
-    private sealed class Receiver<TSignal>(IServiceProvider serviceProvider) : IInProcessSignalReceiver
-        where TSignal : class, ISignal<TSignal>
-    {
-        public Type SignalType { get; } = typeof(TSignal);
+        private readonly List<ISignalReceiverHandlerInvoker> invokers = [];
 
         public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
         public bool IsEnabled { get; private set; } = true;
 
-        public IInProcessSignalReceiver Disable()
+        public void Disable() => IsEnabled = false;
+
+        public void AddInvoker(ISignalReceiverHandlerInvoker invoker)
         {
-            IsEnabled = false;
-            return this;
+            invokers.Add(invoker);
+        }
+
+        public List<SignalHandlerFn<TSignal>> GetSignalHandlerFns<TSignal>(Type signalType)
+            where TSignal : class, ISignal<TSignal>
+        {
+            return invokers.Where(i => i.SignalType.IsAssignableFrom(signalType))
+                           .Select(CreateHandlerFn)
+                           .ToList();
+
+            SignalHandlerFn<TSignal> CreateHandlerFn(ISignalReceiverHandlerInvoker invoker)
+                => (signal, serviceProvider, cancellationToken) => invoker.Invoke(
+                    signal,
+                    serviceProvider,
+                    ConquerorConstants.InProcessTransportName,
+                    cancellationToken);
         }
     }
 }

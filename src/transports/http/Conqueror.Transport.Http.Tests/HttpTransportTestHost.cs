@@ -21,6 +21,8 @@ internal sealed class HttpTransportTestHost : IAsyncDisposable
 
     public required TimeSpan TestTimeout { get; init; }
 
+    public required int AssertionTimeoutInMs { get; init; }
+
     public CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
 
     private CancellationTokenSource TimeoutCancellationTokenSource { get; } = new();
@@ -57,11 +59,16 @@ internal sealed class HttpTransportTestHost : IAsyncDisposable
         var host = await hostBuilder.StartAsync();
         var client = host.GetTestClient();
 
+        var assertionTimeout = Debugger.IsAttached
+            ? TimeSpan.FromMinutes(1)
+            : TimeSpan.FromMilliseconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 200 : 10_000);
+
         var testHost = new HttpTransportTestHost
         {
             HttpClient = client,
             Host = host,
-            TestTimeout = testTimeout ?? TimeSpan.FromSeconds(2),
+            TestTimeout = testTimeout ?? TimeSpan.FromSeconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 2 : 30),
+            AssertionTimeoutInMs = (int)assertionTimeout.TotalMilliseconds,
         };
 
         if (!Debugger.IsAttached)

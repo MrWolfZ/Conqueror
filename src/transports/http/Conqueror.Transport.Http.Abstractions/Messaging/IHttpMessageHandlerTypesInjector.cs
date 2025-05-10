@@ -9,11 +9,11 @@ internal interface IHttpMessageHandlerTypesInjector : IMessageHandlerTypesInject
 {
     /// <summary>
     ///     Helper method to be able to access the message and response types as generic parameters while only
-    ///     having a generic reference to the message type. This allows bypassing reflection.
+    ///     having a generic reference to the generated handler interface type. This allows bypassing reflection.
     /// </summary>
     /// <param name="injectable">The injector that should be called with the generic type parameters</param>
-    /// <typeparam name="TResult">The type of result the factory will return</typeparam>
-    /// <returns>The result of calling the factory</returns>
+    /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
+    /// <returns>The result of calling the injectable</returns>
     TResult Create<TResult>(IHttpMessageTypesInjectable<TResult> injectable);
 }
 
@@ -35,7 +35,7 @@ internal sealed class HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHan
 ///     Helper interface to be able to access the message and response types as generic parameters while only
 ///     having a generic reference to the generated handler interface type. This allows bypassing reflection.
 /// </summary>
-/// <typeparam name="TResult">The type of result the factory will return</typeparam>
+/// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal interface IHttpMessageTypesInjectable<out TResult>
 {

@@ -194,6 +194,9 @@ public sealed class HttpContextDataTests : TestBase
             conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
         }
 
+        // simulate client behavior
+        _ = conquerorContext.RemoveTraceId();
+
         var response = await ExecuteRequest(method, path, data, [(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData())]);
 
         await response.AssertSuccessStatusCode();
@@ -217,6 +220,9 @@ public sealed class HttpContextDataTests : TestBase
         {
             conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
         }
+
+        // simulate client behavior
+        _ = conquerorContext.RemoveTraceId();
 
         var response = await ExecuteRequest(method, path, data, [(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData())]);
 
@@ -243,6 +249,9 @@ public sealed class HttpContextDataTests : TestBase
             conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
         }
 
+        // simulate client behavior
+        _ = conquerorContext.RemoveTraceId();
+
         var response = await ExecuteRequest(method, path, data, [(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData())]);
 
         await response.AssertSuccessStatusCode();
@@ -268,6 +277,9 @@ public sealed class HttpContextDataTests : TestBase
             conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
             conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
         }
+
+        // simulate client behavior
+        _ = conquerorContext.RemoveTraceId();
 
         var encodedData1 = conquerorContext.EncodeDownstreamContextData();
 
@@ -534,20 +546,25 @@ public sealed class HttpContextDataTests : TestBase
 
         private static void ObserveAndSetContextData(TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)
         {
-            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
-            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
-            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
+            var conquerorContext = conquerorContextAccessor.ConquerorContext;
+
+            testObservations.ReceivedTraceIds.Add(conquerorContext?.GetTraceId());
+
+            _ = conquerorContext?.RemoveTraceId();
+
+            testObservations.ReceivedDownstreamContextData = conquerorContext?.DownstreamContextData;
+            testObservations.ReceivedBidirectionalContextData = conquerorContext?.ContextData;
 
             if (testObservations.ShouldAddUpstreamData)
             {
                 foreach (var item in ContextData)
                 {
-                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                    conquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
                 }
 
                 foreach (var item in InProcessContextData)
                 {
-                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                    conquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
                 }
             }
 
@@ -555,12 +572,12 @@ public sealed class HttpContextDataTests : TestBase
             {
                 foreach (var item in ContextData)
                 {
-                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                    conquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
                 }
 
                 foreach (var item in InProcessContextData)
                 {
-                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                    conquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
                 }
             }
 

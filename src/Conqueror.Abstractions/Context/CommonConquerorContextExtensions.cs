@@ -35,7 +35,7 @@ public static class CommonConquerorContextExtensions
     /// <param name="traceId">The trace ID to set</param>
     public static void SetTraceId(this ConquerorContext conquerorContext, string traceId)
     {
-        conquerorContext.DownstreamContextData.Set(TraceIdKey, traceId);
+        conquerorContext.DownstreamContextData.Set(TraceIdKey, traceId, ConquerorContextDataScope.AcrossTransports);
     }
 
     /// <summary>
@@ -49,5 +49,24 @@ public static class CommonConquerorContextExtensions
     public static string GetTraceId(this ConquerorContext conquerorContext)
     {
         return conquerorContext.DownstreamContextData.Get<string>(TraceIdKey) ?? throw new InvalidOperationException("trace ID was not set");
+    }
+
+    /// <summary>
+    ///     Removes the trace ID from the context. This should only be used by transports
+    /// to prevent sending the trace ID twice if it is already separately encoded (e.g.
+    /// for HTTP in the traceparent header).
+    /// </summary>
+    /// <param name="conquerorContext">The Conqueror context to remove the trace ID from</param>
+    /// <returns>The removed trace ID</returns>
+    public static string RemoveTraceId(this ConquerorContext conquerorContext)
+    {
+        var traceId = conquerorContext.GetTraceId();
+
+        if (!conquerorContext.DownstreamContextData.Remove(TraceIdKey))
+        {
+            throw new InvalidOperationException("trace ID was not set");
+        }
+
+        return traceId;
     }
 }

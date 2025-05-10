@@ -11,11 +11,11 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Transport.Http.Client.Messaging;
 
-internal sealed class HttpResponseBodySerializer<TMessage, TResponse>
-    : IHttpResponseSerializer<TMessage, TResponse>
+internal sealed class HttpMessageResponseBodySerializer<TMessage, TResponse>
+    : IHttpMessageResponseSerializer<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
-    public static readonly HttpResponseBodySerializer<TMessage, TResponse> Default = new();
+    public static readonly HttpMessageResponseBodySerializer<TMessage, TResponse> Default = new();
 
     public string ContentType => MediaTypeNames.Application.Json;
 

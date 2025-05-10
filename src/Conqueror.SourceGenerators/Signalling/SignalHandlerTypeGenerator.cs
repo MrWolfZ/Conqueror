@@ -18,7 +18,7 @@ public sealed class SignalHandlerTypeGenerator : IIncrementalGenerator
 
     private static SignalHandlerTypeDescriptor? GetSignalHandlerDescriptor(GeneratorSyntaxContext context, CancellationToken ct)
     {
-        if (context.SemanticModel.GetDeclaredSymbol(context.Node) is not INamedTypeSymbol handlerTypeSymbol)
+        if (context.SemanticModel.GetDeclaredSymbolSafe(context.Node) is not INamedTypeSymbol handlerTypeSymbol)
         {
             // weird, we couldn't get the symbol, ignore it
             return null;
@@ -56,6 +56,6 @@ public sealed class SignalHandlerTypeGenerator : IIncrementalGenerator
             return null;
         }
 
-        return new(handlerTypeDescriptor, new(signalTypeDescriptors));
+        return new(handlerTypeDescriptor, new(signalTypeDescriptors), new([]));
     }
 }
