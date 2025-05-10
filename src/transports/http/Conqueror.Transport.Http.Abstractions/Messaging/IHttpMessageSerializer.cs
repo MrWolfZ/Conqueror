@@ -24,7 +24,7 @@ public interface IHttpMessageSerializer<TMessage, TResponse>
                                CancellationToken cancellationToken);
 }
 
-public interface IHttpResponseSerializer<TMessage, TResponse>
+public interface IHttpMessageResponseSerializer<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     string? ContentType { get; }

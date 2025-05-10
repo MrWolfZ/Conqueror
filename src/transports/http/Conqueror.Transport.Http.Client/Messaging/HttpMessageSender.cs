@@ -56,7 +56,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
             ReadResponseHeaders(conquerorContext, response.Headers);
 
-            var responseSerializer = TMessage.HttpResponseSerializer ?? HttpResponseBodySerializer<TMessage, TResponse>.Default;
+            var responseSerializer = TMessage.HttpMessageResponseSerializer ?? HttpMessageResponseBodySerializer<TMessage, TResponse>.Default;
 
             return await responseSerializer.Deserialize(serviceProvider, response.Content, cancellationToken).ConfigureAwait(false);
         }
@@ -71,7 +71,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
         }
     }
 
-    public IHttpMessageSender<TMessage, TResponse> WithHttpClient(HttpClient? httpClient)
+    public IHttpMessageSender<TMessage, TResponse> WithHttpClient(HttpClient httpClient)
     {
         configuredHttpClient = httpClient;
         return this;

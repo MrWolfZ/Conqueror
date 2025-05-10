@@ -608,7 +608,7 @@ public static partial class HttpTestMessages
                 MessageContentType = "application/custom-message",
                 ResponseContentType = "application/custom-response",
                 MessageSerializer = TestMessageWithCustomSerializer.HttpMessageSerializer,
-                ResponseSerializer = TestMessageWithCustomSerializer.HttpResponseSerializer,
+                ResponseSerializer = TestMessageWithCustomSerializer.HttpMessageResponseSerializer,
                 Message = new TestMessageWithCustomSerializer { QueryPayload = 10, BodyPayload = 11, PathPayload = 12 },
                 Response = new TestMessageWithCustomSerializerResponse { Payload = 33 },
                 RegistrationMethod = registrationMethod,
@@ -955,7 +955,7 @@ public static partial class HttpTestMessages
 
         public IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>? MessageSerializer { get; init; }
 
-        public IHttpResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>? ResponseSerializer { get; init; }
+        public IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>? ResponseSerializer { get; init; }
 
         public required object Message { get; init; }
 
@@ -1516,7 +1516,7 @@ public static partial class HttpTestMessages
         public static IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse> HttpMessageSerializer
             => new TestMessageCustomSerializer();
 
-        public static IHttpResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse> HttpResponseSerializer
+        public static IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse> HttpMessageResponseSerializer
             => new TestMessageCustomSerializer();
     }
 
@@ -1526,11 +1526,11 @@ public static partial class HttpTestMessages
     }
 
     private sealed class TestMessageCustomSerializer : IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>,
-                                                       IHttpResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
+                                                       IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
     {
         string IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType => "application/custom-message";
 
-        string IHttpResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType => "application/custom-response";
+        string IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType => "application/custom-response";
 
         public async Task<(HttpContent? Content, string? Path, string? QueryString)> Serialize(IServiceProvider serviceProvider,
                                                                                                TestMessageWithCustomSerializer message, CancellationToken cancellationToken)

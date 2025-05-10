@@ -7,6 +7,8 @@ public static class ConquerorTransportHttpConstants
 {
     public const string TransportName = "http";
 
+    public const string ServersSentEventsTransportName = "http-server-sent-events";
+
     public const string ConquerorContextHeaderName = "x-conqueror-context";
 
     public const string TraceParentHeaderName = "traceparent";

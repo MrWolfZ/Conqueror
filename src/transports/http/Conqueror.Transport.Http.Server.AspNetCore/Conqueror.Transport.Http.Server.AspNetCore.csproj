@@ -24,4 +24,8 @@
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="System.Net.ServerSentEvents" Version="10.0.0-preview.3.25171.5" />
+    </ItemGroup>
+
 </Project>
