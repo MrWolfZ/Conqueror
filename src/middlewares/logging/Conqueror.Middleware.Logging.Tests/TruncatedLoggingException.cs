@@ -29,6 +29,6 @@ internal sealed class TruncatedLoggingException(Exception wrapped) : Exception(w
             numOfNewLinesFound += 1;
         }
 
-        return wrappedToString[..currentIndex];
+        return wrappedToString[..currentIndex].TrimEnd();
     }
 }

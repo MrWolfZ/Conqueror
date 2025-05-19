@@ -42,13 +42,15 @@ internal static class LogOutputNormalizationStringExtensions
                         .Replace(@"SignalTypeGenerator\", "SignalTypeGenerator/")
                         .Replace(@"Iterator\", "Iterator/")
                         .Replace(@"IteratorTypeGenerator\", "IteratorTypeGenerator/")
+                        .Replace(@"middlewares\", "middlewares/")
                         .Replace(@"Logging\", "Logging/")
+                        .Replace(@"logging\", "logging/")
                         .Replace(@"Tests\", "Tests/")
 
                         // on unix platforms the stack trace contains references to {ProjectDirectory} instead
                         // of the solution dir for this test project, so we have to normalize those as well when
                         // running on non-unix systems
-                        .Replace("{SolutionDirectory}src/Conqueror.Middleware.Logging.Tests/", "{ProjectDirectory}")
+                        .Replace("{SolutionDirectory}src/middlewares/logging/Conqueror.Middleware.Logging.Tests/", "{ProjectDirectory}")
 
                         .Replace(@"obj\Debug\net8.0\Conqueror.SourceGenerators\", "obj/Debug/net8.0/Conqueror.SourceGenerators/");
     }
