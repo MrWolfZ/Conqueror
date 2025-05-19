@@ -8,10 +8,10 @@ public sealed partial class SignalContextTraceAndOperationIdTests
 
     [Test]
     [Combinatorial]
-    [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "parameter name makes sense here")]
     public async Task GivenSetup_WhenExecutingHandler_OperationIdsAreCorrectlyAvailable(
         [Values(true, false)] bool hasCustomTraceId,
-        [Values(true, false)] bool hasActivity)
+        [Values(true, false)] bool hasActivity,
+        [Values(true, false)] bool publishNestedWithDifferentTransport)
     {
         var customTraceId = Guid.NewGuid().ToString();
 
@@ -31,7 +31,17 @@ public sealed partial class SignalContextTraceAndOperationIdTests
                             await Task.Yield();
                             traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
                             messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetSignalId();
-                            await p.GetRequiredService<ISignalPublishers>().For(NestedTestSignal.T).Handle(new(), ct);
+
+                            var handler = p.GetRequiredService<ISignalPublishers>()
+                                           .For(NestedTestSignal.T);
+
+                            if (publishNestedWithDifferentTransport)
+                            {
+                                handler = handler.WithTransport(b => new TestSignalPublisher<NestedTestSignal>(
+                                                                    b.UseInProcessWithSequentialBroadcastingStrategy()));
+                            }
+
+                            await handler.Handle(new(), ct);
                         })
                     .AddSignalHandlerDelegate(
                         NestedTestSignal.T,
@@ -130,4 +140,19 @@ public sealed partial class SignalContextTraceAndOperationIdTests
 
     [Signal]
     private sealed partial record NestedTestSignal;
+
+    private sealed class TestSignalPublisher<TSignal>(ISignalPublisher<TSignal> wrapped) : ISignalPublisher<TSignal>
+        where TSignal : class, ISignal<TSignal>
+    {
+        public string TransportTypeName => "test";
+
+        public Task Publish(
+            TSignal signal,
+            IServiceProvider serviceProvider,
+            ConquerorContext conquerorContext,
+            CancellationToken cancellationToken)
+        {
+            return wrapped.Publish(signal, serviceProvider, conquerorContext, cancellationToken);
+        }
+    }
 }

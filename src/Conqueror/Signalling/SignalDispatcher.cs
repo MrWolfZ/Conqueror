@@ -31,9 +31,9 @@ internal sealed class SignalDispatcher<TSignal>(
 
         var transportType = new SignalTransportType(publisher.TransportTypeName, transportRole);
 
-        // if we are an in-process client, make sure to create a new signal ID for this execution if
+        // if we are in a publish operation, make sure to create a new signal ID for this execution if
         // we were called from within the call context of another handler
-        if (originalSignalId is not null && transportType.IsInProcess() && transportRole == SignalTransportRole.Publisher)
+        if (originalSignalId is not null && transportRole == SignalTransportRole.Publisher)
         {
             conquerorContext.SetSignalId(signalIdFactory.GenerateId());
         }
