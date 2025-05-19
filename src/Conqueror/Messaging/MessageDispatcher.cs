@@ -31,9 +31,9 @@ internal sealed class MessageDispatcher<TMessage, TResponse>(
 
         var transportType = new MessageTransportType(messageSender.TransportTypeName, transportRole);
 
-        // if we are an in-process client, make sure to create a new message ID for this execution if
+        // if we are in a send operation, make sure to create a new message ID for this execution if
         // we were called from within the call context of another handler
-        if (originalMessageId is not null && transportType.IsInProcess() && transportRole == MessageTransportRole.Sender)
+        if (originalMessageId is not null && transportRole == MessageTransportRole.Sender)
         {
             conquerorContext.SetMessageId(messageIdFactory.GenerateId());
         }

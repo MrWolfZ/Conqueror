@@ -8,10 +8,10 @@ public sealed partial class MessageContextTraceAndOperationIdTests
 
     [Test]
     [Combinatorial]
-    [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "parameter name makes sense here")]
     public async Task GivenSetup_WhenExecutingHandler_OperationIdsAreCorrectlyAvailable(
         [Values(true, false)] bool hasCustomTraceId,
-        [Values(true, false)] bool hasActivity)
+        [Values(true, false)] bool hasActivity,
+        [Values(true, false)] bool sendNestedWithDifferentTransport)
     {
         var customTraceId = Guid.NewGuid().ToString();
 
@@ -31,7 +31,17 @@ public sealed partial class MessageContextTraceAndOperationIdTests
                             await Task.Yield();
                             traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
                             messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetMessageId();
-                            _ = await p.GetRequiredService<IMessageSenders>().For(NestedTestMessage.T).Handle(new(), ct);
+
+                            var handler = p.GetRequiredService<IMessageSenders>()
+                                           .For(NestedTestMessage.T);
+
+                            if (sendNestedWithDifferentTransport)
+                            {
+                                handler = handler.WithTransport(b => new TestMessageSender<NestedTestMessage, TestMessageResponse>(
+                                                                    b.UseInProcess()));
+                            }
+
+                            _ = await handler.Handle(new(), ct);
 
                             return new();
                         })
@@ -136,4 +146,23 @@ public sealed partial class MessageContextTraceAndOperationIdTests
 
     [Message<TestMessageResponse>]
     private sealed partial record NestedTestMessage;
+
+    private sealed class TestMessageSender<TMessage, TResponse>(IMessageSender<TMessage, TResponse> wrapped) : IMessageSender<TMessage, TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
+    {
+        public string TransportTypeName => "test";
+
+        public Task<TResponse> Send(
+            TMessage message,
+            IServiceProvider serviceProvider,
+            ConquerorContext conquerorContext,
+            CancellationToken cancellationToken)
+        {
+            return wrapped.Send(
+                message,
+                serviceProvider,
+                conquerorContext,
+                cancellationToken);
+        }
+    }
 }
