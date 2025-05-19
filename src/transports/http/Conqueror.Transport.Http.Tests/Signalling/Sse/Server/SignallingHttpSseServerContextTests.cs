@@ -120,7 +120,7 @@ public sealed class SignallingHttpSseServerContextTests
             using var ctx = host.Resolve<IConquerorContextAccessor>().CloneOrCreate();
             ctx.DecodeContextData(item.Data.Split("\n")[1]);
 
-            Assert.That(seenSignalIdsOnPublisher, Contains.Item(ctx.GetSignalId()));
+            Assert.That(seenSignalIdsOnPublisher, Contains.Item(item.EventId));
             Assert.That(ctx.GetTraceId(), Is.EqualTo(traceId));
 
             if (hasDownstream)

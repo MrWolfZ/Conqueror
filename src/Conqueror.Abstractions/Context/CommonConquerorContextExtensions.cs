@@ -53,8 +53,8 @@ public static class CommonConquerorContextExtensions
 
     /// <summary>
     ///     Removes the trace ID from the context. This should only be used by transports
-    /// to prevent sending the trace ID twice if it is already separately encoded (e.g.
-    /// for HTTP in the traceparent header).
+    ///     to prevent sending the trace ID twice if it is already separately encoded (e.g.
+    ///     for HTTP in the traceparent header).
     /// </summary>
     /// <param name="conquerorContext">The Conqueror context to remove the trace ID from</param>
     /// <returns>The removed trace ID</returns>

@@ -54,6 +54,11 @@ internal sealed class HttpSseSignalReceiverRunner(
                 {
                     using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 
+                    if (item.EventId is not null)
+                    {
+                        conquerorContext.SetSignalId(item.EventId);
+                    }
+
                     if (item.Data.ContextData is { } s)
                     {
                         conquerorContext.DecodeContextData(s);

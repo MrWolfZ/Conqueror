@@ -37,6 +37,8 @@ internal sealed class HttpSseSignalBroker(IServiceProvider serviceProvider)
 
         var content = TSignal.HttpSseSignalSerializer.Serialize(serviceProvider, signal);
 
+        var signalId = conquerorContext.RemoveSignalId();
+
         if (conquerorContext.EncodeDownstreamContextData() is { } s)
         {
             content += "\n" + s;
@@ -44,7 +46,7 @@ internal sealed class HttpSseSignalBroker(IServiceProvider serviceProvider)
 
         var item = new SseItem<string>(content, TSignal.EventType)
         {
-            EventId = conquerorContext.GetSignalId(),
+            EventId = signalId,
         };
 
         cancellationToken.ThrowIfCancellationRequested();
