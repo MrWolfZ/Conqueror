@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Builder;
 using static Conqueror.Transport.Http.Tests.HttpTestContextData;
 using static Conqueror.Transport.Http.Tests.Signalling.HttpTestSignals;
 

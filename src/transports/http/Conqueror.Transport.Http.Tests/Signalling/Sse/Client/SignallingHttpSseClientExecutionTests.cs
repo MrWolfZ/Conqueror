@@ -1,9 +1,5 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Text.Json;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using static Conqueror.Transport.Http.Tests.Signalling.HttpTestSignals;
 
 namespace Conqueror.Transport.Http.Tests.Signalling.Sse.Client;

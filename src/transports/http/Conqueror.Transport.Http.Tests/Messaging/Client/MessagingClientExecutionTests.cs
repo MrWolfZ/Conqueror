@@ -1,8 +1,5 @@
 using System.Net;
 using System.Security.Claims;
-using System.Text.Json;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Client;

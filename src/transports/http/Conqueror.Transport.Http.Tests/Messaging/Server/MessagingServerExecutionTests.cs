@@ -1,9 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Security.Claims;
-using System.Text.Json;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;

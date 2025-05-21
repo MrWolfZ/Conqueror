@@ -1,5 +1,4 @@
 using System.Net.ServerSentEvents;
-using Microsoft.AspNetCore.Http;
 using static Conqueror.Transport.Http.Tests.Signalling.HttpTestSignals;
 
 namespace Conqueror.Transport.Http.Tests.Signalling.Sse.Server;

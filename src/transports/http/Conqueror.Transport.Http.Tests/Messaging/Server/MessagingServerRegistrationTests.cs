@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-
 // not using top-level namespace here since we use nested namespaces in tests below
 namespace Conqueror.Transport.Http.Tests.Messaging.Server
 {
