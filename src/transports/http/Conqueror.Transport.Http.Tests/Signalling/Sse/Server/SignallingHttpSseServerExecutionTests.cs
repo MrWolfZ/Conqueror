@@ -7,7 +7,6 @@ namespace Conqueror.Transport.Http.Tests.Signalling.Sse.Server;
 public sealed partial class SignallingHttpSseServerExecutionTests
 {
     [Test]
-    [Retry(2)] // fix some flakiness due to time-based cancellation
     [TestCaseSource(typeof(HttpTestSignals), nameof(GenerateTestCaseData))]
     public async Task GivenTestHttpSseSignal_WhenSubscribingToSignals_ReturnsCorrectEventStream(HttpSignalTestCase testCase)
     {
@@ -36,28 +35,39 @@ public sealed partial class SignallingHttpSseServerExecutionTests
 
         Assert.That(contentType, Is.EqualTo("text/event-stream"));
 
-        await testCase.PublishSignals(host.Resolve<ISignalPublishers>());
-
         var responseStream = await response.Content.ReadAsStreamAsync(host.TestTimeoutToken);
 
         var parser = SseParser.Create(responseStream);
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
-        cts.CancelAfter(TimeSpan.FromMilliseconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 20 : 10_000));
 
         var result = new List<(string EventType, string Data)>();
 
-        try
+        async Task Run(CancellationToken token)
         {
-            await foreach (var item in parser.EnumerateAsync(cts.Token))
+            try
             {
-                result.Add((item.EventType, item.Data));
+                await foreach (var item in parser.EnumerateAsync(token))
+                {
+                    result.Add((item.EventType, item.Data));
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // nothing to do
             }
         }
-        catch (OperationCanceledException)
-        {
-            // nothing to do
-        }
+
+        var runTask = Run(cts.Token);
+
+        await testCase.PublishSignals(host.Resolve<ISignalPublishers>());
+
+        // give the client time to receive the events
+        await Task.Delay(TimeSpan.FromMilliseconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 100 : 10_000), host.TestTimeoutToken);
+
+        await cts.CancelAsync();
+
+        await runTask;
 
         Assert.That(result, Has.Count.EqualTo(testCase.ExpectedEventTypes.Count));
         Assert.That(result.Select(r => r.EventType), Is.EqualTo(testCase.ExpectedEventTypes));
