@@ -6,24 +6,90 @@ This file contains all the open points for extensions and improvements to the **
 
 - [ ] set up issues templates via yaml config
 - [ ] add code coverage reports and badge
+- [ ] run separate matrix steps for different dotnet versions and ensure that all code works if running against only dotnet 8
 
 ## Core
 
-- [ ] add test to assert that messages support polymorphism
-- [ ] add test that pipeline can be safely forked
-- [ ] add transport to context data test location
-- [ ] throw on empty context data key
-- [ ] improve generator
-  - [ ] write tests for all situations and diagnostics (using data driven tests)
-    - [ ] for every single property, assert that the property can be manually defined and the generator will skip it
-    - [ ] skip abstract classes
-    - [ ] test that the generator works even if the marker interfaces are explicitly implemented, including when through a base class
-  - [ ] generate property metadata (name, type, is-required, is-nullable, etc.)
-  - [ ] allow (primary) constructor arguments in query string parsing
-  - [ ] emit diagnostic error when unsupported property is found during query string parsing
-  - [ ] add statement in recipe that attributes can be renamed with a global using if they cause conflicts
+### Common
 
-### Core middleware
+- [ ] throw on empty context data key
+- [ ] change dependencies to depend on greater-than 8
+- [ ] create benchmark app
+  - [ ] add benchmarks for running with and without context items
+- [ ] use explicit dependency version numbers in all recipes and examples
+  - [ ] add a script to bump version number across whole project
+
+### Messaging
+
+- [ ] align receiver configs to not return itself, but either void or a configuration object
+- [ ] in types injectors rename the `Create` method to `Inject`
+- [ ] add tests for cancellation that assert a `Handle` throws early if passed a canceled token, and also cancels after every middleware
+- [ ] use `ValueTask` instead of `Task` in internal APIs
+  - [ ] validate using benchmarks that this improves latency and memory usage
+- [ ] add test that pipeline can be safely forked
+- [ ] add sender to context data test location
+- [ ] add test to assert that messages support polymorphism
+- [ ] add `.Has()` method to pipelines
+- [ ] add pipeline builder methods to throw on duplicate middleware
+- [ ] align all tests names to `Given_When_Then` style
+- [ ] write code-level documentation for all public APIs
+- [ ] add null checks to public API methods to support users that do not use nullable reference types
+- [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
+- [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
+
+### Signalling
+
+- [ ] in types injectors rename the `Create` method to `Inject`
+- [ ] add tests for cancellation that assert a `Handle` throws early if passed a canceled token, and also cancels after every middleware
+- [ ] refactor `UseInProcess()` to return builder for setting broadcast strategy instead of overloads
+- [ ] add parameter for sequential strategy that configures whether to abort early on cancellation
+- [ ] implement fire & forget strategy
+- [ ] add aggregate publisher that takes a broadcast strategy
+- [ ] use `ValueTask` instead of `Task` in internal APIs
+  - [ ] validate using benchmarks that this improves latency and memory usage
+- [ ] add test that pipeline can be safely forked
+- [ ] add publisher to context data test location
+- [ ] add `.Has()` method to pipelines
+- [ ] add pipeline builder methods to throw on duplicate middleware
+- [ ] align all tests names to `Given_When_Then` style
+- [ ] write code-level documentation for all public APIs
+- [ ] add null checks to public API methods to support users that do not use nullable reference types
+- [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
+- [ ] add recipe that showcases how batching can be implemented with a custom transport
+- [ ] add docs that specify that the sequential strategy calls observers in an unspecified order
+- [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
+
+### Iterators
+
+- [ ] implement
+- [ ] add recipes
+  - [ ] create a recipe that shows how to use these handlers to read from an external stream (e.g. Kafka topic)
+    - [ ] show how to handle acknowledgement by wrapping the item in an envelope
+- [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
+
+### Source Generator
+
+- [ ] test whether source gen can be included transitively through abstractions during development instead of having to explicitly reference it everywhere
+- [ ] generate `string? SummaryComment` property
+- [ ] write tests for all situations and diagnostics (using data driven tests)
+  - [ ] for every single property, assert that the property can be manually defined and the generator will skip it
+  - [ ] test that the generator works even if the marker interfaces are explicitly implemented, including when through a base class
+- [ ] generate property metadata (name, type, is-required, is-nullable, etc.)
+  - [ ] ensure to also add `string? SummaryComment`
+- [ ] generate `CreateInstance(IReadOnlyDictionary<string, object>)` method
+  - [ ] skip if user-defined function exists to allow for special cases
+  - [ ] support primary constructors, required properties, and any combination
+  - [ ] recursively instantiate property objects, again enforcing single constructor
+  - [ ] emit error diagnostic if more than one constructor is defined
+- [ ] add statement in recipe that attributes can be renamed with a global using if they cause conflicts
+
+### Analyzers
+
+- [ ] create analyzers (including code fixes)
+  - [ ] enforce correct `ConfigurePipeline` method signature
+  - [ ] enforce non-empty `ConfigurePipeline` method
+
+## Middlewares
 
 - [ ] in logging middleware recipe explain how to use payload logging kind
 - [ ] reimplement data annotation middleware
@@ -36,24 +102,12 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] `Conqueror.Middleware.RateLimiting`
   - [ ] `Conqueror.Middleware.Tracing`
 
-### Core ASP Core
+### Logging
 
-- [ ] add tests for client error handling
-- [ ] create `HttpMessageEndpointDescriptor` and pass that around internally when registering endpoints instead of accessing `TMessage` everywhere
-- [ ] allow adding endpoints explicitly or manually and then `MapMessageEndpoints` skips those message types
-- [ ] add tests that a custom base interface can be used to specify custom conventions
-- [ ] add `FailureStatusCodes` property to `IHttpMessage` (defaults to 400, 401, and 403)
-  - [ ] generate appropriate endpoint metadata
-  - [ ] ensure that swashbuckle can be used to customize it, e.g. adding `ProblemDetails` as body schema
-- [ ] assert that authorization middleware only catches exceptions and throws if the response has already started
-- [ ] in development environment, when message fails, add exception message and stack trace to response body
-- [ ] remove authentication middleware
-- [ ] add tests that assert controllers can be added multiple times (explicitly or implicitly) idempotently
-- [ ] add recipe for customizing OpenAPI specification with Swashbuckle
-- [ ] create analyzers (including code fixes)
-  - [ ] when command or query does not have a version
+- [ ] allow configuring properties which are added to the logging scope
+- [ ] allow supplying custom logger factory
 
-### Core Transports
+## Transport General
 
 - [ ] create transport test utils package that contains a list of baseline tests that all transports must fulfill
   - [ ] functionality
@@ -61,143 +115,92 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] trace ID
   - [ ] will require converting base class approach to test case generation approach so that only a single test class needs to be subclassed
 
-## Build
+## Transport.Http
 
-- [ ] run separate matrix steps for different dotnet versions and ensure that all code works if running against only dotnet 8
+### Transport.Http Common
 
-## CQS
+- [ ] assert that well-known error handling middleware only sets response if it has not already started yet and otherwise rethrows
+- [ ] pull SEE endpoint logic into helper class
 
-- [ ] add `.Has()` method to pipelines
-- [ ] add pipeline builder methods to throw on duplicate middleware
-- [ ] add trace logging to transports
-- [ ] allow custom method name for custom handler interfaces
-  - [ ] redirect `IncrementCounter` to `Handle` in interface
-  - [ ] caller and handler use custom method name
-  - [ ] dynamic proxy delegates the custom method back to handle on the proxy
-  - [ ] handler registration asserts that the method has a compatible signature
-- [ ] update all recipes and examples to drop `Command` and `Query` suffixes + also use more speaking response names, e.g. `IncrementCounter` and `CounterIncremented`
-- [ ] align all tests names to `Given_When_Then` style
-- [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
-- [ ] create benchmark app
-  - [ ] add benchmarks for running with and without context items
-- [ ] write code-level documentation for all public APIs
-- [ ] add null checks to public API methods to support users that do not use nullable reference types
-- [ ] cache client factory results
-- [ ] allow multiple server-side transports (e.g. can offer query through HTTP and other transport at once) but on client enforce that a client uses a single transport
-- [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
+### Transport.Http Messaging
+
+- [ ] add tests for running with compression middleware
+  - [ ] see also [here](https://stackoverflow.com/questions/28754673/httpclient-conditionally-set-acceptencoding-compression-at-runtime) for some inspiration
+- [ ] add tests for running with handler with disabled redirect following (should fail message)
+- [ ] allow adding endpoints explicitly or manually and then `MapMessageEndpoints` skips those message types
+- [ ] add tests that a custom base interface can be used to specify custom conventions
+- [ ] add `FailureStatusCodes` property to `IHttpMessage` (defaults to 400, 401, and 403)
+  - [ ] generate appropriate endpoint metadata
+  - [ ] ensure that swashbuckle can be used to customize it, e.g. adding `ProblemDetails` as body schema
+- [ ] add support for URI templates (see [here](https://github.com/modelcontextprotocol/csharp-sdk/blob/adb2098e4d847ae6075f98a06b8fbca8c057f6cb/src/ModelContextProtocol/UriTemplate.cs#L19) for reference)
+- [ ] add trace logging (only if ILoggerFactory is present)
+- [ ] add test to assert that messages support polymorphism
+- [ ] create `HttpMessageEndpointDescriptor` and pass that around internally when registering endpoints instead of accessing `TMessage` everywhere
+- [ ] add summary comment to API descriptions
+- [ ] in development environment, when message fails, add exception message and stack trace to response body
+- [ ] add recipe for customizing OpenAPI specification with Swashbuckle
 - [ ] create analyzers (including code fixes)
-  - [ ] remove analyzers for missing or incorrect `ConfigurePipeline` methods
-  - [ ] non-empty `ConfigurePipeline` method
-  - [ ] custom handler interfaces may not have extra methods
-  - [ ] handler must not implement multiple custom interfaces for same command
-  - [ ] middlewares must not implement more than one middleware interface of the same type (i.e. not implement interface with and without configuration)
-  - [ ] error (optionally) when a handler is being injected directly instead of an interface
-- [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action configureTransport)`
-- [ ] use a source generator instead of reflection for generating proxies
-- [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
-- [ ] create dedicated readme files for each package
-- [ ] use explicit dependency version numbers in all recipes and examples
-  - [ ] add a script to bump version number across whole project
+  - [ ] when message does not have a version
 
-## Eventing
+### Transport.Http Signalling
 
-- [ ] add tests for object pipeline
-- [ ] handling and tests for conqueror context
-- [ ] refactor context data tests to use smarter test case generation (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/db5b68d1fbfd1e408e3ad3965dd013c5b3e0fd2a))
-- [ ] properly propagate event IDs (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ea08dc4420033656ef5012079bfa63830078bd4d))
-- [ ] ensure that full stack trace is contained in exception logs (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/c4a9419b896fa225372ae348d76c31ef8715a78f))abbb6066826c3d710bafd5db4ff32db3f17cf50c))
-- [ ] add transport type info to log output (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/652f8610456333a9e8eba40056738c0517d160b7))
-- [ ] refactor all tests to use `Assert.That` for exceptions
-- [ ] add test for batching middleware using polymorphism
-  - [ ] e.g. create base or wrapper type `Batchable` and add middlewares constrained to this base type
-    - [ ] if using wrapper approach, use implicit casts for more ergonomics
-  - [ ] assert that batching works across transports
-- [ ] add dedicated solution
-- [ ] add `.Has()` method to pipelines
-- [ ] add pipeline builder method to throw on duplicate middleware
-- [ ] add trace logging to transports
-- [ ] update all recipes and examples to drop `Event` suffix
-- [ ] align all tests names to `Given_When_Then` style
-- [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
-- [ ] create benchmark app (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/65f4197bf2df717cc387f74bacd264ae519f9e53))
-  - [ ] add benchmarks for running with and without context items
+- [ ] add tests for running with compression middleware
+- [ ] add tests for running with handler with disabled redirect following (should be unrecoverable receiver connection error)
+- [ ] SSE improvements
+  - [ ] add option to send server heartbeats for idle connections
+    - [ ] configurable interval, either regular interval or debounced
+  - [ ] in `MapSignalSseEndpoints` add overload which takes an `IHttpSseEndpointConfiguration`, which allows authorizing requests based on requested signal event types, and allows configuring a pipeline (with a `ConfigurePipeline<TSignal>(ISignalPipeline<TSignal> pipeline) where TSignal : IHttpSseSignal` method)
+    - [ ] add option to enforce `Accept` header
+  - [ ] mention in recipe to use HTTP2+ if possible
 - [ ] provide HTTP websocket transport
-  - [ ] add test for edge case where different observers for the same event type are configured with different remote hosts and ensure that events are only dispatched to correct observers
-  - [ ] add test for edge case where transport initialization throws (expect that hosted service retries with exponential backoff)
+  - [ ] add tests for behavior when websocket connection is interrupted (i.e. disconnect without proper close handshake)
+
+### Transport.Http Iterators
+
+- [ ] provide SSE transport
+  - [ ] make it very explicit in docs that `next` calls are not propagated to the server which means there is no backpressure, which can cause issues when the server publishes faster than the client consumes (i.e. the client buffer fills up)
+- [ ] provide HTTP websocket transport
+  - [ ] add tests for behavior when websocket connection is interrupted (i.e. disconnect without proper close handshake)
+    - [ ] consider adding explicit message for signaling the end of the stream
+  - [ ] allow setting prefetch options (e.g. buffer size, prefetch batch size)
+
+## Transport.SignalR
+
+### Transport.SignalR Messaging
+
+- [ ] provide SignalR transport
+
+### Transport.SignalR Signalling
+
+- [ ] provide SignalR transport
+
+### Transport.SignalR Iterators
+
+- [ ] provide SignalR transport
+
+## Transport.FileSystem
+
+### Transport.FileSystem Messaging
+
 - [ ] provide file system transport
-  - [ ] use file system as persistent queue with file watcher / poller on observer side
-- [ ] write code-level documentation for all public APIs
-- [ ] built-in `Synchronization` observer middleware
-- [ ] add null checks to public API methods to support users that do not use nullable reference types
-- [ ] for event observers, create one background service per transport that inits all the observers for that transport
-- [ ] for event observers, ignore missing transports even if event type is annotated with that transport
-- [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
-- [ ] create dedicated readme files for each package
-- [ ] use explicit dependency version numbers in all recipes and examples
-  - [ ] add a script to bump version number across whole project
-- [ ] add docs that specify that the sequential strategy calls observers in an unspecified order
+  - [ ] use file system as persistent queue with file watcher / poller on sender / receiver sides
 
-### Eventing middleware
+### Transport.FileSystem Signalling
 
-- [ ] create projects for common middlewares, e.g.
-  - [ ] `Conqueror.Eventing.Middleware.DataAnnotationValidation` (only for publisher)
-  - [ ] `Conqueror.Eventing.Middleware.FluentValidation` (only for publisher)
-  - [ ] `Conqueror.Eventing.Middleware.Metrics`
-  - [ ] `Conqueror.Eventing.Middleware.Tracing`
+- [ ] provide file system transport
+  - [ ] use file system as persistent buffer with file watcher / poller on receiver side that indexes into the buffer
 
-## Streaming
+### Transport.FileSystem Iterators
 
-- [ ] refactor context data tests to use smarter test case generation
-- [ ] create transport client before pipeline execution
-- [ ] expose transport type on middleware context
-  - [ ] including http and client/server
-  - [ ] add helper methods to check transport type
-  - [ ] expose `UseInMemory` transport builder extension method
-- [ ] integrate pipeline configuration interface into producer interface
-- [ ] make pipeline builder interface generic
-- [ ] move producer and consumer code into dedicated directories
-- [ ] refactor pipeline logic to take middleware instances instead of resolving them
-- [ ] add support for delegate middlewares
-- [ ] add `.Has()` method to pipelines
-- [ ] make pipeline enumerable
-- [ ] improve performance by using loop instead of recursion in pipeline
-- [ ] rename inmemory to inprocess transport
-- [ ] remove lifetime support from handlers (explain in recipe that this was an explicit design decision and that lifetimes encourage bad practices by making handlers stateful when they should be stateless; also show how you can use injected classes to compensate, e.g. `IMemoryCache`)
-- [ ] expose transporttype on pipeline in addition to middleware context to enable conditional pipelines
-- [ ] add trace logging to transports
-- [ ] write tests to ensure that client pipeline sees transport type as consumer and handler sees it as producer
-- [ ] when registering client, validate it is not a concrete class
-- [ ] rename `ExecuteRequest` and `HandleItem` to `Handle`
-- [ ] update all recipes and examples to drop `Request` suffixes + also use more speaking names, e.g. `GetCounterIncrements` and `CounterIncremented`
-- [ ] align all tests names to `Given_When_Then` style
-- [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
-- [ ] create benchmark app
-  - [ ] add benchmarks for running with and without context items
-- [ ] add test to assert that disposing async enumerator calls finally blocks in handler/server
-- [ ] add tests for middleware lifetimes when applied to different handler types
-- [ ] add context support to consumer
-- [ ] add null checks to public API methods to support users that do not use nullable reference types
-- [ ] add transport for SignalR
-- [ ] add recipes
-  - [ ] create a recipe that shows how to use these handlers to read from an external stream (e.g. Kafka topic)
-    - [ ] show how to handle acknowledgement by wrapping the item in an envelope
-- [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
-- [ ] create dedicated readme files for each package
-- [ ] use explicit dependency version numbers in all recipes and examples
-  - [ ] add a script to bump version number across whole project
+- [ ] provide file system transport
+  - [ ] use file system as persistent queue and buffer with file watcher / poller on runner / receiver sides with sender indexing into the buffer
 
-### Streaming middleware
+## Examples
 
-- [ ] create projects for common middlewares, e.g.
-  - [ ] `Conqueror.Streaming.Middleware.Logging`
-  - [ ] `Conqueror.Streaming.Middleware.DataAnnotationValidation` (only for publisher)
-  - [ ] `Conqueror.Streaming.Middleware.FluentValidation` (only for publisher)
-  - [ ] `Conqueror.Streaming.Middleware.Metrics`
-  - [ ] `Conqueror.Streaming.Middleware.Tracing`
-
-### Streaming HTTP transport
-
-- [ ] add tests for behavior when websocket connection is interrupted (i.e. disconnect without proper close handshake)
-  - [ ] consider adding explicit message for signaling the end of the stream
-- [ ] propagate conqueror context
-- [ ] allow setting prefetch options (e.g. buffer size, prefetch batch size)
+- [ ] enhance examples with auth by first redirecting to user selection page
+  - [ ] on selection get bearer token from server (with symmetric in-memory signing key)
+    - [ ] do not use cookies to allow different tabs with different users
+  - [ ] send messages with bearer token header
+  - [ ] allow logging out to change user
+- [ ] add example for SSE signal endpoint
+  - [ ] also handle authentication by lazily running receiver and configuring it with the bearer token from a singleton
