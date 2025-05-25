@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -12,92 +13,123 @@ internal sealed class HttpSseSignalReceiverRunner(
     HttpSseSignalReceiver receiver,
     IConquerorContextAccessor conquerorContextAccessor)
 {
-    public async Task Run(Type handlerType, CancellationToken cancellationToken)
+    [SuppressMessage(
+        "Reliability",
+        "CA2000:Dispose objects before losing scope",
+        Justification = "false positive, the source is returned to the caller")]
+    public SignalReceiverRun Run(CancellationToken cancellationToken)
+    {
+        var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var connectionTaskCompletionSource = new TaskCompletionSource();
+
+        return new(
+            connectionTaskCompletionSource.Task,
+            Run(receiver.HandlerType, connectionTaskCompletionSource, linkedSource.Token),
+            linkedSource);
+    }
+
+    private async Task Run(Type handlerType, TaskCompletionSource connectionTaskCompletionSource, CancellationToken cancellationToken)
     {
         var config = receiver.Configuration ?? throw new InvalidOperationException($"the receiver for handler type '{handlerType}' is not enabled");
 
-        HttpResponseMessage? response = null;
-
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!cancellationToken.IsCancellationRequested)
             {
-                response = await Connect(config, cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage? response = null;
 
-                if ((int)response.StatusCode is >= 400 and < 500)
+                try
                 {
-                    throw new HttpSseSignalReceiverRunFailedException(
-                        $"failed to connect signal receiver for handler type '{handlerType}' to address '{config.Address}'; got status code {response.StatusCode}")
+                    response = await Connect(config, cancellationToken).ConfigureAwait(false);
+
+                    if ((int)response.StatusCode is >= 400 and < 500)
                     {
-                        HandlerType = handlerType,
-                    };
-                }
+                        throw new HttpSseSignalReceiverRunFailedException(
+                            $"failed to connect signal receiver for handler type '{handlerType}' to address '{config.Address}'; got status code {response.StatusCode}")
+                        {
+                            HandlerType = handlerType,
+                        };
+                    }
 
-                if (!response.IsSuccessStatusCode)
-                {
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (config.ReconnectDelayFn is not null)
+                        {
+                            await config.ReconnectDelayFn((int)response.StatusCode, cancellationToken).ConfigureAwait(false);
+                        }
+
+                        continue;
+                    }
+
+                    _ = connectionTaskCompletionSource.TrySetResult();
+
+                    var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+
+                    var parser = SseParser.Create(responseStream, receiver.ParseItem);
+
+                    await foreach (var item in parser.EnumerateAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
+
+                        if (item.EventId is not null)
+                        {
+                            conquerorContext.SetSignalId(item.EventId);
+                        }
+
+                        if (item.Data.ContextData is { } s)
+                        {
+                            conquerorContext.DecodeContextData(s);
+                        }
+
+                        await receiver.InvokeHandler(item.Data.Signal, cancellationToken).ConfigureAwait(false);
+                    }
+
                     cancellationToken.ThrowIfCancellationRequested();
 
                     if (config.ReconnectDelayFn is not null)
                     {
                         await config.ReconnectDelayFn((int)response.StatusCode, cancellationToken).ConfigureAwait(false);
                     }
-
-                    continue;
                 }
-
-                var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-
-                var parser = SseParser.Create(responseStream, receiver.ParseItem);
-
-                await foreach (var item in parser.EnumerateAsync(cancellationToken).ConfigureAwait(false))
+                catch (OperationCanceledException)
                 {
-                    using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
-
-                    if (item.EventId is not null)
+                    // we return gracefully on cancellation
+                }
+                catch (IOException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // the http stream reader might throw an IOException instead of an OperationCanceledException when
+                    // the token is canceled, so we catch it here and return gracefully
+                }
+                catch (HttpSseSignalReceiverRunFailedException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    throw new HttpSseSignalReceiverRunFailedException(
+                        $"an exception occured while running receiver for signal handler type '{handlerType}'",
+                        ex)
                     {
-                        conquerorContext.SetSignalId(item.EventId);
-                    }
-
-                    if (item.Data.ContextData is { } s)
-                    {
-                        conquerorContext.DecodeContextData(s);
-                    }
-
-                    await receiver.InvokeHandler(item.Data.Signal, cancellationToken).ConfigureAwait(false);
+                        HandlerType = handlerType,
+                    };
                 }
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (config.ReconnectDelayFn is not null)
+                finally
                 {
-                    await config.ReconnectDelayFn((int)response.StatusCode, cancellationToken).ConfigureAwait(false);
+                    response?.Dispose();
                 }
             }
-            catch (OperationCanceledException)
-            {
-                // we return gracefully on cancellation
-            }
-            catch (IOException) when (cancellationToken.IsCancellationRequested)
-            {
-                // the http stream reader might throw an IOException instead of an OperationCanceledException when
-                // the token is canceled, so we catch it here and return gracefully
-            }
-            catch (HttpSseSignalReceiverRunFailedException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new HttpSseSignalReceiverRunFailedException($"an exception occured while running receiver for signal handler type '{handlerType}'", ex)
-                {
-                    HandlerType = handlerType,
-                };
-            }
-            finally
-            {
-                response?.Dispose();
-                response = null;
-            }
+        }
+        catch (Exception ex)
+        {
+            _ = connectionTaskCompletionSource.TrySetException(ex);
+
+            throw;
+        }
+        finally
+        {
+            _ = connectionTaskCompletionSource.TrySetResult();
         }
     }
 

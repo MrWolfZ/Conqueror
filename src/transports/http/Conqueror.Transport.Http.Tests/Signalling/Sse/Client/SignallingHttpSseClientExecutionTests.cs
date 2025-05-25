@@ -85,13 +85,11 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             return;
         }
 
-        Assert.That(
-            () => serverResponseHasBegunCount,
-            Is.EqualTo(1)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await Assert.ThatAsync(
+            () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+            Throws.Nothing);
+
+        Assert.That(serverResponseHasBegunCount, Is.EqualTo(1));
 
         Assert.That(receivedHeadersOnServer!.Authorization.ToString(), Is.EqualTo(AuthorizationHeader));
         Assert.That(receivedHeadersOnServer, Does.ContainKey("test-header").WithValue("test-value"));
@@ -120,7 +118,10 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         }
 
         await cts.CancelAsync();
-        await run.CompletionTask;
+
+        await Assert.ThatAsync(
+            () => run.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
+            Throws.Nothing);
     }
 
     [Test]
@@ -186,13 +187,11 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             ? signalReceivers.RunHttpSseSignalReceiver<TestSignalHandler>(cts.Token)
             : signalReceivers.RunHttpSseSignalReceivers(cts.Token);
 
-        Assert.That(
-            () => serverResponseHasBegunCount,
-            Is.EqualTo(2)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await Assert.ThatAsync(
+            () => Task.WhenAll(run1.InitialConnectionTask, run2.InitialConnectionTask).WaitAsync(host.AssertionTimeout, cts.Token),
+            Throws.Nothing);
+
+        Assert.That(serverResponseHasBegunCount, Is.EqualTo(2));
 
         var signal = new TestSignal { Payload = 10 };
         await host.Resolve<ISignalPublishers>()
@@ -246,13 +245,11 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             ? signalReceivers.RunHttpSseSignalReceiver<TestSignalHandler>(cts1.Token)
             : signalReceivers.RunHttpSseSignalReceivers(cts1.Token);
 
-        Assert.That(
-            () => serverResponseHasBegunCount,
-            Is.EqualTo(1)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await Assert.ThatAsync(
+            () => run1.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
+            Throws.Nothing);
+
+        Assert.That(serverResponseHasBegunCount, Is.EqualTo(1));
 
         await host.Resolve<ISignalPublishers>()
                   .For(TestSignal.T)
@@ -280,13 +277,11 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             ? signalReceivers.RunHttpSseSignalReceiver<TestSignalHandler>(cts2.Token)
             : signalReceivers.RunHttpSseSignalReceivers(cts2.Token);
 
-        Assert.That(
-            () => serverResponseHasBegunCount,
-            Is.EqualTo(2)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await Assert.ThatAsync(
+            () => run2.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
+            Throws.Nothing);
+
+        Assert.That(serverResponseHasBegunCount, Is.EqualTo(2));
 
         await host.Resolve<ISignalPublishers>()
                   .For(TestSignal.T)
@@ -329,13 +324,11 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             ? signalReceivers.RunHttpSseSignalReceiver<TestSignalHandler>(cts.Token)
             : signalReceivers.RunHttpSseSignalReceivers(cts.Token);
 
-        Assert.That(
-            () => serverResponseHasBegunCount,
-            Is.EqualTo(1)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await Assert.ThatAsync(
+            () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
+            Throws.Nothing);
+
+        Assert.That(serverResponseHasBegunCount, Is.EqualTo(1));
 
         await host.Resolve<ISignalPublishers>()
                   .For(TestSignal.T)
@@ -352,14 +345,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             await run.DisposeAsync();
         }
 
-        var completionTask = run.CompletionTask;
-        Assert.That(
-            () => completionTask.IsCompletedSuccessfully,
-            Is.True
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await run.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken);
     }
 
     [Test]
@@ -387,13 +373,11 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
         await using var run = signalReceivers.RunHttpSseSignalReceivers(cts.Token);
 
-        Assert.That(
-            () => serverResponseHasBegunCount,
-            Is.EqualTo(2)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await Assert.ThatAsync(
+            () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
+            Throws.Nothing);
+
+        Assert.That(serverResponseHasBegunCount, Is.EqualTo(2));
 
         await host.Resolve<ISignalPublishers>()
                   .For(TestSignal.T)
@@ -410,19 +394,12 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             await run.DisposeAsync();
         }
 
-        var completionTask = run.CompletionTask;
-        Assert.That(
-            () => completionTask.IsCompletedSuccessfully,
-            Is.True
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await run.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken);
     }
 
     [Test]
     [TestCaseSource(nameof(GenerateErrorTestCaseData))]
-    [Retry(3)] // there might be some flakiness due to timing issues
+    [Repeat(20)]
     public async Task GivenHttpSseSignalHandlers_WhenErrorsOccur_CorrectBehaviorIsExecuted(object testCaseParam)
     {
         var testCase = (HttpSseSignalErrorTestCase)testCaseParam; // cast instead of direct parameter type to keep the type private
@@ -430,6 +407,8 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         await using var host = await CreateTestHost(
             testCase.RegisterServerServices,
             app => app.MapSignalEndpoints());
+
+        var logger = host.Resolve<ILogger<HttpSseSignalErrorTestCase>>();
 
         var httpClient = host.HttpClient;
         var configurationExceptions = new Queue<Exception?>(testCase.ConfigurationExceptions);
@@ -495,14 +474,26 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         if (connectionUnrecoverableErrorCount == 1)
         {
             await Assert.ThatAsync(
-                async () => await await Task.WhenAny(run.CompletionTask, Task.Delay(host.AssertionTimeoutInMs, cts.Token)),
+                () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+                Throws.InstanceOf<HttpSseSignalReceiverRunFailedException>());
+
+            await Assert.ThatAsync(
+                () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<HttpSseSignalReceiverRunFailedException>());
         }
 
         if (connectionUnrecoverableErrorCount > 1)
         {
             await Assert.ThatAsync(
-                async () => await await Task.WhenAny(run.CompletionTask, Task.Delay(host.AssertionTimeoutInMs, cts.Token)),
+                () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+                Throws.InstanceOf<AggregateException>()
+                      .With.Property("InnerExceptions")
+                      .Count.EqualTo(connectionUnrecoverableErrorCount)
+                      .With.Property("InnerExceptions")
+                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is HttpSseSignalReceiverRunFailedException)));
+
+            await Assert.ThatAsync(
+                () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<AggregateException>()
                       .With.Property("InnerExceptions")
                       .Count.EqualTo(connectionUnrecoverableErrorCount)
@@ -520,7 +511,11 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
         var observations = clientServiceProvider.GetRequiredService<TestObservations>();
 
-        await testCase.PublishSignals(host.Resolve<ISignalPublishers>(), host.TestTimeoutToken);
+        logger.LogInformation("Publishing initial signals...");
+
+        await Assert.ThatAsync(
+            () => testCase.PublishSignals(host.Resolve<ISignalPublishers>(), host.TestTimeoutToken),
+            Throws.Nothing);
 
         Assert.That(
             () => observations.ReceivedSignals,
@@ -536,6 +531,11 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             return;
         }
 
+        // at this point, all handlers should have connected successfully
+        await Assert.ThatAsync(
+            () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
+            Throws.Nothing);
+
         var handlerExceptions = testCase.HandlerExceptions
                                         .OfType<Exception>()
                                         .OrderBy(ex => ex.Message)
@@ -544,7 +544,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         if (handlerExceptions.Count == 1)
         {
             await Assert.ThatAsync(
-                async () => await await Task.WhenAny(run.CompletionTask, Task.Delay(host.AssertionTimeoutInMs, cts.Token)),
+                () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<HttpSseSignalReceiverRunFailedException>()
                       .With.InnerException.SameAs(handlerExceptions[0]));
         }
@@ -552,7 +552,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         if (handlerExceptions.Count > 1)
         {
             await Assert.ThatAsync(
-                async () => await await Task.WhenAny(run.CompletionTask, Task.Delay(host.AssertionTimeoutInMs, cts.Token)),
+                () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<AggregateException>()
                       .With.Property("InnerExceptions")
                       .Count.EqualTo(handlerExceptions.Count)
@@ -574,8 +574,13 @@ public sealed partial class SignallingHttpSseClientExecutionTests
                   .PollEvery(10)
                   .MilliSeconds);
 
+            // initial connection task should not be affected by handler exceptions
+            Assert.That(run.InitialConnectionTask.IsCompletedSuccessfully, Is.True);
+
             return;
         }
+
+        logger.LogInformation("Triggering reconnects...");
 
         serverResponseHasBegunCount = 0;
 
@@ -592,7 +597,12 @@ public sealed partial class SignallingHttpSseClientExecutionTests
               .MilliSeconds);
 
         observations.ReceivedSignals.Clear();
-        await testCase.PublishSignals(host.Resolve<ISignalPublishers>(), host.TestTimeoutToken);
+
+        logger.LogInformation("Publishing signals after reconnects...");
+
+        await Assert.ThatAsync(
+            () => testCase.PublishSignals(host.Resolve<ISignalPublishers>(), host.TestTimeoutToken),
+            Throws.Nothing);
 
         Assert.That(
             () => observations.ReceivedSignals,
@@ -649,7 +659,8 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
                                                                                      var taskCompletionSource = taskCompletionSources.Dequeue();
 
-                                                                                     await using var d = ct.Register(() => taskCompletionSource.TrySetCanceled());
+                                                                                     await using var d =
+                                                                                         ct.Register(() => taskCompletionSource.TrySetCanceled());
 
                                                                                      await taskCompletionSource.Task;
                                                                                  }));
@@ -668,6 +679,10 @@ public sealed partial class SignallingHttpSseClientExecutionTests
               .PollEvery(10)
               .MilliSeconds);
 
+        await Assert.ThatAsync(
+            () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
+            Throws.TypeOf<TimeoutException>());
+
         await host.Resolve<ISignalPublishers>()
                   .For(TestSignal.T)
                   .WithTransport(b => b.UseHttpServerSentEvents())
@@ -679,13 +694,11 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
         taskCompletionSource1.SetResult();
 
-        Assert.That(
-            () => serverResponseHasBegunCount,
-            Is.EqualTo(2)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await Assert.ThatAsync(
+            () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
+            Throws.Nothing);
+
+        Assert.That(serverResponseHasBegunCount, Is.EqualTo(2));
 
         await host.Resolve<ISignalPublishers>()
                   .For(TestSignal.T)
@@ -714,6 +727,9 @@ public sealed partial class SignallingHttpSseClientExecutionTests
               .MilliSeconds
               .PollEvery(10)
               .MilliSeconds);
+
+        // connection task is not influenced by reconnects
+        Assert.That(run.InitialConnectionTask.IsCompletedSuccessfully, Is.True);
 
         taskCompletionSource2.SetResult();
 
@@ -766,13 +782,9 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
         await using var run = signalReceivers.RunHttpSseSignalReceivers(cts.Token);
 
-        Assert.That(
-            () => serverResponseHasBegunCount,
-            Is.EqualTo(1)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+        await Assert.ThatAsync(
+            () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+            Throws.Nothing);
 
         Assert.That(configCount, Is.EqualTo(1));
     }
@@ -835,11 +847,15 @@ public sealed partial class SignallingHttpSseClientExecutionTests
                                return;
                            }
 
+                           var logger = ctx.RequestServices.GetRequiredService<ILogger<SignallingHttpSseClientContextTests>>();
+
                            using var cts = CancellationTokenSource.CreateLinkedTokenSource(
                                ctx.RequestAborted,
                                serverCancellationToken.Value);
 
                            ctx.RequestAborted = cts.Token;
+
+                           await using var d = ctx.RequestAborted.Register(static l => ((ILogger)l!).LogInformation("request aborted"), logger);
 
                            await next();
                        })
@@ -923,10 +939,12 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 10 }, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 30 }, ct);
             },
@@ -953,18 +971,21 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 10 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal2.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload2 = 20 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 30 }, ct);
             },
@@ -1093,14 +1114,17 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 10 }, ct);
 
                 await p.For(TestSignal2.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload2 = 20 }, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 30 }, ct);
             },
@@ -1128,14 +1152,17 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 10 }, ct);
 
                 await p.For(TestSignal2.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload2 = 20 }, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 30 }, ct);
             },
@@ -1166,14 +1193,17 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 10 }, ct);
 
                 await p.For(TestSignal2.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload2 = 20 }, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 30 }, ct);
             },
@@ -1205,14 +1235,17 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 10 }, ct);
 
                 await p.For(TestSignal2.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload2 = 20 }, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 30 }, ct);
             },
@@ -1241,24 +1274,28 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 10 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal2.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload2 = 20 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 30 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 40 }, ct);
             },
@@ -1292,24 +1329,28 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 10 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal2.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload2 = 20 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 30 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 40 }, ct);
             },
@@ -1343,24 +1384,29 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 10 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal2.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload2 = 20 }, ct);
 
                 await Task.Delay(10, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 30 }, ct);
 
-                await Task.Delay(10, ct);
+                // give client time to disconnect due to handler failure
+                await Task.Delay(50, ct);
 
                 await p.For(TestSignal.T)
+                       .WithDefaultClientPipeline()
                        .WithTransport(b => b.UseHttpServerSentEvents())
                        .Handle(new() { Payload = 40 }, ct);
             },
@@ -1483,5 +1529,28 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+    }
+}
+
+file static class PipelineExtensions
+{
+    public static ISignalPipeline<TSignal> UseLogging<TSignal>(this ISignalPipeline<TSignal> pipeline)
+        where TSignal : class, ISignal<TSignal>
+    {
+        var logger = pipeline.ServiceProvider.GetRequiredService<ILogger<TSignal>>();
+
+        return pipeline.Use(ctx =>
+        {
+            logger.LogInformation("publishing signal...");
+
+            return ctx.Next(ctx.Signal, ctx.CancellationToken);
+        });
+    }
+
+    public static TIHandler WithDefaultClientPipeline<TSignal, TIHandler>(this ISignalHandler<TSignal, TIHandler> handler)
+        where TSignal : class, ISignal<TSignal>
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+    {
+        return handler.WithPipeline(p => _ = p.UseLogging());
     }
 }

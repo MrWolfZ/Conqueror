@@ -15,17 +15,21 @@ public sealed class SignalReceiverRun : IAsyncDisposable
     private IReadOnlyCollection<SignalReceiverRun>? innerRuns;
 
     [SuppressMessage("ReSharper", "ConvertToPrimaryConstructor", Justification = "false positive")]
-    public SignalReceiverRun(Task completionTask, CancellationTokenSource? cancellationTokenSource)
+    public SignalReceiverRun(Task initialConnectionTask, Task completionTask, CancellationTokenSource? cancellationTokenSource)
     {
+        InitialConnectionTask = initialConnectionTask;
         CompletionTask = completionTask;
         this.cancellationTokenSource = cancellationTokenSource;
     }
 
     public SignalReceiverRun(IReadOnlyCollection<SignalReceiverRun> runs)
     {
-        CompletionTask = RunAll(runs);
+        InitialConnectionTask = WhenAll(runs.Select(r => r.InitialConnectionTask));
+        CompletionTask = WhenAll(runs.Select(r => r.CompletionTask));
         innerRuns = runs;
     }
+
+    public Task InitialConnectionTask { get; }
 
     public Task CompletionTask { get; }
 
@@ -49,9 +53,9 @@ public sealed class SignalReceiverRun : IAsyncDisposable
         }
     }
 
-    private static async Task RunAll(IReadOnlyCollection<SignalReceiverRun> runs)
+    private static async Task WhenAll(IEnumerable<Task> tasks)
     {
-        var task = Task.WhenAll(runs.Select(r => r.CompletionTask));
+        var task = Task.WhenAll(tasks);
 
         try
         {

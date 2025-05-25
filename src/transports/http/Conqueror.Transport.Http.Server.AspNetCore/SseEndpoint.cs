@@ -39,7 +39,7 @@ internal static class SseEndpoint
             await context.Response.Body.FlushAsync(context.RequestAborted).ConfigureAwait(false);
 
             await SseFormatter.WriteAsync(
-                                  RunWithFlushing(items, context.Response.Body, context.RequestAborted),
+                                  RunWithFlushing(items, context.Response.Body),
                                   context.Response.Body,
                                   context.RequestAborted)
                               .ConfigureAwait(false);
@@ -47,7 +47,7 @@ internal static class SseEndpoint
             static async IAsyncEnumerable<SseItem<string>> RunWithFlushing(
                 IAsyncEnumerable<SseItem<string>> items,
                 Stream responseBody,
-                [EnumeratorCancellation] CancellationToken ct)
+                [EnumeratorCancellation] CancellationToken ct = default)
             {
                 await foreach (var item in items.ConfigureAwait(false).WithCancellation(ct))
                 {

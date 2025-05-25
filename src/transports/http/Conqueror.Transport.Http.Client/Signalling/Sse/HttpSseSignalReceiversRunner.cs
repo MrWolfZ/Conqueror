@@ -43,10 +43,6 @@ internal sealed class HttpSseSignalReceiversRunner(IServiceProvider serviceProvi
         }
     }
 
-    [SuppressMessage(
-        "Reliability",
-        "CA2000:Dispose objects before losing scope",
-        Justification = "false positive, the source is returned to the caller")]
     internal SignalReceiverRun Run(HttpSseSignalReceiver receiver, CancellationToken cancellationToken)
     {
         try
@@ -55,9 +51,7 @@ internal sealed class HttpSseSignalReceiversRunner(IServiceProvider serviceProvi
                 receiver,
                 serviceProvider.GetRequiredService<IConquerorContextAccessor>());
 
-            var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-            return new(runner.Run(receiver.HandlerType, linkedSource.Token), linkedSource);
+            return runner.Run(cancellationToken);
         }
         catch (Exception ex)
         {

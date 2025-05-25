@@ -33,7 +33,7 @@ public static class HttpSseSignalReceiversExtensions
 
         if (receiver is null)
         {
-            return new(Task.CompletedTask, null);
+            return new(Task.CompletedTask, Task.CompletedTask, null);
         }
 
         return receivers.RunHttpSseSignalReceiver(receiver, cancellationToken);

@@ -80,7 +80,7 @@ internal static class HttpTransportTestLoggingBuilderExtensions
 {
     public static ILoggingBuilder AddTestLogger(this ILoggingBuilder builder)
     {
-        _ = builder.AddSimpleConsole();
+        _ = builder.AddSimpleConsole(o => o.TimestampFormat = "[HH:mm:ss.fff]");
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, HttpTransportTestLoggerProvider>());
         builder.Services.TryAddSingleton<HttpTransportTestLogSink>();

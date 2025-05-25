@@ -15,14 +15,7 @@ internal sealed class HttpSseSignalBroker(IServiceProvider serviceProvider)
 {
     private readonly ConcurrentDictionary<string, ImmutableList<ChannelWriter<ChannelMessage>>> channelWritersByEventType = new();
 
-    public IAsyncEnumerable<SseItem<string>> Subscribe(
-        IEnumerable<string> eventTypes,
-        CancellationToken cancellationToken)
-    {
-        var items = SubscribeInternal(eventTypes, cancellationToken);
-
-        return items;
-    }
+    public IAsyncEnumerable<SseItem<string>> Subscribe(IEnumerable<string> eventTypes) => SubscribeInternal(eventTypes);
 
     public async Task Publish<TSignal>(
         TSignal signal,
@@ -57,7 +50,8 @@ internal sealed class HttpSseSignalBroker(IServiceProvider serviceProvider)
         {
             try
             {
-                var taskCompletionSource = new TaskCompletionSource();
+                // run continuation async to ensure we are not blocking the reader when it notifies us of the completion
+                var taskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 var channelMessage = new ChannelMessage(item, taskCompletionSource);
 
                 await writer.WriteAsync(channelMessage, cancellationToken).ConfigureAwait(false);
@@ -70,47 +64,60 @@ internal sealed class HttpSseSignalBroker(IServiceProvider serviceProvider)
             {
                 // if a client disconnects right when we want to publish, we simply skip that client
             }
-            catch (Exception) when (cancellationToken.IsCancellationRequested)
+            catch (Exception ex) when (cancellationToken.IsCancellationRequested)
             {
-                throw new OperationCanceledException($"publish of signal of type '{signal.GetType()}' was cancelled", cancellationToken);
+                throw new OperationCanceledException($"publish of signal of type '{signal.GetType()}' was cancelled", ex, cancellationToken);
             }
         }
     }
 
     private async IAsyncEnumerable<SseItem<string>> SubscribeInternal(
         IEnumerable<string> eventTypes,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        var eventTypesList = eventTypes.ToList();
+
         var channel = Channel.CreateBounded<ChannelMessage>(new BoundedChannelOptions(8));
 
-        using var d = new AggregateDisposable();
+        TaskCompletionSource? latestTaskCompletionSource = null;
 
-        foreach (var eventType in eventTypes)
+        try
         {
-            _ = channelWritersByEventType.AddOrUpdate(eventType, _ => [channel.Writer], (_, list) => list.Add(channel.Writer));
-            var registration = cancellationToken.Register(
-                static state =>
-                {
-                    _ = state.channel.Writer.TryComplete();
-                    _ = state.channelWritersByEventType.AddOrUpdate(
-                        state.eventType,
-                        _ => [],
-                        (_, list) => list.Remove(state.channel.Writer));
-                },
-                (eventType, channel, channelWritersByEventType));
-            d.Add(registration);
+            foreach (var eventType in eventTypesList)
+            {
+                _ = channelWritersByEventType.AddOrUpdate(eventType, _ => [channel.Writer], (_, list) => list.Add(channel.Writer));
+            }
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                (var item, latestTaskCompletionSource) = await channel.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+
+                yield return item;
+
+                // this code will be hit when the next item is requested from the enumerable
+                latestTaskCompletionSource.SetResult();
+                latestTaskCompletionSource = null;
+            }
         }
-
-        while (!cancellationToken.IsCancellationRequested)
+        finally
         {
-            var (item, taskCompletionSource) = await channel.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+            channel.Writer.Complete();
 
-            await using var d2 = cancellationToken.Register(() => taskCompletionSource.TrySetResult()).ConfigureAwait(false);
+            _ = latestTaskCompletionSource?.TrySetResult();
 
-            yield return item;
+            // notify any pending publish operations
+            while (channel.Reader.TryRead(out var m))
+            {
+                _ = m.TaskCompletionSource.TrySetResult();
+            }
 
-            // this code will be hit when the next item is requested from the enumerable
-            _ = taskCompletionSource.TrySetResult();
+            foreach (var eventType in eventTypesList)
+            {
+                _ = channelWritersByEventType.AddOrUpdate(
+                    eventType,
+                    _ => [],
+                    (_, list) => list.Remove(channel.Writer));
+            }
         }
     }
 
