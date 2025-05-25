@@ -9,6 +9,11 @@ namespace Conqueror;
 public interface IConquerorContextData : IEnumerable<(string Key, object Value, ConquerorContextDataScope Scope)>
 {
     /// <summary>
+    ///     Returns <c>true</c> if there is no data in the context.
+    /// </summary>
+    bool IsEmpty { get; }
+
+    /// <summary>
     ///     Set a value, overwriting any existing value with the same key.
     /// </summary>
     /// <param name="key">The key to set the value for</param>
@@ -44,10 +49,4 @@ public interface IConquerorContextData : IEnumerable<(string Key, object Value, 
     /// <returns>The value if it exists, otherwise <c>null</c></returns>
     /// <exception cref="System.InvalidCastException">If the data for the given key is not of type <see cref="T"/></exception>
     T? Get<T>(string key);
-
-    /// <summary>
-    ///     Copy all context data from this instance to the destination instance.
-    /// </summary>
-    /// <param name="destination">the context data instance to copy the data to</param>
-    void CopyTo(IConquerorContextData destination);
 }

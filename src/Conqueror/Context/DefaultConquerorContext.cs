@@ -2,53 +2,70 @@ using System;
 
 namespace Conqueror.Context;
 
-internal sealed class DefaultConquerorContext(Action<ConquerorContext> onDispose) : ConquerorContext
+internal sealed class DefaultConquerorContext : ConquerorContext
 {
-    public override IConquerorContextData DownstreamContextData { get; } = new DefaultConquerorContextData();
+    private readonly Action<DefaultConquerorContext> onDispose;
+    private readonly DefaultConquerorContext? parent;
 
-    public override IConquerorContextData UpstreamContextData { get; } = new DefaultConquerorContextData();
-
-    public override IConquerorContextData ContextData { get; } = new DefaultConquerorContextData();
-
-    public DefaultConquerorContext Clone(Action onClonedDispose)
+    private DefaultConquerorContext(Action<ConquerorContext> onDispose)
     {
-        var newContext = new DefaultConquerorContext(CopyUpstreamData);
-        CopyDownstreamData();
+        this.onDispose = onDispose;
+        parent = null;
+        DownstreamContextData = new();
+        UpstreamContextData = new();
+        ContextData = new();
+    }
 
-        return newContext;
+    private DefaultConquerorContext(DefaultConquerorContext parent, Action<DefaultConquerorContext> onDispose)
+    {
+        this.onDispose = onDispose;
+        this.parent = parent;
 
-        void CopyDownstreamData()
+        DownstreamContextData = new(parent.DownstreamContextData);
+        ContextData = new(parent.ContextData);
+
+        // Upstream data is initially empty since it flows up from child to parent
+        UpstreamContextData = new();
+    }
+
+    public override DefaultConquerorContextData DownstreamContextData { get; }
+
+    public override DefaultConquerorContextData UpstreamContextData { get; }
+
+    public override DefaultConquerorContextData ContextData { get; }
+
+    public static DefaultConquerorContext CreateRootContext(Action<ConquerorContext> onRootDispose)
+    {
+        return new(onRootDispose);
+    }
+
+    public DefaultConquerorContext CreateChildContext(Action onChildDispose)
+    {
+        return new(
+            this,
+            ctx =>
+            {
+                PropagateUpstreamData(ctx);
+                onChildDispose();
+            });
+    }
+
+    protected override void Dispose(bool isDisposing)
+    {
+        if (isDisposing)
         {
-            // copy over all downstream data
-            foreach (var (key, value, scope) in DownstreamContextData)
-            {
-                if (value is string s)
-                {
-                    newContext.DownstreamContextData.Set(key, s, scope);
-                }
-                else
-                {
-                    newContext.DownstreamContextData.Set(key, value);
-                }
-            }
+            parent?.PropagateUpstreamData(this);
 
-            // copy over all bidirectional data
-            foreach (var (key, value, scope) in ContextData)
-            {
-                if (value is string s)
-                {
-                    newContext.ContextData.Set(key, s, scope);
-                }
-                else
-                {
-                    newContext.ContextData.Set(key, value);
-                }
-            }
+            onDispose(this);
         }
+    }
 
-        void CopyUpstreamData(ConquerorContext ctx)
+    private void PropagateUpstreamData(DefaultConquerorContext childContext)
+    {
+        // performance optimization to prevent unnecessary allocation of enumerator
+        if (!childContext.UpstreamContextData.IsEmpty)
         {
-            foreach (var (key, value, scope) in ctx.UpstreamContextData)
+            foreach (var (key, value, scope) in childContext.UpstreamContextData)
             {
                 if (value is string s)
                 {
@@ -59,12 +76,25 @@ internal sealed class DefaultConquerorContext(Action<ConquerorContext> onDispose
                     UpstreamContextData.Set(key, value);
                 }
             }
+        }
 
-            // clear parent context data before copying over data from child context, so that
-            // removals are propagated from the child context
-            ContextData.Clear();
+        // performance optimization to prevent unnecessary allocation of enumerator
+        if (!ContextData.IsEmpty)
+        {
+            // bidirectional keys also propagate deletion upstream
+            foreach (var (key, _, _) in ContextData)
+            {
+                if (childContext.ContextData.IsRemoved(key))
+                {
+                    _ = ContextData.Remove(key);
+                }
+            }
+        }
 
-            foreach (var (key, value, scope) in ctx.ContextData)
+        // performance optimization to prevent unnecessary allocation of enumerator
+        if (!childContext.ContextData.IsEmpty)
+        {
+            foreach (var (key, value, scope) in childContext.ContextData)
             {
                 if (value is string s)
                 {
@@ -75,16 +105,6 @@ internal sealed class DefaultConquerorContext(Action<ConquerorContext> onDispose
                     ContextData.Set(key, value);
                 }
             }
-
-            onClonedDispose();
-        }
-    }
-
-    protected override void Dispose(bool isDisposing)
-    {
-        if (isDisposing)
-        {
-            onDispose(this);
         }
     }
 }

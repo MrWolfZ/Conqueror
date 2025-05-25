@@ -1,25 +1,42 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Threading;
 
 namespace Conqueror.Context;
 
-public sealed class DefaultConquerorContextData : IConquerorContextData
+internal sealed class DefaultConquerorContextData(DefaultConquerorContextData? parent = null)
+    : IConquerorContextData
 {
-    private readonly Lazy<ConcurrentDictionary<string, (object Value, ConquerorContextDataScope Scope)>> itemsLazy = new();
+    // initialize the object eagerly for downstream data since it is always populated
+    private ConcurrentDictionary<string, (object Value, ConquerorContextDataScope Scope)>? items;
+
+    // track keys that were removed in this context (to override parent values)
+    private ConcurrentDictionary<string, object?>? removedKeys;
+
+    public bool IsEmpty => (items is null || items.IsEmpty) && (parent is null || parent.IsEmpty);
 
     public IEnumerator<(string Key, object Value, ConquerorContextDataScope Scope)> GetEnumerator()
     {
-        if (!itemsLazy.IsValueCreated)
+        if (items is not null)
         {
-            yield break;
+            foreach (var (key, (value, scope)) in items)
+            {
+                yield return (key, value, scope);
+            }
         }
 
-        foreach (var (key, (value, scope)) in itemsLazy.Value)
+        // yield entries from parent that haven't been overridden or removed
+        if (parent != null)
         {
-            yield return (key, value, scope);
+            foreach (var (key, value, scope) in parent)
+            {
+                if ((items is null || !items.ContainsKey(key))
+                    && (removedKeys is null || !removedKeys.ContainsKey(key)))
+                {
+                    yield return (key, value, scope);
+                }
+            }
         }
     }
 
@@ -27,63 +44,60 @@ public sealed class DefaultConquerorContextData : IConquerorContextData
 
     public void Set(string key, string value, ConquerorContextDataScope scope)
     {
-        _ = itemsLazy.Value.AddOrUpdate(key, _ => (value, scope), (_, _) => (value, scope));
+        EnsureItems()[key] = (value, scope);
+        _ = removedKeys is not null && removedKeys.TryRemove(key, out _);
     }
 
     public void Set(string key, object value)
     {
-        _ = itemsLazy.Value.AddOrUpdate(key, _ => (value, ConquerorContextDataScope.InProcess), (_, _) => (value, ConquerorContextDataScope.InProcess));
+        EnsureItems()[key] = (value, ConquerorContextDataScope.InProcess);
+        _ = removedKeys is not null && removedKeys.TryRemove(key, out _);
     }
 
     public bool Remove(string key)
     {
-        if (!itemsLazy.IsValueCreated)
-        {
-            return false;
-        }
+        var removed = items is not null && items.TryRemove(key, out _);
 
-        return itemsLazy.Value.TryRemove(key, out _);
+        _ = EnsureRemovedKeys().TryAdd(key, null);
+
+        return removed || parent?.Get<object>(key) != null;
     }
 
     public void Clear()
     {
-        if (!itemsLazy.IsValueCreated)
+        if (items is null)
         {
             return;
         }
 
-        itemsLazy.Value.Clear();
+        foreach (var key in items.Keys)
+        {
+            _ = EnsureRemovedKeys().TryAdd(key, null);
+        }
+
+        items.Clear();
     }
 
     public T? Get<T>(string key)
     {
-        if (!itemsLazy.IsValueCreated)
+        if (IsRemoved(key))
         {
             return default;
         }
 
-        var result = itemsLazy.Value.TryGetValue(key, out var v);
-
-        if (!result)
+        if (items is not null && items.TryGetValue(key, out var value))
         {
-            return default;
+            return (T)value.Value;
         }
 
-        return (T)v.Value;
+        return parent is not null ? parent.Get<T>(key) : default;
     }
 
-    public void CopyTo(IConquerorContextData destination)
-    {
-        foreach (var (key, (value, scope)) in itemsLazy.Value)
-        {
-            if (value is string s)
-            {
-                destination.Set(key, s, scope);
-                continue;
-            }
+    public bool IsRemoved(string key) => removedKeys is not null && removedKeys.ContainsKey(key);
 
-            Debug.Assert(scope is ConquerorContextDataScope.InProcess, "only in-process scoped values cannot be strings");
-            destination.Set(key, value);
-        }
-    }
+    private ConcurrentDictionary<string, (object Value, ConquerorContextDataScope Scope)> EnsureItems()
+        => LazyInitializer.EnsureInitialized(ref items, static () => new(1, 4));
+
+    private ConcurrentDictionary<string, object?> EnsureRemovedKeys()
+        => LazyInitializer.EnsureInitialized(ref removedKeys, static () => new(1, 4));
 }

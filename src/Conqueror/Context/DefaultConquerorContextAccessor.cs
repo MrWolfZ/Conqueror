@@ -9,9 +9,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
 {
     private static readonly AsyncLocal<ConquerorContextHolder> ConquerorContextCurrent = new();
 
-    public ConquerorContext? ConquerorContext => DefaultConquerorContext;
-
-    private static DefaultConquerorContext? DefaultConquerorContext => ConquerorContextCurrent.Value?.Context;
+    public ConquerorContext? ConquerorContext => ConquerorContextCurrent.Value?.Context;
 
     public ConquerorContext GetOrCreate()
     {
@@ -21,22 +19,22 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
 
     public ConquerorContext CloneOrCreate()
     {
-        return DefaultConquerorContext != null ? CloneContext(DefaultConquerorContext) : CreateContext();
+        return ConquerorContextCurrent.Value?.Context is { } ctx ? CreateChildContext(ctx) : CreateContext();
     }
 
     private static DefaultConquerorContext CreateContext()
     {
-        var context = new DefaultConquerorContext(_ => ClearContextFromAsyncLocal());
+        var context = DefaultConquerorContext.CreateRootContext(_ => ClearContextFromAsyncLocal());
         context.InitializeTraceId();
         SetContextInAsyncLocal(context);
         return context;
     }
 
-    private static DefaultConquerorContext CloneContext(DefaultConquerorContext parentContext)
+    private static DefaultConquerorContext CreateChildContext(DefaultConquerorContext parentContext)
     {
-        var clonedContext = parentContext.Clone(ClearContextFromAsyncLocal);
-        SetContextInAsyncLocal(clonedContext);
-        return clonedContext;
+        var childContext = parentContext.CreateChildContext(ClearContextFromAsyncLocal);
+        SetContextInAsyncLocal(childContext);
+        return childContext;
     }
 
     private static void SetContextInAsyncLocal(DefaultConquerorContext context)
