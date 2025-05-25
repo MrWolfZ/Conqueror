@@ -36,4 +36,9 @@ public static class ConquerorTransportHttpConstants
 
         public const string TextPlain = "text/plain";
     }
+
+    public static class QueryParameterNames
+    {
+        public const string SignalSseEventType = "signalEventType";
+    }
 }

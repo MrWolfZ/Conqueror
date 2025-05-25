@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Net.ServerSentEvents;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
+using static Conqueror.ConquerorTransportHttpConstants;
 
 namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 
@@ -112,16 +112,16 @@ internal sealed class HttpSseSignalReceiverRunner(
         {
             var httpClient = config.HttpClient ?? defaultHttpClient;
 
-            var queryString = HttpUtility.ParseQueryString(string.Empty);
+            var queryString = QueryStringBuilder.Create();
 
             foreach (var eventType in receiver.EventTypes)
             {
-                queryString.Add("signalTypes", eventType);
+                queryString = queryString.Add(QueryParameterNames.SignalSseEventType, eventType);
             }
 
             var targetUriBuilder = new UriBuilder(config.Address)
             {
-                Query = $"?{queryString}",
+                Query = queryString.Build(),
             };
 
             using var request = new HttpRequestMessage(new("GET"), targetUriBuilder.Uri);

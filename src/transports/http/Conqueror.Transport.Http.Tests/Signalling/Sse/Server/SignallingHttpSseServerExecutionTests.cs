@@ -86,7 +86,7 @@ public sealed partial class SignallingHttpSseServerExecutionTests
                         .AddRouting(),
             app => app.MapSignalEndpoints());
 
-        var targetUriBuilder = new UriBuilder(SseAddress) { Query = "?signalTypes=throwingTest" };
+        var targetUriBuilder = new UriBuilder(SseAddress) { Query = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "throwingTest")) };
         using var request = new HttpRequestMessage(new("GET"), targetUriBuilder.Uri);
 
         using var response = await host.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, host.TestTimeoutToken);
@@ -110,7 +110,7 @@ public sealed partial class SignallingHttpSseServerExecutionTests
                         .AddRouting(),
             app => app.MapSignalEndpoints());
 
-        var targetUriBuilder = new UriBuilder(SseAddress) { Query = "?signalTypes=test" };
+        var targetUriBuilder = new UriBuilder(SseAddress) { Query = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "test")) };
         using var request = new HttpRequestMessage(new("GET"), targetUriBuilder.Uri);
 
         using var response = await host.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, host.TestTimeoutToken);
@@ -141,7 +141,7 @@ public sealed partial class SignallingHttpSseServerExecutionTests
                         .AddRouting(),
             app => app.MapSignalEndpoints());
 
-        var targetUriBuilder = new UriBuilder(SseAddress) { Query = "?signalTypes=test" };
+        var targetUriBuilder = new UriBuilder(SseAddress) { Query = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "test")) };
         using var request1 = new HttpRequestMessage(new("GET"), targetUriBuilder.Uri);
         using var request2 = new HttpRequestMessage(new("GET"), targetUriBuilder.Uri);
 

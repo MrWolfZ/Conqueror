@@ -23,7 +23,7 @@ public sealed class SignallingHttpSseServerContextTests
                                 .AddRouting(),
             app => app.MapSignalEndpoints());
 
-        var targetUriBuilder = new UriBuilder(SseAddress) { Query = "?signalTypes=test" };
+        var targetUriBuilder = new UriBuilder(SseAddress) { Query = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "test")) };
 
         using var request = new HttpRequestMessage(new("GET"), targetUriBuilder.Uri);
 

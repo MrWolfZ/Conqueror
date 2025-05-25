@@ -43,7 +43,7 @@ public static partial class HttpTestSignals
         {
             yield return new()
             {
-                QueryString = "?signalTypes=test",
+                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "test"),
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
                 ExpectedEventTypes = ["test", "test"],
                 ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
@@ -73,7 +73,8 @@ public static partial class HttpTestSignals
 
             yield return new()
             {
-                QueryString = "?signalTypes=test&signalTypes=testSignal2",
+                QueryString = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "test"),
+                                                    (QueryParameterNames.SignalSseEventType, "testSignal2")),
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload2\":11}", "{\"payload\":20}", "{\"payload2\":21}"],
                 ExpectedEventTypes = ["test", "testSignal2", "test", "testSignal2"],
                 ExpectedReceivedSignals =
@@ -96,7 +97,7 @@ public static partial class HttpTestSignals
 
             yield return new()
             {
-                QueryString = "?signalTypes=test",
+                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "test"),
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
                 ExpectedEventTypes = ["test", "test"],
                 ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
@@ -114,7 +115,7 @@ public static partial class HttpTestSignals
 
             yield return new()
             {
-                QueryString = "?signalTypes=testSignalWithoutPayload",
+                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithoutPayload"),
                 ExpectedPayloads = ["{}", "{}"],
                 ExpectedEventTypes = ["testSignalWithoutPayload", "testSignalWithoutPayload"],
                 ExpectedReceivedSignals = [new TestSignalWithoutPayload(), new TestSignalWithoutPayload()],
@@ -130,7 +131,7 @@ public static partial class HttpTestSignals
             yield return new()
             {
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
-                QueryString = "?signalTypes=testSignalWithCustomSerializedPayloadType",
+                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithCustomSerializedPayloadType"),
                 ExpectedEventTypes = ["testSignalWithCustomSerializedPayloadType", "testSignalWithCustomSerializedPayloadType"],
                 ExpectedReceivedSignals =
                 [
@@ -171,7 +172,7 @@ public static partial class HttpTestSignals
             yield return new()
             {
                 ExpectedPayloads = ["payload:10", "payload:20"],
-                QueryString = "?signalTypes=testSignalWithCustomSerializer",
+                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithCustomSerializer"),
                 ExpectedEventTypes = ["testSignalWithCustomSerializer", "testSignalWithCustomSerializer"],
                 ExpectedReceivedSignals =
                 [
@@ -195,7 +196,7 @@ public static partial class HttpTestSignals
             yield return new()
             {
                 ExpectedPayloads = ["{\"MESSAGE_PAYLOAD\":10}", "{\"MESSAGE_PAYLOAD\":20}"],
-                QueryString = "?signalTypes=testSignalWithCustomJsonTypeInfo",
+                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithCustomJsonTypeInfo"),
                 ExpectedEventTypes = ["testSignalWithCustomJsonTypeInfo", "testSignalWithCustomJsonTypeInfo"],
                 ExpectedReceivedSignals =
                 [
@@ -224,7 +225,7 @@ public static partial class HttpTestSignals
             yield return new()
             {
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
-                QueryString = "?signalTypes=testSignalWithMiddleware",
+                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithMiddleware"),
                 ExpectedEventTypes = ["testSignalWithMiddleware", "testSignalWithMiddleware"],
                 ExpectedReceivedSignals = [new TestSignalWithMiddleware { Payload = 10 }, new TestSignalWithMiddleware { Payload = 20 }],
                 RegisterHandler = s => s.AddSignalHandler<TestSignalWithMiddlewareHandler>(),
@@ -246,7 +247,7 @@ public static partial class HttpTestSignals
             yield return new()
             {
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
-                QueryString = "?signalTypes=testSignalForAssemblyScanning",
+                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalForAssemblyScanning"),
                 ExpectedEventTypes = ["testSignalForAssemblyScanning", "testSignalForAssemblyScanning"],
                 ExpectedReceivedSignals = [new TestSignalForAssemblyScanning { Payload = 10 }, new TestSignalForAssemblyScanning { Payload = 20 }],
                 RegisterHandler = s => s.AddSignalHandlersFromAssembly(typeof(TestSignalForAssemblyScanning).Assembly),
@@ -269,8 +270,10 @@ public static partial class HttpTestSignals
             yield return new()
             {
                 ExpectedPayloads = ["{\"payload\":10}", "{}", "payload:20", "{\"MESSAGE_PAYLOAD\":30}", "{\"payload\":40}"],
-                QueryString =
-                    "?signalTypes=test&signalTypes=testSignalWithoutPayload&signalTypes=testSignalWithCustomSerializer&signalTypes=testSignalWithCustomJsonTypeInfo",
+                QueryString = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "test"),
+                                                    (QueryParameterNames.SignalSseEventType, "testSignalWithoutPayload"),
+                                                    (QueryParameterNames.SignalSseEventType, "testSignalWithCustomSerializer"),
+                                                    (QueryParameterNames.SignalSseEventType, "testSignalWithCustomJsonTypeInfo")),
                 ExpectedEventTypes = ["test", "testSignalWithoutPayload", "testSignalWithCustomSerializer", "testSignalWithCustomJsonTypeInfo", "test"],
                 ExpectedReceivedSignals =
                 [
@@ -316,7 +319,8 @@ public static partial class HttpTestSignals
                     "{\"payloadSub\":31,\"payload\":30}",
                     "{\"payloadSub\":41,\"payload\":40}",
                 ],
-                QueryString = "?signalTypes=testSignalBase&signalTypes=testSignalSub",
+                QueryString = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "testSignalBase"),
+                                                    (QueryParameterNames.SignalSseEventType, "testSignalSub")),
                 ExpectedEventTypes = ["testSignalBase", "testSignalBase", "testSignalBase", "testSignalSub", "testSignalSub"],
                 ExpectedReceivedSignals =
                 [

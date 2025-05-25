@@ -27,7 +27,7 @@ public static class ConquerorHttpSseServerSignallingEndpointRouteBuilderExtensio
                 var loggerFactory = builder.ServiceProvider.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger("Conqueror.HttpSseSignalEndpoint");
 
-                var eventTypes = context.Request.Query.TryGetValue("signalTypes", out var st)
+                var eventTypes = context.Request.Query.TryGetValue(QueryParameterNames.SignalSseEventType, out var st)
                     ? st.OfType<string>().Where(t => !string.IsNullOrWhiteSpace(t)).ToList()
                     : [];
 
