@@ -158,7 +158,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         services.TryAddTransient<IMessageSenders, MessageSenders>();
         services.TryAddSingleton<IMessageIdFactory, DefaultMessageIdFactory>();
         services.TryAddSingleton<MessageHandlerRegistry>();
-        services.TryAddSingleton<IMessageHandlerRegistry>(p => p.GetRequiredService<MessageHandlerRegistry>());
+        services.TryAddSingleton<IMessageHandlerRegistry>(static p => p.GetRequiredService<MessageHandlerRegistry>());
 
         return services.AddConquerorContext().AddConquerorSingletons();
     }
@@ -237,8 +237,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
             .WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>()
         {
             var invoker = new MessageHandlerInvoker<TMessage, TResponse>(
-                p => THandler.ConfigurePipeline(new TPipelineProxy { Wrapped = p }),
-                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct),
+                static p => THandler.ConfigurePipeline(new TPipelineProxy { Wrapped = p }),
+                static (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct),
                 typeof(THandler));
 
             var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), typeof(THandler), null, invoker, THandler.GetTypeInjectors().ToList());

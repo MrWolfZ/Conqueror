@@ -6,8 +6,8 @@ namespace Conqueror.Messaging;
 internal sealed class MessageSenderFactory<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    private readonly ConfigureMessageSenderAsync<TMessage, TResponse>? asyncSenderFactory;
-    private readonly ConfigureMessageSender<TMessage, TResponse>? syncSenderFactory;
+    private readonly ConfigureMessageSenderAsync<TMessage, TResponse>? configureSenderAsync;
+    private readonly ConfigureMessageSender<TMessage, TResponse>? configureSender;
     private readonly IMessageSender<TMessage, TResponse>? sender;
 
     public MessageSenderFactory(IMessageSender<TMessage, TResponse> sender)
@@ -15,33 +15,33 @@ internal sealed class MessageSenderFactory<TMessage, TResponse>
         this.sender = sender;
     }
 
-    public MessageSenderFactory(ConfigureMessageSender<TMessage, TResponse>? syncSenderFactory)
+    public MessageSenderFactory(ConfigureMessageSender<TMessage, TResponse>? configureSender)
     {
-        this.syncSenderFactory = syncSenderFactory;
+        this.configureSender = configureSender;
     }
 
-    public MessageSenderFactory(ConfigureMessageSenderAsync<TMessage, TResponse>? asyncSenderFactory)
+    public MessageSenderFactory(ConfigureMessageSenderAsync<TMessage, TResponse>? configureSenderAsync)
     {
-        this.asyncSenderFactory = asyncSenderFactory;
+        this.configureSenderAsync = configureSenderAsync;
     }
 
-    public Task<IMessageSender<TMessage, TResponse>> Create(IServiceProvider serviceProvider, ConquerorContext conquerorContext)
+    public ValueTask<IMessageSender<TMessage, TResponse>> Create(IServiceProvider serviceProvider, ConquerorContext conquerorContext)
     {
         if (sender is not null)
         {
-            return Task.FromResult(sender);
+            return ValueTask.FromResult(sender);
         }
 
         var transportBuilder = new MessageSenderBuilder<TMessage, TResponse>(serviceProvider, conquerorContext);
 
-        if (syncSenderFactory is not null)
+        if (configureSender is not null)
         {
-            return Task.FromResult(syncSenderFactory.Invoke(transportBuilder));
+            return ValueTask.FromResult(configureSender.Invoke(transportBuilder));
         }
 
-        if (asyncSenderFactory is not null)
+        if (configureSenderAsync is not null)
         {
-            return asyncSenderFactory.Invoke(transportBuilder);
+            return new(configureSenderAsync.Invoke(transportBuilder));
         }
 
         // this code should not be reachable

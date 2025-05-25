@@ -14,7 +14,7 @@
 
         <!-- third-party packages -->
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-        <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+        <PackageReference Include="BenchmarkDotNet" Version="0.15.0" />
     </ItemGroup>
 
 </Project>

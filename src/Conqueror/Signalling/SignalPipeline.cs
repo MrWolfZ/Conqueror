@@ -43,7 +43,7 @@ internal sealed class SignalPipeline<TSignal>(
     {
         while (true)
         {
-            var index = middlewares.FindIndex(m => m is TMiddleware);
+            var index = middlewares.FindIndex(static m => m is TMiddleware);
 
             if (index < 0)
             {
@@ -57,7 +57,7 @@ internal sealed class SignalPipeline<TSignal>(
     public ISignalPipeline<TSignal> Configure<TMiddleware>(Action<TMiddleware> configure)
         where TMiddleware : ISignalMiddleware<TSignal>
     {
-        var index = middlewares.FindIndex(m => m is TMiddleware);
+        var index = middlewares.FindIndex(static m => m is TMiddleware);
 
         if (index < 0)
         {

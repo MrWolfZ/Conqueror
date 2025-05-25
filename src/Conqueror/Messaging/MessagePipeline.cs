@@ -43,7 +43,7 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     {
         while (true)
         {
-            var index = middlewares.FindIndex(m => m is TMiddleware);
+            var index = middlewares.FindIndex(static m => m is TMiddleware);
 
             if (index < 0)
             {
@@ -57,7 +57,7 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     public IMessagePipeline<TMessage, TResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>
     {
-        var index = middlewares.FindIndex(m => m is TMiddleware);
+        var index = middlewares.FindIndex(static m => m is TMiddleware);
 
         if (index < 0)
         {

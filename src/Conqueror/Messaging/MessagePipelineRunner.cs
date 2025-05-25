@@ -13,13 +13,13 @@ internal sealed class MessagePipelineRunner<TMessage, TResponse>(
 {
     private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares = middlewares.AsEnumerable().Reverse().ToList();
 
-    public async Task<TResponse> Execute(IServiceProvider serviceProvider,
-                                         TMessage initialMessage,
-                                         IMessageSender<TMessage, TResponse> sender,
-                                         MessageTransportType transportType,
-                                         CancellationToken cancellationToken)
+    public Task<TResponse> Execute(IServiceProvider serviceProvider,
+                                   TMessage initialMessage,
+                                   IMessageSender<TMessage, TResponse> sender,
+                                   MessageTransportType transportType,
+                                   CancellationToken cancellationToken)
     {
-        var next = (TMessage message, CancellationToken token) => sender.Send(message, serviceProvider, conquerorContext, token);
+        MessageMiddlewareNext<TMessage, TResponse> next = (message, token) => sender.Send(message, serviceProvider, conquerorContext, token);
 
         foreach (var middleware in middlewares)
         {
@@ -27,7 +27,7 @@ internal sealed class MessagePipelineRunner<TMessage, TResponse>(
             next = (message, token) =>
             {
                 var ctx = new DefaultMessageMiddlewareContext<TMessage, TResponse>(message,
-                                                                                   (c, t) => nextToCall(c, t),
+                                                                                   nextToCall,
                                                                                    serviceProvider,
                                                                                    conquerorContext,
                                                                                    transportType,
@@ -37,6 +37,6 @@ internal sealed class MessagePipelineRunner<TMessage, TResponse>(
             };
         }
 
-        return await next(initialMessage, cancellationToken).ConfigureAwait(false);
+        return next(initialMessage, cancellationToken);
     }
 }

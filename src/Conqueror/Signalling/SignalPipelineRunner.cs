@@ -13,13 +13,13 @@ internal sealed class SignalPipelineRunner<TSignal>(
 {
     private readonly List<ISignalMiddleware<TSignal>> middlewares = middlewares.AsEnumerable().Reverse().ToList();
 
-    public async Task Execute(IServiceProvider serviceProvider,
-                              TSignal initialSignal,
-                              ISignalPublisher<TSignal> publisher,
-                              SignalTransportType transportType,
-                              CancellationToken cancellationToken)
+    public Task Execute(IServiceProvider serviceProvider,
+                        TSignal initialSignal,
+                        ISignalPublisher<TSignal> publisher,
+                        SignalTransportType transportType,
+                        CancellationToken cancellationToken)
     {
-        var next = (TSignal signal, CancellationToken token) => publisher.Publish(signal, serviceProvider, conquerorContext, token);
+        SignalMiddlewareNext<TSignal> next = (signal, token) => publisher.Publish(signal, serviceProvider, conquerorContext, token);
 
         foreach (var middleware in middlewares)
         {
@@ -27,7 +27,7 @@ internal sealed class SignalPipelineRunner<TSignal>(
             next = (signal, token) =>
             {
                 var ctx = new DefaultSignalMiddlewareContext<TSignal>(signal,
-                                                                      (c, t) => nextToCall(c, t),
+                                                                      nextToCall,
                                                                       serviceProvider,
                                                                       conquerorContext,
                                                                       transportType,
@@ -37,6 +37,6 @@ internal sealed class SignalPipelineRunner<TSignal>(
             };
         }
 
-        await next(initialSignal, cancellationToken).ConfigureAwait(false);
+        return next(initialSignal, cancellationToken);
     }
 }

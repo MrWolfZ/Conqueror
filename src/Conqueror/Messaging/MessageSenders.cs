@@ -19,7 +19,7 @@ internal sealed class MessageSenders(IServiceProvider serviceProvider) : IMessag
         {
             var dispatcher = new MessageDispatcher<TMessage, TResponse>(
                 serviceProvider,
-                new(b => b.UseInProcess()),
+                new(static b => b.UseInProcess()),
                 null,
                 MessageTransportRole.Sender,
                 null);

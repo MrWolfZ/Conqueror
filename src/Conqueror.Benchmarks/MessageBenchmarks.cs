@@ -1,49 +1,100 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System.Diagnostics.CodeAnalysis;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
+using BenchmarkDotNet.Toolchains.InProcess.Emit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Benchmarks;
 
 [Config(typeof(ConfigWithCustomEnvVars))]
-
-// ReSharper disable once ClassCanBeSealed.Global (BenchmarkDotNet requires class to be unsealed)
+[MemoryDiagnoser]
+[SuppressMessage("ReSharper", "ClassCanBeSealed.Global", Justification = "Benchmark.NET requires non-sealed classes")]
 public partial class MessageBenchmarks
 {
     private readonly IServiceProvider serviceProvider = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
                                                                                .BuildServiceProvider();
 
-    [Params(
-        null,
-        0,
-        100,
-        1000,
-        10000)]
-    public static int? NumOfMiddlewares { get; set; }
+    [Benchmark]
+    [ArgumentsSource(nameof(NoConquerorArguments))]
+    public void RunWithoutConqueror(int numOfExecutions, int? parallelism)
+    {
+        Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();
+
+        async ValueTask RunSingle(int idx)
+        {
+            var response = await serviceProvider.GetRequiredService<TestMessageHandler>()
+                                                .Handle(new(idx));
+
+            if (response.Value != idx)
+            {
+                throw new InvalidOperationException($"got wrong result {response.Value}, expected {idx}");
+            }
+        }
+    }
 
     [Benchmark]
-    public void RunMessageBenchmark()
+    [ArgumentsSource(nameof(ConquerorArguments))]
+    public void RunWithConqueror(int numOfExecutions, int? parallelism, int numOfMiddlewares)
     {
-        if (NumOfMiddlewares is null)
-        {
-            var res = serviceProvider.GetRequiredService<TestMessageHandler>().Handle(new(0)).GetAwaiter().GetResult();
+        Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();
 
-            if (res.Value != 0)
+        async ValueTask RunSingle(int idx)
+        {
+            var response = await serviceProvider.GetRequiredService<IMessageSenders>()
+                                                .For(TestMessage.T)
+                                                .WithPipeline(pipeline =>
+                                                {
+                                                    for (var i = 0; i < numOfMiddlewares; i++)
+                                                    {
+                                                        pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>());
+                                                    }
+                                                })
+                                                .Handle(new(idx));
+
+            if (response.Value != numOfMiddlewares + idx)
             {
-                throw new InvalidOperationException($"got wrong result {res.Value}, expected 0");
+                throw new InvalidOperationException($"got wrong result {response.Value}, expected {numOfMiddlewares + idx}");
             }
+        }
+    }
+
+    public static IEnumerable<object?[]> NoConquerorArguments()
+    {
+        foreach (var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000 }
+                                                       from parallelism in new int?[] { null, 4 }
+                                                       where parallelism is null || numOfExecutions >= parallelism
+                                                       select (numOfExecutions, parallelism))
+        {
+            yield return [numOfExecutions, parallelism];
+        }
+    }
+
+    public static IEnumerable<object?[]> ConquerorArguments()
+    {
+        foreach (var (args, numOfMiddlewares) in from args in NoConquerorArguments()
+                                                 from numOfMiddlewares in new[] { 0, 10, 100 }
+                                                 select (args, numOfMiddlewares))
+        {
+            yield return [..args, numOfMiddlewares];
+        }
+    }
+
+    private static async Task Run(Func<int, ValueTask> runSingle, int numOfExecutions, int? parallelism)
+    {
+        if (parallelism is not null)
+        {
+            await Parallel.ForEachAsync(
+                Enumerable.Range(0, numOfExecutions),
+                new ParallelOptions { MaxDegreeOfParallelism = parallelism.Value },
+                (i, _) => runSingle(i));
 
             return;
         }
 
-        var result = serviceProvider.GetRequiredService<IMessageSenders>()
-                                    .For(TestMessage.T)
-                                    .Handle(new(0))
-                                    .GetAwaiter()
-                                    .GetResult();
-
-        if (result.Value != NumOfMiddlewares)
+        for (var i = 0; i < numOfExecutions; i += 1)
         {
-            throw new InvalidOperationException($"got wrong result {result.Value}, expected {NumOfMiddlewares}");
+            await runSingle(i);
         }
     }
 
@@ -53,6 +104,10 @@ public partial class MessageBenchmarks
         // ReSharper disable once EmptyConstructor
         public ConfigWithCustomEnvVars()
         {
+            AddJob(
+                Job.Default
+                   .WithToolchain(InProcessEmitToolchain.Instance));
+
             // AddJob(Job.Default
             //           .WithEnvironmentVariables(new EnvironmentVariable("SOME_VAR", "SOME_VALUE"))
             //           .WithId("some ID"));
@@ -75,10 +130,7 @@ public partial class MessageBenchmarks
 
         public static void ConfigurePipeline(TestMessage.IPipeline pipeline)
         {
-            for (var i = 0; i < NumOfMiddlewares; i++)
-            {
-                pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>());
-            }
+            _ = pipeline;
         }
     }
 

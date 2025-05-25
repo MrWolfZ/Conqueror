@@ -18,7 +18,7 @@ internal sealed class SignalPublishers(IServiceProvider serviceProvider) : ISign
         {
             var dispatcher = new SignalDispatcher<TSignal>(
                 serviceProvider,
-                new(b => b.UseInProcessWithSequentialBroadcastingStrategy()),
+                new(static b => b.UseInProcessWithSequentialBroadcastingStrategy()),
                 null,
                 SignalTransportRole.Publisher,
                 null);

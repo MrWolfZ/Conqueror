@@ -117,7 +117,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         services.TryAddTransient<ISignalReceivers, SignalReceivers>();
         services.TryAddSingleton<ISignalIdFactory, DefaultSignalIdFactory>();
         services.TryAddSingleton<SignalHandlerRegistry>();
-        services.TryAddSingleton<ISignalHandlerRegistry>(p => p.GetRequiredService<SignalHandlerRegistry>());
+        services.TryAddSingleton<ISignalHandlerRegistry>(static p => p.GetRequiredService<SignalHandlerRegistry>());
         services.TryAddSingleton<InProcessSignalReceiver>();
 
         return services.AddConquerorContext().AddConquerorSingletons();
@@ -191,7 +191,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
 
             var invoker = new SignalHandlerInvoker<TSignal>(
                 THandler.ConfigurePipeline,
-                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct),
+                static (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct),
                 typeof(THandler));
 
             var registration = new SignalHandlerRegistration(typeof(TSignal), typeof(THandler), null, invoker, THandler.GetTypeInjectors().ToList());
