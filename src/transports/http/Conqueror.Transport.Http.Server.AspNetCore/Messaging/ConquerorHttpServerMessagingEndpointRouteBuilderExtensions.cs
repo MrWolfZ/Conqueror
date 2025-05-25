@@ -17,7 +17,6 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
-using Microsoft.Net.Http.Headers;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
@@ -143,7 +142,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 throw new MessageFailedDueToInvalidFormattedConquerorContextDataException($"badly formatted context data while processing HTTP message of type '{typeof(TMessage)}'", ex)
                 {
                     MessagePayload = message,
-                    TransportType = new(ConquerorTransportHttpConstants.TransportName, MessageTransportRole.Receiver),
+                    TransportType = new(TransportName, MessageTransportRole.Receiver),
                 };
             }
 
@@ -156,7 +155,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             var response = await invoker.Invoke<TMessage, TResponse>(message,
                                                                      httpContext.RequestServices,
-                                                                     ConquerorTransportHttpConstants.TransportName,
+                                                                     TransportName,
                                                                      httpContext.RequestAborted)
                                         .ConfigureAwait(false);
 
@@ -164,7 +163,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             if (conquerorContext.EncodeUpstreamContextData() is { } data)
             {
-                httpContext.Response.Headers[ConquerorTransportHttpConstants.ConquerorContextHeaderName] = data;
+                httpContext.Response.Headers[HeaderNames.ConquerorContext] = data;
             }
 
             if (typeof(TResponse) == typeof(UnitMessageResponse))
@@ -182,7 +181,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             await httpContext.Response.WriteAsJsonAsync(response, jsonTypeInfo).ConfigureAwait(false);
 
             static IEnumerable<string> ReadContextDataFromRequest(HttpContext httpContext)
-                => httpContext.Request.Headers.TryGetValue(ConquerorTransportHttpConstants.ConquerorContextHeaderName, out var values) ? values : [];
+                => httpContext.Request.Headers.TryGetValue(HeaderNames.ConquerorContext, out var values) ? values : [];
 
             static string? GetTraceId(HttpContext httpContext)
             {
@@ -230,7 +229,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                                  ResponseContentType = TMessage.HttpMessageResponseSerializer?.ContentType ?? MediaTypeNames.Application.Json,
                                  MessageType = typeof(TMessage),
                                  HasPayload = hasPayload,
-                                 QueryParams = TMessage.HttpMethod == ConquerorTransportHttpConstants.MethodGet ? GetQueryParams() : [],
+                                 QueryParams = TMessage.HttpMethod == MethodNames.Get ? GetQueryParams() : [],
                                  ResponseType = typeof(TResponse),
                                  SuccessStatusCode = TMessage.SuccessStatusCode,
                              })

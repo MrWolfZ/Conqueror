@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Net.ServerSentEvents;
 using System.Threading;
 using System.Threading.Tasks;
-using static Conqueror.ConquerorTransportHttpConstants;
 
 namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 

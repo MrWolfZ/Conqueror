@@ -37,7 +37,7 @@ public sealed class MessagingServerExecutionTests
 
         using var content = testCase.Payload is not null ? CreateJsonStringContent(testCase.Payload) : new(string.Empty);
 
-        if (testCase.HttpMethod != MethodGet)
+        if (testCase.HttpMethod != MethodNames.Get)
         {
             request.Content = content;
         }

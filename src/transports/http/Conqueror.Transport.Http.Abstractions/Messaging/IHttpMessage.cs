@@ -11,7 +11,7 @@ namespace Conqueror;
 public interface IHttpMessage<TMessage, TResponse> : IMessage<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
-    static virtual string HttpMethod => ConquerorTransportHttpConstants.MethodPost;
+    static virtual string HttpMethod => ConquerorTransportHttpConstants.MethodNames.Post;
 
     static virtual string PathPrefix => "api";
 
@@ -31,7 +31,7 @@ public interface IHttpMessage<TMessage, TResponse> : IMessage<TMessage, TRespons
     static virtual JsonSerializerContext? HttpJsonSerializerContext => TMessage.JsonSerializerContext;
 
     static virtual IHttpMessageSerializer<TMessage, TResponse>? HttpMessageSerializer
-        => TMessage.HttpMethod == ConquerorTransportHttpConstants.MethodGet
+        => TMessage.HttpMethod == ConquerorTransportHttpConstants.MethodNames.Get
             ? new HttpMessageQueryStringSerializer<TMessage, TResponse>()
             : null;
 

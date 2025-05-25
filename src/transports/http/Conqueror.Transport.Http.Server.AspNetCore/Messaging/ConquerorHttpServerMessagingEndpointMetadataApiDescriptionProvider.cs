@@ -100,7 +100,7 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
             });
         }
 
-        if (endpointMetadata.HttpMethod == ConquerorTransportHttpConstants.MethodGet)
+        if (endpointMetadata.HttpMethod == MethodNames.Get)
         {
             return;
         }

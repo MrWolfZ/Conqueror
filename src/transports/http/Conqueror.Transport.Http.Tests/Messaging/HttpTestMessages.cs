@@ -124,7 +124,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageHandler),
                 IHandlerType = typeof(TestMessage.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/test",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -146,7 +146,7 @@ public static partial class HttpTestMessages
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithoutResponseHandler),
                 IHandlerType = typeof(TestMessageWithoutResponse.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithoutResponse",
                 SuccessStatusCode = 204,
                 ApiGroupName = null,
@@ -168,7 +168,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithoutPayloadHandler),
                 IHandlerType = typeof(TestMessageWithoutPayload.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithoutPayload",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -190,7 +190,7 @@ public static partial class HttpTestMessages
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithoutResponseWithoutPayloadHandler),
                 IHandlerType = typeof(TestMessageWithoutResponseWithoutPayload.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithoutResponseWithoutPayload",
                 SuccessStatusCode = 204,
                 ApiGroupName = null,
@@ -212,7 +212,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithMethodHandler),
                 IHandlerType = typeof(TestMessageWithMethod.IHandler),
-                HttpMethod = MethodDelete,
+                HttpMethod = MethodNames.Delete,
                 FullPath = "/api/testMessageWithMethod",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -234,7 +234,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithPathPrefixHandler),
                 IHandlerType = typeof(TestMessageWithPathPrefix.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/custom/prefix/testMessageWithPathPrefix",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -256,7 +256,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithVersionHandler),
                 IHandlerType = typeof(TestMessageWithVersion.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/v2/testMessageWithVersion",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -278,7 +278,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithPathHandler),
                 IHandlerType = typeof(TestMessageWithPath.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/custom/path",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -300,7 +300,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithPathPrefixAndPathAndVersionHandler),
                 IHandlerType = typeof(TestMessageWithPathPrefixAndPathAndVersion.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/custom/prefix/v3/custom/path",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -322,7 +322,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithFullPathHandler),
                 IHandlerType = typeof(TestMessageWithFullPath.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/custom/full/path/for/message",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -344,7 +344,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithFullPathAndVersionHandler),
                 IHandlerType = typeof(TestMessageWithFullPathAndVersion.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/custom/full/path/for/message/ignoring/version",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -366,7 +366,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithSuccessStatusCodeHandler),
                 IHandlerType = typeof(TestMessageWithSuccessStatusCode.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithSuccessStatusCode",
                 SuccessStatusCode = 201,
                 ApiGroupName = null,
@@ -388,7 +388,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithNameHandler),
                 IHandlerType = typeof(TestMessageWithName.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithName",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -410,7 +410,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithApiGroupNameHandler),
                 IHandlerType = typeof(TestMessageWithApiGroupName.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithApiGroupName",
                 SuccessStatusCode = 200,
                 ApiGroupName = "Custom Message Group",
@@ -432,7 +432,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetHandler),
                 IHandlerType = typeof(TestMessageWithGet.IHandler),
-                HttpMethod = MethodGet,
+                HttpMethod = MethodNames.Get,
                 FullPath = "/api/testMessageWithGet",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -454,7 +454,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetWithoutPayloadHandler),
                 IHandlerType = typeof(TestMessageWithGetWithoutPayload.IHandler),
-                HttpMethod = MethodGet,
+                HttpMethod = MethodNames.Get,
                 FullPath = "/api/testMessageWithGetWithoutPayload",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -476,7 +476,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetWithOptionalPayloadHandler),
                 IHandlerType = typeof(TestMessageWithGetWithOptionalPayload.IHandler),
-                HttpMethod = MethodGet,
+                HttpMethod = MethodNames.Get,
                 FullPath = "/api/testMessageWithGetWithOptionalPayload",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -498,7 +498,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetWithPrimaryConstructorHandler),
                 IHandlerType = typeof(TestMessageWithGetWithPrimaryConstructor.IHandler),
-                HttpMethod = MethodGet,
+                HttpMethod = MethodNames.Get,
                 FullPath = "/api/testMessageWithGetWithPrimaryConstructor",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -520,7 +520,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetWithPrimaryConstructorWithOptionalParametersHandler),
                 IHandlerType = typeof(TestMessageWithGetWithPrimaryConstructorWithOptionalParameters.IHandler),
-                HttpMethod = MethodGet,
+                HttpMethod = MethodNames.Get,
                 FullPath = "/api/testMessageWithGetWithPrimaryConstructorWithOptionalParameters",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -542,7 +542,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithComplexGetPayloadHandler),
                 IHandlerType = typeof(TestMessageWithComplexGetPayload.IHandler),
-                HttpMethod = MethodGet,
+                HttpMethod = MethodNames.Get,
                 FullPath = "/api/testMessageWithComplexGetPayload",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -569,7 +569,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageWithCustomSerializedPayloadTypeResponse),
                 HandlerType = typeof(TestMessageWithCustomSerializedPayloadTypeHandler),
                 IHandlerType = typeof(TestMessageWithCustomSerializedPayloadType.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithCustomSerializedPayloadType",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -591,7 +591,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageWithCustomSerializerResponse),
                 HandlerType = typeof(TestMessageWithCustomSerializerHandler),
                 IHandlerType = typeof(TestMessageWithCustomSerializer.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/custom/path/for/serializer/12",
                 Template = "/api/custom/path/for/serializer/{pathPayload:int}",
                 SuccessStatusCode = 200,
@@ -616,7 +616,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageWithCustomJsonTypeInfoResponse),
                 HandlerType = typeof(TestMessageWithCustomJsonTypeInfoHandler),
                 IHandlerType = typeof(TestMessageWithCustomJsonTypeInfo.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithCustomJsonTypeInfo",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -643,7 +643,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithMiddlewareHandler),
                 IHandlerType = typeof(TestMessageWithMiddleware.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithMiddleware",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -665,7 +665,7 @@ public static partial class HttpTestMessages
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithMiddlewareWithoutResponseHandler),
                 IHandlerType = typeof(TestMessageWithMiddlewareWithoutResponse.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithMiddlewareWithoutResponse",
                 SuccessStatusCode = 204,
                 ApiGroupName = null,
@@ -687,7 +687,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse[]),
                 HandlerType = typeof(TestMessageWithArrayResponseHandler),
                 IHandlerType = typeof(TestMessageWithArrayResponse.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithArrayResponse",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -709,7 +709,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(List<TestMessageResponse>),
                 HandlerType = typeof(TestMessageWithListResponseHandler),
                 IHandlerType = typeof(TestMessageWithListResponse.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithListResponse",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -731,7 +731,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(IEnumerable<TestMessageResponse>),
                 HandlerType = typeof(TestMessageWithEnumerableResponseHandler),
                 IHandlerType = typeof(TestMessageWithEnumerableResponse.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithEnumerableResponse",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -753,7 +753,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageOmittedFromApiDescriptionHandler),
                 IHandlerType = typeof(TestMessageOmittedFromApiDescription.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageOmittedFromApiDescription",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -776,7 +776,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithDisabledHandlerHandler),
                 IHandlerType = typeof(TestMessageWithDisabledHandler.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithDisabledHandler",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -799,7 +799,7 @@ public static partial class HttpTestMessages
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithoutResponseWithDisabledHandlerHandler),
                 IHandlerType = typeof(TestMessageWithoutResponseWithDisabledHandler.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithoutResponseWithDisabledHandler",
                 SuccessStatusCode = 204,
                 ApiGroupName = null,
@@ -822,7 +822,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = null,
                 IHandlerType = typeof(TestMessageWithDelegateHandler.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithDelegateHandler",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -845,7 +845,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithCustomConventionsHandler),
                 IHandlerType = typeof(TestMessageWithCustomConventions.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/customApi/testMessageWithCustomConventions",
                 SuccessStatusCode = 201,
                 ApiGroupName = null,
@@ -867,7 +867,7 @@ public static partial class HttpTestMessages
                 ResponseType = typeof(TestMessageForAssemblyScanningResponse),
                 HandlerType = typeof(TestMessageForAssemblyScanningHandler),
                 IHandlerType = typeof(TestMessageForAssemblyScanning.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageForAssemblyScanning",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
@@ -889,7 +889,7 @@ public static partial class HttpTestMessages
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithoutResponseForAssemblyScanningHandler),
                 IHandlerType = typeof(TestMessageWithoutResponseForAssemblyScanning.IHandler),
-                HttpMethod = MethodPost,
+                HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithoutResponseForAssemblyScanning",
                 SuccessStatusCode = 204,
                 ApiGroupName = null,
@@ -1069,7 +1069,7 @@ public static partial class HttpTestMessages
         }
     }
 
-    [HttpMessage<TestMessageResponse>(HttpMethod = MethodDelete)]
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Delete)]
     public sealed partial record TestMessageWithMethod
     {
         public int Payload { get; init; }
@@ -1299,7 +1299,7 @@ public static partial class HttpTestMessages
         }
     }
 
-    [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
     public sealed partial record TestMessageWithGet
     {
         public required int Payload { get; init; }
@@ -1324,7 +1324,7 @@ public static partial class HttpTestMessages
         }
     }
 
-    [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
     public sealed partial record TestMessageWithGetWithoutPayload;
 
     public sealed partial class TestMessageWithGetWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
@@ -1344,7 +1344,7 @@ public static partial class HttpTestMessages
         }
     }
 
-    [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
     public sealed partial record TestMessageWithGetWithOptionalPayload
     {
         public int? Payload { get; init; }
@@ -1369,7 +1369,7 @@ public static partial class HttpTestMessages
         }
     }
 
-    [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
     [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "testing")]
     public sealed partial record TestMessageWithGetWithPrimaryConstructor(int Payload, string Param, int[] IntArray);
 
@@ -1392,7 +1392,7 @@ public static partial class HttpTestMessages
         }
     }
 
-    [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
     [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "testing")]
     public sealed partial record TestMessageWithGetWithPrimaryConstructorWithOptionalParameters(int? Payload = null, string? Param = null);
 
@@ -1415,7 +1415,7 @@ public static partial class HttpTestMessages
         }
     }
 
-    [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
     public sealed partial record TestMessageWithComplexGetPayload
     {
         [Required]

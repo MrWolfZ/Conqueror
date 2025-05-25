@@ -53,7 +53,7 @@ public sealed class MessagingServerApiDescriptionTests
         var responseMediaTypes = messageApiDescription.SupportedResponseTypes.SelectMany(t => t.ApiResponseFormats).Select(f => f.MediaType);
         Assert.That(responseMediaTypes, testCase.ResponseContentType is null ? Is.Empty : Is.EquivalentTo(new[] { testCase.ResponseContentType }));
 
-        if (testCase is { ParameterCount: 1, HttpMethod: MethodPost })
+        if (testCase is { ParameterCount: 1, HttpMethod: MethodNames.Post })
         {
             Assert.That(messageApiDescription.ParameterDescriptions[0].Type, Is.EqualTo(testCase.MessageType));
         }
@@ -120,7 +120,7 @@ public sealed class MessagingServerApiDescriptionTests
         var expectedTags = new[] { testCase.ApiGroupName ?? testCase.Name ?? testCase.MessageType.Name };
         Assert.That(operation.Value.Tags.Select(t => t.Name).ToList(), Is.EqualTo(expectedTags));
 
-        Assert.That(operation.Value.Parameters, Has.Count.EqualTo(testCase.HttpMethod == MethodGet ? testCase.ParameterCount : 0));
+        Assert.That(operation.Value.Parameters, Has.Count.EqualTo(testCase.HttpMethod == MethodNames.Get ? testCase.ParameterCount : 0));
 
         var responseDescriptor = operation.Value.Responses.Single();
         Assert.That(responseDescriptor.Key, Is.EqualTo(testCase.SuccessStatusCode.ToString()));

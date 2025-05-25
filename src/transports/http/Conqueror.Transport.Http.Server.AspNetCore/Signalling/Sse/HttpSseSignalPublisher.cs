@@ -7,7 +7,7 @@ namespace Conqueror.Transport.Http.Server.AspNetCore.Signalling.Sse;
 internal sealed class HttpSseSignalPublisher<TSignal>(HttpSseSignalBroker broker) : IHttpSseSignalPublisher<TSignal>
     where TSignal : class, IHttpSseSignal<TSignal>
 {
-    public string TransportTypeName => ConquerorTransportHttpConstants.ServersSentEventsTransportName;
+    public string TransportTypeName => ServersSentEventsTransportName;
 
     public Task Publish(
         TSignal signal,

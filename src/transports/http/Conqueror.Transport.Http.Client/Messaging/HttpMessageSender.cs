@@ -16,7 +16,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
     private HttpClient? configuredHttpClient;
     private Action<HttpRequestHeaders> configureRequestHeaders = _ => { };
 
-    public string TransportTypeName => ConquerorTransportHttpConstants.TransportName;
+    public string TransportTypeName => TransportName;
 
     public async Task<TResponse> Send(TMessage message,
                                       IServiceProvider serviceProvider,
@@ -96,12 +96,12 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
         if (Activity.Current is null)
         {
-            headers.Add(ConquerorTransportHttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
+            headers.Add(HeaderNames.TraceParent, TracingHelper.CreateTraceParent(traceId: traceId));
         }
 
         if (conquerorContext.EncodeDownstreamContextData() is { } data)
         {
-            headers.Add(ConquerorTransportHttpConstants.ConquerorContextHeaderName, data);
+            headers.Add(HeaderNames.ConquerorContext, data);
         }
 
         configureRequestHeaders(headers);
@@ -109,7 +109,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
     private static void ReadResponseHeaders(ConquerorContext conquerorContext, HttpResponseHeaders headers)
     {
-        if (headers.TryGetValues(ConquerorTransportHttpConstants.ConquerorContextHeaderName, out var values))
+        if (headers.TryGetValues(HeaderNames.ConquerorContext, out var values))
         {
             conquerorContext.DecodeContextData(values);
         }

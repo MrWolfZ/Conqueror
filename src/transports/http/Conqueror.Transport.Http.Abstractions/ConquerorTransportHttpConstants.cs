@@ -11,23 +11,26 @@ public static class ConquerorTransportHttpConstants
 
     public const string ServersSentEventsTransportName = "http-server-sent-events";
 
-    public const string ConquerorContextHeaderName = "x-conqueror-context";
+    public static class MethodNames
+    {
+        public const string Delete = "DELETE";
 
-    public const string TraceParentHeaderName = "traceparent";
+        public const string Get = "GET";
 
-    public const string MethodDelete = "DELETE";
+        public const string Post = "POST";
 
-    public const string MethodGet = "GET";
+        public const string Put = "PUT";
 
-    public const string MethodPost = "POST";
-
-    public const string MethodPut = "PUT";
-
-    public const string MethodPatch = "PATCH";
+        public const string Patch = "PATCH";
+    }
 
     public static class HeaderNames
     {
         public const string ContentType = "Content-Type";
+
+        public const string ConquerorContext = "x-conqueror-context";
+
+        public const string TraceParent = "traceparent";
     }
 
     public static class ContentTypes

@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
-using static Conqueror.ConquerorTransportHttpConstants;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;

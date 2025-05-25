@@ -42,7 +42,7 @@ public sealed partial class MessagingServerContextTests
                 conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
             }
 
-            ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
+            ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(HeaderNames.ConquerorContext, conquerorContext.EncodeDownstreamContextData());
         }
 
         var response = await host.HttpClient.SendAsync(request);
@@ -50,13 +50,13 @@ public sealed partial class MessagingServerContextTests
         if (!testCase.HandlerIsEnabled)
         {
             await response.AssertStatusCode(StatusCodes.Status404NotFound);
-            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            Assert.That(response.Headers.TryGetValues(HeaderNames.ConquerorContext, out _), Is.False);
             return;
         }
 
         await response.AssertSuccessStatusCode();
 
-        var exists = response.Headers.TryGetValues(ConquerorContextHeaderName, out var values);
+        var exists = response.Headers.TryGetValues(HeaderNames.ConquerorContext, out var values);
 
         Assert.That(exists, Is.EqualTo(hasUpstream || hasBidirectional));
 
@@ -125,15 +125,15 @@ public sealed partial class MessagingServerContextTests
 
         using var request = ConstructHttpRequest(testCase);
 
-        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(ConquerorContextHeaderName, encodedData1);
-        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(ConquerorContextHeaderName, encodedData2);
+        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(HeaderNames.ConquerorContext, encodedData1);
+        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(HeaderNames.ConquerorContext, encodedData2);
 
         var response = await host.HttpClient.SendAsync(request);
 
         if (!testCase.HandlerIsEnabled)
         {
             await response.AssertStatusCode(StatusCodes.Status404NotFound);
-            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            Assert.That(response.Headers.TryGetValues(HeaderNames.ConquerorContext, out _), Is.False);
             return;
         }
 
@@ -162,11 +162,11 @@ public sealed partial class MessagingServerContextTests
 
         using var request = ConstructHttpRequest(testCase);
 
-        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(ConquerorContextHeaderName, "foo=bar");
+        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(HeaderNames.ConquerorContext, "foo=bar");
 
         var response = await host.HttpClient.SendAsync(request);
         await response.AssertStatusCode(testCase.HandlerIsEnabled ? StatusCodes.Status400BadRequest : StatusCodes.Status404NotFound);
-        Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+        Assert.That(response.Headers.TryGetValues(HeaderNames.ConquerorContext, out _), Is.False);
     }
 
     [Test]
@@ -188,14 +188,14 @@ public sealed partial class MessagingServerContextTests
 
         using var request = ConstructHttpRequest(testCase);
 
-        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
+        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(HeaderNames.ConquerorContext, conquerorContext.EncodeDownstreamContextData());
 
         var response = await host.HttpClient.SendAsync(request);
 
         if (!testCase.HandlerIsEnabled)
         {
             await response.AssertStatusCode(StatusCodes.Status404NotFound);
-            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            Assert.That(response.Headers.TryGetValues(HeaderNames.ConquerorContext, out _), Is.False);
             return;
         }
 
@@ -225,7 +225,7 @@ public sealed partial class MessagingServerContextTests
         if (!testCase.HandlerIsEnabled)
         {
             await response.AssertStatusCode(StatusCodes.Status404NotFound);
-            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            Assert.That(response.Headers.TryGetValues(HeaderNames.ConquerorContext, out _), Is.False);
             return;
         }
 
@@ -260,14 +260,14 @@ public sealed partial class MessagingServerContextTests
         using var request = ConstructHttpRequest(testCase);
 
         const string traceId = "80e1a2ed08e019fc1110464cfa66635c";
-        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(TraceParentHeaderName, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
+        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await host.HttpClient.SendAsync(request);
 
         if (!testCase.HandlerIsEnabled)
         {
             await response.AssertStatusCode(StatusCodes.Status404NotFound);
-            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            Assert.That(response.Headers.TryGetValues(HeaderNames.ConquerorContext, out _), Is.False);
             return;
         }
 
@@ -303,14 +303,14 @@ public sealed partial class MessagingServerContextTests
 
         using var request = ConstructHttpRequest(testCase);
 
-        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(TraceParentHeaderName, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
+        ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await host.HttpClient.SendAsync(request);
 
         if (!testCase.HandlerIsEnabled)
         {
             await response.AssertStatusCode(StatusCodes.Status404NotFound);
-            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            Assert.That(response.Headers.TryGetValues(HeaderNames.ConquerorContext, out _), Is.False);
             return;
         }
 
@@ -342,7 +342,7 @@ public sealed partial class MessagingServerContextTests
 
             var content = testCase.Payload is not null ? CreateJsonStringContent(testCase.Payload) : new(string.Empty);
 
-            if (testCase.HttpMethod != MethodGet)
+            if (testCase.HttpMethod != MethodNames.Get)
             {
                 request.Content = content;
             }

@@ -32,6 +32,6 @@ internal static class TracingHelper
             return;
         }
 
-        headers.Add(ConquerorTransportHttpConstants.TraceParentHeaderName, id);
+        headers.Add(HeaderNames.TraceParent, id);
     }
 }
