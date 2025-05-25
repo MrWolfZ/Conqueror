@@ -10,6 +10,8 @@ namespace Conqueror.Transport.Http.Tests;
 
 internal sealed class HttpTransportTestHost : IAsyncDisposable
 {
+    private static readonly bool IsRunningInGithubActionField = Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
+
     private HttpTransportTestHost()
     {
     }
@@ -25,12 +27,14 @@ internal sealed class HttpTransportTestHost : IAsyncDisposable
 
     private CancellationTokenSource TimeoutCancellationTokenSource { get; } = new();
 
+    public bool IsRunningInGithubAction => IsRunningInGithubActionField;
+
     public static async Task<HttpTransportTestHost> Create(
         Action<IServiceCollection>? configureServices = null,
         Action<IApplicationBuilder>? configure = null,
         TimeSpan? testTimeout = null)
     {
-        var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddConsole()
+        var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddTestLogger()
                                                                                .SetMinimumLevel(LogLevel.Trace)
 
                                                                                // set some very verbose loggers to info to reduce noise in the logs
@@ -59,13 +63,13 @@ internal sealed class HttpTransportTestHost : IAsyncDisposable
 
         var assertionTimeout = Debugger.IsAttached
             ? TimeSpan.FromMinutes(1)
-            : TimeSpan.FromMilliseconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 200 : 10_000);
+            : TimeSpan.FromMilliseconds(IsRunningInGithubActionField ? 10_000 : 200);
 
         var testHost = new HttpTransportTestHost
         {
             HttpClient = client,
             Host = host,
-            TestTimeout = testTimeout ?? TimeSpan.FromSeconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 2 : 30),
+            TestTimeout = testTimeout ?? TimeSpan.FromSeconds(IsRunningInGithubActionField ? 30 : 2),
             AssertionTimeoutInMs = (int)assertionTimeout.TotalMilliseconds,
         };
 

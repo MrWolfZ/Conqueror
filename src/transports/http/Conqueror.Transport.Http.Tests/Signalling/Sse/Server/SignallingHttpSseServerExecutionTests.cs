@@ -63,7 +63,7 @@ public sealed partial class SignallingHttpSseServerExecutionTests
         await testCase.PublishSignals(host.Resolve<ISignalPublishers>());
 
         // give the client time to receive the events
-        await Task.Delay(TimeSpan.FromMilliseconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 100 : 10_000), host.TestTimeoutToken);
+        await Task.Delay(TimeSpan.FromMilliseconds(host.IsRunningInGithubAction ? 10_000 : 100), host.TestTimeoutToken);
 
         await cts.CancelAsync();
 

@@ -96,7 +96,7 @@ public sealed class SignallingHttpSseServerContextTests
         var parser = SseParser.Create(responseStream);
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
-        cts.CancelAfter(TimeSpan.FromMilliseconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 20 : 10_000));
+        cts.CancelAfter(TimeSpan.FromMilliseconds(host.IsRunningInGithubAction ? 10_000 : 20));
 
         var result = new List<SseItem<string>>();
 
