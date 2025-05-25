@@ -25,7 +25,19 @@ internal sealed class SignalPublisherFactory<TSignal>
         this.asyncPublisherFactory = asyncPublisherFactory;
     }
 
-    public ValueTask<ISignalPublisher<TSignal>> Create(IServiceProvider serviceProvider, ConquerorContext conquerorContext)
+    public ISignalPublisher<TSignal>? CreateSync(IServiceProvider serviceProvider, ConquerorContext conquerorContext)
+    {
+        if (publisher is not null)
+        {
+            return publisher;
+        }
+
+        var publisherBuilder = new SignalPublisherBuilder<TSignal>(serviceProvider, conquerorContext);
+
+        return syncPublisherFactory?.Invoke(publisherBuilder);
+    }
+
+    public ValueTask<ISignalPublisher<TSignal>> CreateAsync(IServiceProvider serviceProvider, ConquerorContext conquerorContext)
     {
         if (publisher is not null)
         {

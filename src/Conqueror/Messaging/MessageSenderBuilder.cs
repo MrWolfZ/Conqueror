@@ -2,7 +2,7 @@ using System;
 
 namespace Conqueror.Messaging;
 
-internal sealed class MessageSenderBuilder<TMessage, TResponse>(
+internal readonly struct MessageSenderBuilder<TMessage, TResponse>(
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext)
     : IMessageSenderBuilder<TMessage, TResponse>

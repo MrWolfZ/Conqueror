@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Signalling;
 
@@ -22,6 +23,8 @@ internal sealed class SignalHandlerInvoker<TSignal>(
 
         var dispatcher = new SignalDispatcher<TSignal>(
             serviceProvider,
+            serviceProvider.GetRequiredService<IConquerorContextAccessor>(),
+            serviceProvider.GetRequiredService<ISignalIdFactory>(),
             new(new Publisher(handlerFn, transportTypeName)),
             configurePipeline,
             SignalTransportRole.Receiver,

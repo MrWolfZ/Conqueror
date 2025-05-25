@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,30 +10,45 @@ internal sealed class SignalPipelineRunner<TSignal>(
     List<ISignalMiddleware<TSignal>> middlewares)
     where TSignal : class, ISignal<TSignal>
 {
-    private readonly List<ISignalMiddleware<TSignal>> middlewares = middlewares.AsEnumerable().Reverse().ToList();
-
-    public Task Execute(IServiceProvider serviceProvider,
-                        TSignal initialSignal,
-                        ISignalPublisher<TSignal> publisher,
-                        SignalTransportType transportType,
-                        CancellationToken cancellationToken)
+    public Task Execute(
+        IServiceProvider serviceProvider,
+        TSignal initialSignal,
+        ISignalPublisher<TSignal> publisher,
+        SignalTransportType transportType,
+        CancellationToken cancellationToken)
     {
-        SignalMiddlewareNext<TSignal> next = (signal, token) => publisher.Publish(signal, serviceProvider, conquerorContext, token);
-
-        foreach (var middleware in middlewares)
+        if (middlewares.Count == 0)
         {
-            var nextToCall = next;
-            next = (signal, token) =>
-            {
-                var ctx = new DefaultSignalMiddlewareContext<TSignal>(signal,
-                                                                      nextToCall,
-                                                                      serviceProvider,
-                                                                      conquerorContext,
-                                                                      transportType,
-                                                                      token);
+            return publisher.Publish(
+                initialSignal,
+                serviceProvider,
+                conquerorContext,
+                cancellationToken);
+        }
 
-                return middleware.Execute(ctx);
-            };
+        Task Publish(TSignal message, CancellationToken token) => publisher.Publish(
+            message,
+            serviceProvider,
+            conquerorContext,
+            token);
+
+        SignalMiddlewareNext<TSignal> next = Publish;
+
+        for (var i = middlewares.Count - 1; i >= 0; i -= 1)
+        {
+            var middleware = middlewares[i];
+            var nextToCall = next;
+            next = Next;
+
+            Task Next(TSignal message, CancellationToken token)
+                => middleware.Execute(
+                    new DefaultSignalMiddlewareContext<TSignal>(
+                        message,
+                        nextToCall,
+                        serviceProvider,
+                        conquerorContext,
+                        transportType,
+                        token));
         }
 
         return next(initialSignal, cancellationToken);

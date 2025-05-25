@@ -2,7 +2,7 @@ using System;
 
 namespace Conqueror.Signalling;
 
-internal sealed class SignalPublisherBuilder<TSignal>(
+internal readonly struct SignalPublisherBuilder<TSignal>(
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext)
     : ISignalPublisherBuilder<TSignal>

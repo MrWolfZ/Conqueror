@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Messaging;
 
@@ -12,20 +13,21 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse>(
     : IMessageHandlerInvoker
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    public async Task<TR> Invoke<TM, TR>(TM message, IServiceProvider serviceProvider, string transportTypeName, CancellationToken cancellationToken)
+    public Task<TR> Invoke<TM, TR>(TM message, IServiceProvider serviceProvider, string transportTypeName, CancellationToken cancellationToken)
         where TM : class, IMessage<TM, TR>
     {
         Debug.Assert(typeof(TM) == typeof(TMessage), $"the signal type was expected to be {typeof(TMessage)}, but was {typeof(TM)} instead.");
         Debug.Assert(typeof(TR) == typeof(TResponse), $"the signal type was expected to be {typeof(TResponse)}, but was {typeof(TR)} instead.");
 
         var dispatcher = new MessageDispatcher<TMessage, TResponse>(serviceProvider,
+                                                                    serviceProvider.GetRequiredService<IConquerorContextAccessor>(),
+                                                                    serviceProvider.GetRequiredService<IMessageIdFactory>(),
                                                                     new(new Sender(handlerFn, transportTypeName)),
                                                                     configurePipeline,
                                                                     MessageTransportRole.Receiver,
                                                                     handlerType);
 
-        var response = await dispatcher.Dispatch((message as TMessage)!, cancellationToken).ConfigureAwait(false);
-        return (TR)(object)response!;
+        return (Task<TR>)(object)dispatcher.Dispatch((message as TMessage)!, cancellationToken);
     }
 
     private sealed class Sender(MessageHandlerFn<TMessage, TResponse> handlerFn, string transportTypeName) : IMessageSender<TMessage, TResponse>

@@ -2,16 +2,27 @@
 
 namespace Conqueror.Messaging;
 
-internal sealed class MessageSenders(IServiceProvider serviceProvider) : IMessageSenders
+internal sealed class MessageSenders(
+    IServiceProvider serviceProvider,
+    IConquerorContextAccessor conquerorContextAccessor,
+    IMessageIdFactory messageIdFactory)
+    : IMessageSenders
 {
     public TIHandler For<TMessage, TResponse, TIHandler>(MessageTypes<TMessage, TResponse, TIHandler> messageTypes)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return TMessage.CoreTypesInjector.Create(new Injectable<TIHandler>(serviceProvider));
+        return TMessage.CoreTypesInjector.Create(
+            new Injectable<TIHandler>(
+                serviceProvider,
+                conquerorContextAccessor,
+                messageIdFactory));
     }
 
-    private sealed class Injectable<TIHandlerParam>(IServiceProvider serviceProvider) : ICoreMessageHandlerTypesInjectable<TIHandlerParam>
+    private readonly struct Injectable<TIHandlerParam>(
+        IServiceProvider serviceProvider,
+        IConquerorContextAccessor conquerorContextAccessor,
+        IMessageIdFactory messageIdFactory) : ICoreMessageHandlerTypesInjectable<TIHandlerParam>
         where TIHandlerParam : class
     {
         TIHandlerParam ICoreMessageHandlerTypesInjectable<TIHandlerParam>
@@ -19,7 +30,9 @@ internal sealed class MessageSenders(IServiceProvider serviceProvider) : IMessag
         {
             var dispatcher = new MessageDispatcher<TMessage, TResponse>(
                 serviceProvider,
-                new(static b => b.UseInProcess()),
+                conquerorContextAccessor,
+                messageIdFactory,
+                MessageSenderFactory<TMessage, TResponse>.InProcess,
                 null,
                 MessageTransportRole.Sender,
                 null);

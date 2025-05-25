@@ -8,21 +8,16 @@ namespace Conqueror.Messaging;
 internal sealed class MessageHandlerRegistry(IEnumerable<MessageHandlerRegistration> registrations) : IMessageHandlerRegistry
 {
     private readonly ConcurrentDictionary<Type, List<IMessageReceiverHandlerInvoker>> invokersByInjectorType = new();
+    private readonly ConcurrentDictionary<(Type MessageType, Type InjectorType), IMessageReceiverHandlerInvoker?> invokerByMessageAndInjectorType = new();
     private readonly Dictionary<Type, MessageHandlerRegistration> registrationByMessageType = registrations.ToDictionary(r => r.MessageType);
 
     public IMessageReceiverHandlerInvoker<TTypesInjector>? GetReceiverHandlerInvoker<TMessage, TResponse, TTypesInjector>()
         where TMessage : class, IMessage<TMessage, TResponse>
         where TTypesInjector : class, IMessageHandlerTypesInjector
     {
-        var registration = registrationByMessageType.GetValueOrDefault(typeof(TMessage));
-
-        if (registration is null)
-        {
-            return null;
-        }
-
-        var typesInjector = registration.TypeInjectors.OfType<TTypesInjector>().FirstOrDefault(i => i.MessageType == registration.MessageType);
-        return typesInjector is null ? null : new MessageReceiverHandlerInvoker<TTypesInjector>(registration, typesInjector);
+        return invokerByMessageAndInjectorType.GetOrAdd((typeof(TMessage), typeof(TTypesInjector)),
+                                                        GetInvokerForMessageAndInjectorType<TTypesInjector>)
+            as IMessageReceiverHandlerInvoker<TTypesInjector>;
     }
 
     public IReadOnlyCollection<IMessageReceiverHandlerInvoker<TTypesInjector>> GetReceiverHandlerInvokers<TTypesInjector>()
@@ -43,6 +38,21 @@ internal sealed class MessageHandlerRegistry(IEnumerable<MessageHandlerRegistrat
                        select (IMessageReceiverHandlerInvoker)new MessageReceiverHandlerInvoker<TTypesInjector>(r, typesInjector);
 
         return invokers.ToList();
+    }
+
+    private MessageReceiverHandlerInvoker<TTypesInjector>? GetInvokerForMessageAndInjectorType<TTypesInjector>(
+        (Type MessageType, Type InjectorType) tuple)
+        where TTypesInjector : class, IMessageHandlerTypesInjector
+    {
+        var registration = registrationByMessageType.GetValueOrDefault(tuple.MessageType);
+
+        if (registration is null)
+        {
+            return null;
+        }
+
+        var typesInjector = registration.TypeInjectors.OfType<TTypesInjector>().FirstOrDefault(i => i.MessageType == registration.MessageType);
+        return typesInjector is null ? null : new MessageReceiverHandlerInvoker<TTypesInjector>(registration, typesInjector);
     }
 }
 

@@ -52,7 +52,7 @@ public static class InProcessMessageSenderBuilderExtensions
         return (new InProcessMessageSender<TMessage, TResponse>(invoker), false);
     }
 
-    private sealed class Injectable(IServiceProvider serviceProvider) : ICoreMessageHandlerTypesInjectable<bool>
+    private readonly struct Injectable(IServiceProvider serviceProvider) : ICoreMessageHandlerTypesInjectable<bool>
     {
         bool ICoreMessageHandlerTypesInjectable<bool>.WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>()
         {
