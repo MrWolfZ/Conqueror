@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -134,11 +136,13 @@ public static class ConquerorSignallingServiceCollectionExtensions
             throw new InvalidOperationException($"handler type '{typeof(THandler)}' must not be an interface or abstract class");
         }
 
-        foreach (var injector in THandler.GetTypeInjectors().OfType<ICoreSignalHandlerTypesInjector>())
+        var typesInjectors = THandler.GetTypeInjectors().ToList();
+        foreach (var injector in typesInjectors.OfType<ICoreSignalHandlerTypesInjector>())
         {
-            injector.Create(new SignalHandlerRegistrationTypeInjectable(services,
+            injector.Inject(new SignalHandlerRegistrationTypeInjectable(services,
                                                                         serviceDescriptor,
-                                                                        shouldOverwriteRegistration));
+                                                                        shouldOverwriteRegistration),
+                            new(typeof(THandler), typesInjectors, injector.ConfigurePipeline));
         }
 
         return services;
@@ -177,24 +181,34 @@ public static class ConquerorSignallingServiceCollectionExtensions
         }
     }
 
+    private readonly record struct SignalHandlerRegistrationTypeInjectableArg(
+        Type HandlerType,
+        List<ISignalHandlerTypesInjector> TypeInjectors,
+        Delegate? ConfigurePipeline);
+
     private sealed class SignalHandlerRegistrationTypeInjectable(
         IServiceCollection services,
         ServiceDescriptor serviceDescriptor,
         bool shouldOverwriteRegistration)
-        : ICoreSignalHandlerTypesInjectable<IServiceCollection>
+        : ICoreSignalHandlerTypesInjectable<SignalHandlerRegistrationTypeInjectableArg, IServiceCollection>
     {
-        IServiceCollection ICoreSignalHandlerTypesInjectable<IServiceCollection>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
+        IServiceCollection ICoreSignalHandlerTypesInjectable<SignalHandlerRegistrationTypeInjectableArg, IServiceCollection>
+            .WithInjectedTypes<TSignal, TIHandler, TProxy>(SignalHandlerRegistrationTypeInjectableArg arg)
         {
             var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is SignalHandlerRegistration r
                                                                      && r.SignalType == typeof(TSignal)
-                                                                     && r.HandlerType == typeof(THandler));
+                                                                     && r.HandlerType == arg.HandlerType);
+
+            var configurePipeline = arg.ConfigurePipeline as Action<ISignalPipeline<TSignal>>;
+
+            Debug.Assert(configurePipeline is not null, "the handler registration injectable should only be called from the types injector of a concrete handler type");
 
             var invoker = new SignalHandlerInvoker<TSignal>(
-                THandler.ConfigurePipeline,
-                static (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct),
-                typeof(THandler));
+                configurePipeline,
+                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(arg.HandlerType), n, ct),
+                arg.HandlerType);
 
-            var registration = new SignalHandlerRegistration(typeof(TSignal), typeof(THandler), null, invoker, THandler.GetTypeInjectors().ToList());
+            var registration = new SignalHandlerRegistration(typeof(TSignal), arg.HandlerType, null, invoker, arg.TypeInjectors);
 
             if (existingRegistration is not null)
             {

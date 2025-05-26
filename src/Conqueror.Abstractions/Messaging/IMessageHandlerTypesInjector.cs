@@ -13,48 +13,62 @@ public interface IMessageHandlerTypesInjector
     Type MessageType { get; }
 }
 
-public interface ICoreMessageHandlerTypesInjector : IMessageHandlerTypesInjector
+internal interface ICoreMessageHandlerTypesInjector : IMessageHandlerTypesInjector
 {
-    TResult Create<TResult>(ICoreMessageHandlerTypesInjectable<TResult> injectable);
+    Delegate? ConfigurePipeline { get; }
+
+    void ConfigureInProcessReceiver(IInProcessMessageReceiver receiver);
+
+    /// <summary>
+    ///     Helper method to be able to access the message types as generic parameters while only
+    ///     having a generic reference to the message or handler type. This allows bypassing reflection.
+    /// </summary>
+    /// <param name="injectable">The injectable that should be called with the generic type parameters</param>
+    /// <param name="arg">The argument to pass to the injectable</param>
+    /// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
+    /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
+    /// <returns>The result of calling the injectable</returns>
+    TResult Inject<TArg, TResult>(ICoreMessageHandlerTypesInjectable<TArg, TResult> injectable, TArg arg);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler> : ICoreMessageHandlerTypesInjector
+internal sealed class CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(
+    Delegate? configurePipeline,
+    Action<IInProcessMessageReceiver>? configureInProcessReceiver)
+    : ICoreMessageHandlerTypesInjector
     where TMessage : class, IMessage<TMessage, TResponse>
     where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>
     where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
     where TIPipeline : class, IMessagePipeline<TMessage, TResponse>
     where TPipelineProxy : MessagePipelineProxy<TMessage, TResponse>, TIPipeline, new()
-    where THandler : class, TIHandler
 {
-    public static readonly CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler> Default = new();
-
     public Type MessageType { get; } = typeof(TMessage);
 
-    /// <summary>
-    ///     Helper method to be able to access the message types as generic parameters while only
-    ///     having a generic reference to the message type. This allows bypassing reflection.
-    /// </summary>
-    /// <param name="injectable">The injectable that should be called with the generic type parameters</param>
-    /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
-    /// <returns>The result of calling the injectable</returns>
-    public TResult Create<TResult>(ICoreMessageHandlerTypesInjectable<TResult> injectable)
-        => injectable.WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>();
+    public Delegate? ConfigurePipeline { get; } = configurePipeline;
+
+    public void ConfigureInProcessReceiver(IInProcessMessageReceiver receiver)
+    {
+        // will be null for delegate handlers
+        configureInProcessReceiver?.Invoke(receiver);
+    }
+
+    public TResult Inject<TArg, TResult>(ICoreMessageHandlerTypesInjectable<TArg, TResult> injectable, TArg arg)
+        => injectable.WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(arg);
 }
 
 /// <summary>
 ///     Helper interface to be able to access the message types as generic parameters while only
 ///     having a generic reference to a message handler type. This allows bypassing reflection.
 /// </summary>
+/// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface ICoreMessageHandlerTypesInjectable<out TResult>
+internal interface ICoreMessageHandlerTypesInjectable<in TArg, out TResult>
 {
-    TResult WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>()
+    TResult WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(TArg arg)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>
         where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
         where TIPipeline : class, IMessagePipeline<TMessage, TResponse>
-        where TPipelineProxy : MessagePipelineProxy<TMessage, TResponse>, TIPipeline, new()
-        where THandler : class, TIHandler;
+        where TPipelineProxy : MessagePipelineProxy<TMessage, TResponse>, TIPipeline, new();
 }

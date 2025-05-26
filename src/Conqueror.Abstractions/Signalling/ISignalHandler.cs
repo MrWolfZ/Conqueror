@@ -41,8 +41,7 @@ public interface ISignalHandler<TSignal, TIHandler> : ISignalHandler
 {
     static virtual SignalTypes<TSignal, TIHandler> SignalTypes { get; } = new();
 
-    static virtual Task Invoke(TIHandler handler, TSignal signal, CancellationToken cancellationToken)
-        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler interface type");
+    static abstract Task Invoke(TIHandler handler, TSignal signal, CancellationToken cancellationToken);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -53,9 +52,16 @@ public interface ISignalHandler<TSignal, TIHandler, TProxy> : ISignalHandler<TSi
 {
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    static ISignalHandlerTypesInjector CreateCoreTypesInjector()
+        => new CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy>(null, null);
+
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     static ISignalHandlerTypesInjector CreateCoreTypesInjector<THandler>()
         where THandler : class, TIHandler
-        => CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy, THandler>.Default;
+        => new CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy>(
+            THandler.ConfigurePipeline<TSignal>,
+            THandler.ConfigureInProcessReceiver);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -81,6 +87,9 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
         => new TProxy { Dispatcher = Dispatcher.WithPublisher(configureTransport) };
 
     static IEnumerable<ISignalHandlerTypesInjector> ISignalHandler.GetTypeInjectors()
+        => throw new NotSupportedException("this method should never be called on the proxy");
+
+    static Task ISignalHandler<TSignal, TIHandler>.Invoke(TIHandler handler, TSignal signal, CancellationToken cancellationToken)
         => throw new NotSupportedException("this method should never be called on the proxy");
 }
 

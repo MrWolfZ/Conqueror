@@ -27,8 +27,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.PrivateNestedWith
             public static global::Conqueror.MessageTypes<TestMessage, global::Conqueror.UnitMessageResponse, IHandler> T => new();
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessage, global::Conqueror.UnitMessageResponse>.CoreTypesInjector
-                => global::Conqueror.CoreMessageHandlerTypesInjector<TestMessage, global::Conqueror.UnitMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
+            static global::Conqueror.IMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessage, global::Conqueror.UnitMessageResponse>.CoreTypesInjector { get; } = IHandler.CreateCoreTypesInjector();
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.UnitMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>

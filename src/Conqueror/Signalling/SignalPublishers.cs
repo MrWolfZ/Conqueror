@@ -8,36 +8,41 @@ internal sealed class SignalPublishers(
     ISignalIdFactory signalIdFactory)
     : ISignalPublishers
 {
+    private static readonly Injectable HandlerCreationInjectable = new();
+
     public TIHandler For<TSignal, TIHandler>(SignalTypes<TSignal, TIHandler> signalTypes)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return TSignal.CoreTypesInjector.Create(new Injectable<TIHandler>(serviceProvider, conquerorContextAccessor, signalIdFactory));
+        return ((ICoreSignalHandlerTypesInjector)TSignal.CoreTypesInjector).Inject(
+            HandlerCreationInjectable,
+            new(serviceProvider,
+                conquerorContextAccessor,
+                signalIdFactory)) as TIHandler ?? throw new InvalidOperationException("could not create handler proxy");
     }
 
-    private readonly struct Injectable<TIHandlerParam>(
-        IServiceProvider serviceProvider,
-        IConquerorContextAccessor conquerorContextAccessor,
-        ISignalIdFactory signalIdFactory) : ICoreSignalHandlerTypesInjectable<TIHandlerParam>
-        where TIHandlerParam : class
+    private readonly record struct InjectableArg(
+        IServiceProvider ServiceProvider,
+        IConquerorContextAccessor ConquerorContextAccessor,
+        ISignalIdFactory SignalIdFactory);
+
+    private sealed class Injectable : ICoreSignalHandlerTypesInjectable<InjectableArg, object>
     {
-        TIHandlerParam ICoreSignalHandlerTypesInjectable<TIHandlerParam>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
+        object ICoreSignalHandlerTypesInjectable<InjectableArg, object>.WithInjectedTypes<TSignal, TIHandler, TProxy>(InjectableArg arg)
         {
             var dispatcher = new SignalDispatcher<TSignal>(
-                serviceProvider,
-                conquerorContextAccessor,
-                signalIdFactory,
+                arg.ServiceProvider,
+                arg.ConquerorContextAccessor,
+                arg.SignalIdFactory,
                 new(static b => b.UseInProcessWithSequentialBroadcastingStrategy()),
                 null,
                 SignalTransportRole.Publisher,
                 null);
 
-            var proxy = new TProxy
+            return new TProxy
             {
                 Dispatcher = dispatcher,
             };
-
-            return proxy as TIHandlerParam ?? throw new InvalidOperationException("could not create handler proxy");
         }
     }
 }

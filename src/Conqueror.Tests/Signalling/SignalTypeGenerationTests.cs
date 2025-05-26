@@ -35,8 +35,7 @@ public sealed partial class SignalTypeGenerationTests
     {
         public static SignalTypes<TestSignal, IHandler> T => new();
 
-        static ICoreSignalHandlerTypesInjector ISignal<TestSignal>.CoreTypesInjector
-            => CoreSignalHandlerTypesInjector<TestSignal, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;
+        static ISignalHandlerTypesInjector ISignal<TestSignal>.CoreTypesInjector { get; } = IHandler.CreateCoreTypesInjector();
 
         [SuppressMessage("ReSharper", "PartialTypeWithSinglePart", Justification = "emulating generator output")]
         public partial interface IHandler : ISignalHandler<TestSignal, IHandler, IHandler.Proxy>
@@ -67,8 +66,7 @@ public sealed partial class SignalTypeGenerationTests
     {
         public static SignalTypes<TestSignal2, IHandler> T => new();
 
-        static ICoreSignalHandlerTypesInjector ISignal<TestSignal2>.CoreTypesInjector
-            => CoreSignalHandlerTypesInjector<TestSignal2, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;
+        static ISignalHandlerTypesInjector ISignal<TestSignal2>.CoreTypesInjector { get; } = IHandler.CreateCoreTypesInjector();
 
         [SuppressMessage("ReSharper", "PartialTypeWithSinglePart", Justification = "emulating generator output")]
         public partial interface IHandler : ISignalHandler<TestSignal2, IHandler, IHandler.Proxy>
@@ -96,12 +94,12 @@ public sealed partial class SignalTypeGenerationTests
 
     // generated
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "testing")]
+    [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "testing")]
     public sealed partial record GenericTestSignal<TPayload> : ISignal<GenericTestSignal<TPayload>>
     {
         public static SignalTypes<GenericTestSignal<TPayload>, IHandler> T => new();
 
-        static ICoreSignalHandlerTypesInjector ISignal<GenericTestSignal<TPayload>>.CoreTypesInjector
-            => CoreSignalHandlerTypesInjector<GenericTestSignal<TPayload>, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;
+        static ISignalHandlerTypesInjector ISignal<GenericTestSignal<TPayload>>.CoreTypesInjector { get; } = IHandler.CreateCoreTypesInjector();
 
         [SuppressMessage("ReSharper", "PartialTypeWithSinglePart", Justification = "emulating generator output")]
         public partial interface IHandler : ISignalHandler<GenericTestSignal<TPayload>, IHandler, IHandler.Proxy>

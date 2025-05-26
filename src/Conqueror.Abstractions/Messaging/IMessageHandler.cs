@@ -35,8 +35,7 @@ public interface IMessageHandler<TMessage, TResponse, TIHandler> : IMessageHandl
 {
     static virtual MessageTypes<TMessage, TResponse, TIHandler> MessageTypes { get; } = new();
 
-    static virtual Task<TResponse> Invoke(TIHandler handler, TMessage message, CancellationToken cancellationToken)
-        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler interface type");
+    static abstract Task<TResponse> Invoke(TIHandler handler, TMessage message, CancellationToken cancellationToken);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -55,9 +54,16 @@ public interface IMessageHandler<TMessage, TResponse, TIHandler, TProxy, in TIPi
 
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    static IMessageHandlerTypesInjector CreateCoreTypesInjector()
+        => new CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(null, null);
+
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     static IMessageHandlerTypesInjector CreateCoreTypesInjector<THandler>()
         where THandler : class, TIHandler
-        => CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>.Default;
+        => new CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(
+            THandler.ConfigurePipeline,
+            THandler.ConfigureInProcessReceiver);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -83,6 +89,9 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy
         => new TProxy { Dispatcher = Dispatcher.WithSender(configureTransport) };
 
     static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors()
+        => throw new NotSupportedException("this method should never be called on the proxy");
+
+    static Task<TResponse> IMessageHandler<TMessage, TResponse, TIHandler>.Invoke(TIHandler handler, TMessage message, CancellationToken cancellationToken)
         => throw new NotSupportedException("this method should never be called on the proxy");
 }
 

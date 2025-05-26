@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -174,11 +176,13 @@ public static class ConquerorMessagingServiceCollectionExtensions
             throw new InvalidOperationException($"handler type '{typeof(THandler)}' must not be an interface or abstract class");
         }
 
-        foreach (var injector in THandler.GetTypeInjectors().OfType<ICoreMessageHandlerTypesInjector>())
+        var typesInjectors = THandler.GetTypeInjectors().ToList();
+        foreach (var injector in typesInjectors.OfType<ICoreMessageHandlerTypesInjector>())
         {
-            injector.Create(new MessageHandlerRegistrationTypeInjectable(services,
+            injector.Inject(new MessageHandlerRegistrationTypeInjectable(services,
                                                                          serviceDescriptor,
-                                                                         shouldOverwriteRegistration));
+                                                                         shouldOverwriteRegistration),
+                            new(typeof(THandler), typesInjectors, injector.ConfigurePipeline));
         }
 
         return services;
@@ -227,21 +231,30 @@ public static class ConquerorMessagingServiceCollectionExtensions
         }
     }
 
+    private readonly record struct MessageHandlerRegistrationTypeInjectableArg(
+        Type HandlerType,
+        List<IMessageHandlerTypesInjector> TypeInjectors,
+        Delegate? ConfigurePipeline);
+
     private sealed class MessageHandlerRegistrationTypeInjectable(
         IServiceCollection services,
         ServiceDescriptor serviceDescriptor,
         bool shouldOverwriteRegistration
-    ) : ICoreMessageHandlerTypesInjectable<IServiceCollection>
+    ) : ICoreMessageHandlerTypesInjectable<MessageHandlerRegistrationTypeInjectableArg, IServiceCollection>
     {
-        IServiceCollection ICoreMessageHandlerTypesInjectable<IServiceCollection>
-            .WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>()
+        IServiceCollection ICoreMessageHandlerTypesInjectable<MessageHandlerRegistrationTypeInjectableArg, IServiceCollection>
+            .WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(MessageHandlerRegistrationTypeInjectableArg arg)
         {
-            var invoker = new MessageHandlerInvoker<TMessage, TResponse>(
-                static p => THandler.ConfigurePipeline(new TPipelineProxy { Wrapped = p }),
-                static (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct),
-                typeof(THandler));
+            var configurePipeline = arg.ConfigurePipeline as Action<TIPipeline>;
 
-            var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), typeof(THandler), null, invoker, THandler.GetTypeInjectors().ToList());
+            Debug.Assert(configurePipeline is not null, "the handler registration injectable should only be called from the types injector of a concrete handler type");
+
+            var invoker = new MessageHandlerInvoker<TMessage, TResponse>(
+                p => configurePipeline(new TPipelineProxy { Wrapped = p }),
+                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(arg.HandlerType), n, ct),
+                arg.HandlerType);
+
+            var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), arg.HandlerType, null, invoker, arg.TypeInjectors);
 
             var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is MessageHandlerRegistration r
                                                                      && r.MessageType == typeof(TMessage));

@@ -110,13 +110,7 @@ public static class SignalTypeSources
         return sb.AppendLine()
                  .AppendSignalTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"static global::Conqueror.ICoreSignalHandlerTypesInjector global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.CoreTypesInjector").AppendLineWithIndentation(indentation)
-                 .AppendSingleIndent()
-
-                 // We are cheating a bit here by using handler proxy as the type parameter for the handler type.
-                 // This is because this property here is only used to generate publishers with the correct interface,
-                 // and we don't need the concrete handler type there.
-                 .Append($"=> global::Conqueror.CoreSignalHandlerTypesInjector<{signalTypeDescriptor.Name}, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;").AppendLine();
+                 .Append($"static global::Conqueror.ISignalHandlerTypesInjector global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.CoreTypesInjector {{ get; }} = IHandler.CreateCoreTypesInjector();").AppendLine();
     }
 
     private static StringBuilder AppendSignalHandlerInterface(this StringBuilder sb,

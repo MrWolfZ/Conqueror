@@ -20,7 +20,7 @@ public interface ISignal<out TSignal>
     ///     reflection. Implementations of the property should only be created by the source
     ///     generator.
     /// </summary>
-    static abstract ICoreSignalHandlerTypesInjector CoreTypesInjector { get; }
+    static abstract ISignalHandlerTypesInjector CoreTypesInjector { get; }
 
     /// <summary>
     ///     Some transports must be able to construct an instance of this signal

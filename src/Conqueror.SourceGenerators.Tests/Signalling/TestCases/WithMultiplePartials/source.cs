@@ -19,7 +19,7 @@ public partial record TestSignal
 {
     public partial interface IHandler;
 
-    public static ICoreSignalHandlerTypesInjector CoreTypesInjector => null!;
+    public static ISignalHandlerTypesInjector CoreTypesInjector => null!;
 
     public static TestSignal? EmptyInstance => null;
 

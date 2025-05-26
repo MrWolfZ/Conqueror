@@ -45,8 +45,7 @@ public sealed partial class MessageTypeGenerationTests
     {
         public static MessageTypes<TestMessage, TestMessageResponse, IHandler> T => new();
 
-        static ICoreMessageHandlerTypesInjector IMessage<TestMessage, TestMessageResponse>.CoreTypesInjector
-            => CoreMessageHandlerTypesInjector<TestMessage, TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
+        static IMessageHandlerTypesInjector IMessage<TestMessage, TestMessageResponse>.CoreTypesInjector { get; } = IHandler.CreateCoreTypesInjector();
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         static TestMessage? IMessage<TestMessage, TestMessageResponse>.EmptyInstance => null;
@@ -100,8 +99,7 @@ public sealed partial class MessageTypeGenerationTests
     {
         public static MessageTypes<TestMessageWithoutResponse, UnitMessageResponse, IHandler> T => new();
 
-        static ICoreMessageHandlerTypesInjector IMessage<TestMessageWithoutResponse, UnitMessageResponse>.CoreTypesInjector
-            => CoreMessageHandlerTypesInjector<TestMessageWithoutResponse, UnitMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
+        static IMessageHandlerTypesInjector IMessage<TestMessageWithoutResponse, UnitMessageResponse>.CoreTypesInjector { get; } = IHandler.CreateCoreTypesInjector();
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         static TestMessageWithoutResponse? IMessage<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => null;

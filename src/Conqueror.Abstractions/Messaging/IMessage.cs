@@ -21,7 +21,7 @@ public interface IMessage<out TMessage, TResponse>
     ///     reflection. Implementations of the property should only be created by the source
     ///     generator.
     /// </summary>
-    static abstract ICoreMessageHandlerTypesInjector CoreTypesInjector { get; }
+    static abstract IMessageHandlerTypesInjector CoreTypesInjector { get; }
 
     /// <summary>
     ///     Some transports must be able to construct an instance of this message

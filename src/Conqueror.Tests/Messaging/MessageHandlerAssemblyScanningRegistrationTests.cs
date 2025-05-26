@@ -192,6 +192,9 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
             => Task.FromResult(new ExplicitTestMessageResponse());
 
         static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors() => [];
+
+        public static Task<ExplicitTestMessageResponse> Invoke(ExplicitTestMessage.IHandler handler, ExplicitTestMessage message, CancellationToken cancellationToken)
+            => throw new NotSupportedException();
     }
 
     public abstract partial class AbstractTestMessageHandler : TestMessage.IHandler
@@ -221,6 +224,9 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
             => Task.CompletedTask;
 
         static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors() => [];
+
+        public static Task<UnitMessageResponse> Invoke(ExplicitTestMessageWithoutResponse.IHandler handler, ExplicitTestMessageWithoutResponse message, CancellationToken cancellationToken)
+            => throw new NotSupportedException();
     }
 
     protected sealed partial class ProtectedTestMessageHandler : ProtectedTestMessage.IHandler

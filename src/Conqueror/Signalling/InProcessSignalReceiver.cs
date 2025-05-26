@@ -52,24 +52,26 @@ internal sealed class InProcessSignalReceiver(IServiceProvider serviceProviderFi
 
         return serviceProvider.GetRequiredService<SignalHandlerRegistry>()
                               .GetReceiverHandlerInvokers<ICoreSignalHandlerTypesInjector>()
-                              .Select(i => i.TypesInjector.Create(new Injectable(serviceProvider, i, receiverByHandlerType)))
+                              .Select(ConfigureReceiver)
                               .OfType<Receiver>()
                               .Distinct()
                               .ToList();
-    }
 
-    private sealed class Injectable(
-        IServiceProvider serviceProvider,
-        ISignalReceiverHandlerInvoker invoker,
-        Dictionary<Type, Receiver> receiverByHandlerType)
-        : ICoreSignalHandlerTypesInjectable<Receiver?>
-    {
-        Receiver? ICoreSignalHandlerTypesInjectable<Receiver?>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
+        Receiver? ConfigureReceiver(ISignalReceiverHandlerInvoker<ICoreSignalHandlerTypesInjector> invoker)
         {
-            if (!receiverByHandlerType.TryGetValue(typeof(THandler), out var receiver))
+            // delegate handlers are always enabled
+            if (invoker.HandlerType is null)
             {
-                receiverByHandlerType.Add(typeof(THandler), receiver = new(serviceProvider));
-                THandler.ConfigureInProcessReceiver(receiver);
+                var r = new Receiver(serviceProvider);
+                r.AddInvoker(invoker);
+
+                return r;
+            }
+
+            if (!receiverByHandlerType.TryGetValue(invoker.HandlerType, out var receiver))
+            {
+                receiverByHandlerType.Add(invoker.HandlerType, receiver = new(serviceProvider));
+                invoker.TypesInjector.ConfigureInProcessReceiver(receiver);
             }
 
             if (!receiver.IsEnabled)

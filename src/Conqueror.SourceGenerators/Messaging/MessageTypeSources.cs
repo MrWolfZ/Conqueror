@@ -116,13 +116,7 @@ public static class MessageTypeSources
         return sb.AppendLine()
                  .AppendMessageTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>.CoreTypesInjector").AppendLineWithIndentation(indentation)
-                 .AppendSingleIndent()
-
-                 // We are cheating a bit here by using handler proxy as the type parameter for the handler type.
-                 // This is because this property here is only used to generate senders with the correct interface,
-                 // and we don't need the concrete handler type there.
-                 .Append($"=> global::Conqueror.CoreMessageHandlerTypesInjector<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;").AppendLine();
+                 .Append($"static global::Conqueror.IMessageHandlerTypesInjector global::Conqueror.IMessage<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>.CoreTypesInjector {{ get; }} = IHandler.CreateCoreTypesInjector();").AppendLine();
     }
 
     private static StringBuilder AppendMessageHandlerInterface(this StringBuilder sb,

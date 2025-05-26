@@ -42,23 +42,14 @@ public static class InProcessMessageSenderBuilderExtensions
             return (null, false);
         }
 
-        var isEnabled = invoker.TypesInjector.Create(new Injectable(builder.ServiceProvider));
+        var receiver = new InProcessMessageReceiver<TMessage, TResponse>(builder.ServiceProvider);
+        invoker.TypesInjector.ConfigureInProcessReceiver(receiver);
 
-        if (!isEnabled)
+        if (!receiver.IsEnabled)
         {
             return (null, true);
         }
 
         return (new InProcessMessageSender<TMessage, TResponse>(invoker), false);
-    }
-
-    private readonly struct Injectable(IServiceProvider serviceProvider) : ICoreMessageHandlerTypesInjectable<bool>
-    {
-        bool ICoreMessageHandlerTypesInjectable<bool>.WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>()
-        {
-            var receiver = new InProcessMessageReceiver<TMessage, TResponse>(serviceProvider);
-            THandler.ConfigureInProcessReceiver(receiver);
-            return receiver.IsEnabled;
-        }
     }
 }
