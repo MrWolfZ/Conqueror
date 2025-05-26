@@ -47,6 +47,7 @@ public sealed class MessagingServerExecutionTests
         if (!testCase.HandlerIsEnabled)
         {
             await response.AssertStatusCode(StatusCodes.Status404NotFound);
+
             return;
         }
 
@@ -85,6 +86,186 @@ public sealed class MessagingServerExecutionTests
     }
 
     [Test]
+    [Combinatorial]
+    public async Task GivenTestHttpMessageWithDelegateHandler_WhenExecutingMessage_ReturnsCorrectResponse(
+        [Values(true, false)] bool hasResponse,
+        [Values(true, false)] bool isSync,
+        [Values(true, false)] bool configuresPipeline,
+        [Values(true, false)] bool configuresReceiver)
+    {
+        var middlewareWasCalled = false;
+        var receiverWasConfigured = false;
+
+        await using var host = await HttpTransportTestHost.Create(
+            services =>
+            {
+                _ = (hasResponse, isSync, configuresPipeline, configuresReceiver) switch
+                {
+                    (false, false, false, false) => services.AddHttpMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => Task.CompletedTask),
+                    (true, false, false, false) => services.AddHttpMessageHandlerDelegate(
+                        TestMessage.T,
+                        (_, _, _) => Task.FromResult(new TestMessageResponse())),
+                    (false, true, false, false) => services.AddHttpMessageHandlerDelegate(
+                        TestMessageWithoutResponse.T,
+                        (_, _, _) =>
+                        {
+                        }),
+                    (true, true, false, false) => services.AddHttpMessageHandlerDelegate(TestMessage.T, (_, _, _) => new()),
+                    (false, false, true, false) => services.AddHttpMessageHandlerDelegate(
+                        TestMessageWithoutResponse.T,
+                        (_, _, _) => Task.CompletedTask,
+                        p => p.Use(ctx =>
+                        {
+                            middlewareWasCalled = true;
+
+                            return ctx.Next(ctx.Message, ctx.CancellationToken);
+                        })),
+                    (true, false, true, false) => services.AddHttpMessageHandlerDelegate(
+                        TestMessage.T,
+                        (_, _, _) => Task.FromResult(new TestMessageResponse()),
+                        p => p.Use(ctx =>
+                        {
+                            middlewareWasCalled = true;
+
+                            return ctx.Next(ctx.Message, ctx.CancellationToken);
+                        })),
+                    (false, true, true, false) => services.AddHttpMessageHandlerDelegate(
+                        TestMessageWithoutResponse.T,
+                        (_, _, _) =>
+                        {
+                        },
+                        p => p.Use(ctx =>
+                        {
+                            middlewareWasCalled = true;
+
+                            return ctx.Next(ctx.Message, ctx.CancellationToken);
+                        })),
+                    (true, true, true, false) => services.AddHttpMessageHandlerDelegate(
+                        TestMessage.T,
+                        (_, _, _) => new(),
+                        p => p.Use(ctx =>
+                        {
+                            middlewareWasCalled = true;
+
+                            return ctx.Next(ctx.Message, ctx.CancellationToken);
+                        })),
+                    (false, false, false, true) => services.AddHttpMessageHandlerDelegate(
+                        TestMessageWithoutResponse.T,
+                        (_, _, _) => Task.CompletedTask,
+                        configureReceiver: r =>
+                        {
+                            receiverWasConfigured = true;
+                            _ = r.OmitFromApiDescription();
+                        }),
+                    (true, false, false, true) => services.AddHttpMessageHandlerDelegate(
+                        TestMessage.T,
+                        (_, _, _) => Task.FromResult(new TestMessageResponse()),
+                        configureReceiver: r =>
+                        {
+                            receiverWasConfigured = true;
+                            _ = r.OmitFromApiDescription();
+                        }),
+                    (false, true, false, true) => services.AddHttpMessageHandlerDelegate(
+                        TestMessageWithoutResponse.T,
+                        (_, _, _) =>
+                        {
+                        },
+                        configureReceiver: r =>
+                        {
+                            receiverWasConfigured = true;
+                            _ = r.OmitFromApiDescription();
+                        }),
+                    (true, true, false, true) => services.AddHttpMessageHandlerDelegate(
+                        TestMessage.T,
+                        (_, _, _) => new(),
+                        configureReceiver: r =>
+                        {
+                            receiverWasConfigured = true;
+                            _ = r.OmitFromApiDescription();
+                        }),
+                    (false, false, true, true) => services.AddHttpMessageHandlerDelegate(
+                        TestMessageWithoutResponse.T,
+                        (_, _, _) => Task.CompletedTask,
+                        p => p.Use(ctx =>
+                        {
+                            middlewareWasCalled = true;
+
+                            return ctx.Next(ctx.Message, ctx.CancellationToken);
+                        }),
+                        r =>
+                        {
+                            receiverWasConfigured = true;
+                            _ = r.OmitFromApiDescription();
+                        }),
+                    (true, false, true, true) => services.AddHttpMessageHandlerDelegate(
+                        TestMessage.T,
+                        (_, _, _) => Task.FromResult(new TestMessageResponse()),
+                        p => p.Use(ctx =>
+                        {
+                            middlewareWasCalled = true;
+
+                            return ctx.Next(ctx.Message, ctx.CancellationToken);
+                        }),
+                        r =>
+                        {
+                            receiverWasConfigured = true;
+                            _ = r.OmitFromApiDescription();
+                        }),
+                    (false, true, true, true) => services.AddHttpMessageHandlerDelegate(
+                        TestMessageWithoutResponse.T,
+                        (_, _, _) =>
+                        {
+                        },
+                        p => p.Use(ctx =>
+                        {
+                            middlewareWasCalled = true;
+
+                            return ctx.Next(ctx.Message, ctx.CancellationToken);
+                        }),
+                        r =>
+                        {
+                            receiverWasConfigured = true;
+                            _ = r.OmitFromApiDescription();
+                        }),
+                    (true, true, true, true) => services.AddHttpMessageHandlerDelegate(
+                        TestMessage.T,
+                        (_, _, _) => new(),
+                        p => p.Use(ctx =>
+                        {
+                            middlewareWasCalled = true;
+
+                            return ctx.Next(ctx.Message, ctx.CancellationToken);
+                        }),
+                        r =>
+                        {
+                            receiverWasConfigured = true;
+                            _ = r.OmitFromApiDescription();
+                        }),
+                };
+
+                _ = services.AddRouting().AddMessageEndpoints();
+            },
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+
+        var targetUriBuilder = new UriBuilder
+        {
+            Host = "localhost",
+            Path = hasResponse ? "api/test" : "api/testMessageWithoutResponse",
+        };
+
+        using var request = new HttpRequestMessage(new("POST"), targetUriBuilder.Uri);
+
+        using var content = CreateJsonStringContent("{\"payload\":10}");
+        request.Content = content;
+
+        var response = await host.HttpClient.SendAsync(request);
+        await response.AssertSuccessStatusCode();
+
+        Assert.That(middlewareWasCalled, Is.EqualTo(configuresPipeline));
+        Assert.That(receiverWasConfigured, Is.EqualTo(configuresReceiver));
+    }
+
+    [Test]
     public async Task GivenTestHttpMessage_WhenExecutingMessage_ConquerorContextContainsClaimsPrincipal()
     {
         ClaimsPrincipal? seenClaimsPrincipal = null;
@@ -96,6 +277,7 @@ public sealed class MessagingServerExecutionTests
                             .AddSingleton<FnToCallFromHandler>((_, p) =>
                             {
                                 seenClaimsPrincipal = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetCurrentPrincipalInternal();
+
                                 return Task.CompletedTask;
                             });
 

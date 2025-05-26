@@ -60,7 +60,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(messageTypes, fn, null);
+        return services.AddMessageHandlerDelegateInternal(messageTypes, fn, null, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
@@ -73,7 +73,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         {
             await fn(m, p, ct).ConfigureAwait(false);
             return UnitMessageResponse.Instance;
-        }, null);
+        }, null, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse, TIHandler>(this IServiceCollection services,
@@ -82,7 +82,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), null);
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), null, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
@@ -95,7 +95,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         {
             fn(m, p, ct);
             return Task.FromResult(UnitMessageResponse.Instance);
-        }, null);
+        }, null, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse, TIHandler>(this IServiceCollection services,
@@ -105,7 +105,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(messageTypes, fn, configurePipeline);
+        return services.AddMessageHandlerDelegateInternal(messageTypes, fn, configurePipeline, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
@@ -119,7 +119,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         {
             await fn(m, p, ct).ConfigureAwait(false);
             return UnitMessageResponse.Instance;
-        }, configurePipeline);
+        }, configurePipeline, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse, TIHandler>(this IServiceCollection services,
@@ -129,7 +129,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline);
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
@@ -143,7 +143,18 @@ public static class ConquerorMessagingServiceCollectionExtensions
         {
             fn(m, p, ct);
             return Task.FromResult(UnitMessageResponse.Instance);
-        }, configurePipeline);
+        }, configurePipeline, null);
+    }
+
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse, TIHandler>(this IServiceCollection services,
+                                                                                               MessageTypes<TMessage, TResponse, TIHandler> messageTypes,
+                                                                                               MessageHandlerFn<TMessage, TResponse> fn,
+                                                                                               Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline,
+                                                                                               IMessageHandlerTypesInjector typesInjector)
+        where TMessage : class, IMessage<TMessage, TResponse>
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+    {
+        return services.AddMessageHandlerDelegateInternal(messageTypes, fn, configurePipeline, typesInjector);
     }
 
     public static IServiceCollection AddMessageHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
@@ -192,7 +203,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
         this IServiceCollection services,
         MessageTypes<TMessage, TResponse, TIHandler> _, // for type inference
         MessageHandlerFn<TMessage, TResponse> fn,
-        Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline)
+        Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline,
+        IMessageHandlerTypesInjector? typesInjector)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
@@ -200,9 +212,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
         var invoker = new MessageHandlerInvoker<TMessage, TResponse>(configurePipeline, fn, null);
 
-        // we do not support configuring the receiver for delegate handlers (yet), since they are mostly
-        // designed to support simple testing scenarios, not be used as full-fledged message handlers
-        var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), null, fn, invoker, [TMessage.CoreTypesInjector]);
+        var typesInjectors = typesInjector is null ? new[] { TMessage.CoreTypesInjector } : [TMessage.CoreTypesInjector, typesInjector];
+        var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), null, fn, invoker, typesInjectors);
 
         var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is MessageHandlerRegistration r
                                                                  && r.MessageType == typeof(TMessage));

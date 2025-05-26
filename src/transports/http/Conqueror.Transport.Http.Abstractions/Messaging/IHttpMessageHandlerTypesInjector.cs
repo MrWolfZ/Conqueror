@@ -23,14 +23,18 @@ internal interface IHttpMessageHandlerTypesInjector : IMessageHandlerTypesInject
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal sealed class HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(
-    Action<IHttpMessageReceiver> configureReceiver)
+    Action<IHttpMessageReceiver>? configureReceiver)
     : IHttpMessageHandlerTypesInjector
     where TMessage : class, IHttpMessage<TMessage, TResponse>
     where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
 {
     public Type MessageType { get; } = typeof(TMessage);
 
-    public void ConfigureHttpReceiver(IHttpMessageReceiver receiver) => configureReceiver(receiver);
+    public void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
+    {
+        // can be null for delegate handlers
+        configureReceiver?.Invoke(receiver);
+    }
 
     public TResult Inject<TArg, TResult>(IHttpMessageTypesInjectable<TArg, TResult> injectable, TArg arg)
         => injectable.WithInjectedTypes<TMessage, TResponse, TIHandler>(arg);

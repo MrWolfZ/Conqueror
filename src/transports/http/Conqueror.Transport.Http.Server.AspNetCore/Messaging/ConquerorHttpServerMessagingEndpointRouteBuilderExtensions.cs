@@ -23,14 +23,14 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 {
-    private static readonly EndpointTypeInjectable EnpointConfigurationInjectable = new();
+    private static readonly EndpointTypeInjectable EndpointConfigurationInjectable = new();
 
     public static IEndpointRouteBuilder MapMessageEndpoints(this IEndpointRouteBuilder builder)
     {
         var messageTransportRegistry = builder.ServiceProvider.GetRequiredService<IMessageHandlerRegistry>();
         foreach (var invoker in messageTransportRegistry.GetReceiverHandlerInvokers<IHttpMessageHandlerTypesInjector>())
         {
-            _ = invoker.TypesInjector.Inject(EnpointConfigurationInjectable, new(builder, invoker));
+            _ = invoker.TypesInjector.Inject(EndpointConfigurationInjectable, new(builder, invoker));
         }
 
         return builder;
@@ -54,7 +54,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             throw new InvalidOperationException($"either no or only a delegate handler is registered for HTTP message type '{typeof(TMessage)}'");
         }
 
-        return invoker.TypesInjector.Inject(EnpointConfigurationInjectable, new(builder, invoker));
+        return invoker.TypesInjector.Inject(EndpointConfigurationInjectable, new(builder, invoker));
     }
 
     private readonly record struct EndpointTypeInjectableArg(
