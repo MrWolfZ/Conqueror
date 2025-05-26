@@ -12,7 +12,7 @@ internal sealed class MessagePipelineRunner<TMessage, TResponse>(
 {
     public Task<TResponse> Execute(
         IServiceProvider serviceProvider,
-        TMessage initialMessage,
+        TMessage message,
         IMessageSender<TMessage, TResponse> sender,
         MessageTransportType transportType,
         CancellationToken cancellationToken)
@@ -20,37 +20,21 @@ internal sealed class MessagePipelineRunner<TMessage, TResponse>(
         if (middlewares.Count == 0)
         {
             return sender.Send(
-                initialMessage,
+                message,
                 serviceProvider,
                 conquerorContext,
                 cancellationToken);
         }
 
-        Task<TResponse> Send(TMessage message, CancellationToken token) => sender.Send(
-            message,
-            serviceProvider,
-            conquerorContext,
-            token);
-
-        MessageMiddlewareNext<TMessage, TResponse> next = Send;
-
-        for (var i = middlewares.Count - 1; i >= 0; i -= 1)
+        var ctx = new MessageMiddlewareContext<TMessage, TResponse>(middlewares, sender)
         {
-            var middleware = middlewares[i];
-            var nextToCall = next;
-            next = Next;
+            Message = message,
+            TransportType = transportType,
+            CancellationToken = cancellationToken,
+            ConquerorContext = conquerorContext,
+            ServiceProvider = serviceProvider,
+        };
 
-            Task<TResponse> Next(TMessage message, CancellationToken token)
-                => middleware.Execute(
-                    new DefaultMessageMiddlewareContext<TMessage, TResponse>(
-                        message,
-                        nextToCall,
-                        serviceProvider,
-                        conquerorContext,
-                        transportType,
-                        token));
-        }
-
-        return next(initialMessage, cancellationToken);
+        return middlewares[0].Execute(ctx);
     }
 }

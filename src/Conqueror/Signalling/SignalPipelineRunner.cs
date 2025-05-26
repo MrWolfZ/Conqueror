@@ -12,7 +12,7 @@ internal sealed class SignalPipelineRunner<TSignal>(
 {
     public Task Execute(
         IServiceProvider serviceProvider,
-        TSignal initialSignal,
+        TSignal signal,
         ISignalPublisher<TSignal> publisher,
         SignalTransportType transportType,
         CancellationToken cancellationToken)
@@ -20,37 +20,21 @@ internal sealed class SignalPipelineRunner<TSignal>(
         if (middlewares.Count == 0)
         {
             return publisher.Publish(
-                initialSignal,
+                signal,
                 serviceProvider,
                 conquerorContext,
                 cancellationToken);
         }
 
-        Task Publish(TSignal message, CancellationToken token) => publisher.Publish(
-            message,
-            serviceProvider,
-            conquerorContext,
-            token);
-
-        SignalMiddlewareNext<TSignal> next = Publish;
-
-        for (var i = middlewares.Count - 1; i >= 0; i -= 1)
+        var ctx = new SignalMiddlewareContext<TSignal>(middlewares, publisher)
         {
-            var middleware = middlewares[i];
-            var nextToCall = next;
-            next = Next;
+            Signal = signal,
+            TransportType = transportType,
+            CancellationToken = cancellationToken,
+            ConquerorContext = conquerorContext,
+            ServiceProvider = serviceProvider,
+        };
 
-            Task Next(TSignal message, CancellationToken token)
-                => middleware.Execute(
-                    new DefaultSignalMiddlewareContext<TSignal>(
-                        message,
-                        nextToCall,
-                        serviceProvider,
-                        conquerorContext,
-                        transportType,
-                        token));
-        }
-
-        return next(initialSignal, cancellationToken);
+        return middlewares[0].Execute(ctx);
     }
 }

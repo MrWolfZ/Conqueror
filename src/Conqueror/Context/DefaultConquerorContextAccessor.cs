@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Conqueror.Context;
@@ -24,7 +25,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
 
     private static DefaultConquerorContext CreateContext()
     {
-        var context = DefaultConquerorContext.CreateRootContext(_ => ClearContextFromAsyncLocal());
+        var context = DefaultConquerorContext.CreateRootContext(static _ => ClearContextFromAsyncLocal());
         context.InitializeTraceId();
         SetContextInAsyncLocal(context);
         return context;
@@ -44,6 +45,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
         ConquerorContextCurrent.Value = new() { Context = context };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ClearContextFromAsyncLocal()
     {
         var holder = ConquerorContextCurrent.Value;
@@ -55,7 +57,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
         }
     }
 
-    private sealed class ConquerorContextHolder
+    private sealed record ConquerorContextHolder
     {
         public DefaultConquerorContext? Context { get; set; }
     }

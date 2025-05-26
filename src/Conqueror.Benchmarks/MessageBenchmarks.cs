@@ -45,9 +45,15 @@ public partial class MessageBenchmarks
                                                 .For(TestMessage.T)
                                                 .WithPipeline(pipeline =>
                                                 {
-                                                    for (var i = 0; i < numOfMiddlewares; i++)
+                                                    for (var i = 0; i < numOfMiddlewares; i += 1)
                                                     {
-                                                        pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>());
+                                                        pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(new() { Parameter = i }));
+                                                    }
+
+                                                    if (numOfMiddlewares > 0)
+                                                    {
+                                                        pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m => m.Configuration
+                                                            .Parameter = 1);
                                                     }
                                                 })
                                                 .Handle(new(idx));
@@ -105,7 +111,7 @@ public partial class MessageBenchmarks
         public ConfigWithCustomEnvVars()
         {
             AddJob(
-                Job.Default
+                Job.ShortRun
                    .WithToolchain(InProcessEmitToolchain.Instance));
 
             // AddJob(Job.Default
@@ -134,15 +140,24 @@ public partial class MessageBenchmarks
         }
     }
 
-    private sealed class TestMessageMiddleware<TMessage, TResponse> : IMessageMiddleware<TMessage, TResponse>
+    private sealed record TestMessageMiddlewareConfiguration
+    {
+        public required int Parameter { get; set; }
+    }
+
+    private sealed class TestMessageMiddleware<TMessage, TResponse>(
+        TestMessageMiddlewareConfiguration configuration)
+        : IMessageMiddleware<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
+        public TestMessageMiddlewareConfiguration Configuration => configuration;
+
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {
             await Task.Yield();
 
             var q = (TestMessage)(object)ctx.Message;
-            var newMessage = (TMessage)(object)new TestMessage(q.Value + 1);
+            var newMessage = (TMessage)(object)new TestMessage(q.Value + configuration.Parameter);
 
             return await ctx.Next(newMessage, ctx.CancellationToken);
         }
