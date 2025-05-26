@@ -47,7 +47,9 @@ public partial class MessageBenchmarks
                                                 {
                                                     for (var i = 0; i < numOfMiddlewares; i += 1)
                                                     {
-                                                        pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(new() { Parameter = i }));
+                                                        pipeline.Use(
+                                                            new TestMessageMiddleware<TestMessage, TestMessageResponse>
+                                                                { Configuration = new() { Parameter = i } });
                                                     }
 
                                                     if (numOfMiddlewares > 0)
@@ -145,19 +147,17 @@ public partial class MessageBenchmarks
         public required int Parameter { get; set; }
     }
 
-    private sealed class TestMessageMiddleware<TMessage, TResponse>(
-        TestMessageMiddlewareConfiguration configuration)
-        : IMessageMiddleware<TMessage, TResponse>
+    private sealed class TestMessageMiddleware<TMessage, TResponse> : IMessageMiddleware<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        public TestMessageMiddlewareConfiguration Configuration => configuration;
+        public required TestMessageMiddlewareConfiguration Configuration { get; init; }
 
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {
             await Task.Yield();
 
             var q = (TestMessage)(object)ctx.Message;
-            var newMessage = (TMessage)(object)new TestMessage(q.Value + configuration.Parameter);
+            var newMessage = (TMessage)(object)new TestMessage(q.Value + Configuration.Parameter);
 
             return await ctx.Next(newMessage, ctx.CancellationToken);
         }

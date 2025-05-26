@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Conqueror.Signalling;
@@ -41,32 +40,27 @@ internal sealed class SignalPipeline<TSignal>(
     public ISignalPipeline<TSignal> Without<TMiddleware>()
         where TMiddleware : ISignalMiddleware<TSignal>
     {
-        while (true)
-        {
-            var index = middlewares.FindIndex(static m => m is TMiddleware);
+        _ = middlewares.RemoveAll(static m => m is TMiddleware);
 
-            if (index < 0)
-            {
-                return this;
-            }
-
-            middlewares.RemoveAt(index);
-        }
+        return this;
     }
 
     public ISignalPipeline<TSignal> Configure<TMiddleware>(Action<TMiddleware> configure)
         where TMiddleware : ISignalMiddleware<TSignal>
     {
-        var index = middlewares.FindIndex(static m => m is TMiddleware);
-
-        if (index < 0)
+        var found = false;
+        foreach (var middleware in middlewares)
         {
-            throw new InvalidOperationException($"middleware '${typeof(TMiddleware)}' cannot be configured for this pipeline since it is not used");
+            if (middleware is TMiddleware m)
+            {
+                configure(m);
+                found = true;
+            }
         }
 
-        foreach (var middleware in middlewares.OfType<TMiddleware>())
+        if (!found)
         {
-            configure(middleware);
+            throw new InvalidOperationException($"middleware '${typeof(TMiddleware)}' cannot be configured for this pipeline since it is not used");
         }
 
         return this;
