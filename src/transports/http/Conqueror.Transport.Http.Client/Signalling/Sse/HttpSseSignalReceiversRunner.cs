@@ -8,17 +8,18 @@ namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 
 internal sealed class HttpSseSignalReceiversRunner(IServiceProvider serviceProvider)
 {
+    private static readonly ConfigurationInjectable ConfigInjectable = new();
+
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
         Justification = "false positive, the source is returned to the caller")]
-    public HttpSseSignalReceiver? ConfigureReceiver<THandler>()
-        where THandler : class, IHttpSseSignalHandler
+    public HttpSseSignalReceiver? ConfigureReceiver(Type handlerType, Action<IHttpSseSignalReceiver> configureReceiver)
     {
         try
         {
-            var receiver = new HttpSseSignalReceiver(serviceProvider, typeof(THandler));
-            THandler.ConfigureHttpSseReceiver(receiver);
+            var receiver = new HttpSseSignalReceiver(serviceProvider, handlerType);
+            configureReceiver(receiver);
 
             if (!receiver.IsEnabled)
             {
@@ -29,16 +30,16 @@ internal sealed class HttpSseSignalReceiversRunner(IServiceProvider serviceProvi
                                                    .GetReceiverHandlerInvokers<IHttpSseSignalHandlerTypesInjector>()
                                                    .Where(i => i.HandlerType == receiver.HandlerType))
             {
-                _ = invoker.TypesInjector.Create(new ConfigurationInjectable(invoker, receiver));
+                _ = invoker.TypesInjector.Inject(ConfigInjectable, new(invoker, receiver));
             }
 
             return receiver;
         }
         catch (Exception ex)
         {
-            throw new HttpSseSignalReceiverRunFailedException($"failed to run the signal receiver for handler type '{typeof(THandler)}'", ex)
+            throw new HttpSseSignalReceiverRunFailedException($"failed to run the signal receiver for handler type '{handlerType}'", ex)
             {
-                HandlerType = typeof(THandler),
+                HandlerType = handlerType,
             };
         }
     }
@@ -62,11 +63,14 @@ internal sealed class HttpSseSignalReceiversRunner(IServiceProvider serviceProvi
         }
     }
 
-    private sealed class ConfigurationInjectable(ISignalReceiverHandlerInvoker invoker, HttpSseSignalReceiver receiver) : IHttpSseSignalTypesInjectable<object?>
+    private readonly record struct ConfigurationInjectableArg(ISignalReceiverHandlerInvoker Invoker, HttpSseSignalReceiver Receiver);
+
+    private sealed class ConfigurationInjectable : IHttpSseSignalTypesInjectable<ConfigurationInjectableArg, object?>
     {
-        object? IHttpSseSignalTypesInjectable<object?>.WithInjectedTypes<TSignal, TIHandler, THandler>()
+        object? IHttpSseSignalTypesInjectable<ConfigurationInjectableArg, object?>
+            .WithInjectedTypes<TSignal, TIHandler>(ConfigurationInjectableArg arg)
         {
-            receiver.AddSignalType<TSignal>(invoker);
+            arg.Receiver.AddSignalType<TSignal>(arg.Invoker);
 
             return null;
         }

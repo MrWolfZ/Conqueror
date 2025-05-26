@@ -21,5 +21,5 @@ public interface IHttpSseSignalHandler<TSignal, TIHandler> : ISignalHandler<TSig
     [EditorBrowsable(EditorBrowsableState.Never)]
     static ISignalHandlerTypesInjector CreateHttpSseTypesInjector<THandler>()
         where THandler : class, TIHandler
-        => HttpSseSignalHandlerTypesInjector<TSignal, TIHandler, THandler>.Default;
+        => new HttpSseSignalHandlerTypesInjector<TSignal, TIHandler>(THandler.ConfigureHttpSseReceiver);
 }

@@ -20,5 +20,5 @@ public interface IHttpMessageHandler<TMessage, TResponse, TIHandler> : IMessageH
     [EditorBrowsable(EditorBrowsableState.Never)]
     static IMessageHandlerTypesInjector CreateHttpTypesInjector<THandler>()
         where THandler : class, TIHandler
-        => HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, THandler>.Default;
+        => new HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(THandler.ConfigureHttpReceiver);
 }

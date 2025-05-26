@@ -18,8 +18,18 @@ public static class HttpSseSignalReceiversExtensions
         var registry = receivers.ServiceProvider.GetRequiredService<ISignalHandlerRegistry>();
         var invokers = registry.GetReceiverHandlerInvokers<IHttpSseSignalHandlerTypesInjector>();
 
-        var injectable = new Injectable(receivers);
-        var configuredReceivers = invokers.Select(i => i.TypesInjector.Create(injectable))
+        var configuredHandlerTypes = new HashSet<Type>();
+
+        var configuredReceivers = invokers.Select(i =>
+                                          {
+                                              if (i.HandlerType is null || !configuredHandlerTypes.Add(i.HandlerType))
+                                              {
+                                                  // if the receiver was already configured, we can skip it
+                                                  return null;
+                                              }
+
+                                              return receivers.ConfigureHttpSseSignalReceiver(i.HandlerType!, i.TypesInjector.ConfigureHttpSseReceiver);
+                                          })
                                           .OfType<HttpSseSignalReceiver>()
                                           .ToList();
 
@@ -42,10 +52,18 @@ public static class HttpSseSignalReceiversExtensions
     private static HttpSseSignalReceiver? ConfigureHttpSseSignalReceiver<THandler>(this ISignalReceivers receivers)
         where THandler : class, IHttpSseSignalHandler
     {
+        return receivers.ConfigureHttpSseSignalReceiver(typeof(THandler), THandler.ConfigureHttpSseReceiver);
+    }
+
+    private static HttpSseSignalReceiver? ConfigureHttpSseSignalReceiver(
+        this ISignalReceivers receivers,
+        Type handlerType,
+        Action<IHttpSseSignalReceiver> configureReceiver)
+    {
         var singletons = receivers.ServiceProvider.GetRequiredService<ConquerorSingletons>();
         var runner = singletons.GetOrAddSingleton(p => new HttpSseSignalReceiversRunner(p));
 
-        return runner.ConfigureReceiver<THandler>();
+        return runner.ConfigureReceiver(handlerType, configureReceiver);
     }
 
     private static SignalReceiverRun RunHttpSseSignalReceiver(
@@ -57,21 +75,5 @@ public static class HttpSseSignalReceiversExtensions
         var runner = singletons.GetOrAddSingleton(p => new HttpSseSignalReceiversRunner(p));
 
         return runner.Run(receiver, cancellationToken);
-    }
-
-    private sealed class Injectable(ISignalReceivers receivers) : IHttpSseSignalTypesInjectable<HttpSseSignalReceiver?>
-    {
-        private readonly HashSet<Type> configuredHandlerTypes = [];
-
-        HttpSseSignalReceiver? IHttpSseSignalTypesInjectable<HttpSseSignalReceiver?>.WithInjectedTypes<TSignal, TIHandler, THandler>()
-        {
-            if (!configuredHandlerTypes.Add(typeof(THandler)))
-            {
-                // if the receiver was already configured, we can skip it
-                return null;
-            }
-
-            return receivers.ConfigureHttpSseSignalReceiver<THandler>();
-        }
     }
 }

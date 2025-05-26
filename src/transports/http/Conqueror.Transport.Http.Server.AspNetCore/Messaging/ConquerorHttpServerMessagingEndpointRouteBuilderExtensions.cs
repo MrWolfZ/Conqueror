@@ -23,12 +23,14 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 {
+    private static readonly EndpointTypeInjectable EnpointConfigurationInjectable = new();
+
     public static IEndpointRouteBuilder MapMessageEndpoints(this IEndpointRouteBuilder builder)
     {
         var messageTransportRegistry = builder.ServiceProvider.GetRequiredService<IMessageHandlerRegistry>();
         foreach (var invoker in messageTransportRegistry.GetReceiverHandlerInvokers<IHttpMessageHandlerTypesInjector>())
         {
-            _ = invoker.TypesInjector.Create(new EndpointTypeInjectable(builder, invoker));
+            _ = invoker.TypesInjector.Inject(EnpointConfigurationInjectable, new(builder, invoker));
         }
 
         return builder;
@@ -52,27 +54,34 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             throw new InvalidOperationException($"either no or only a delegate handler is registered for HTTP message type '{typeof(TMessage)}'");
         }
 
-        return invoker.TypesInjector.Create(new EndpointTypeInjectable(builder, invoker));
+        return invoker.TypesInjector.Inject(EnpointConfigurationInjectable, new(builder, invoker));
     }
 
-    private sealed class EndpointTypeInjectable(IEndpointRouteBuilder builder, IMessageReceiverHandlerInvoker invoker) : IHttpMessageTypesInjectable<IEndpointConventionBuilder?>
+    private readonly record struct EndpointTypeInjectableArg(
+        IEndpointRouteBuilder Builder,
+        IMessageReceiverHandlerInvoker<IHttpMessageHandlerTypesInjector> Invoker);
+
+    private sealed class EndpointTypeInjectable
+        : IHttpMessageTypesInjectable<EndpointTypeInjectableArg, IEndpointConventionBuilder?>
     {
-        IEndpointConventionBuilder? IHttpMessageTypesInjectable<IEndpointConventionBuilder?>.WithInjectedTypes<TMessage, TResponse, TIHandler, THandler>()
+        IEndpointConventionBuilder? IHttpMessageTypesInjectable<EndpointTypeInjectableArg, IEndpointConventionBuilder?>
+            .WithInjectedTypes<TMessage, TResponse, TIHandler>(EndpointTypeInjectableArg arg)
         {
-            var receiver = new HttpMessageReceiver<TMessage, TResponse>(builder.ServiceProvider);
-            THandler.ConfigureHttpReceiver(receiver);
+            var receiver = new HttpMessageReceiver<TMessage, TResponse>(arg.Builder.ServiceProvider);
+            arg.Invoker.TypesInjector.ConfigureHttpReceiver(receiver);
 
             if (!receiver.IsEnabled)
             {
                 return null;
             }
 
-            var duplicates = builder.DataSources
-                                    .SelectMany(ds => ds.Endpoints)
-                                    .SelectMany(e => e.Metadata)
-                                    .OfType<ConquerorHttpMessageEndpointMetadata>()
-                                    .Where(m => m.FullPath == TMessage.FullPath && m.HttpMethod == TMessage.HttpMethod)
-                                    .ToList();
+            var duplicates = arg.Builder
+                                .DataSources
+                                .SelectMany(ds => ds.Endpoints)
+                                .SelectMany(e => e.Metadata)
+                                .OfType<ConquerorHttpMessageEndpointMetadata>()
+                                .Where(m => m.FullPath == TMessage.FullPath && m.HttpMethod == TMessage.HttpMethod)
+                                .ToList();
 
             if (duplicates.Count > 0)
             {
@@ -83,12 +92,12 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             }
 
             return ConfigureRoute<TMessage, TResponse>(
-                builder.MapMethods(TMessage.FullPath, [TMessage.HttpMethod], Handle<TMessage, TResponse, TIHandler>),
+                arg.Builder.MapMethods(TMessage.FullPath, [TMessage.HttpMethod], ctx => Handle<TMessage, TResponse, TIHandler>(ctx, arg.Invoker)),
                 TMessage.EmptyInstance is null,
                 receiver.IsOmittedFromApiDescription);
         }
 
-        private async Task Handle<TMessage, TResponse, TIHandler>(HttpContext context)
+        private async Task Handle<TMessage, TResponse, TIHandler>(HttpContext context, IMessageReceiverHandlerInvoker invoker)
             where TMessage : class, IHttpMessage<TMessage, TResponse>
             where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
         {
@@ -97,7 +106,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             // handle messages without payload
             if (message is not null)
             {
-                await Handle<TMessage, TResponse, TIHandler>(message, context).ConfigureAwait(false);
+                await Handle<TMessage, TResponse, TIHandler>(message, context, invoker).ConfigureAwait(false);
                 return;
             }
 
@@ -117,10 +126,13 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 message = await context.Request.ReadFromJsonAsync(jsonTypeInfo).ConfigureAwait(false);
             }
 
-            await Handle<TMessage, TResponse, TIHandler>(message, context).ConfigureAwait(false);
+            await Handle<TMessage, TResponse, TIHandler>(message, context, invoker).ConfigureAwait(false);
         }
 
-        private async Task Handle<TMessage, TResponse, TIHandler>(TMessage? message, HttpContext httpContext)
+        private async Task Handle<TMessage, TResponse, TIHandler>(
+            TMessage? message,
+            HttpContext httpContext,
+            IMessageReceiverHandlerInvoker invoker)
             where TMessage : class, IHttpMessage<TMessage, TResponse>
             where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
         {

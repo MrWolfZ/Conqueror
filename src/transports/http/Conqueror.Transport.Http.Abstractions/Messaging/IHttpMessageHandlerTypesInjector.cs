@@ -7,40 +7,45 @@ namespace Conqueror;
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal interface IHttpMessageHandlerTypesInjector : IMessageHandlerTypesInjector
 {
+    void ConfigureHttpReceiver(IHttpMessageReceiver receiver);
+
     /// <summary>
     ///     Helper method to be able to access the message and response types as generic parameters while only
     ///     having a generic reference to the generated handler interface type. This allows bypassing reflection.
     /// </summary>
     /// <param name="injectable">The injector that should be called with the generic type parameters</param>
+    /// <param name="arg">The argument to pass to the injectable</param>
+    /// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
     /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
     /// <returns>The result of calling the injectable</returns>
-    TResult Create<TResult>(IHttpMessageTypesInjectable<TResult> injectable);
+    TResult Inject<TArg, TResult>(IHttpMessageTypesInjectable<TArg, TResult> injectable, TArg arg);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal sealed class HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, THandler> : IHttpMessageHandlerTypesInjector
+internal sealed class HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(
+    Action<IHttpMessageReceiver> configureReceiver)
+    : IHttpMessageHandlerTypesInjector
     where TMessage : class, IHttpMessage<TMessage, TResponse>
     where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
-    where THandler : class, TIHandler
 {
-    public static readonly HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, THandler> Default = new();
-
     public Type MessageType { get; } = typeof(TMessage);
 
-    public TResult Create<TResult>(IHttpMessageTypesInjectable<TResult> injectable)
-        => injectable.WithInjectedTypes<TMessage, TResponse, TIHandler, THandler>();
+    public void ConfigureHttpReceiver(IHttpMessageReceiver receiver) => configureReceiver(receiver);
+
+    public TResult Inject<TArg, TResult>(IHttpMessageTypesInjectable<TArg, TResult> injectable, TArg arg)
+        => injectable.WithInjectedTypes<TMessage, TResponse, TIHandler>(arg);
 }
 
 /// <summary>
 ///     Helper interface to be able to access the message and response types as generic parameters while only
 ///     having a generic reference to the generated handler interface type. This allows bypassing reflection.
 /// </summary>
+/// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal interface IHttpMessageTypesInjectable<out TResult>
+internal interface IHttpMessageTypesInjectable<in TArg, out TResult>
 {
-    TResult WithInjectedTypes<TMessage, TResponse, TIHandler, THandler>()
+    TResult WithInjectedTypes<TMessage, TResponse, TIHandler>(TArg arg)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler;
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>;
 }

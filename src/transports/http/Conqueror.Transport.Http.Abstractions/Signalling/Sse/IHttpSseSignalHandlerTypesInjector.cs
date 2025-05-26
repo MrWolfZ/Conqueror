@@ -7,40 +7,45 @@ namespace Conqueror;
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal interface IHttpSseSignalHandlerTypesInjector : ISignalHandlerTypesInjector
 {
+    void ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver);
+
     /// <summary>
     ///     Helper method to be able to access the signal types as generic parameters while only
     ///     having a generic reference to the generated handler interface type. This allows bypassing reflection.
     /// </summary>
     /// <param name="injectable">The injector that should be called with the generic type parameters</param>
+    /// <param name="arg">The argument to pass to the injectable</param>
+    /// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
     /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
     /// <returns>The result of calling the injectable</returns>
-    TResult Create<TResult>(IHttpSseSignalTypesInjectable<TResult> injectable);
+    TResult Inject<TArg, TResult>(IHttpSseSignalTypesInjectable<TArg, TResult> injectable, TArg arg);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal sealed class HttpSseSignalHandlerTypesInjector<TSignal, TIHandler, THandler> : IHttpSseSignalHandlerTypesInjector
+internal sealed class HttpSseSignalHandlerTypesInjector<TSignal, TIHandler>(
+    Action<IHttpSseSignalReceiver> configureReceiver)
+    : IHttpSseSignalHandlerTypesInjector
     where TSignal : class, IHttpSseSignal<TSignal>
     where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>
-    where THandler : class, TIHandler
 {
-    public static readonly HttpSseSignalHandlerTypesInjector<TSignal, TIHandler, THandler> Default = new();
-
     public Type SignalType { get; } = typeof(TSignal);
 
-    public TResult Create<TResult>(IHttpSseSignalTypesInjectable<TResult> injectable)
-        => injectable.WithInjectedTypes<TSignal, TIHandler, THandler>();
+    public void ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) => configureReceiver(receiver);
+
+    public TResult Inject<TArg, TResult>(IHttpSseSignalTypesInjectable<TArg, TResult> injectable, TArg arg)
+        => injectable.WithInjectedTypes<TSignal, TIHandler>(arg);
 }
 
 /// <summary>
 ///     Helper interface to be able to access the signal types as generic parameters while only
 ///     having a generic reference to the generated handler interface type. This allows bypassing reflection.
 /// </summary>
+/// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal interface IHttpSseSignalTypesInjectable<out TResult>
+internal interface IHttpSseSignalTypesInjectable<in TArg, out TResult>
 {
-    TResult WithInjectedTypes<TSignal, TIHandler, THandler>()
+    TResult WithInjectedTypes<TSignal, TIHandler>(TArg arg)
         where TSignal : class, IHttpSseSignal<TSignal>
-        where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>
-        where THandler : class, TIHandler;
+        where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>;
 }
