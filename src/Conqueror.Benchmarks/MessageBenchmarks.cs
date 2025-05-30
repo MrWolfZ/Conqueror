@@ -12,13 +12,14 @@ namespace Conqueror.Benchmarks;
 [SuppressMessage("ReSharper", "ClassCanBeSealed.Global", Justification = "Benchmark.NET requires non-sealed classes")]
 public partial class MessageBenchmarks
 {
-    private readonly IServiceProvider serviceProvider = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
-                                                                               .BuildServiceProvider();
-
     [Benchmark]
     [ArgumentsSource(nameof(NoConquerorArguments))]
     public void RunWithoutConqueror(int numOfExecutions, int? parallelism)
     {
+        var serviceProvider = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
+                                                     .AddSingleton(new TestRunConfig(numOfExecutions, parallelism, 0))
+                                                     .BuildServiceProvider();
+
         Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();
 
         async ValueTask RunSingle(int idx)
@@ -28,7 +29,7 @@ public partial class MessageBenchmarks
 
             if (response.Value != idx)
             {
-                throw new InvalidOperationException($"got wrong result {response.Value}, expected {idx}");
+                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {idx}");
             }
         }
     }
@@ -37,14 +38,20 @@ public partial class MessageBenchmarks
     [ArgumentsSource(nameof(ConquerorArguments))]
     public void RunWithConqueror(int numOfExecutions, int? parallelism, int numOfMiddlewares)
     {
+        var serviceProvider = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
+                                                     .AddSingleton(new TestRunConfig(numOfExecutions, parallelism, numOfMiddlewares))
+                                                     .BuildServiceProvider();
+
         Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();
 
         async ValueTask RunSingle(int idx)
         {
             var response = await serviceProvider.GetRequiredService<IMessageSenders>()
                                                 .For(TestMessage.T)
-                                                .WithPipeline(pipeline =>
+                                                .WithPipeline(static pipeline =>
                                                 {
+                                                    var numOfMiddlewares = pipeline.ServiceProvider.GetRequiredService<TestRunConfig>().NumOfMiddlewares;
+
                                                     for (var i = 0; i < numOfMiddlewares; i += 1)
                                                     {
                                                         pipeline.Use(
@@ -55,14 +62,14 @@ public partial class MessageBenchmarks
                                                     if (numOfMiddlewares > 0)
                                                     {
                                                         pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m => m.Configuration
-                                                            .Parameter = 1);
+                                                                .Parameter = 1);
                                                     }
                                                 })
                                                 .Handle(new(idx));
 
             if (response.Value != numOfMiddlewares + idx)
             {
-                throw new InvalidOperationException($"got wrong result {response.Value}, expected {numOfMiddlewares + idx}");
+                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {numOfMiddlewares + idx}");
             }
         }
     }
@@ -121,6 +128,8 @@ public partial class MessageBenchmarks
             //           .WithId("some ID"));
         }
     }
+
+    private sealed record TestRunConfig(int NumOfExecutions, int? Parallelism, int NumOfMiddlewares);
 
     [Message<TestMessageResponse>]
     private sealed partial record TestMessage(int Value);
