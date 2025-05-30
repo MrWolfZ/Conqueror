@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,17 +9,20 @@ namespace Conqueror;
 public readonly record struct MessageMiddlewareContext<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares;
+    private readonly IMessageMiddleware<TMessage, TResponse>[] middlewares;
     private readonly IMessageSender<TMessage, TResponse> sender;
+    private readonly int count;
 
     public MessageMiddlewareContext(
-        List<IMessageMiddleware<TMessage, TResponse>> middlewares,
+        IMessageMiddleware<TMessage, TResponse>[] middlewares,
+        int count,
         IMessageSender<TMessage, TResponse> sender)
     {
-        Debug.Assert(middlewares.Count > 0, "this should only be called if there are middlewares to execute");
+        Debug.Assert(middlewares.Length > 0, "this should only be called if there are middlewares to execute");
 
         this.middlewares = middlewares;
         this.sender = sender;
+        this.count = count;
     }
 
     public required TMessage Message { get; init; }
@@ -40,7 +42,7 @@ public readonly record struct MessageMiddlewareContext<TMessage, TResponse>
     public Task<TResponse> Next(TMessage message, CancellationToken cancellationToken)
     {
         var nextIndex = CurrentIndex + 1;
-        if (nextIndex < middlewares.Count)
+        if (nextIndex < count)
         {
             var updatedContext = this with
             {

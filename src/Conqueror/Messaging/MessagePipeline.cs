@@ -9,12 +9,11 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     Type? handlerType,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
-    MessageTransportType transportType)
+    MessageTransportType transportType,
+    IMessageMiddleware<TMessage, TResponse>[] middlewares)
     : IMessagePipeline<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares = [];
-
     public Type? HandlerType { get; } = handlerType;
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
@@ -23,12 +22,13 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
 
     public MessageTransportType TransportType { get; } = transportType;
 
-    public int Count => middlewares.Count;
+    public int Count { get; private set; }
 
     public IMessagePipeline<TMessage, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>
     {
-        middlewares.Add(middleware);
+        middlewares[Count] = middleware;
+        Count += 1;
         return this;
     }
 
@@ -40,7 +40,7 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     public IMessagePipeline<TMessage, TResponse> Without<TMiddleware>()
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>
     {
-        _ = middlewares.RemoveAll(static m => m is TMiddleware);
+        // _ = middlewares.RemoveAll(static m => m is TMiddleware);
 
         return this;
     }
@@ -49,9 +49,9 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>
     {
         var found = false;
-        foreach (var middleware in middlewares)
+        for (var i = 0; i < Count; i++)
         {
-            if (middleware is TMiddleware m)
+            if (middlewares[i] is TMiddleware m)
             {
                 configure(m);
                 found = true;
@@ -68,10 +68,10 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
 
     public MessagePipelineRunner<TMessage, TResponse> Build(ConquerorContext conquerorContext)
     {
-        return new(conquerorContext, middlewares);
+        return new(conquerorContext, middlewares, Count);
     }
 
-    public IEnumerator<IMessageMiddleware<TMessage, TResponse>> GetEnumerator() => middlewares.GetEnumerator();
+    public IEnumerator<IMessageMiddleware<TMessage, TResponse>> GetEnumerator() => ((IEnumerable<IMessageMiddleware<TMessage, TResponse>>)middlewares).GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

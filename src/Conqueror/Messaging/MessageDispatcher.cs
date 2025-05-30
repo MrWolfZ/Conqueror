@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,18 +40,33 @@ internal sealed class MessageDispatcher<TMessage, TResponse>(
             conquerorContext.SetMessageId(messageIdFactory.GenerateId());
         }
 
-        var pipeline = new MessagePipeline<TMessage, TResponse>(handlerType, serviceProvider, conquerorContext, transportType);
+        var middlewares = ArrayPool<IMessageMiddleware<TMessage, TResponse>>.Shared.Rent(128);
 
-        configurePipelineField?.Invoke(pipeline);
+        try
+        {
+            var pipeline = new MessagePipeline<TMessage, TResponse>(
+                handlerType,
+                serviceProvider,
+                conquerorContext,
+                transportType,
+                middlewares);
 
-        var pipelineRunner = pipeline.Build(conquerorContext);
+            configurePipelineField?.Invoke(pipeline);
 
-        return await pipelineRunner.Execute(serviceProvider,
-                                            message,
-                                            messageSender,
-                                            transportType,
-                                            cancellationToken)
-                                   .ConfigureAwait(false);
+            var pipelineRunner = pipeline.Build(conquerorContext);
+
+            return await pipelineRunner.Execute(
+                                           serviceProvider,
+                                           message,
+                                           messageSender,
+                                           transportType,
+                                           cancellationToken)
+                                       .ConfigureAwait(false);
+        }
+        finally
+        {
+            ArrayPool<IMessageMiddleware<TMessage, TResponse>>.Shared.Return(middlewares, true);
+        }
     }
 
     public IMessageDispatcher<TMessage, TResponse> WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)

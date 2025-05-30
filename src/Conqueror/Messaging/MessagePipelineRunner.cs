@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,7 +6,8 @@ namespace Conqueror.Messaging;
 
 internal sealed class MessagePipelineRunner<TMessage, TResponse>(
     ConquerorContext conquerorContext,
-    List<IMessageMiddleware<TMessage, TResponse>> middlewares)
+    IMessageMiddleware<TMessage, TResponse>[] middlewares,
+    int count)
     where TMessage : class, IMessage<TMessage, TResponse>
 {
     public Task<TResponse> Execute(
@@ -17,7 +17,7 @@ internal sealed class MessagePipelineRunner<TMessage, TResponse>(
         MessageTransportType transportType,
         CancellationToken cancellationToken)
     {
-        if (middlewares.Count == 0)
+        if (count == 0)
         {
             return sender.Send(
                 message,
@@ -26,7 +26,7 @@ internal sealed class MessagePipelineRunner<TMessage, TResponse>(
                 cancellationToken);
         }
 
-        var ctx = new MessageMiddlewareContext<TMessage, TResponse>(middlewares, sender)
+        var ctx = new MessageMiddlewareContext<TMessage, TResponse>(middlewares, count, sender)
         {
             Message = message,
             TransportType = transportType,
