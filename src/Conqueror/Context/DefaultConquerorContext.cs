@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 
 namespace Conqueror.Context;
 
@@ -7,13 +8,14 @@ internal sealed class DefaultConquerorContext : ConquerorContext
     private readonly Action<DefaultConquerorContext> onDispose;
     private readonly DefaultConquerorContext? parent;
 
+    private DefaultConquerorContextData? downstreamContextData;
+    private DefaultConquerorContextData? upstreamContextData;
+    private DefaultConquerorContextData? contextData;
+
     private DefaultConquerorContext(Action<ConquerorContext> onDispose)
     {
         this.onDispose = onDispose;
         parent = null;
-        DownstreamContextData = new();
-        UpstreamContextData = new();
-        ContextData = new();
     }
 
     private DefaultConquerorContext(DefaultConquerorContext parent, Action<DefaultConquerorContext> onDispose)
@@ -21,18 +23,18 @@ internal sealed class DefaultConquerorContext : ConquerorContext
         this.onDispose = onDispose;
         this.parent = parent;
 
-        DownstreamContextData = new(parent.DownstreamContextData);
-        ContextData = new(parent.ContextData);
-
-        // Upstream data is initially empty since it flows up from child to parent
-        UpstreamContextData = new();
+        downstreamContextData = parent.downstreamContextData is not null ? new(parent.downstreamContextData) : null;
+        contextData = parent.contextData is not null ? new(parent.contextData) : null;
     }
 
-    public override DefaultConquerorContextData DownstreamContextData { get; }
+    public override DefaultConquerorContextData DownstreamContextData
+        => LazyInitializer.EnsureInitialized(ref downstreamContextData, static () => new());
 
-    public override DefaultConquerorContextData UpstreamContextData { get; }
+    public override DefaultConquerorContextData UpstreamContextData
+        => LazyInitializer.EnsureInitialized(ref upstreamContextData, static () => new());
 
-    public override DefaultConquerorContextData ContextData { get; }
+    public override DefaultConquerorContextData ContextData
+        => LazyInitializer.EnsureInitialized(ref contextData, static () => new());
 
     public static DefaultConquerorContext CreateRootContext(Action<ConquerorContext> onRootDispose)
     {
@@ -63,9 +65,9 @@ internal sealed class DefaultConquerorContext : ConquerorContext
     private void PropagateUpstreamData(DefaultConquerorContext childContext)
     {
         // performance optimization to prevent unnecessary allocation of enumerator
-        if (!childContext.UpstreamContextData.IsEmpty)
+        if (childContext.upstreamContextData is not null && !childContext.upstreamContextData.IsEmpty)
         {
-            foreach (var (key, value, scope) in childContext.UpstreamContextData)
+            foreach (var (key, value, scope) in childContext.upstreamContextData)
             {
                 if (value is string s)
                 {
@@ -79,22 +81,22 @@ internal sealed class DefaultConquerorContext : ConquerorContext
         }
 
         // performance optimization to prevent unnecessary allocation of enumerator
-        if (!ContextData.IsEmpty)
+        if (contextData is not null && !contextData.IsEmpty)
         {
             // bidirectional keys also propagate deletion upstream
-            foreach (var (key, _, _) in ContextData)
+            foreach (var (key, _, _) in contextData)
             {
-                if (childContext.ContextData.IsRemoved(key))
+                if (childContext.contextData?.IsRemoved(key) ?? false)
                 {
-                    _ = ContextData.Remove(key);
+                    _ = contextData.Remove(key);
                 }
             }
         }
 
         // performance optimization to prevent unnecessary allocation of enumerator
-        if (!childContext.ContextData.IsEmpty)
+        if (childContext.contextData is not null && !childContext.contextData.IsEmpty)
         {
-            foreach (var (key, value, scope) in childContext.ContextData)
+            foreach (var (key, value, scope) in childContext.contextData)
             {
                 if (value is string s)
                 {

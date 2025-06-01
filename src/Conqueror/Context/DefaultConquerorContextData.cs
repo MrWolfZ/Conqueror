@@ -8,7 +8,6 @@ namespace Conqueror.Context;
 internal sealed class DefaultConquerorContextData(DefaultConquerorContextData? parent = null)
     : IConquerorContextData
 {
-    // initialize the object eagerly for downstream data since it is always populated
     private ConcurrentDictionary<string, (object Value, ConquerorContextDataScope Scope)>? items;
 
     // track keys that were removed in this context (to override parent values)

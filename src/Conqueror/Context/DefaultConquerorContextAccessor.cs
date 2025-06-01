@@ -33,7 +33,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
 
     private static DefaultConquerorContext CreateChildContext(DefaultConquerorContext parentContext)
     {
-        var childContext = parentContext.CreateChildContext(ClearContextFromAsyncLocal);
+        var childContext = parentContext.CreateChildContext(static () => ClearContextFromAsyncLocal());
         SetContextInAsyncLocal(childContext);
         return childContext;
     }
