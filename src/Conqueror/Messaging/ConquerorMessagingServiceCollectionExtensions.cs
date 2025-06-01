@@ -175,6 +175,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
                                                                                        handlerType: null));
 
         services.TryAddTransient<IMessageSenders, MessageSenders>();
+        services.TryAddSingleton<IInProcessMessageSenderFactory, InProcessMessageSenderFactory>();
         services.TryAddSingleton<IMessageIdFactory, DefaultMessageIdFactory>();
         services.TryAddSingleton<MessageHandlerRegistry>();
         services.TryAddSingleton<IMessageHandlerRegistry>(static p => p.GetRequiredService<MessageHandlerRegistry>());
