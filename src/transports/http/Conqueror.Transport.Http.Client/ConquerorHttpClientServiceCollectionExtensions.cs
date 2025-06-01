@@ -1,3 +1,5 @@
+using Conqueror;
+using Conqueror.Transport.Http.Client.Messaging;
 using Conqueror.Transport.Http.Client.Signalling.Sse;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -10,8 +12,19 @@ public static class ConquerorHttpClientServiceCollectionExtensions
     {
         _ = services.AddConqueror();
 
-        services.TryAddSingleton<HttpSseSignalReceiversRunner>();
+        AddMessaging(services);
+        AddSignalling(services);
 
         return services;
+    }
+
+    private static void AddMessaging(IServiceCollection services)
+    {
+        services.TryAddSingleton<IHttpMessageSenderFactory, HttpMessageSenderFactory>();
+    }
+
+    private static void AddSignalling(IServiceCollection services)
+    {
+        services.TryAddSingleton<HttpSseSignalReceiversRunner>();
     }
 }
