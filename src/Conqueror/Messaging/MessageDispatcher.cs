@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -58,13 +59,30 @@ internal sealed class MessageDispatcher(
 
         var transportType = new MessageTransportType(sender.TransportTypeName, transportRole);
 
+        var initialCapacity = transportRole is MessageTransportRole.Sender
+            ? PipelineCapacityCache<TMessage>.MaxObservedSenderPipelineCapacity
+            : PipelineCapacityCache<TMessage>.MaxObservedHandlerPipelineCapacity;
+
         var pipeline = new MessagePipeline<TMessage, TResponse>(
             handlerType,
             serviceProvider,
             conquerorContext,
-            transportType);
+            transportType,
+            initialCapacity);
 
         configurePipeline?.Invoke(pipeline);
+
+        if (pipeline.Count > initialCapacity)
+        {
+            if (transportRole is MessageTransportRole.Sender)
+            {
+                PipelineCapacityCache<TMessage>.MaxObservedSenderPipelineCapacity = pipeline.Count;
+            }
+            else
+            {
+                PipelineCapacityCache<TMessage>.MaxObservedHandlerPipelineCapacity = pipeline.Count;
+            }
+        }
 
         return await pipeline.Execute(
                                  serviceProvider,
@@ -74,4 +92,19 @@ internal sealed class MessageDispatcher(
                                  cancellationToken)
                              .ConfigureAwait(false);
     }
+}
+
+// performance optimization: we assume that most of the time the pipeline configuration will be very stable for a given
+// message and transport role (e.g. the same middlewares will be used for sending or handling a message), so we cache the
+// maximum observed pipeline size so that we can use it as the initial capacity for the pipeline; this way we avoid
+// unnecessary resizes of the backing list; this performance optimization has been successfully validated through
+// benchmarking, and it significantly reduces allocations for pipelines with more than 8 middlewares (which we assume
+// is going to be fairly common)
+[SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "intentional design to leverage static classes as cache")]
+[SuppressMessage("ReSharper", "UnusedTypeParameter", Justification = "used as static lookup key")]
+file static class PipelineCapacityCache<TMessage>
+{
+    public static int MaxObservedSenderPipelineCapacity { get; set; }
+
+    public static int MaxObservedHandlerPipelineCapacity { get; set; }
 }

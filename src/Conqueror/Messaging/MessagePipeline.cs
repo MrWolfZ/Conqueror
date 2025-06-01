@@ -10,11 +10,12 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     Type? handlerType,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
-    MessageTransportType transportType)
+    MessageTransportType transportType,
+    int initialCapacity)
     : IMessagePipeline<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares = [];
+    private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares = new(initialCapacity);
 
     public Type? HandlerType { get; } = handlerType;
 
@@ -30,6 +31,7 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>
     {
         middlewares.Add(middleware);
+
         return this;
     }
 
