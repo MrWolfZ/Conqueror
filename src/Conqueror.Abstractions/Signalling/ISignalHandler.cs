@@ -71,20 +71,56 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
     where TProxy : SignalHandlerProxy<TSignal, TIHandler, TProxy>, TIHandler, new()
 {
     // cannot be 'required' since that would block the `new()` constraint
-    internal ISignalDispatcher<TSignal> Dispatcher { get; init; } = null!;
+    internal IServiceProvider ServiceProvider { get; init; } = null!;
+
+    internal ISignalDispatcher Dispatcher { get; init; } = null!;
+
+    private Action<ISignalPipeline<TSignal>>? ConfigurePipeline { get; init; }
+
+    private ConfigureSignalPublisher<TSignal>? ConfigurePublisher { get; init; }
+
+    private ConfigureSignalPublisherAsync<TSignal>? ConfigurePublisherAsync { get; init; }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Task Handle(TSignal signal, CancellationToken cancellationToken = default)
-        => Dispatcher.Dispatch(signal, cancellationToken);
+        => Dispatcher.Dispatch(
+            signal,
+            ServiceProvider,
+            ConfigurePipeline,
+            publisher: null,
+            ConfigurePublisher,
+            ConfigurePublisherAsync,
+            cancellationToken);
 
     public TIHandler WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline)
-        => new TProxy { Dispatcher = Dispatcher.WithPipeline(configurePipeline) };
+        => new TProxy
+        {
+            ServiceProvider = ServiceProvider,
+            Dispatcher = Dispatcher,
+            ConfigurePipeline = (Action<ISignalPipeline<TSignal>>)Delegate.Combine(ConfigurePipeline, configurePipeline),
+            ConfigurePublisher = ConfigurePublisher,
+            ConfigurePublisherAsync = ConfigurePublisherAsync,
+        };
 
-    public TIHandler WithTransport(ConfigureSignalPublisher<TSignal> configureTransport)
-        => new TProxy { Dispatcher = Dispatcher.WithPublisher(configureTransport) };
+    public TIHandler WithTransport(ConfigureSignalPublisher<TSignal> configurePublisher)
+        => new TProxy
+        {
+            ServiceProvider = ServiceProvider,
+            Dispatcher = Dispatcher,
+            ConfigurePipeline = ConfigurePipeline,
+            ConfigurePublisher = configurePublisher,
+            ConfigurePublisherAsync = null,
+        };
 
-    public TIHandler WithTransport(ConfigureSignalPublisherAsync<TSignal> configureTransport)
-        => new TProxy { Dispatcher = Dispatcher.WithPublisher(configureTransport) };
+    public TIHandler WithTransport(ConfigureSignalPublisherAsync<TSignal> configurePublisherAsync)
+        => new TProxy
+        {
+            ServiceProvider = ServiceProvider,
+            Dispatcher = Dispatcher,
+            ConfigurePipeline = ConfigurePipeline,
+            ConfigurePublisher = null,
+            ConfigurePublisherAsync = configurePublisherAsync,
+        };
 
     static IEnumerable<ISignalHandlerTypesInjector> ISignalHandler.GetTypeInjectors()
         => throw new NotSupportedException("this method should never be called on the proxy");
@@ -100,7 +136,7 @@ internal interface ISignalHandlerProxy<TSignal, THandler> : ISignalHandler<TSign
 {
     THandler WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline);
 
-    THandler WithTransport(ConfigureSignalPublisher<TSignal> configureTransport);
+    THandler WithTransport(ConfigureSignalPublisher<TSignal> configurePublisher);
 
-    THandler WithTransport(ConfigureSignalPublisherAsync<TSignal> configureTransport);
+    THandler WithTransport(ConfigureSignalPublisherAsync<TSignal> configurePublisherAsync);
 }

@@ -11,6 +11,7 @@ public sealed partial class SignalHandlerRegistrationTests
         var services = new ServiceCollection().AddSignalHandler<TestSignalHandler>()
                                               .AddSignalHandler<TestSignal2Handler>();
 
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ISignalDispatcher)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ISignalPublishers)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ISignalIdFactory)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(SignalHandlerRegistry)));

@@ -4,18 +4,22 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Signalling;
 
-internal sealed class SignalDispatcher<TSignal>(
-    IServiceProvider serviceProvider,
+internal sealed class SignalDispatcher(
     IConquerorContextAccessor conquerorContextAccessor,
     ISignalIdFactory signalIdFactory,
-    SignalPublisherFactory<TSignal> publisherFactory,
-    Action<ISignalPipeline<TSignal>>? configurePipelineField,
     SignalTransportRole transportRole,
     Type? handlerType)
-    : ISignalDispatcher<TSignal>
-    where TSignal : class, ISignal<TSignal>
+    : ISignalDispatcher
 {
-    public async Task Dispatch(TSignal signal, CancellationToken cancellationToken)
+    public async Task Dispatch<TSignal>(
+        TSignal signal,
+        IServiceProvider serviceProvider,
+        Action<ISignalPipeline<TSignal>>? configurePipeline,
+        ISignalPublisher<TSignal>? publisher,
+        ConfigureSignalPublisher<TSignal>? configurePublisher,
+        ConfigureSignalPublisherAsync<TSignal>? configurePublisherAsync,
+        CancellationToken cancellationToken)
+        where TSignal : class, ISignal<TSignal>
     {
         using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 
@@ -27,11 +31,6 @@ internal sealed class SignalDispatcher<TSignal>(
             conquerorContext.SetSignalId(signalIdFactory.GenerateId());
         }
 
-        var publisher = publisherFactory.CreateSync(serviceProvider, conquerorContext)
-                        ?? await publisherFactory.CreateAsync(serviceProvider, conquerorContext).ConfigureAwait(false);
-
-        var transportType = new SignalTransportType(publisher.TransportTypeName, transportRole);
-
         // if we are in a publish operation, make sure to create a new signal ID for this execution if
         // we were called from within the call context of another handler
         if (originalSignalId is not null && transportRole is SignalTransportRole.Publisher)
@@ -39,9 +38,29 @@ internal sealed class SignalDispatcher<TSignal>(
             conquerorContext.SetSignalId(signalIdFactory.GenerateId());
         }
 
+        if (publisher is null)
+        {
+            var transportBuilder = new SignalPublisherBuilder<TSignal>(serviceProvider, conquerorContext);
+
+            if (configurePublisher is not null)
+            {
+                publisher = configurePublisher(transportBuilder);
+            }
+            else if (configurePublisherAsync is not null)
+            {
+                publisher = await configurePublisherAsync(transportBuilder).ConfigureAwait(false);
+            }
+            else
+            {
+                publisher = transportBuilder.UseInProcessWithSequentialBroadcastingStrategy();
+            }
+        }
+
+        var transportType = new SignalTransportType(publisher.TransportTypeName, transportRole);
+
         var pipeline = new SignalPipeline<TSignal>(handlerType, serviceProvider, conquerorContext, transportType);
 
-        configurePipelineField?.Invoke(pipeline);
+        configurePipeline?.Invoke(pipeline);
 
         var pipelineRunner = pipeline.Build(conquerorContext);
 
@@ -52,34 +71,4 @@ internal sealed class SignalDispatcher<TSignal>(
                                      cancellationToken)
                             .ConfigureAwait(false);
     }
-
-    public ISignalDispatcher<TSignal> WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline)
-        => new SignalDispatcher<TSignal>(
-            serviceProvider,
-            conquerorContextAccessor,
-            signalIdFactory,
-            publisherFactory,
-            (Action<ISignalPipeline<TSignal>>)Delegate.Combine(configurePipelineField, configurePipeline),
-            transportRole,
-            handlerType);
-
-    public ISignalDispatcher<TSignal> WithPublisher(ConfigureSignalPublisher<TSignal> configurePublisher)
-        => new SignalDispatcher<TSignal>(
-            serviceProvider,
-            conquerorContextAccessor,
-            signalIdFactory,
-            new(configurePublisher),
-            configurePipelineField,
-            transportRole,
-            handlerType);
-
-    public ISignalDispatcher<TSignal> WithPublisher(ConfigureSignalPublisherAsync<TSignal> configurePublisher)
-        => new SignalDispatcher<TSignal>(
-            serviceProvider,
-            conquerorContextAccessor,
-            signalIdFactory,
-            new(configurePublisher),
-            configurePipelineField,
-            transportRole,
-            handlerType);
 }

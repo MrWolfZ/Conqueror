@@ -115,6 +115,12 @@ public static class ConquerorSignallingServiceCollectionExtensions
 
     internal static IServiceCollection AddConquerorSignalling(this IServiceCollection services)
     {
+        // when creating publishers, we can use a singleton dispatcher since it is not bound to a handler type
+        services.TryAddSingleton<ISignalDispatcher>(static p => new SignalDispatcher(p.GetRequiredService<IConquerorContextAccessor>(),
+                                                                                     p.GetRequiredService<ISignalIdFactory>(),
+                                                                                     SignalTransportRole.Publisher,
+                                                                                     handlerType: null));
+
         services.TryAddTransient<ISignalPublishers, SignalPublishers>();
         services.TryAddTransient<ISignalReceivers, SignalReceivers>();
         services.TryAddSingleton<ISignalIdFactory, DefaultSignalIdFactory>();

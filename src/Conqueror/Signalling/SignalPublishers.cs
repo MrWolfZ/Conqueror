@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Conqueror.Signalling;
 
 internal sealed class SignalPublishers(
     IServiceProvider serviceProvider,
-    IConquerorContextAccessor conquerorContextAccessor,
-    ISignalIdFactory signalIdFactory)
+    ISignalDispatcher dispatcher)
     : ISignalPublishers
 {
     private static readonly Injectable HandlerCreationInjectable = new();
@@ -14,34 +14,27 @@ internal sealed class SignalPublishers(
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return ((ICoreSignalHandlerTypesInjector)TSignal.CoreTypesInjector).Inject(
+        var proxy = ((ICoreSignalHandlerTypesInjector)TSignal.CoreTypesInjector).Inject(
             HandlerCreationInjectable,
-            new(serviceProvider,
-                conquerorContextAccessor,
-                signalIdFactory)) as TIHandler ?? throw new InvalidOperationException("could not create handler proxy");
+            new(serviceProvider, dispatcher));
+
+        Debug.Assert(proxy is TIHandler, $"handler proxy was not of correct type; expected handler type '{typeof(TIHandler)}', actual '{proxy.GetType()}'");
+
+        return (TIHandler)proxy;
     }
 
     private readonly record struct InjectableArg(
         IServiceProvider ServiceProvider,
-        IConquerorContextAccessor ConquerorContextAccessor,
-        ISignalIdFactory SignalIdFactory);
+        ISignalDispatcher Dispatcher);
 
     private sealed class Injectable : ICoreSignalHandlerTypesInjectable<InjectableArg, object>
     {
         object ICoreSignalHandlerTypesInjectable<InjectableArg, object>.WithInjectedTypes<TSignal, TIHandler, TProxy>(InjectableArg arg)
         {
-            var dispatcher = new SignalDispatcher<TSignal>(
-                arg.ServiceProvider,
-                arg.ConquerorContextAccessor,
-                arg.SignalIdFactory,
-                new(static b => b.UseInProcessWithSequentialBroadcastingStrategy()),
-                null,
-                SignalTransportRole.Publisher,
-                null);
-
             return new TProxy
             {
-                Dispatcher = dispatcher,
+                ServiceProvider = arg.ServiceProvider,
+                Dispatcher = arg.Dispatcher,
             };
         }
     }

@@ -13,24 +13,33 @@ internal sealed class SignalHandlerInvoker<TSignal>(
     : ISignalHandlerInvoker
     where TSignal : class, ISignal<TSignal>
 {
+    // since the dispatcher only relies on singleton services, we can cache it here to avoid unnecessary allocations
+    private SignalDispatcher? dispatcher;
+
     public Task Invoke(
         object signal,
         IServiceProvider serviceProvider,
         string transportTypeName,
         CancellationToken cancellationToken)
     {
-        Debug.Assert(signal.GetType().IsAssignableTo(typeof(TSignal)), $"the signal type was expected to be assignable to '{typeof(TSignal)}', but was '{signal.GetType()}' instead.");
+        Debug.Assert(
+            signal.GetType().IsAssignableTo(typeof(TSignal)),
+            $"the signal type was expected to be assignable to '{typeof(TSignal)}', but was '{signal.GetType()}' instead.");
 
-        var dispatcher = new SignalDispatcher<TSignal>(
-            serviceProvider,
+        dispatcher ??= new(
             serviceProvider.GetRequiredService<IConquerorContextAccessor>(),
             serviceProvider.GetRequiredService<ISignalIdFactory>(),
-            new(new Publisher(handlerFn, transportTypeName)),
-            configurePipeline,
             SignalTransportRole.Receiver,
             handlerType);
 
-        return dispatcher.Dispatch((TSignal)signal, cancellationToken);
+        return dispatcher.Dispatch(
+            (TSignal)signal,
+            serviceProvider,
+            configurePipeline,
+            new Publisher(handlerFn, transportTypeName),
+            configurePublisher: null,
+            configurePublisherAsync: null,
+            cancellationToken);
     }
 
     private sealed class Publisher(SignalHandlerFn<TSignal> handlerFn, string transportTypeName) : ISignalPublisher<TSignal>

@@ -5,14 +5,15 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-internal interface ISignalDispatcher<TSignal>
-    where TSignal : class, ISignal<TSignal>
+internal interface ISignalDispatcher
 {
-    Task Dispatch(TSignal signal, CancellationToken cancellationToken);
-
-    ISignalDispatcher<TSignal> WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline);
-
-    ISignalDispatcher<TSignal> WithPublisher(ConfigureSignalPublisher<TSignal> configurePublisher);
-
-    ISignalDispatcher<TSignal> WithPublisher(ConfigureSignalPublisherAsync<TSignal> configurePublisher);
+    Task Dispatch<TSignal>(
+        TSignal signal,
+        IServiceProvider serviceProvider,
+        Action<ISignalPipeline<TSignal>>? configurePipeline,
+        ISignalPublisher<TSignal>? publisher,
+        ConfigureSignalPublisher<TSignal>? configurePublisher,
+        ConfigureSignalPublisherAsync<TSignal>? configurePublisherAsync,
+        CancellationToken cancellationToken)
+        where TSignal : class, ISignal<TSignal>;
 }
