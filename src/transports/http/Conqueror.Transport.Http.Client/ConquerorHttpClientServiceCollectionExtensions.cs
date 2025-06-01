@@ -25,6 +25,7 @@ public static class ConquerorHttpClientServiceCollectionExtensions
 
     private static void AddSignalling(IServiceCollection services)
     {
+        services.TryAddSingleton<IHttpSseSignalReceivers, HttpSseSignalReceivers>();
         services.TryAddSingleton<HttpSseSignalReceiversRunner>();
     }
 }

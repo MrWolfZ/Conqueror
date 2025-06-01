@@ -4,16 +4,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.Transport.Http.Client.Signalling.Sse;
 using Microsoft.Extensions.DependencyInjection;
 
-// ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
-namespace Conqueror;
+namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 
-public static class HttpSseSignalReceiversExtensions
+internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
 {
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive, the source is returned to the caller")]
-    public static SignalReceiverRun RunHttpSseSignalReceivers(this ISignalReceivers receivers, CancellationToken cancellationToken)
+    public SignalReceiverRun RunReceivers(ISignalReceivers receivers, CancellationToken cancellationToken)
     {
         var registry = receivers.ServiceProvider.GetRequiredService<ISignalHandlerRegistry>();
         var invokers = registry.GetReceiverHandlerInvokers<IHttpSseSignalHandlerTypesInjector>();
@@ -28,35 +26,35 @@ public static class HttpSseSignalReceiversExtensions
                                                   return null;
                                               }
 
-                                              return receivers.ConfigureHttpSseSignalReceiver(i.HandlerType!, i.TypesInjector.ConfigureHttpSseReceiver);
+                                              return ConfigureHttpSseSignalReceiver(receivers, i.HandlerType!, i.TypesInjector.ConfigureHttpSseReceiver);
                                           })
                                           .OfType<HttpSseSignalReceiver>()
                                           .ToList();
 
-        return receivers.CombineRuns(configuredReceivers.Select(r => receivers.RunHttpSseSignalReceiver(r, cancellationToken)).ToList());
+        return receivers.CombineRuns(configuredReceivers.Select(r => RunHttpSseSignalReceiver(receivers, r, cancellationToken)).ToList());
     }
 
-    public static SignalReceiverRun RunHttpSseSignalReceiver<THandler>(this ISignalReceivers receivers, CancellationToken cancellationToken)
+    public SignalReceiverRun RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
         where THandler : class, IHttpSseSignalHandler
     {
-        var receiver = receivers.ConfigureHttpSseSignalReceiver<THandler>();
+        var receiver = ConfigureHttpSseSignalReceiver<THandler>(receivers);
 
         if (receiver is null)
         {
             return new(Task.CompletedTask, Task.CompletedTask, null);
         }
 
-        return receivers.RunHttpSseSignalReceiver(receiver, cancellationToken);
+        return RunHttpSseSignalReceiver(receivers, receiver, cancellationToken);
     }
 
-    private static HttpSseSignalReceiver? ConfigureHttpSseSignalReceiver<THandler>(this ISignalReceivers receivers)
+    private static HttpSseSignalReceiver? ConfigureHttpSseSignalReceiver<THandler>(ISignalReceivers receivers)
         where THandler : class, IHttpSseSignalHandler
     {
-        return receivers.ConfigureHttpSseSignalReceiver(typeof(THandler), THandler.ConfigureHttpSseReceiver);
+        return ConfigureHttpSseSignalReceiver(receivers, typeof(THandler), THandler.ConfigureHttpSseReceiver);
     }
 
     private static HttpSseSignalReceiver? ConfigureHttpSseSignalReceiver(
-        this ISignalReceivers receivers,
+        ISignalReceivers receivers,
         Type handlerType,
         Action<IHttpSseSignalReceiver> configureReceiver)
     {
@@ -66,7 +64,7 @@ public static class HttpSseSignalReceiversExtensions
     }
 
     private static SignalReceiverRun RunHttpSseSignalReceiver(
-        this ISignalReceivers receivers,
+        ISignalReceivers receivers,
         HttpSseSignalReceiver receiver,
         CancellationToken cancellationToken)
     {
