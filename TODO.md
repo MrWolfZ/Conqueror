@@ -4,6 +4,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ## General
 
+- [ ] write script to generate solution and `.dotsettings` for recipes
 - [ ] set up issues templates via yaml config
 - [ ] add code coverage reports and badge
 - [ ] run separate matrix steps for different dotnet versions and ensure that all code works if running against only dotnet 8
@@ -36,6 +37,9 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add null checks to public API methods to support users that do not use nullable reference types
 - [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
 - [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
+- [ ] allow opting into performance enhancement by re-using pipelines
+  - [ ] add `WithEagerPipeline` to evaluate client pipeline eagerly, which allows caching senders with a pre-built pipeline
+  - [ ] add `ConfigureStaticPipeline` to create a handler pipeline only once
 
 ### Signalling
 
@@ -58,6 +62,9 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add recipe that showcases how batching can be implemented with a custom transport
 - [ ] add docs that specify that the sequential strategy calls observers in an unspecified order
 - [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
+- [ ] allow opting into performance enhancement by re-using pipelines
+  - [ ] add `WithEagerPipeline` to evaluate client pipeline eagerly, which allows caching senders with a pre-built pipeline
+  - [ ] add `ConfigureStaticPipeline` to create a handler pipeline only once
 
 ### Iterators
 
@@ -87,6 +94,7 @@ This file contains all the open points for extensions and improvements to the **
 
 - [ ] create analyzers (including code fixes)
   - [ ] enforce correct `ConfigurePipeline` method signature
+    - [ ] do this generically (for any handler type) by finding signature mismatches between any `static virtual` interface method and methods of the same name on the handler type
   - [ ] enforce non-empty `ConfigurePipeline` method
 
 ## Middlewares
@@ -124,6 +132,11 @@ This file contains all the open points for extensions and improvements to the **
 
 ### Transport.Http Messaging
 
+- [ ] consider 3XX response status codes as error
+- [ ] support templated paths
+  - [ ] provide custom query or body serializer in IHttpMessage based on HTTP method (instead of lazily deciding this on server/client)
+  - [ ] in body serializer set content type with utf-8 encoding and in deserializer throw if content type is not json or encoding is explicitly set to something non-utf8
+  - [ ] in both add support for binding from path template
 - [ ] add tests for running with compression middleware
   - [ ] see also [here](https://stackoverflow.com/questions/28754673/httpclient-conditionally-set-acceptencoding-compression-at-runtime) for some inspiration
 - [ ] add tests for running with handler with disabled redirect following (should fail message)
@@ -144,6 +157,8 @@ This file contains all the open points for extensions and improvements to the **
 
 ### Transport.Http Signalling
 
+- [ ] consider 3XX response status codes as unrecoverable error
+- [ ] add API descriptions for endpoints
 - [ ] add tests for running with compression middleware
 - [ ] add tests for running with handler with disabled redirect following (should be unrecoverable receiver connection error)
 - [ ] SSE improvements
@@ -204,3 +219,10 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] allow logging out to change user
 - [ ] add example for SSE signal endpoint
   - [ ] also handle authentication by lazily running receiver and configuring it with the bearer token from a singleton
+- [ ] add example for SSE iterator endpoint
+- [ ] add AOT example app
+- [ ] create multiple implementations of basic scenario
+  - [ ] chat app
+  - [ ] messages to send chats and DMs
+  - [ ] signals to receive public chats
+  - [ ] iterators to receive DMs
