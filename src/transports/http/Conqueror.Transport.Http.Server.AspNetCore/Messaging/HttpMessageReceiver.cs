@@ -12,10 +12,9 @@ internal sealed class HttpMessageReceiver<TMessage, TResponse>(IServiceProvider 
 
     public bool IsOmittedFromApiDescription { get; private set; }
 
-    public IHttpMessageReceiver Disable()
+    public void Disable()
     {
         IsEnabled = false;
-        return this;
     }
 
     public IHttpMessageReceiver OmitFromApiDescription()

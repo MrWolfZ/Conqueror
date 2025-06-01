@@ -1850,7 +1850,7 @@ public static partial class HttpTestMessages
 
         static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver)
         {
-            _ = receiver.Disable();
+            receiver.Disable();
         }
     }
 
@@ -1876,7 +1876,7 @@ public static partial class HttpTestMessages
 
         static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver)
         {
-            _ = receiver.Disable();
+            receiver.Disable();
         }
     }
 

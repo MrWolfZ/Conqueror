@@ -338,7 +338,7 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
 
                         if (isDisabled)
                         {
-                            _ = r.Disable();
+                            r.Disable();
                         }
                     })
                     .AddSingleton(observations);
@@ -389,7 +389,7 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
 
                         if (isDisabled)
                         {
-                            _ = r.Disable();
+                            r.Disable();
                         }
                     })
                     .AddSingleton(observations);
