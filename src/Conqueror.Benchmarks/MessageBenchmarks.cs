@@ -2,7 +2,6 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Toolchains.InProcess.Emit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Benchmarks;
@@ -119,9 +118,7 @@ public partial class MessageBenchmarks
         // ReSharper disable once EmptyConstructor
         public ConfigWithCustomEnvVars()
         {
-            AddJob(
-                Job.ShortRun
-                   .WithToolchain(InProcessEmitToolchain.Instance));
+            AddJob(Job.ShortRun);
 
             // AddJob(Job.Default
             //           .WithEnvironmentVariables(new EnvironmentVariable("SOME_VAR", "SOME_VALUE"))
