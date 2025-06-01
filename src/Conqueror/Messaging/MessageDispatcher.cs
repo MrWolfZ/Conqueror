@@ -66,14 +66,12 @@ internal sealed class MessageDispatcher(
 
         configurePipeline?.Invoke(pipeline);
 
-        var pipelineRunner = pipeline.Build(conquerorContext);
-
-        return await pipelineRunner.Execute(
-                                       serviceProvider,
-                                       message,
-                                       sender,
-                                       transportType,
-                                       cancellationToken)
-                                   .ConfigureAwait(false);
+        return await pipeline.Execute(
+                                 serviceProvider,
+                                 message,
+                                 sender,
+                                 transportType,
+                                 cancellationToken)
+                             .ConfigureAwait(false);
     }
 }

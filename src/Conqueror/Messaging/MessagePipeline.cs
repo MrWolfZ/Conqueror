@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Conqueror.Messaging;
@@ -66,9 +67,32 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
         return this;
     }
 
-    public MessagePipelineRunner<TMessage, TResponse> Build(ConquerorContext conquerorContext)
+    public Task<TResponse> Execute(
+        IServiceProvider serviceProvider,
+        TMessage message,
+        IMessageSender<TMessage, TResponse> sender,
+        MessageTransportType transportType,
+        CancellationToken cancellationToken)
     {
-        return new(conquerorContext, middlewares);
+        if (middlewares.Count == 0)
+        {
+            return sender.Send(
+                message,
+                serviceProvider,
+                ConquerorContext,
+                cancellationToken);
+        }
+
+        var ctx = new MessageMiddlewareContext<TMessage, TResponse>(middlewares, sender)
+        {
+            Message = message,
+            TransportType = transportType,
+            CancellationToken = cancellationToken,
+            ConquerorContext = ConquerorContext,
+            ServiceProvider = serviceProvider,
+        };
+
+        return middlewares[0].Execute(ctx);
     }
 
     public IEnumerator<IMessageMiddleware<TMessage, TResponse>> GetEnumerator() => middlewares.GetEnumerator();
