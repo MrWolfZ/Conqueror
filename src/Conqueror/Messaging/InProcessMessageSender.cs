@@ -11,14 +11,16 @@ internal sealed class InProcessMessageSender<TMessage, TResponse>(
 {
     public string TransportTypeName => ConquerorConstants.InProcessTransportName;
 
-    public Task<TResponse> Send(TMessage message,
-                                      IServiceProvider serviceProvider,
-                                      ConquerorContext conquerorContext,
-                                      CancellationToken cancellationToken)
+    public Task<TResponse> Send(
+        TMessage message,
+        IServiceProvider serviceProvider,
+        ConquerorContext conquerorContext,
+        CancellationToken cancellationToken)
     {
-        return invoker.Invoke<TMessage, TResponse>(message,
-                                                   serviceProvider,
-                                                   TransportTypeName,
-                                                   cancellationToken);
+        return invoker.Invoke<TMessage, TResponse>(
+            message,
+            serviceProvider,
+            TransportTypeName,
+            cancellationToken);
     }
 }

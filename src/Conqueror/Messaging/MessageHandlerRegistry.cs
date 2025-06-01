@@ -15,9 +15,16 @@ internal sealed class MessageHandlerRegistry(IEnumerable<MessageHandlerRegistrat
         where TMessage : class, IMessage<TMessage, TResponse>
         where TTypesInjector : class, IMessageHandlerTypesInjector
     {
-        return invokerByMessageAndInjectorType.GetOrAdd((typeof(TMessage), typeof(TTypesInjector)),
-                                                        GetInvokerForMessageAndInjectorType<TTypesInjector>)
-            as IMessageReceiverHandlerInvoker<TTypesInjector>;
+        var key = (typeof(TMessage), typeof(TTypesInjector));
+
+        // performance optimization: we do not use `GetOrAdd` here to save on the allocation of the delegate
+        if (invokerByMessageAndInjectorType.TryGetValue(key, out var invoker))
+        {
+            return invoker as IMessageReceiverHandlerInvoker<TTypesInjector>;
+        }
+
+        invokerByMessageAndInjectorType[key] = GetInvokerForMessageAndInjectorType<TMessage, TTypesInjector>();
+        return invokerByMessageAndInjectorType[key] as IMessageReceiverHandlerInvoker<TTypesInjector>;
     }
 
     public IReadOnlyCollection<IMessageReceiverHandlerInvoker<TTypesInjector>> GetReceiverHandlerInvokers<TTypesInjector>()
@@ -40,11 +47,10 @@ internal sealed class MessageHandlerRegistry(IEnumerable<MessageHandlerRegistrat
         return invokers.ToList();
     }
 
-    private MessageReceiverHandlerInvoker<TTypesInjector>? GetInvokerForMessageAndInjectorType<TTypesInjector>(
-        (Type MessageType, Type InjectorType) tuple)
+    private MessageReceiverHandlerInvoker<TTypesInjector>? GetInvokerForMessageAndInjectorType<TMessage, TTypesInjector>()
         where TTypesInjector : class, IMessageHandlerTypesInjector
     {
-        var registration = registrationByMessageType.GetValueOrDefault(tuple.MessageType);
+        var registration = registrationByMessageType.GetValueOrDefault(typeof(TMessage));
 
         if (registration is null)
         {

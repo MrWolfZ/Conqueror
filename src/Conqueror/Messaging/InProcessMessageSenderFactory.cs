@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 
 namespace Conqueror.Messaging;
 
@@ -7,6 +8,8 @@ internal sealed class InProcessMessageSenderFactory(
     MessageHandlerRegistry registry)
     : IInProcessMessageSenderFactory
 {
+    private readonly ConcurrentDictionary<Type, object?> senderByMessageType = new();
+
     public IMessageSender<TMessage, TResponse> Get<TMessage, TResponse>()
         where TMessage : class, IMessage<TMessage, TResponse>
     {
@@ -30,6 +33,11 @@ internal sealed class InProcessMessageSenderFactory(
     private (IMessageSender<TMessage, TResponse>? Handler, bool IsDisabled) GetInternal<TMessage, TResponse>()
         where TMessage : class, IMessage<TMessage, TResponse>
     {
+        if (senderByMessageType.TryGetValue(typeof(TMessage), out var sender))
+        {
+            return sender is IMessageSender<TMessage, TResponse> s ? (s, false) : (null, true);
+        }
+
         var invoker = registry.GetReceiverHandlerInvoker<TMessage, TResponse, ICoreMessageHandlerTypesInjector>();
 
         if (invoker is null)
@@ -42,9 +50,21 @@ internal sealed class InProcessMessageSenderFactory(
 
         if (!receiver.IsEnabled)
         {
+            if (!receiver.MustBeConfiguredOnEveryMessage)
+            {
+                senderByMessageType[typeof(TMessage)] = null;
+            }
+
             return (null, true);
         }
 
-        return (new InProcessMessageSender<TMessage, TResponse>(invoker), false);
+        var newSender = new InProcessMessageSender<TMessage, TResponse>(invoker);
+
+        if (!receiver.MustBeConfiguredOnEveryMessage)
+        {
+            senderByMessageType[typeof(TMessage)] = newSender;
+        }
+
+        return (newSender, false);
     }
 }

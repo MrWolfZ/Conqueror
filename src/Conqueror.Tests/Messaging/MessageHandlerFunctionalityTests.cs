@@ -316,12 +316,31 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
     }
 
     [Test]
-    public async Task GivenHandlerWithDisabledInProcessTransport_WhenHandlerIsCalled_ExceptionIsThrown()
+    [Combinatorial]
+    public async Task GivenHandlerWithInProcessReceiverConfiguration_WhenHandlerIsCalledMultipleTimes_ReceiverIsConfiguredCorrectly(
+        [Values(true, false)] bool isDisabled,
+        [Values(true, false)] bool configurePerMessage)
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandler<TestMessageHandlerWithDisabledInProcessTransport>()
+        var configureCallCount = 0;
+
+        _ = services.AddMessageHandler<TestMessageHandlerWithInProcessReceiverConfiguration>()
+                    .AddSingleton<Action<IInProcessMessageReceiver>>(r =>
+                    {
+                        configureCallCount += 1;
+
+                        if (configurePerMessage)
+                        {
+                            _ = r.ConfigureOnEveryMessage();
+                        }
+
+                        if (isDisabled)
+                        {
+                            _ = r.Disable();
+                        }
+                    })
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -329,14 +348,120 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
         var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
-        await Assert.ThatAsync(() => handler.Handle(CreateMessage()), Throws.InvalidOperationException.With.Message.Contains("in-process transport is disabled for message type"));
+        async Task Call()
+        {
+            try
+            {
+                _ = await handler.Handle(CreateMessage());
+            }
+            catch when (isDisabled)
+            {
+            }
+        }
+
+        await Call();
+        await Call();
+        await Call();
+
+        Assert.That(configureCallCount, Is.EqualTo(configurePerMessage ? 3 : 1));
+    }
+
+    [Test]
+    [Combinatorial]
+    public async Task GivenHandlerWithoutResponseWithInProcessReceiverConfiguration_WhenHandlerIsCalledMultipleTimes_ReceiverIsConfiguredCorrectly(
+        [Values(true, false)] bool isDisabled,
+        [Values(true, false)] bool configurePerMessage)
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        var configureCallCount = 0;
+
+        _ = services.AddMessageHandler<TestMessageWithoutResponseHandlerWithInProcessReceiverConfiguration>()
+                    .AddSingleton<Action<IInProcessMessageReceiver>>(r =>
+                    {
+                        configureCallCount += 1;
+
+                        if (configurePerMessage)
+                        {
+                            _ = r.ConfigureOnEveryMessage();
+                        }
+
+                        if (isDisabled)
+                        {
+                            _ = r.Disable();
+                        }
+                    })
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageSenders>()
+                              .For(TestMessageWithoutResponse.T);
+
+        async Task Call()
+        {
+            try
+            {
+                await handler.Handle(CreateMessageWithoutResponse());
+            }
+            catch when (isDisabled)
+            {
+            }
+        }
+
+        await Call();
+        await Call();
+        await Call();
+
+        Assert.That(configureCallCount, Is.EqualTo(configurePerMessage ? 3 : 1));
+    }
+
+    [Test]
+    public async Task GivenHandlerWithDisabledInProcessTransport_WhenHandlerIsCalled_ExceptionIsThrown()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddMessageHandler<TestMessageHandlerWithInProcessReceiverConfiguration>()
+                    .AddSingleton<Action<IInProcessMessageReceiver>>(r => r.Disable())
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageSenders>()
+                              .For(TestMessage.T);
+
+        await Assert.ThatAsync(
+            () => handler.Handle(CreateMessage()),
+            Throws.InvalidOperationException.With.Message.Contains("in-process transport is disabled for message type"));
+    }
+
+    [Test]
+    public async Task GivenHandlerWithoutResponseWithDisabledInProcessTransport_WhenHandlerIsCalled_ExceptionIsThrown()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddMessageHandler<TestMessageWithoutResponseHandlerWithInProcessReceiverConfiguration>()
+                    .AddSingleton<Action<IInProcessMessageReceiver>>(r => r.Disable())
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageSenders>()
+                              .For(TestMessageWithoutResponse.T);
+
+        await Assert.ThatAsync(
+            () => handler.Handle(CreateMessageWithoutResponse()),
+            Throws.InvalidOperationException.With.Message.Contains("in-process transport is disabled for message type"));
     }
 
     [Test]
     [Combinatorial]
     public async Task GivenSender_WhenConfiguringSender_TheLastConfigurationWins(
-        [Values("sync", "async")]string firstConfigurationKind,
-        [Values("sync", "async")]string secondConfigurationKind)
+        [Values("sync", "async")] string firstConfigurationKind,
+        [Values("sync", "async")] string secondConfigurationKind)
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -362,6 +487,7 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
             "async" => handler.WithTransport(async _ =>
             {
                 await Task.CompletedTask;
+
                 throw new NotSupportedException();
             }),
             _ => throw new ArgumentOutOfRangeException(nameof(firstConfigurationKind), firstConfigurationKind, null),
@@ -410,6 +536,7 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
             observations.Messages.Add(message);
             observations.CancellationTokens.Add(cancellationToken);
             observations.ServiceProviders.Add(serviceProvider);
+
             return new(message.Payload + 1);
         }
     }
@@ -448,6 +575,7 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
             observations.Messages.Add(message);
             observations.CancellationTokens.Add(cancellationToken);
             observations.ServiceProviders.Add(serviceProvider);
+
             return new(message.Payload + 1);
         }
 
@@ -463,11 +591,13 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
             observations.Messages.Add(message);
             observations.CancellationTokens.Add(cancellationToken);
             observations.ServiceProviders.Add(serviceProvider);
+
             return new(message.Payload + 1);
         }
     }
 
-    private sealed partial class TestMessageHandlerWithDisabledInProcessTransport(TestObservations observations) : TestMessage.IHandler
+    private sealed partial class TestMessageHandlerWithInProcessReceiverConfiguration(TestObservations observations)
+        : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
         {
@@ -475,17 +605,36 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
 
             observations.Messages.Add(message);
             observations.CancellationTokens.Add(cancellationToken);
+
             return new(message.Payload + 1);
         }
 
-        static void IMessageHandler.ConfigureInProcessReceiver(IInProcessMessageReceiver receiver) => receiver.Disable();
+        static void IMessageHandler.ConfigureInProcessReceiver(IInProcessMessageReceiver receiver)
+            => receiver.ServiceProvider.GetRequiredService<Action<IInProcessMessageReceiver>>().Invoke(receiver);
     }
 
-    private sealed partial class DisposableMessageHandler(DisposalObservation observation) : TestMessage.IHandler, IDisposable
+    private sealed partial class TestMessageWithoutResponseHandlerWithInProcessReceiverConfiguration(TestObservations observations)
+        : TestMessageWithoutResponse.IHandler
+    {
+        public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+
+            observations.Messages.Add(message);
+            observations.CancellationTokens.Add(cancellationToken);
+        }
+
+        static void IMessageHandler.ConfigureInProcessReceiver(IInProcessMessageReceiver receiver)
+            => receiver.ServiceProvider.GetRequiredService<Action<IInProcessMessageReceiver>>().Invoke(receiver);
+    }
+
+    private sealed partial class DisposableMessageHandler(DisposalObservation observation) : TestMessage.IHandler,
+                                                                                             IDisposable
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
+
             return new(message.Payload);
         }
 
@@ -512,6 +661,7 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
             observations.Messages.Add(message);
             observations.CancellationTokens.Add(cancellationToken);
             observations.ServiceProviders.Add(serviceProvider);
+
             return new(message.PayloadBase + 1);
         }
     }
@@ -527,39 +677,44 @@ public sealed class MessageHandlerFunctionalityDelegateTests : MessageHandlerFun
 {
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
-        return services.AddMessageHandlerDelegate(TestMessage.T, async (message, p, cancellationToken) =>
-        {
-            await Task.Yield();
-
-            if (p.GetService<Exception>() is { } e)
+        return services.AddMessageHandlerDelegate(
+            TestMessage.T,
+            async (message, p, cancellationToken) =>
             {
-                throw e;
-            }
+                await Task.Yield();
 
-            var obs = p.GetRequiredService<TestObservations>();
-            obs.Messages.Add(message);
-            obs.CancellationTokens.Add(cancellationToken);
-            obs.ServiceProviders.Add(p);
-            return new(message.Payload + 1);
-        });
+                if (p.GetService<Exception>() is { } e)
+                {
+                    throw e;
+                }
+
+                var obs = p.GetRequiredService<TestObservations>();
+                obs.Messages.Add(message);
+                obs.CancellationTokens.Add(cancellationToken);
+                obs.ServiceProviders.Add(p);
+
+                return new(message.Payload + 1);
+            });
     }
 
     protected override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
     {
-        return services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, async (message, p, cancellationToken) =>
-        {
-            await Task.Yield();
-
-            if (p.GetService<Exception>() is { } e)
+        return services.AddMessageHandlerDelegate(
+            TestMessageWithoutResponse.T,
+            async (message, p, cancellationToken) =>
             {
-                throw e;
-            }
+                await Task.Yield();
 
-            var obs = p.GetRequiredService<TestObservations>();
-            obs.Messages.Add(message);
-            obs.CancellationTokens.Add(cancellationToken);
-            obs.ServiceProviders.Add(p);
-        });
+                if (p.GetService<Exception>() is { } e)
+                {
+                    throw e;
+                }
+
+                var obs = p.GetRequiredService<TestObservations>();
+                obs.Messages.Add(message);
+                obs.CancellationTokens.Add(cancellationToken);
+                obs.ServiceProviders.Add(p);
+            });
     }
 }
 
@@ -577,7 +732,10 @@ public sealed partial class MessageHandlerFunctionalityAssemblyScanningTests : M
     }
 
     // ReSharper disable once UnusedType.Global (accessed via reflection)
-    public sealed partial class TestMessageForAssemblyScanningHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null)
+    public sealed partial class TestMessageForAssemblyScanningHandler(
+        TestObservations observations,
+        IServiceProvider serviceProvider,
+        Exception? exception = null)
         : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
@@ -592,12 +750,16 @@ public sealed partial class MessageHandlerFunctionalityAssemblyScanningTests : M
             observations.Messages.Add(message);
             observations.CancellationTokens.Add(cancellationToken);
             observations.ServiceProviders.Add(serviceProvider);
+
             return new(message.Payload + 1);
         }
     }
 
     // ReSharper disable once UnusedType.Global (accessed via reflection)
-    public sealed partial class TestMessageWithoutResponseForAssemblyScanningHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null)
+    public sealed partial class TestMessageWithoutResponseForAssemblyScanningHandler(
+        TestObservations observations,
+        IServiceProvider serviceProvider,
+        Exception? exception = null)
         : TestMessageWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
@@ -673,11 +835,14 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
         var handlerWasCalled = false;
 
         await using var provider = RegisterHandler(new ServiceCollection())
-                                   .AddMessageHandlerDelegate(TestMessage.T, (message, _, _) =>
-                                   {
-                                       handlerWasCalled = true;
-                                       return new(message.Payload + 1);
-                                   })
+                                   .AddMessageHandlerDelegate(
+                                       TestMessage.T,
+                                       (message, _, _) =>
+                                       {
+                                           handlerWasCalled = true;
+
+                                           return new(message.Payload + 1);
+                                       })
                                    .AddSingleton(observations)
                                    .BuildServiceProvider();
 
@@ -696,7 +861,12 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
         var handlerWasCalled = false;
 
         await using var provider = RegisterHandler(new ServiceCollection())
-                                   .AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => { handlerWasCalled = true; })
+                                   .AddMessageHandlerDelegate(
+                                       TestMessageWithoutResponse.T,
+                                       (_, _, _) =>
+                                       {
+                                           handlerWasCalled = true;
+                                       })
                                    .AddSingleton(observations)
                                    .BuildServiceProvider();
 
@@ -746,7 +916,8 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
         var observations = new TestObservations();
 
         await using var provider = RegisterHandler(new ServiceCollection())
-                                   .AddMessageHandler<TestMessageHandlerWithDisabledInProcessTransport>()
+                                   .AddMessageHandler<TestMessageHandlerWithInProcessReceiverConfiguration>()
+                                   .AddSingleton<Action<IInProcessMessageReceiver>>(r => r.Disable())
                                    .AddSingleton(observations)
                                    .BuildServiceProvider();
 
@@ -763,7 +934,8 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
         var observations = new TestObservations();
 
         await using var provider = RegisterHandler(new ServiceCollection())
-                                   .AddMessageHandler<TestMessageWithoutResponseHandlerWithDisabledInProcessTransport>()
+                                   .AddMessageHandler<TestMessageWithoutResponseHandlerWithInProcessReceiverConfiguration>()
+                                   .AddSingleton<Action<IInProcessMessageReceiver>>(r => r.Disable())
                                    .AddSingleton(observations)
                                    .BuildServiceProvider();
 
@@ -780,7 +952,8 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
 
     protected abstract TestMessageWithoutResponse.IHandler ConfigureWithTransportWithoutResponse(
         TestMessageWithoutResponse.IHandler handler,
-        Func<IMessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>? baseConfigure = null);
+        Func<IMessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>?
+            baseConfigure = null);
 
     protected sealed override IServiceCollection RegisterHandler(IServiceCollection services)
     {
@@ -802,24 +975,28 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
         return ConfigureWithTransportWithoutResponse(base.ResolveHandlerWithoutResponse(serviceProvider));
     }
 
-    private sealed partial class TestMessageHandlerWithDisabledInProcessTransport : TestMessage.IHandler
+    private sealed partial class TestMessageHandlerWithInProcessReceiverConfiguration : TestMessage.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException("in-process transport is disabled for handler type");
+            await Task.Yield();
+
+            return new(message.Payload + 1);
         }
 
-        static void IMessageHandler.ConfigureInProcessReceiver(IInProcessMessageReceiver receiver) => receiver.Disable();
+        static void IMessageHandler.ConfigureInProcessReceiver(IInProcessMessageReceiver receiver)
+            => receiver.ServiceProvider.GetRequiredService<Action<IInProcessMessageReceiver>>().Invoke(receiver);
     }
 
-    private sealed partial class TestMessageWithoutResponseHandlerWithDisabledInProcessTransport : TestMessageWithoutResponse.IHandler
+    private sealed partial class TestMessageWithoutResponseHandlerWithInProcessReceiverConfiguration : TestMessageWithoutResponse.IHandler
     {
-        public Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
+        public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException("in-process transport is disabled for handler type");
+            await Task.Yield();
         }
 
-        static void IMessageHandler.ConfigureInProcessReceiver(IInProcessMessageReceiver receiver) => receiver.Disable();
+        static void IMessageHandler.ConfigureInProcessReceiver(IInProcessMessageReceiver receiver)
+            => receiver.ServiceProvider.GetRequiredService<Action<IInProcessMessageReceiver>>().Invoke(receiver);
     }
 
     protected sealed class TestMessageTransport<TMessage, TResponse>(Exception? exception = null) : IMessageSender<TMessage, TResponse>
@@ -827,10 +1004,11 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
     {
         public string TransportTypeName => "test";
 
-        public async Task<TResponse> Send(TMessage message,
-                                          IServiceProvider serviceProvider,
-                                          ConquerorContext conquerorContext,
-                                          CancellationToken cancellationToken)
+        public async Task<TResponse> Send(
+            TMessage message,
+            IServiceProvider serviceProvider,
+            ConquerorContext conquerorContext,
+            CancellationToken cancellationToken)
         {
             await Task.Yield();
 
@@ -850,6 +1028,7 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
             }
 
             var cmd = (TestMessage)(object)message;
+
             return (TResponse)(object)new TestMessageResponse(cmd.Payload + 1);
         }
     }
@@ -865,17 +1044,20 @@ public sealed class MessageHandlerFunctionalityClientWithSyncTransportFactoryTes
         return handler.WithTransport(b =>
         {
             b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+
             return baseConfigure?.Invoke(b) ?? b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
         });
     }
 
     protected override TestMessageWithoutResponse.IHandler ConfigureWithTransportWithoutResponse(
         TestMessageWithoutResponse.IHandler handler,
-        Func<IMessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>? baseConfigure = null)
+        Func<IMessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>?
+            baseConfigure = null)
     {
         return handler.WithTransport(b =>
         {
             b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+
             return baseConfigure?.Invoke(b) ?? b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>>();
         });
     }
@@ -892,18 +1074,21 @@ public sealed class MessageHandlerFunctionalityClientWithAsyncTransportFactoryTe
         {
             await Task.Delay(1);
             b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+
             return baseConfigure?.Invoke(b) ?? b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
         });
     }
 
     protected override TestMessageWithoutResponse.IHandler ConfigureWithTransportWithoutResponse(
         TestMessageWithoutResponse.IHandler handler,
-        Func<IMessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>? baseConfigure = null)
+        Func<IMessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>?
+            baseConfigure = null)
     {
         return handler.WithTransport(async b =>
         {
             await Task.Delay(1);
             b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+
             return baseConfigure?.Invoke(b) ?? b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>>();
         });
     }
