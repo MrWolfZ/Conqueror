@@ -10,11 +10,12 @@ internal sealed class SignalPipeline<TSignal>(
     Type? handlerType,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
-    SignalTransportType transportType)
+    SignalTransportType transportType,
+    int initialCapacity)
     : ISignalPipeline<TSignal>
     where TSignal : class, ISignal<TSignal>
 {
-    private readonly List<ISignalMiddleware<TSignal>> middlewares = [];
+    private readonly List<ISignalMiddleware<TSignal>> middlewares = new(initialCapacity);
 
     public Type? HandlerType { get; } = handlerType;
 
@@ -30,6 +31,7 @@ internal sealed class SignalPipeline<TSignal>(
         where TMiddleware : ISignalMiddleware<TSignal>
     {
         middlewares.Add(middleware);
+
         return this;
     }
 

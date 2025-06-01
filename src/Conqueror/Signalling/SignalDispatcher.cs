@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -58,15 +59,46 @@ internal sealed class SignalDispatcher(
 
         var transportType = new SignalTransportType(publisher.TransportTypeName, transportRole);
 
-        var pipeline = new SignalPipeline<TSignal>(handlerType, serviceProvider, conquerorContext, transportType);
+        var initialCapacity = transportRole is SignalTransportRole.Publisher
+            ? PipelineCapacityCache<TSignal>.MaxObservedPublisherPipelineCapacity
+            : PipelineCapacityCache<TSignal>.MaxObservedHandlerPipelineCapacity;
+
+        var pipeline = new SignalPipeline<TSignal>(
+            handlerType,
+            serviceProvider,
+            conquerorContext,
+            transportType,
+            initialCapacity);
 
         configurePipeline?.Invoke(pipeline);
 
-        await pipeline.Execute(serviceProvider,
-                               signal,
-                               publisher,
-                               transportType,
-                               cancellationToken)
+        if (pipeline.Count > initialCapacity)
+        {
+            if (transportRole is SignalTransportRole.Publisher)
+            {
+                PipelineCapacityCache<TSignal>.MaxObservedPublisherPipelineCapacity = pipeline.Count;
+            }
+            else
+            {
+                PipelineCapacityCache<TSignal>.MaxObservedHandlerPipelineCapacity = pipeline.Count;
+            }
+        }
+
+        await pipeline.Execute(
+                          serviceProvider,
+                          signal,
+                          publisher,
+                          transportType,
+                          cancellationToken)
                       .ConfigureAwait(false);
     }
+}
+
+[SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "intentional design to leverage static classes as cache")]
+[SuppressMessage("ReSharper", "UnusedTypeParameter", Justification = "used as static lookup key")]
+file static class PipelineCapacityCache<TSignal>
+{
+    public static int MaxObservedPublisherPipelineCapacity { get; set; }
+
+    public static int MaxObservedHandlerPipelineCapacity { get; set; }
 }
