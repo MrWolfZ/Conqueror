@@ -53,7 +53,7 @@ internal sealed class SignalDispatcher(
             }
             else
             {
-                publisher = transportBuilder.UseInProcessWithSequentialBroadcastingStrategy();
+                publisher = transportBuilder.UseInProcess();
             }
         }
 

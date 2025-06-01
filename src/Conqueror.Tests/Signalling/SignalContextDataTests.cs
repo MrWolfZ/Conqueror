@@ -137,7 +137,7 @@ public sealed partial class SignalContextDataTests
                                                    testObservations,
                                                    Location.TransportBuilder);
 
-                                               return b.UseInProcessWithSequentialBroadcastingStrategy();
+                                               return b.UseInProcess();
                                            });
 
         await handlerClient.WithPipeline(pipeline =>

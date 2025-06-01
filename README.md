@@ -252,7 +252,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
                         // transport to use parallel broadcasting for demonstration (instead of
                         // the default sequential broadcasting). You can also pass your own custom
                         // strategy if you need it
-                        .WithTransport(b => b.UseInProcessWithParallelBroadcastingStrategy())
+                        .WithTransport(b => b.UseInProcess().WithParallelBroadcastingStrategy())
 
                         // The 'Handle' method is unique for each `IHandler`. This means that your
                         // IDE's "Go to Implementation" feature will show all signal handlers for

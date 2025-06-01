@@ -362,7 +362,7 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
 
                 // this is to make the compiler recognize the correct overload of `WithTransport`
 #pragma warning disable CS0162 // Unreachable code detected
-                return b.UseInProcessWithSequentialBroadcastingStrategy();
+                return b.UseInProcess();
 #pragma warning restore CS0162 // Unreachable code detected
             }),
             "async" => handler.WithTransport(async _ =>
@@ -375,12 +375,12 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
 
         handler = secondConfigurationKind switch
         {
-            "sync" => handler.WithTransport(b => b.UseInProcessWithSequentialBroadcastingStrategy()),
+            "sync" => handler.WithTransport(b => b.UseInProcess()),
             "async" => handler.WithTransport(async b =>
             {
                 await Task.CompletedTask;
 
-                return b.UseInProcessWithSequentialBroadcastingStrategy();
+                return b.UseInProcess();
             }),
             _ => throw new ArgumentOutOfRangeException(nameof(firstConfigurationKind), firstConfigurationKind, null),
         };

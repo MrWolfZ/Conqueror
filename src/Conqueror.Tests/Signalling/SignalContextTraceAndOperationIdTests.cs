@@ -37,8 +37,7 @@ public sealed partial class SignalContextTraceAndOperationIdTests
 
                             if (publishNestedWithDifferentTransport)
                             {
-                                handler = handler.WithTransport(b => new TestSignalPublisher<NestedTestSignal>(
-                                                                    b.UseInProcessWithSequentialBroadcastingStrategy()));
+                                handler = handler.WithTransport(b => new TestSignalPublisher<NestedTestSignal>(b.UseInProcess()));
                             }
 
                             await handler.Handle(new(), ct);
@@ -74,7 +73,7 @@ public sealed partial class SignalContextTraceAndOperationIdTests
                                                traceIdFromTransportBuilder = b.ConquerorContext.GetTraceId();
                                                messageIdFromTransportBuilder = b.ConquerorContext.GetSignalId();
 
-                                               return b.UseInProcessWithSequentialBroadcastingStrategy();
+                                               return b.UseInProcess();
                                            });
 
         await handlerSender.Handle(new());

@@ -22,7 +22,7 @@ public sealed partial class SignalTypeGenerationTests
 
         await signalPublishers.For(TestSignal.T)
                               .WithPipeline(p => p.UseTest().UseTest())
-                              .WithTransport(b => b.UseInProcessWithSequentialBroadcastingStrategy())
+                              .WithTransport(b => b.UseInProcess())
                               .Handle(new(10));
     }
 

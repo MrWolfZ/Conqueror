@@ -122,6 +122,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
                                                                                      handlerType: null));
 
         services.TryAddTransient<ISignalPublishers, SignalPublishers>();
+        services.TryAddSingleton<IInProcessSignalPublisherFactory, InProcessSignalPublisherFactory>();
         services.TryAddTransient<ISignalReceivers, SignalReceivers>();
         services.TryAddSingleton<ISignalIdFactory, DefaultSignalIdFactory>();
         services.TryAddSingleton<SignalHandlerRegistry>();
