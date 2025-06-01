@@ -73,20 +73,56 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy
     where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
 {
     // cannot be 'required' since that would block the `new()` constraint
-    internal IMessageDispatcher<TMessage, TResponse> Dispatcher { get; init; } = null!;
+    internal IServiceProvider ServiceProvider { get; init; } = null!;
+
+    internal IMessageDispatcher Dispatcher { get; init; } = null!;
+
+    private Action<IMessagePipeline<TMessage, TResponse>>? ConfigurePipeline { get; init; }
+
+    private ConfigureMessageSender<TMessage, TResponse>? ConfigureSender { get; init; }
+
+    private ConfigureMessageSenderAsync<TMessage, TResponse>? ConfigureSenderAsync { get; init; }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
-        => Dispatcher.Dispatch(message, cancellationToken);
+        => Dispatcher.Dispatch(
+            message,
+            ServiceProvider,
+            ConfigurePipeline,
+            sender: null,
+            ConfigureSender,
+            ConfigureSenderAsync,
+            cancellationToken);
 
     public TIHandler WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        => new TProxy { Dispatcher = Dispatcher.WithPipeline(configurePipeline) };
+        => new TProxy
+        {
+            ServiceProvider = ServiceProvider,
+            Dispatcher = Dispatcher,
+            ConfigurePipeline = (Action<IMessagePipeline<TMessage, TResponse>>)Delegate.Combine(ConfigurePipeline, configurePipeline),
+            ConfigureSender = ConfigureSender,
+            ConfigureSenderAsync = ConfigureSenderAsync,
+        };
 
-    public TIHandler WithTransport(ConfigureMessageSender<TMessage, TResponse> configureTransport)
-        => new TProxy { Dispatcher = Dispatcher.WithSender(configureTransport) };
+    public TIHandler WithTransport(ConfigureMessageSender<TMessage, TResponse> configureSender)
+        => new TProxy
+        {
+            ServiceProvider = ServiceProvider,
+            Dispatcher = Dispatcher,
+            ConfigurePipeline = ConfigurePipeline,
+            ConfigureSender = configureSender,
+            ConfigureSenderAsync = null,
+        };
 
-    public TIHandler WithTransport(ConfigureMessageSenderAsync<TMessage, TResponse> configureTransport)
-        => new TProxy { Dispatcher = Dispatcher.WithSender(configureTransport) };
+    public TIHandler WithTransport(ConfigureMessageSenderAsync<TMessage, TResponse> configureSenderAsync)
+        => new TProxy
+        {
+            ServiceProvider = ServiceProvider,
+            Dispatcher = Dispatcher,
+            ConfigurePipeline = ConfigurePipeline,
+            ConfigureSender = null,
+            ConfigureSenderAsync = configureSenderAsync,
+        };
 
     static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors()
         => throw new NotSupportedException("this method should never be called on the proxy");
@@ -103,7 +139,7 @@ public abstract class MessageHandlerProxy<TMessage, TIHandler, TProxy> : Message
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     public new Task Handle(TMessage message, CancellationToken cancellationToken = default)
-        => Dispatcher.Dispatch(message, cancellationToken);
+        => base.Handle(message, cancellationToken);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -113,7 +149,7 @@ internal interface IMessageHandlerProxy<TMessage, TResponse, THandler> : IMessag
 {
     THandler WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline);
 
-    THandler WithTransport(ConfigureMessageSender<TMessage, TResponse> configureTransport);
+    THandler WithTransport(ConfigureMessageSender<TMessage, TResponse> configureSender);
 
-    THandler WithTransport(ConfigureMessageSenderAsync<TMessage, TResponse> configureTransport);
+    THandler WithTransport(ConfigureMessageSenderAsync<TMessage, TResponse> configureSenderAsync);
 }

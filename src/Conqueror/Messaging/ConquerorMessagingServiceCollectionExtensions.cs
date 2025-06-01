@@ -168,6 +168,12 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
     internal static IServiceCollection AddConquerorMessaging(this IServiceCollection services)
     {
+        // when creating senders we can use a singleton dispatcher since it is not bound to a handler type
+        services.TryAddSingleton<IMessageDispatcher>(static p => new MessageDispatcher(p.GetRequiredService<IConquerorContextAccessor>(),
+                                                                                       p.GetRequiredService<IMessageIdFactory>(),
+                                                                                       MessageTransportRole.Sender,
+                                                                                       handlerType: null));
+
         services.TryAddTransient<IMessageSenders, MessageSenders>();
         services.TryAddSingleton<IMessageIdFactory, DefaultMessageIdFactory>();
         services.TryAddSingleton<MessageHandlerRegistry>();

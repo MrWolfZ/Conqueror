@@ -7,6 +7,6 @@ public delegate IMessageSender<TMessage, TResponse> ConfigureMessageSender<TMess
     IMessageSenderBuilder<TMessage, TResponse> builder)
     where TMessage : class, IMessage<TMessage, TResponse>;
 
-public delegate Task<IMessageSender<TMessage, TResponse>> ConfigureMessageSenderAsync<TMessage, TResponse>(
+public delegate ValueTask<IMessageSender<TMessage, TResponse>> ConfigureMessageSenderAsync<TMessage, TResponse>(
     IMessageSenderBuilder<TMessage, TResponse> builder)
     where TMessage : class, IMessage<TMessage, TResponse>;

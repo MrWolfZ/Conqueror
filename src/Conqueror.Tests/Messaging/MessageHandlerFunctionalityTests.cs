@@ -332,6 +332,56 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
         await Assert.ThatAsync(() => handler.Handle(CreateMessage()), Throws.InvalidOperationException.With.Message.Contains("in-process transport is disabled for message type"));
     }
 
+    [Test]
+    [Combinatorial]
+    public async Task GivenSender_WhenConfiguringSender_TheLastConfigurationWins(
+        [Values("sync", "async")]string firstConfigurationKind,
+        [Values("sync", "async")]string secondConfigurationKind)
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddMessageHandler<TestMessageHandler>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageSenders>().For(TestMessage.T);
+
+        handler = firstConfigurationKind switch
+        {
+            "sync" => handler.WithTransport(b =>
+            {
+                throw new NotSupportedException();
+
+                // this is to make the compiler recognize the correct overload of `WithTransport`
+#pragma warning disable CS0162 // Unreachable code detected
+                return b.UseInProcess();
+#pragma warning restore CS0162 // Unreachable code detected
+            }),
+            "async" => handler.WithTransport(async _ =>
+            {
+                await Task.CompletedTask;
+                throw new NotSupportedException();
+            }),
+            _ => throw new ArgumentOutOfRangeException(nameof(firstConfigurationKind), firstConfigurationKind, null),
+        };
+
+        handler = secondConfigurationKind switch
+        {
+            "sync" => handler.WithTransport(b => b.UseInProcess()),
+            "async" => handler.WithTransport(async b =>
+            {
+                await Task.CompletedTask;
+
+                return b.UseInProcess();
+            }),
+            _ => throw new ArgumentOutOfRangeException(nameof(firstConfigurationKind), firstConfigurationKind, null),
+        };
+
+        await Assert.ThatAsync(() => handler.Handle(CreateMessage()), Throws.Nothing);
+    }
+
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
         return services.AddMessageHandler<TestMessageHandler>();

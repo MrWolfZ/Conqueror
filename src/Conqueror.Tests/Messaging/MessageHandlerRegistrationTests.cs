@@ -11,6 +11,7 @@ public sealed partial class MessageHandlerRegistrationTests
         var services = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
                                               .AddMessageHandler<TestMessage2Handler>();
 
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageDispatcher)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageSenders)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageIdFactory)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MessageHandlerRegistry)));

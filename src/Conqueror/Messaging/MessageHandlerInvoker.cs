@@ -13,37 +13,56 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse>(
     : IMessageHandlerInvoker
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    public Task<TR> Invoke<TM, TR>(TM message, IServiceProvider serviceProvider, string transportTypeName, CancellationToken cancellationToken)
+    // since the dispatcher only relies on singleton services, we can cache it here to avoid unnecessary allocations
+    private MessageDispatcher? dispatcher;
+
+    public Task<TR> Invoke<TM, TR>(
+        TM message,
+        IServiceProvider serviceProvider,
+        string transportTypeName,
+        CancellationToken cancellationToken)
         where TM : class, IMessage<TM, TR>
     {
         Debug.Assert(typeof(TM) == typeof(TMessage), $"the signal type was expected to be {typeof(TMessage)}, but was {typeof(TM)} instead.");
         Debug.Assert(typeof(TR) == typeof(TResponse), $"the signal type was expected to be {typeof(TResponse)}, but was {typeof(TR)} instead.");
 
-        var dispatcher = new MessageDispatcher<TMessage, TResponse>(serviceProvider,
-                                                                    serviceProvider.GetRequiredService<IConquerorContextAccessor>(),
-                                                                    serviceProvider.GetRequiredService<IMessageIdFactory>(),
-                                                                    new(new Sender(handlerFn, transportTypeName)),
-                                                                    configurePipeline,
-                                                                    MessageTransportRole.Receiver,
-                                                                    handlerType);
+        // we don't need thread safety for this lazy initialization, since it
+        // does not matter if we initialize the dispatcher multiple times
+        dispatcher ??= new(
+            serviceProvider.GetRequiredService<IConquerorContextAccessor>(),
+            serviceProvider.GetRequiredService<IMessageIdFactory>(),
+            MessageTransportRole.Receiver,
+            handlerType);
 
-        return (Task<TR>)(object)dispatcher.Dispatch((message as TMessage)!, cancellationToken);
+        return (Task<TR>)(object)dispatcher.Dispatch(
+            (message as TMessage)!,
+            serviceProvider,
+            configurePipeline,
+            new Sender(handlerFn, transportTypeName),
+            configureSender: null,
+            configureSenderAsync: null,
+            cancellationToken);
     }
 
     private sealed class Sender(MessageHandlerFn<TMessage, TResponse> handlerFn, string transportTypeName) : IMessageSender<TMessage, TResponse>
     {
         public string TransportTypeName { get; } = transportTypeName;
 
-        public Task<TResponse> Send(TMessage message, IServiceProvider serviceProvider, ConquerorContext conquerorContext, CancellationToken cancellationToken)
+        public Task<TResponse> Send(
+            TMessage message,
+            IServiceProvider serviceProvider,
+            ConquerorContext conquerorContext,
+            CancellationToken cancellationToken)
             => handlerFn(message, serviceProvider, cancellationToken);
     }
 }
 
 internal interface IMessageHandlerInvoker
 {
-    Task<TResponse> Invoke<TMessage, TResponse>(TMessage message,
-                                                IServiceProvider serviceProvider,
-                                                string transportTypeName,
-                                                CancellationToken cancellationToken)
+    Task<TResponse> Invoke<TMessage, TResponse>(
+        TMessage message,
+        IServiceProvider serviceProvider,
+        string transportTypeName,
+        CancellationToken cancellationToken)
         where TMessage : class, IMessage<TMessage, TResponse>;
 }
