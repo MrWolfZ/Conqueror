@@ -15,8 +15,7 @@ public sealed partial class MessageTypeGenerationTests
     public async Task GivenMessageTypeWithExplicitImplementations_WhenUsingHandler_ItWorks()
     {
         var services = new ServiceCollection();
-        var provider = services.AddConqueror()
-                               .AddMessageHandler<TestMessageHandler>()
+        var provider = services.AddMessageHandler<TestMessageHandler>()
                                .AddMessageHandler<TestMessageWithoutResponseHandler>()
                                .BuildServiceProvider();
 

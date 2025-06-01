@@ -10,11 +10,8 @@ using Microsoft.AspNetCore.Routing.Constraints;
 var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services
-       .AddMessageEndpoints()
-       .AddMessageHandler<TopLevelTestMessageHandler>();
-
-builder.Services
-       .AddEndpointsApiExplorer()
+       .AddConquerorHttpServerAspNetCore()
+       .AddMessageHandler<TopLevelTestMessageHandler>()
        .AddSwaggerGen(c =>
        {
            c.DocInclusionPredicate((_, _) => true);
@@ -24,11 +21,8 @@ builder.Services.Configure<RouteOptions>(options => options.SetParameterPolicy<R
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseConquerorWellKnownErrorHandling();
 

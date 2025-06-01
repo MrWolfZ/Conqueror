@@ -16,7 +16,7 @@ public sealed partial class SignallingHttpSseClientContextTests
         bool hasActivity)
     {
         await using var host = await HttpTransportTestHost.Create(
-            services => services.AddConqueror().AddRouting(),
+            services => services.AddConquerorHttpServerAspNetCore().AddRouting(),
             app =>
             {
                 _ = app.Use(async (ctx, next) =>
@@ -43,7 +43,8 @@ public sealed partial class SignallingHttpSseClientContextTests
         List<IConquerorContextData?> receivedBidirectionalContextDatas = [];
         var clientTestObservations = new TestObservations();
 
-        var clientServices = new ServiceCollection().AddSignalHandler<TestSignalHandler>()
+        var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSignalHandler<TestSignalHandler>()
                                                     .AddSignalHandler<NestedTestSignalHandler>()
                                                     .AddSingleton(clientTestObservations)
                                                     .AddSingleton<FnToCallFromHandler>(async (s, p) =>

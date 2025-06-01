@@ -17,7 +17,7 @@ public sealed class SignallingHttpSseServerContextTests
         bool hasActivity)
     {
         await using var host = await HttpTransportTestHost.Create(
-            services => services.AddConqueror()
+            services => services.AddConquerorHttpServerAspNetCore()
                                 .AddSingleton<TestObservations>()
                                 .AddTransient(typeof(TestSignalMiddleware<>))
                                 .AddRouting(),

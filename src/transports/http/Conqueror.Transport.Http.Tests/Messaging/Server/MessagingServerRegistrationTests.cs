@@ -11,7 +11,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
                             services =>
                             {
                                 _ = services.AddRoutingCore()
-                                            .AddMessageEndpoints()
+                                            .AddConquerorHttpServerAspNetCore()
                                             .AddMessageHandler<TestMessageHandler>()
                                             .AddMessageHandler<DuplicateMessageName.TestMessageHandler>();
                             }, app => _ = app.UseRouting().UseEndpoints(b => b.MapMessageEndpoints())),
@@ -25,7 +25,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
                             services =>
                             {
                                 _ = services.AddRoutingCore()
-                                            .AddMessageEndpoints()
+                                            .AddConquerorHttpServerAspNetCore()
                                             .AddMessageHandler<TestMessageHandler>()
                                             .AddMessageHandler<TestMessageWithDuplicatePathFromConfigHandler>();
                             }, app => _ = app.UseRouting().UseEndpoints(b => b.MapMessageEndpoints())),

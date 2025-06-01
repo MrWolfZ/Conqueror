@@ -15,8 +15,7 @@ public sealed partial class SignalTypeGenerationTests
     public async Task GivenSignalTypeWithExplicitImplementations_WhenUsingHandler_ItWorks()
     {
         var services = new ServiceCollection();
-        var provider = services.AddConqueror()
-                               .AddSignalHandler<TestSignalHandler>()
+        var provider = services.AddSignalHandler<TestSignalHandler>()
                                .BuildServiceProvider();
 
         var signalPublishers = provider.GetRequiredService<ISignalPublishers>();

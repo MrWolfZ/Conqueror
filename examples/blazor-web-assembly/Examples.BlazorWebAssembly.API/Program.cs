@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
        .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
-       .AddMessageEndpoints()
+       .AddConquerorHttpServerAspNetCore()
        .AddSingleton<ChatRepository>()
        .AddSwaggerGen(o => o.DocInclusionPredicate((_, _) => true))
        .AddCors(c => c.AddPolicy("allow-all", b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().Build()))

@@ -26,11 +26,4 @@ public static class ConquerorServiceCollectionExtensions
 
         return services;
     }
-
-    internal static IServiceCollection AddConquerorSingletons(this IServiceCollection services)
-    {
-        services.TryAddSingleton<ConquerorSingletons>();
-
-        return services;
-    }
 }

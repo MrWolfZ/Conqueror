@@ -402,7 +402,7 @@ public static partial class HttpTestSignals
         {
             RegisterOnServer?.Invoke(services);
 
-            _ = services.AddConqueror()
+            _ = services.AddConquerorHttpServerAspNetCore()
                         .AddSingleton<TestObservations>()
                         .AddTransient(typeof(TestSignalMiddleware<>))
                         .AddRouting();

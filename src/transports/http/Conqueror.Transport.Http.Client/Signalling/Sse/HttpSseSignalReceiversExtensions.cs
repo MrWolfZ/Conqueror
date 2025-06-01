@@ -60,10 +60,9 @@ public static class HttpSseSignalReceiversExtensions
         Type handlerType,
         Action<IHttpSseSignalReceiver> configureReceiver)
     {
-        var singletons = receivers.ServiceProvider.GetRequiredService<ConquerorSingletons>();
-        var runner = singletons.GetOrAddSingleton(p => new HttpSseSignalReceiversRunner(p));
-
-        return runner.ConfigureReceiver(handlerType, configureReceiver);
+        return receivers.ServiceProvider
+                        .GetRequiredService<HttpSseSignalReceiversRunner>()
+                        .ConfigureReceiver(handlerType, configureReceiver);
     }
 
     private static SignalReceiverRun RunHttpSseSignalReceiver(
@@ -71,9 +70,8 @@ public static class HttpSseSignalReceiversExtensions
         HttpSseSignalReceiver receiver,
         CancellationToken cancellationToken)
     {
-        var singletons = receivers.ServiceProvider.GetRequiredService<ConquerorSingletons>();
-        var runner = singletons.GetOrAddSingleton(p => new HttpSseSignalReceiversRunner(p));
-
-        return runner.Run(receiver, cancellationToken);
+        return receivers.ServiceProvider
+                        .GetRequiredService<HttpSseSignalReceiversRunner>()
+                        .Run(receiver, cancellationToken);
     }
 }

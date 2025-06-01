@@ -29,7 +29,7 @@ public sealed class MessagingClientExecutionTests
             services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
             app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
-        var clientServices = new ServiceCollection().AddConqueror()
+        var clientServices = new ServiceCollection().AddConquerorHttpClient()
                                                     .AddSingleton<TestObservations>()
                                                     .AddTransient(typeof(TestMessageMiddleware<,>));
 
@@ -124,11 +124,11 @@ public sealed class MessagingClientExecutionTests
             services =>
             {
                 _ = services.AddMessageHandler<DisabledTestMessageHandler>();
-                _ = services.AddRouting().AddMessageEndpoints();
+                _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
             app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
 
-        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+        await using var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 
@@ -150,11 +150,11 @@ public sealed class MessagingClientExecutionTests
             services =>
             {
                 _ = services.AddMessageHandler<DisabledTestMessageWithoutResponseHandler>();
-                _ = services.AddRouting().AddMessageEndpoints();
+                _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
             app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
 
-        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+        await using var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 
@@ -187,11 +187,11 @@ public sealed class MessagingClientExecutionTests
                                 TransportType = new(TransportName, MessageTransportRole.Receiver),
                             });
 
-                _ = services.AddRouting().AddMessageEndpoints();
+                _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
             app => app.UseConquerorWellKnownErrorHandling().UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
 
-        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+        await using var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 
@@ -222,14 +222,14 @@ public sealed class MessagingClientExecutionTests
                                 return Task.CompletedTask;
                             });
 
-                _ = services.AddRouting().AddMessageEndpoints();
+                _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
             app => app.UseConquerorWellKnownErrorHandling()
                       .UseAuthentication()
                       .UseRouting()
                       .UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
 
-        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+        await using var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 
@@ -403,11 +403,11 @@ public sealed class MessagingClientExecutionTests
                         }),
                 };
 
-                _ = services.AddRouting().AddMessageEndpoints();
+                _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
             app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
 
-        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+        await using var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 

@@ -243,7 +243,7 @@ public sealed class MessagingServerExecutionTests
                         }),
                 };
 
-                _ = services.AddRouting().AddMessageEndpoints();
+                _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
             app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
 
@@ -281,7 +281,7 @@ public sealed class MessagingServerExecutionTests
                                 return Task.CompletedTask;
                             });
 
-                _ = services.AddRouting().AddMessageEndpoints();
+                _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
             app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
 

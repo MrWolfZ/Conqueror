@@ -12,7 +12,7 @@ builder.Services
        .AddSignalHandlersFromAssembly(typeof(Program).Assembly)
 
        // Add some services that Conqueror needs to properly expose messages via HTTP
-       .AddMessageEndpoints()
+       .AddConquerorHttpServerAspNetCore()
 
        // Let's enable Swashbuckle to get a nice Swagger UI
        .AddSwaggerGen();

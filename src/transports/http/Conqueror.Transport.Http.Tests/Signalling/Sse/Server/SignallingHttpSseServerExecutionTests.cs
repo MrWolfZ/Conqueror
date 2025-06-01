@@ -11,7 +11,7 @@ public sealed partial class SignallingHttpSseServerExecutionTests
     public async Task GivenTestHttpSseSignal_WhenSubscribingToSignals_ReturnsCorrectEventStream(HttpSignalTestCase testCase)
     {
         await using var host = await HttpTransportTestHost.Create(
-            testCase.RegisterServerServices,
+            services => testCase.RegisterServerServices(services.AddConquerorHttpServerAspNetCore()),
             app => app.MapSignalEndpoints());
 
         var targetUriBuilder = new UriBuilder(SseAddress)
@@ -81,7 +81,7 @@ public sealed partial class SignallingHttpSseServerExecutionTests
 
         await using var host = await HttpTransportTestHost.Create(
             services =>
-                services.AddConqueror()
+                services.AddConquerorHttpServerAspNetCore()
                         .AddSingleton(exception)
                         .AddRouting(),
             app => app.MapSignalEndpoints());
@@ -105,7 +105,7 @@ public sealed partial class SignallingHttpSseServerExecutionTests
     {
         await using var host = await HttpTransportTestHost.Create(
             services =>
-                services.AddConqueror()
+                services.AddConquerorHttpServerAspNetCore()
                         .AddSingleton<TestObservations>()
                         .AddRouting(),
             app => app.MapSignalEndpoints());
@@ -136,7 +136,7 @@ public sealed partial class SignallingHttpSseServerExecutionTests
     {
         await using var host = await HttpTransportTestHost.Create(
             services =>
-                services.AddConqueror()
+                services.AddConquerorHttpServerAspNetCore()
                         .AddSingleton<TestObservations>()
                         .AddRouting(),
             app => app.MapSignalEndpoints());

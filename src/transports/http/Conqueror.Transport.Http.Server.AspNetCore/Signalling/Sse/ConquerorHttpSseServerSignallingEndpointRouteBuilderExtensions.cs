@@ -43,8 +43,7 @@ public static class ConquerorHttpSseServerSignallingEndpointRouteBuilderExtensio
                                      context,
                                      logger,
                                      () => context.RequestServices
-                                                  .GetRequiredService<ConquerorSingletons>()
-                                                  .GetOrAddSingleton(p => new HttpSseSignalBroker(p))
+                                                  .GetRequiredService<HttpSseSignalBroker>()
                                                   .Subscribe(eventTypes))
                                  .ConfigureAwait(false);
             });

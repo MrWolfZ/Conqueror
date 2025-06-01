@@ -10,10 +10,10 @@ builder.Services
        .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
        .AddSignalHandlersFromAssembly(typeof(Program).Assembly)
 
-       // Add some services that Conqueror needs to properly expose messages via HTTP
-       .AddMessageEndpoints()
+       // Add services that Conqueror needs to properly expose things via HTTP
+       .AddConquerorHttpServerAspNetCore()
 
-       // Let's enable Swashbuckle to get a nice Swagger UI
+       // Let's also enable Swashbuckle to get a nice Swagger UI
        .AddSwaggerGen();
 
 var app = builder.Build();
@@ -24,5 +24,9 @@ app.UseSwagger()
 // This enables message handlers as minimal HTTP API endpoints (including in AOT mode
 // if you need that, although please check the corresponding recipe for more details)
 app.MapMessageEndpoints();
+
+// This adds a minimal API endpoint which allows consuming published signals
+// via Server-Sent Events
+app.MapServerSentEventsSignalsEndpoint("api/signals/sse");
 
 app.Run();

@@ -27,12 +27,13 @@ public sealed partial class SignallingHttpSseClientExecutionTests
     public async Task GivenTestHttpSseSignal_WhenRunningReceivers_ReceiversReceiveCorrectSignals(HttpSignalTestCase testCase)
     {
         await using var host = await CreateTestHost(
-            testCase.RegisterServerServices,
+            services => testCase.RegisterServerServices(services.AddConquerorHttpServerAspNetCore()),
             app => app.MapSignalEndpoints());
 
         var httpClient = host.HttpClient;
 
         var clientServices = testCase.RegisterClientServices(new ServiceCollection())
+                                     .AddConquerorHttpClient()
                                      .AddSingleton<FnToCallFromHandler>((s, p) =>
                                      {
                                          var observations = p.GetRequiredService<TestObservations>();
@@ -130,12 +131,13 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         [Values] bool runIndividually)
     {
         await using var host = await CreateTestHost(
-            services => services.AddConqueror()
+            services => services.AddConquerorHttpServerAspNetCore()
                                 .AddSingleton<TestObservations>()
                                 .AddRouting(),
             app => app.MapSignalEndpoints());
 
-        var clientServices = new ServiceCollection().AddSignalHandler<TestSignalWithDuplicateEventTypeHandler>();
+        var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSignalHandler<TestSignalWithDuplicateEventTypeHandler>();
 
         var clientServiceProvider = clientServices.BuildServiceProvider();
 
@@ -157,7 +159,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         [Values] bool runIndividually)
     {
         await using var host = await CreateTestHost(
-            services => services.AddConqueror()
+            services => services.AddConquerorHttpServerAspNetCore()
                                 .AddSingleton<TestObservations>()
                                 .AddRouting(),
             app => app.MapSignalEndpoints());
@@ -165,7 +167,8 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         var httpClient = host.HttpClient;
         var observations = new TestObservations();
 
-        var clientServices = new ServiceCollection().AddSignalHandler<TestSignalHandler>()
+        var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSignalHandler<TestSignalHandler>()
                                                     .AddSingleton<FnToCallFromHandler>((s, _) =>
                                                     {
                                                         observations.ReceivedSignals.Enqueue(s);
@@ -214,7 +217,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         [Values] bool runIndividually)
     {
         await using var host = await CreateTestHost(
-            services => services.AddConqueror()
+            services => services.AddConquerorHttpServerAspNetCore()
                                 .AddSingleton<TestObservations>()
                                 .AddRouting(),
             app => app.MapSignalEndpoints());
@@ -222,7 +225,8 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         var httpClient = host.HttpClient;
         var observations = new TestObservations();
 
-        var clientServices = new ServiceCollection().AddSignalHandler<TestSignalHandler>()
+        var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSignalHandler<TestSignalHandler>()
                                                     .AddSingleton<FnToCallFromHandler>((s, _) =>
                                                     {
                                                         observations.ReceivedSignals.Enqueue(s);
@@ -304,14 +308,15 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         [Values] bool useCancel)
     {
         await using var host = await CreateTestHost(
-            services => services.AddConqueror()
+            services => services.AddConquerorHttpServerAspNetCore()
                                 .AddSingleton<TestObservations>()
                                 .AddRouting(),
             app => app.MapSignalEndpoints());
 
         var httpClient = host.HttpClient;
 
-        var clientServices = new ServiceCollection().AddSignalHandler<TestSignalHandler>()
+        var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSignalHandler<TestSignalHandler>()
                                                     .AddSingleton<Action<IHttpSseSignalReceiver>>(r => r.Enable(SseAddress)
                                                                                                         .WithHttpClient(httpClient));
 
@@ -354,14 +359,15 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         [Values] bool useCancel)
     {
         await using var host = await CreateTestHost(
-            services => services.AddConqueror()
+            services => services.AddConquerorHttpServerAspNetCore()
                                 .AddSingleton<TestObservations>()
                                 .AddRouting(),
             app => app.MapSignalEndpoints());
 
         var httpClient = host.HttpClient;
 
-        var clientServices = new ServiceCollection().AddSignalHandler<TestSignalHandler>()
+        var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSignalHandler<TestSignalHandler>()
                                                     .AddSignalHandler<MultiTestSignalHandler>()
                                                     .AddSingleton<Action<IHttpSseSignalReceiver>>(r => r.Enable(SseAddress)
                                                                                                         .WithHttpClient(httpClient));
@@ -417,6 +423,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         serverCancellationToken = serverCts.Token;
 
         var clientServices = testCase.RegisterClientServices(new ServiceCollection())
+                                     .AddConquerorHttpClient()
                                      .AddSingleton(new ConcurrentQueue<Exception?>(testCase.HandlerExceptions))
                                      .AddSingleton<Action<IHttpSseSignalReceiver>>(r =>
                                      {
@@ -617,7 +624,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
     public async Task GivenHttpSseSignalHandlerWithReconnectDelayFn_WhenRunningReceiverWithRecoverableErrors_ReconnectsAreExecutedAfterDelay()
     {
         await using var host = await CreateTestHost(
-            services => services.AddConqueror()
+            services => services.AddConquerorHttpServerAspNetCore()
                                 .AddSingleton<TestObservations>()
                                 .AddRouting(),
             app => app.MapSignalEndpoints());
@@ -636,6 +643,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         serverConnectionResponses.Enqueue((StatusCodes.Status503ServiceUnavailable, ContentTypes.TextPlain, KeepAlive: false));
 
         var clientServices = new ServiceCollection()
+                             .AddConquerorHttpClient()
                              .AddSignalHandler<TestSignalHandler>()
                              .AddSingleton<FnToCallFromHandler>((s, _) =>
                              {
@@ -759,7 +767,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
     public async Task GivenHttpSseSignalHandlerForMultipleSignalTypes_WhenRunningReceiver_OnlyConfiguresReceiverOnce()
     {
         await using var host = await CreateTestHost(
-            services => services.AddConqueror()
+            services => services.AddConquerorHttpServerAspNetCore()
                                 .AddSingleton<TestObservations>()
                                 .AddRouting(),
             app => app.MapSignalEndpoints());
@@ -767,7 +775,8 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         var httpClient = host.HttpClient;
         var configCount = 0;
 
-        var clientServices = new ServiceCollection().AddSignalHandler<MultiTestSignalHandler>()
+        var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSignalHandler<MultiTestSignalHandler>()
                                                     .AddSingleton<Action<IHttpSseSignalReceiver>>(r =>
                                                     {
                                                         configCount += 1;
@@ -1448,7 +1457,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
         public void RegisterServerServices(IServiceCollection services)
         {
-            _ = services.AddConqueror()
+            _ = services.AddConquerorHttpServerAspNetCore()
                         .AddSingleton<TestObservations>()
                         .AddTransient(typeof(TestSignalMiddleware<>))
                         .AddRouting();

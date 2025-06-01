@@ -10,21 +10,17 @@ using Microsoft.AspNetCore.Mvc;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-       .AddEndpointsApiExplorer()
+       .AddConquerorHttpServerAspNetCore()
+       .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
        .AddSwaggerGen(c =>
        {
            c.DocInclusionPredicate((_, _) => true);
        });
 
-builder.Services.AddMessageHandlersFromAssembly(typeof(Program).Assembly);
-
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseConquerorWellKnownErrorHandling();
 

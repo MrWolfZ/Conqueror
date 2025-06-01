@@ -122,7 +122,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         services.TryAddSingleton<ISignalHandlerRegistry>(static p => p.GetRequiredService<SignalHandlerRegistry>());
         services.TryAddSingleton<InProcessSignalReceiver>();
 
-        return services.AddConquerorContext().AddConquerorSingletons();
+        return services.AddConquerorContext();
     }
 
     private static IServiceCollection AddSignalHandlerInternalGeneric<THandler>(

@@ -24,7 +24,7 @@ public sealed class TestHost : IStartupFilter,
 
         HttpClient = ApplicationFactory.CreateClient();
 
-        ClientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+        ClientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
     }
 
     private WebApplicationFactory<Program> ApplicationFactory { get; }

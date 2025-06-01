@@ -26,7 +26,7 @@ public sealed class MessagingClientContextTests : IDisposable
             services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
             app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
-        var clientServices = new ServiceCollection().AddConqueror()
+        var clientServices = new ServiceCollection().AddConquerorHttpClient()
                                                     .AddSingleton<TestObservations>()
                                                     .AddTransient(typeof(TestMessageMiddleware<,>));
 

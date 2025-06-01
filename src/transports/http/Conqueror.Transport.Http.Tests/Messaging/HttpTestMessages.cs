@@ -67,7 +67,7 @@ public static partial class HttpTestMessages
 
         _ = services.AddRouting()
                     .AddEndpointsApiExplorer()
-                    .AddMessageEndpoints();
+                    .AddConquerorHttpServerAspNetCore();
     }
 
     public static void MapMessageEndpoints<TMessage, TResponse, TIHandler>(this IApplicationBuilder app, MessageTestCase testCase)

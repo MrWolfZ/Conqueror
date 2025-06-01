@@ -10,9 +10,8 @@ public static class HttpSseSignalPublisherBuilderExtensions
         this ISignalPublisherBuilder<TSignal> builder)
         where TSignal : class, IHttpSseSignal<TSignal>
     {
-        var singletons = builder.ServiceProvider.GetRequiredService<ConquerorSingletons>();
-        var serverTransport = singletons.GetOrAddSingleton(p => new HttpSseSignalBroker(p));
+        var broker = builder.ServiceProvider.GetRequiredService<HttpSseSignalBroker>();
 
-        return new HttpSseSignalPublisher<TSignal>(serverTransport);
+        return new HttpSseSignalPublisher<TSignal>(broker);
     }
 }

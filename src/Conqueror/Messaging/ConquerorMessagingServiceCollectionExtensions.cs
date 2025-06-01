@@ -173,7 +173,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         services.TryAddSingleton<MessageHandlerRegistry>();
         services.TryAddSingleton<IMessageHandlerRegistry>(static p => p.GetRequiredService<MessageHandlerRegistry>());
 
-        return services.AddConquerorContext().AddConquerorSingletons();
+        return services.AddConquerorContext();
     }
 
     private static IServiceCollection AddMessageHandlerInternalGeneric<THandler>(
