@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Conqueror;
 using Conqueror.Transport.Http.Server.AspNetCore;
 using Conqueror.Transport.Http.Server.AspNetCore.Signalling.Sse;
 using Microsoft.AspNetCore.Builder;

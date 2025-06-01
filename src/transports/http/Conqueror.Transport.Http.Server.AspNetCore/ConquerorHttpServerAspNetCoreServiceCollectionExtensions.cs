@@ -1,3 +1,4 @@
+using Conqueror;
 using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 using Conqueror.Transport.Http.Server.AspNetCore.Signalling.Sse;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
@@ -27,6 +28,7 @@ public static class ConquerorHttpServerAspNetCoreServiceCollectionExtensions
 
     private static void AddSignalling(IServiceCollection services)
     {
+        services.TryAddSingleton<IHttpSseSignalPublisherFactory, HttpSseSignalPublisherFactory>();
         services.TryAddSingleton<HttpSseSignalBroker>();
     }
 }
