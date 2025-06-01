@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Conqueror.Signalling;
@@ -66,9 +67,32 @@ internal sealed class SignalPipeline<TSignal>(
         return this;
     }
 
-    public SignalPipelineRunner<TSignal> Build(ConquerorContext conquerorContext)
+    public Task Execute(
+        IServiceProvider serviceProvider,
+        TSignal signal,
+        ISignalPublisher<TSignal> publisher,
+        SignalTransportType transportType,
+        CancellationToken cancellationToken)
     {
-        return new(conquerorContext, middlewares);
+        if (middlewares.Count == 0)
+        {
+            return publisher.Publish(
+                signal,
+                serviceProvider,
+                ConquerorContext,
+                cancellationToken);
+        }
+
+        var ctx = new SignalMiddlewareContext<TSignal>(middlewares, publisher)
+        {
+            Signal = signal,
+            TransportType = transportType,
+            CancellationToken = cancellationToken,
+            ConquerorContext = ConquerorContext,
+            ServiceProvider = serviceProvider,
+        };
+
+        return middlewares[0].Execute(ctx);
     }
 
     public IEnumerator<ISignalMiddleware<TSignal>> GetEnumerator() => middlewares.GetEnumerator();

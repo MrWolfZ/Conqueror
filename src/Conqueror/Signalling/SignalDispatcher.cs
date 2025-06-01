@@ -62,13 +62,11 @@ internal sealed class SignalDispatcher(
 
         configurePipeline?.Invoke(pipeline);
 
-        var pipelineRunner = pipeline.Build(conquerorContext);
-
-        await pipelineRunner.Execute(serviceProvider,
-                                     signal,
-                                     publisher,
-                                     transportType,
-                                     cancellationToken)
-                            .ConfigureAwait(false);
+        await pipeline.Execute(serviceProvider,
+                               signal,
+                               publisher,
+                               transportType,
+                               cancellationToken)
+                      .ConfigureAwait(false);
     }
 }
