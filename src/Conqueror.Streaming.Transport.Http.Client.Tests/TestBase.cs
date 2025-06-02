@@ -141,7 +141,7 @@ public abstract class TestBase
         return ClientServiceProvider.GetRequiredService<T>();
     }
 
-    protected async Task<WebSocket> ConnectToWebSocket(string path, HttpRequestHeaders headers)
+    protected async Task<WebSocket> ConnectToWebSocket(string path, HttpHeaders headers)
     {
         WebSocketClient.ConfigureRequest = req =>
         {

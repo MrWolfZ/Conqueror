@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.Signalling.Sse;
 
-namespace Conqueror.Transport.Http.Client.Signalling.Sse;
+namespace Conqueror.Transport.Http.Client.Signalling.WebSockets;
 
-internal sealed class HttpSseSignalReceiver(IServiceProvider serviceProvider, Type handlerType) : IHttpSseSignalReceiver
+internal sealed class HttpWebSocketsSignalReceiver(IServiceProvider serviceProvider, Type handlerType) : IHttpWebSocketsSignalReceiver
 {
     private readonly List<ISignalReceiverHandlerInvoker> invokers = [];
     private readonly ConcurrentDictionary<Type, List<ISignalReceiverHandlerInvoker>> invokersBySignalType = [];
-    private readonly Dictionary<string, Func<string, object>> parserByEventType = [];
+    private readonly Dictionary<string, Func<Stream, CancellationToken, ValueTask<object>>> parserByTag = [];
     private readonly Dictionary<string, Type> signalTypeByEventType = [];
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
@@ -22,13 +21,13 @@ internal sealed class HttpSseSignalReceiver(IServiceProvider serviceProvider, Ty
 
     public bool IsEnabled => Configuration is not null;
 
-    public HttpSseSignalReceiverConfiguration? Configuration { get; private set; }
+    public HttpWebSocketsSignalReceiverConfiguration? Configuration { get; private set; }
 
-    public IReadOnlyCollection<string> EventTypes => parserByEventType.Keys;
+    public IReadOnlyCollection<string> Tags => parserByTag.Keys;
 
     public void Disable() => Configuration = null;
 
-    public HttpSseSignalReceiverConfiguration Enable(Uri address)
+    public HttpWebSocketsSignalReceiverConfiguration Enable(Uri address)
     {
         Configuration = new() { Address = address };
 
@@ -36,34 +35,22 @@ internal sealed class HttpSseSignalReceiver(IServiceProvider serviceProvider, Ty
     }
 
     public void AddSignalType<TSignal>(ISignalReceiverHandlerInvoker invoker)
-        where TSignal : class, IHttpSseSignal<TSignal>
+        where TSignal : class, IHttpWebSocketsSignal<TSignal>
     {
-        if (!signalTypeByEventType.TryAdd(TSignal.EventType, typeof(TSignal)))
+        if (!signalTypeByEventType.TryAdd(TSignal.Tag, typeof(TSignal)))
         {
             throw new InvalidOperationException(
-                $"the event type '{TSignal.EventType}' is already used by signal type '{signalTypeByEventType[TSignal.EventType]}'");
+                $"the event type '{TSignal.Tag}' is already used by signal type '{signalTypeByEventType[TSignal.Tag]}'");
         }
 
         invokers.Add(invoker);
-        parserByEventType[TSignal.EventType] = content => TSignal.HttpSseSignalSerializer.Deserialize(ServiceProvider, content);
+        parserByTag[TSignal.Tag] = async (content, ct)
+            => await TSignal.HttpWebSocketsSignalSerializer.Deserialize(ServiceProvider, content, ct).ConfigureAwait(false);
     }
 
-    public HttpSseSignalEnvelope ParseItem(string eventType, ReadOnlySpan<byte> bytes)
+    public ValueTask<object> ReadSignal(string tag, Stream stream, CancellationToken cancellationToken)
     {
-        var content = Encoding.UTF8.GetString(bytes);
-        var newLineIndex = content.IndexOf('\n');
-
-        var serializedSignal = content;
-        string? contextData = null;
-        if (newLineIndex >= 0)
-        {
-            serializedSignal = content[..newLineIndex];
-            contextData = content[(newLineIndex + 1)..];
-        }
-
-        var signal = parserByEventType[eventType].Invoke(serializedSignal);
-
-        return new(signal, contextData);
+        return parserByTag[tag].Invoke(stream, cancellationToken);
     }
 
     public async Task InvokeHandler(object signal, CancellationToken cancellationToken)
@@ -77,7 +64,7 @@ internal sealed class HttpSseSignalReceiver(IServiceProvider serviceProvider, Ty
             await invoker.Invoke(
                              signal,
                              ServiceProvider,
-                             ServersSentEventsTransportName,
+                             WebSocketsTransportName,
                              cancellationToken)
                          .ConfigureAwait(false);
         }

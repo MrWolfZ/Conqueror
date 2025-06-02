@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.WebSockets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Repositories;
@@ -17,6 +18,7 @@ internal sealed class HttpTransportTestHost : IAsyncDisposable
     }
 
     public required HttpClient HttpClient { get; init; }
+
     public required IHost Host { get; init; }
 
     public required TimeSpan TestTimeout { get; init; }
@@ -102,6 +104,25 @@ internal sealed class HttpTransportTestHost : IAsyncDisposable
             {
                 resource.Dispose();
             }
+        }
+    }
+
+    public async Task<WebSocket> ConnectToWebSocket(Uri address, Action<IHeaderDictionary>? configureHeaders = null)
+    {
+        var webSocketClient = Host.GetTestServer().CreateWebSocketClient();
+
+        webSocketClient.ConfigureRequest = req =>
+        {
+            configureHeaders?.Invoke(req.Headers);
+        };
+
+        try
+        {
+            return await webSocketClient.ConnectAsync(address, TestTimeoutToken);
+        }
+        finally
+        {
+            webSocketClient.ConfigureRequest = null;
         }
     }
 

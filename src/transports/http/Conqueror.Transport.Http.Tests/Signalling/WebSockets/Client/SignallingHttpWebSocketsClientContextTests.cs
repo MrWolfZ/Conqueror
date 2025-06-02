@@ -1,16 +1,16 @@
 using static Conqueror.Transport.Http.Tests.HttpTestContextData;
 using static Conqueror.Transport.Http.Tests.Signalling.HttpTestSignals;
 
-namespace Conqueror.Transport.Http.Tests.Signalling.Sse.Client;
+namespace Conqueror.Transport.Http.Tests.Signalling.WebSockets.Client;
 
 [TestFixture]
-public sealed partial class SignallingHttpSseClientContextTests
+public sealed partial class SignallingHttpWebSocketsClientContextTests
 {
     private int serverResponseHasBegunCount;
 
     [Test]
     [TestCaseSource(nameof(GenerateContextDataTestCases))]
-    public async Task GivenContextData_WhenPublishingHttpSseSignal_DataIsCorrectlySent(
+    public async Task GivenContextData_WhenPublishingHttpWebSocketsSignal_DataIsCorrectlySent(
         bool hasDownstream,
         bool hasBidirectional,
         bool hasActivity)
@@ -34,8 +34,6 @@ public sealed partial class SignallingHttpSseClientContextTests
                 app.MapSignalEndpoints();
             });
 
-        var httpClient = host.HttpClient;
-
         DisposableActivity? activity = null;
 
         var callCount = 0;
@@ -52,8 +50,10 @@ public sealed partial class SignallingHttpSseClientContextTests
                                                     {
                                                         var conquerorContextAccessor = p.GetRequiredService<IConquerorContextAccessor>();
 
-                                                        clientTestObservations.ReceivedSignalIds.Enqueue(conquerorContextAccessor.ConquerorContext?.GetSignalId());
-                                                        clientTestObservations.ReceivedTraceIds.Enqueue(conquerorContextAccessor.ConquerorContext?.GetTraceId());
+                                                        clientTestObservations.ReceivedSignalIds.Enqueue(
+                                                            conquerorContextAccessor.ConquerorContext?.GetSignalId());
+                                                        clientTestObservations.ReceivedTraceIds.Enqueue(
+                                                            conquerorContextAccessor.ConquerorContext?.GetTraceId());
                                                         receivedContextDatas.Add(conquerorContextAccessor.ConquerorContext?.DownstreamContextData);
                                                         receivedBidirectionalContextDatas.Add(conquerorContextAccessor.ConquerorContext?.ContextData);
 
@@ -63,21 +63,24 @@ public sealed partial class SignallingHttpSseClientContextTests
 
                                                         callCount += 1;
                                                     })
-                                                    .AddSingleton<Action<IHttpSseSignalReceiver>>(r => r.Enable(SseAddress)
-                                                                                                        .WithHttpClient(httpClient));
+                                                    .AddSingleton<Action<IHttpWebSocketsSignalReceiver>>(r => r.Enable(WebSocketsAddress)
+                                                                                                             .WithWebSocketFactory(async (address, _)
+                                                                                                                 //// ReSharper disable once AccessToDisposedClosure
+                                                                                                                 => await host.ConnectToWebSocket(
+                                                                                                                     address)));
 
         var clientServiceProvider = clientServices.BuildServiceProvider();
 
         var signalReceivers = clientServiceProvider.GetRequiredService<ISignalReceivers>();
 
-        await using var run = signalReceivers.RunHttpSseSignalReceivers(host.TestTimeoutToken);
+        await using var run = signalReceivers.RunHttpWebSocketsSignalReceivers(host.TestTimeoutToken);
 
         _ = run.CompletionTask.ContinueWith(
             (t, logger) =>
             {
                 ((ILogger)logger!).LogError(t.Exception!, "error in run");
             },
-            host.Resolve<ILogger<SignallingHttpSseClientExecutionTests>>(),
+            host.Resolve<ILogger<SignallingHttpWebSocketsClientExecutionTests>>(),
             host.TestTimeoutToken,
             TaskContinuationOptions.OnlyOnFaulted,
             TaskScheduler.Default);
@@ -92,7 +95,7 @@ public sealed partial class SignallingHttpSseClientContextTests
 
         if (hasActivity)
         {
-            activity = DisposableActivity.Create(nameof(GivenContextData_WhenPublishingHttpSseSignal_DataIsCorrectlySent));
+            activity = DisposableActivity.Create(nameof(GivenContextData_WhenPublishingHttpWebSocketsSignal_DataIsCorrectlySent));
             _ = activity.Activity.Start();
         }
 
@@ -136,7 +139,7 @@ public sealed partial class SignallingHttpSseClientContextTests
                               seenSignalIdsOnPublisher.Add(b.ConquerorContext.GetSignalId());
                               seenTraceIdsOnPublisher.Add(b.ConquerorContext.GetTraceId());
 
-                              return b.UseHttpServerSentEvents();
+                              return b.UseHttpWebSockets();
                           });
 
         await handler.Handle(new() { Payload = 10 }, host.TestTimeoutToken);

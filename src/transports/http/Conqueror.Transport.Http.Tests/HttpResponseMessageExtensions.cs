@@ -16,7 +16,9 @@ public static class HttpResponseMessageExtensions
                 try
                 {
                     var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-                    return $"title: {problemDetails?.Title}\ndetail: {problemDetails?.Detail}\nextensions: {JsonSerializer.Serialize(problemDetails?.Extensions)}";
+
+                    return
+                        $"title: {problemDetails?.Title}\ndetail: {problemDetails?.Detail}\nextensions: {JsonSerializer.Serialize(problemDetails?.Extensions)}";
                 }
                 catch
                 {
@@ -36,12 +38,22 @@ public static class HttpResponseMessageExtensions
             {
                 try
                 {
-                    var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-                    return $"title: {problemDetails?.Title}\ndetail: {problemDetails?.Detail}\nextensions: {JsonSerializer.Serialize(problemDetails?.Extensions)}";
+                    var stringResponse = await response.Content.ReadAsStringAsync();
+
+                    try
+                    {
+                        var pd = JsonSerializer.Deserialize<ProblemDetails>(stringResponse);
+
+                        return $"title: {pd?.Title}\ndetail: {pd?.Detail}\nextensions: {JsonSerializer.Serialize(pd?.Extensions)}";
+                    }
+                    catch
+                    {
+                        return $"{stringResponse}";
+                    }
                 }
-                catch
+                catch (Exception e)
                 {
-                    return await response.Content.ReadAsStringAsync();
+                    return $"failed to read response: {e}";
                 }
             }
         }

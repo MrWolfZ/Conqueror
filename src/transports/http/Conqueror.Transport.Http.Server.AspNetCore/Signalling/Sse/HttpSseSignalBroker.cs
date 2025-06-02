@@ -47,7 +47,7 @@ internal sealed partial class HttpSseSignalBroker(
     {
         LogPublishStart(logger);
 
-        if (!channelWritersByEventType.TryGetValue(TSignal.EventType, out var writers))
+        if (!channelWritersByEventType.TryGetValue(TSignal.EventType, out var writers) || writers.Count == 0)
         {
             return Task.CompletedTask;
         }
@@ -81,7 +81,8 @@ internal sealed partial class HttpSseSignalBroker(
 
                 await writer.WriteAsync(channelMessage, cancellationToken).ConfigureAwait(false);
 
-                await using var d = cancellationToken.Register(() => taskCompletionSource.TrySetCanceled()).ConfigureAwait(false);
+                await using var d = cancellationToken.Register(static tcs => ((TaskCompletionSource)tcs!).TrySetCanceled(), taskCompletionSource)
+                                                     .ConfigureAwait(false);
 
                 LogWroteToChannel(logger, TSignal.EventType);
 

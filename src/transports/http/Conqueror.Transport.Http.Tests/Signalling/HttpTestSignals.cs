@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using JsonOptions = Microsoft.AspNetCore.Http.Json.JsonOptions;
@@ -13,11 +14,12 @@ public static partial class HttpTestSignals
     public delegate Task FnToCallFromHandler(object signal, IServiceProvider serviceProvider);
 
     public static readonly Uri SseAddress = new("http://localhost/api/signals/sse");
+    public static readonly Uri WebSocketsAddress = new("ws://localhost/api/signals/ws");
 
     public static void MapSignalEndpoints(this IApplicationBuilder app)
     {
         _ = app.UseConquerorWellKnownErrorHandling();
-        _ = app.UseRouting();
+        _ = app.UseRouting().UseWebSockets();
 
         _ = app.UseEndpoints(endpoints =>
         {
@@ -29,54 +31,100 @@ public static partial class HttpTestSignals
                      });
 
             _ = endpoints.MapServerSentEventsSignalsEndpoint(SseAddress.AbsolutePath);
+            _ = endpoints.MapWebSocketsSignalsEndpoint(WebSocketsAddress.AbsolutePath);
         });
     }
 
-    public static IEnumerable<TestCaseData> GenerateTestCaseData()
+    public static IEnumerable<TestCaseData> GenerateTestCaseData(TransportType transportType)
     {
-        return GenerateTestCases().Select(c => new TestCaseData(c));
+        return GenerateTestCases(transportType).Select(c => new TestCaseData(c));
     }
 
-    private static IEnumerable<HttpSignalTestCase> GenerateTestCases()
+    public enum TransportType
     {
+        Sse,
+        WebSockets,
+    }
+
+    private static IEnumerable<HttpSignalTestCase> GenerateTestCases(TransportType transportType)
+    {
+        var queryParamName = transportType switch
+        {
+            TransportType.Sse => QueryParameterNames.SignalSseEventType,
+            TransportType.WebSockets => QueryParameterNames.SignalWebSocketsTag,
+            _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, null),
+        };
+
+        ISignalPublisher<TSignal> CreatePublisher<TSignal>(ISignalPublisherBuilder<TSignal> builder)
+            where TSignal : class, IHttpSseSignal<TSignal>, IHttpWebSocketsSignal<TSignal>
+        {
+            return transportType switch
+            {
+                TransportType.Sse => builder.UseHttpServerSentEvents(),
+                TransportType.WebSockets => builder.UseHttpWebSockets(),
+                _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, null),
+            };
+        }
+
+        SignalReceiverRun RunReceiverForTransport<THandler>(ISignalReceivers r, CancellationToken ct)
+            where THandler : class, ISignalHandlerWithSourceGeneration, IHttpSseSignalHandler, IHttpWebSocketsSignalHandler
+        {
+            return transportType switch
+            {
+                TransportType.Sse => r.RunHttpSseSignalReceiver<THandler>(ct),
+                TransportType.WebSockets => r.RunHttpWebSocketsSignalReceiver<THandler>(ct),
+                _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, null),
+            };
+        }
+
+        SignalReceiverRun RunReceiversForTransport(ISignalReceivers r, CancellationToken ct)
+        {
+            return transportType switch
+            {
+                TransportType.Sse => r.RunHttpSseSignalReceivers(ct),
+                TransportType.WebSockets => r.RunHttpWebSocketsSignalReceivers(ct),
+                _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, null),
+            };
+        }
+
         foreach (var runIndividually in new[] { true, false })
         {
             yield return new()
             {
-                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "test"),
+                QueryString = QueryStringBuilder.Of(queryParamName, "test"),
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
-                ExpectedEventTypes = ["test", "test"],
+                ExpectedEventTypesOrTags = ["test", "test"],
                 ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
                 RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
                 PublishSignals = async p =>
                 {
-                    await p.For(TestSignal.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload = 10 });
-                    await p.For(TestSignal.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload = 20 });
+                    await p.For(TestSignal.T).WithTransport(CreatePublisher).Handle(new() { Payload = 10 });
+                    await p.For(TestSignal.T).WithTransport(CreatePublisher).Handle(new() { Payload = 20 });
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<TestSignalHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<TestSignalHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             yield return new()
             {
                 QueryString = string.Empty,
                 ExpectedPayloads = [],
-                ExpectedEventTypes = [],
+                ExpectedEventTypesOrTags = [],
                 ExpectedReceivedSignals = [],
                 RegisterHandler = s => s.AddSignalHandler<DisabledTestSignalHandler>(),
                 PublishSignals = async p =>
                 {
-                    await p.For(TestSignal.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload = 10 });
-                    await p.For(TestSignal.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload = 20 });
+                    await p.For(TestSignal.T).WithTransport(CreatePublisher).Handle(new() { Payload = 10 });
+                    await p.For(TestSignal.T).WithTransport(CreatePublisher).Handle(new() { Payload = 20 });
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<DisabledTestSignalHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<DisabledTestSignalHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             yield return new()
             {
-                QueryString = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "test"),
-                                                    (QueryParameterNames.SignalSseEventType, "testSignal2")),
+                QueryString = QueryStringBuilder.Of((queryParamName, "test"),
+                                                    (queryParamName, "testSignal2")),
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload2\":11}", "{\"payload\":20}", "{\"payload2\":21}"],
-                ExpectedEventTypes = ["test", "testSignal2", "test", "testSignal2"],
+                ExpectedEventTypesOrTags = ["test", "testSignal2", "test", "testSignal2"],
                 ExpectedReceivedSignals =
                 [
                     new TestSignal { Payload = 10 },
@@ -87,52 +135,67 @@ public static partial class HttpTestSignals
                 RegisterHandler = s => s.AddSignalHandler<MultiTestSignalHandler>(),
                 PublishSignals = async p =>
                 {
-                    await p.For(TestSignal.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload = 10 });
-                    await p.For(TestSignal2.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload2 = 11 });
-                    await p.For(TestSignal.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload = 20 });
-                    await p.For(TestSignal2.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload2 = 21 });
+                    await p.For(TestSignal.T).WithTransport(CreatePublisher).Handle(new() { Payload = 10 });
+                    await p.For(TestSignal2.T).WithTransport(CreatePublisher).Handle(new() { Payload2 = 11 });
+                    await p.For(TestSignal.T).WithTransport(CreatePublisher).Handle(new() { Payload = 20 });
+                    await p.For(TestSignal2.T).WithTransport(CreatePublisher).Handle(new() { Payload2 = 21 });
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<MultiTestSignalHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<MultiTestSignalHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             yield return new()
             {
-                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "test"),
+                QueryString = QueryStringBuilder.Of(queryParamName, "test"),
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
-                ExpectedEventTypes = ["test", "test"],
+                ExpectedEventTypesOrTags = ["test", "test"],
                 ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
                 RegisterHandler = s => s.AddSignalHandler<MixedWithNonHttpTestSignalHandler>(),
                 PublishSignals = async p =>
                 {
-                    await p.For(TestSignal.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload = 10 });
+                    await p.For(TestSignal.T).WithTransport(CreatePublisher).Handle(new() { Payload = 10 });
                     await p.For(NonHttpTestSignal.T).Handle(new() { Payload = 11 });
 
-                    await p.For(TestSignal.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new() { Payload = 20 });
+                    await p.For(TestSignal.T).WithTransport(CreatePublisher).Handle(new() { Payload = 20 });
                     await p.For(NonHttpTestSignal.T).Handle(new() { Payload = 21 });
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<MixedWithNonHttpTestSignalHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<MixedWithNonHttpTestSignalHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             yield return new()
             {
-                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithoutPayload"),
+                QueryString = QueryStringBuilder.Of(queryParamName, "custom"),
+                ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
+                ExpectedEventTypesOrTags = ["custom", "custom"],
+                ExpectedReceivedSignals = [new TestSignalWithCustomEventTypeOrTag { Payload = 10 }, new TestSignalWithCustomEventTypeOrTag { Payload = 20 }],
+                RegisterHandler = s => s.AddSignalHandler<TestSignalWithCustomEventTypeOrTagHandler>(),
+                PublishSignals = async p =>
+                {
+                    await p.For(TestSignalWithCustomEventTypeOrTag.T).WithTransport(CreatePublisher).Handle(new() { Payload = 10 });
+                    await p.For(TestSignalWithCustomEventTypeOrTag.T).WithTransport(CreatePublisher).Handle(new() { Payload = 20 });
+                },
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<TestSignalWithCustomEventTypeOrTagHandler>(r, ct) : RunReceiversForTransport(r, ct),
+            };
+
+            yield return new()
+            {
+                QueryString = QueryStringBuilder.Of(queryParamName, "testSignalWithoutPayload"),
                 ExpectedPayloads = ["{}", "{}"],
-                ExpectedEventTypes = ["testSignalWithoutPayload", "testSignalWithoutPayload"],
+                ExpectedEventTypesOrTags = ["testSignalWithoutPayload", "testSignalWithoutPayload"],
                 ExpectedReceivedSignals = [new TestSignalWithoutPayload(), new TestSignalWithoutPayload()],
                 RegisterHandler = s => s.AddSignalHandler<TestSignalWithoutPayloadHandler>(),
                 PublishSignals = async p =>
                 {
-                    await p.For(TestSignalWithoutPayload.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new());
-                    await p.For(TestSignalWithoutPayload.T).WithTransport(b => b.UseHttpServerSentEvents()).Handle(new());
+                    await p.For(TestSignalWithoutPayload.T).WithTransport(CreatePublisher).Handle(new());
+                    await p.For(TestSignalWithoutPayload.T).WithTransport(CreatePublisher).Handle(new());
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<TestSignalWithoutPayloadHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<TestSignalWithoutPayloadHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             yield return new()
             {
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
-                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithCustomSerializedPayloadType"),
-                ExpectedEventTypes = ["testSignalWithCustomSerializedPayloadType", "testSignalWithCustomSerializedPayloadType"],
+                QueryString = QueryStringBuilder.Of(queryParamName, "testSignalWithCustomSerializedPayloadType"),
+                ExpectedEventTypesOrTags = ["testSignalWithCustomSerializedPayloadType", "testSignalWithCustomSerializedPayloadType"],
                 ExpectedReceivedSignals =
                 [
                     new TestSignalWithCustomSerializedPayloadType { Payload = new(10) },
@@ -159,21 +222,21 @@ public static partial class HttpTestSignals
                 PublishSignals = async p =>
                 {
                     await p.For(TestSignalWithCustomSerializedPayloadType.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = new(10) });
 
                     await p.For(TestSignalWithCustomSerializedPayloadType.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = new(20) });
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<TestSignalWithCustomSerializedPayloadTypeHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<TestSignalWithCustomSerializedPayloadTypeHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             yield return new()
             {
                 ExpectedPayloads = ["payload:10", "payload:20"],
-                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithCustomSerializer"),
-                ExpectedEventTypes = ["testSignalWithCustomSerializer", "testSignalWithCustomSerializer"],
+                QueryString = QueryStringBuilder.Of(queryParamName, "testSignalWithCustomSerializer"),
+                ExpectedEventTypesOrTags = ["testSignalWithCustomSerializer", "testSignalWithCustomSerializer"],
                 ExpectedReceivedSignals =
                 [
                     new TestSignalWithCustomSerializer { Payload = 10 },
@@ -183,21 +246,21 @@ public static partial class HttpTestSignals
                 PublishSignals = async p =>
                 {
                     await p.For(TestSignalWithCustomSerializer.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = 10 });
 
                     await p.For(TestSignalWithCustomSerializer.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = 20 });
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<TestSignalWithCustomSerializerHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<TestSignalWithCustomSerializerHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             yield return new()
             {
                 ExpectedPayloads = ["{\"MESSAGE_PAYLOAD\":10}", "{\"MESSAGE_PAYLOAD\":20}"],
-                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithCustomJsonTypeInfo"),
-                ExpectedEventTypes = ["testSignalWithCustomJsonTypeInfo", "testSignalWithCustomJsonTypeInfo"],
+                QueryString = QueryStringBuilder.Of(queryParamName, "testSignalWithCustomJsonTypeInfo"),
+                ExpectedEventTypesOrTags = ["testSignalWithCustomJsonTypeInfo", "testSignalWithCustomJsonTypeInfo"],
                 ExpectedReceivedSignals =
                 [
                     new TestSignalWithCustomJsonTypeInfo { MessagePayload = 10 },
@@ -208,14 +271,14 @@ public static partial class HttpTestSignals
                 PublishSignals = async p =>
                 {
                     await p.For(TestSignalWithCustomJsonTypeInfo.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { MessagePayload = 10 });
 
                     await p.For(TestSignalWithCustomJsonTypeInfo.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { MessagePayload = 20 });
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<TestSignalWithCustomJsonTypeInfoHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<TestSignalWithCustomJsonTypeInfoHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             static JsonSerializerContext? GetJsonSerializerContext<TSignal>()
@@ -225,56 +288,56 @@ public static partial class HttpTestSignals
             yield return new()
             {
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
-                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalWithMiddleware"),
-                ExpectedEventTypes = ["testSignalWithMiddleware", "testSignalWithMiddleware"],
+                QueryString = QueryStringBuilder.Of(queryParamName, "testSignalWithMiddleware"),
+                ExpectedEventTypesOrTags = ["testSignalWithMiddleware", "testSignalWithMiddleware"],
                 ExpectedReceivedSignals = [new TestSignalWithMiddleware { Payload = 10 }, new TestSignalWithMiddleware { Payload = 20 }],
                 RegisterHandler = s => s.AddSignalHandler<TestSignalWithMiddlewareHandler>(),
                 PublishSignals = async pubs =>
                 {
                     await pubs.For(TestSignalWithMiddleware.T)
                               .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>()))
-                              .WithTransport(b => b.UseHttpServerSentEvents())
+                              .WithTransport(CreatePublisher)
                               .Handle(new() { Payload = 10 });
 
                     await pubs.For(TestSignalWithMiddleware.T)
                               .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>()))
-                              .WithTransport(b => b.UseHttpServerSentEvents())
+                              .WithTransport(CreatePublisher)
                               .Handle(new() { Payload = 20 });
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<TestSignalWithMiddlewareHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<TestSignalWithMiddlewareHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             yield return new()
             {
                 ExpectedPayloads = ["{\"payload\":10}", "{\"payload\":20}"],
-                QueryString = QueryStringBuilder.Of(QueryParameterNames.SignalSseEventType, "testSignalForAssemblyScanning"),
-                ExpectedEventTypes = ["testSignalForAssemblyScanning", "testSignalForAssemblyScanning"],
+                QueryString = QueryStringBuilder.Of(queryParamName, "testSignalForAssemblyScanning"),
+                ExpectedEventTypesOrTags = ["testSignalForAssemblyScanning", "testSignalForAssemblyScanning"],
                 ExpectedReceivedSignals = [new TestSignalForAssemblyScanning { Payload = 10 }, new TestSignalForAssemblyScanning { Payload = 20 }],
                 RegisterHandler = s => s.AddSignalHandlersFromAssembly(typeof(TestSignalForAssemblyScanning).Assembly),
                 PublishSignals = async p =>
                 {
                     await p.For(TestSignalForAssemblyScanning.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = 10 });
 
                     await p.For(TestSignalForAssemblyScanning.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = 20 });
                 },
 
                 // the assembly scanning will find all the handlers here, so we always run the receiver individually since otherwise
                 // all the other handlers would run as well
-                RunReceiver = (r, ct) => r.RunHttpSseSignalReceiver<TestSignalForAssemblyScanningHandler>(ct),
+                RunReceiver = RunReceiverForTransport<TestSignalForAssemblyScanningHandler>,
             };
 
             yield return new()
             {
                 ExpectedPayloads = ["{\"payload\":10}", "{}", "payload:20", "{\"MESSAGE_PAYLOAD\":30}", "{\"payload\":40}"],
-                QueryString = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "test"),
-                                                    (QueryParameterNames.SignalSseEventType, "testSignalWithoutPayload"),
-                                                    (QueryParameterNames.SignalSseEventType, "testSignalWithCustomSerializer"),
-                                                    (QueryParameterNames.SignalSseEventType, "testSignalWithCustomJsonTypeInfo")),
-                ExpectedEventTypes = ["test", "testSignalWithoutPayload", "testSignalWithCustomSerializer", "testSignalWithCustomJsonTypeInfo", "test"],
+                QueryString = QueryStringBuilder.Of((queryParamName, "test"),
+                                                    (queryParamName, "testSignalWithoutPayload"),
+                                                    (queryParamName, "testSignalWithCustomSerializer"),
+                                                    (queryParamName, "testSignalWithCustomJsonTypeInfo")),
+                ExpectedEventTypesOrTags = ["test", "testSignalWithoutPayload", "testSignalWithCustomSerializer", "testSignalWithCustomJsonTypeInfo", "test"],
                 ExpectedReceivedSignals =
                 [
                     new TestSignal { Payload = 10 },
@@ -287,26 +350,26 @@ public static partial class HttpTestSignals
                 PublishSignals = async p =>
                 {
                     await p.For(TestSignal.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = 10 });
 
                     await p.For(TestSignalWithoutPayload.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new());
 
                     await p.For(TestSignalWithCustomSerializer.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = 20 });
 
                     await p.For(TestSignalWithCustomJsonTypeInfo.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { MessagePayload = 30 });
 
                     await p.For(TestSignal.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = 40 });
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<WildMixTestSignalHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<WildMixTestSignalHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
 
             yield return new()
@@ -319,9 +382,9 @@ public static partial class HttpTestSignals
                     "{\"payloadSub\":31,\"payload\":30}",
                     "{\"payloadSub\":41,\"payload\":40}",
                 ],
-                QueryString = QueryStringBuilder.Of((QueryParameterNames.SignalSseEventType, "testSignalBase"),
-                                                    (QueryParameterNames.SignalSseEventType, "testSignalSub")),
-                ExpectedEventTypes = ["testSignalBase", "testSignalBase", "testSignalBase", "testSignalSub", "testSignalSub"],
+                QueryString = QueryStringBuilder.Of((queryParamName, "testSignalBase"),
+                                                    (queryParamName, "testSignalSub")),
+                ExpectedEventTypesOrTags = ["testSignalBase", "testSignalBase", "testSignalBase", "testSignalSub", "testSignalSub"],
                 ExpectedReceivedSignals =
                 [
                     new TestSignalBase(1),
@@ -346,26 +409,26 @@ public static partial class HttpTestSignals
                 PublishSignals = async p =>
                 {
                     await p.For(TestSignalBase.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new(1));
 
                     await p.For(TestSignalBase.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new TestSignalSub(10, 11));
 
                     await p.For(TestSignalBase.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new TestSignalSubSub(20, 21, 22));
 
                     await p.For(TestSignalSub.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new(30, 31));
 
                     await p.For(TestSignalSub.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents())
+                           .WithTransport(CreatePublisher)
                            .Handle(new TestSignalSubSub(40, 41, 42));
                 },
-                RunReceiver = (r, ct) => runIndividually ? r.RunHttpSseSignalReceiver<MultiHierarchyTestSignalHandler>(ct) : r.RunHttpSseSignalReceivers(ct),
+                RunReceiver = (r, ct) => runIndividually ? RunReceiverForTransport<MultiHierarchyTestSignalHandler>(r, ct) : RunReceiversForTransport(r, ct),
             };
         }
     }
@@ -376,7 +439,7 @@ public static partial class HttpTestSignals
 
         public required List<string> ExpectedPayloads { get; init; }
 
-        public required List<string> ExpectedEventTypes { get; init; }
+        public required List<string> ExpectedEventTypesOrTags { get; init; }
 
         public JsonSerializerContext? JsonSerializerContext { get; init; }
 
@@ -415,6 +478,7 @@ public static partial class HttpTestSignals
     }
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public sealed partial record TestSignal
     {
         public required int Payload { get; init; }
@@ -445,6 +509,9 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     public sealed partial class DisabledTestSignalHandler : TestSignal.IHandler
@@ -461,9 +528,16 @@ public static partial class HttpTestSignals
             receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
             receiver.Disable();
         }
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+        {
+            receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            receiver.Disable();
+        }
     }
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public sealed partial record TestSignal2
     {
         public required int Payload2 { get; init; }
@@ -497,6 +571,9 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     [Signal]
@@ -533,9 +610,41 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+    }
+
+    [HttpSseSignal(EventType = "custom")]
+    [HttpWebSocketsSignal(Tag = "custom")]
+    public sealed partial record TestSignalWithCustomEventTypeOrTag
+    {
+        public required int Payload { get; init; }
+    }
+
+    public sealed partial class TestSignalWithCustomEventTypeOrTagHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestSignalWithCustomEventTypeOrTag.IHandler
+    {
+        public async Task Handle(TestSignalWithCustomEventTypeOrTag signal, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(signal, serviceProvider);
+            }
+        }
+
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public sealed partial record TestSignalWithoutPayload;
 
     public sealed partial class TestSignalWithoutPayloadHandler(
@@ -556,9 +665,13 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public sealed partial record TestSignalWithCustomSerializedPayloadType
     {
         public required TestSignalWithCustomSerializedPayloadTypePayload Payload { get; init; }
@@ -587,6 +700,9 @@ public static partial class HttpTestSignals
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
 
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+
         internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
         {
             public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestSignalWithCustomSerializedPayloadTypePayload);
@@ -612,15 +728,19 @@ public static partial class HttpTestSignals
     }
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public sealed partial record TestSignalWithCustomSerializer
     {
         public required int Payload { get; init; }
 
         static IHttpSseSignalSerializer<TestSignalWithCustomSerializer> IHttpSseSignal<TestSignalWithCustomSerializer>.HttpSseSignalSerializer
-            => new TestSignalCustomSerializer();
+            => new TestSignalCustomSseSerializer();
+
+        static IHttpWebSocketsSignalSerializer<TestSignalWithCustomSerializer> IHttpWebSocketsSignal<TestSignalWithCustomSerializer>.HttpWebSocketsSignalSerializer
+            => new TestSignalCustomWebSocketsSerializer();
     }
 
-    private sealed class TestSignalCustomSerializer : IHttpSseSignalSerializer<TestSignalWithCustomSerializer>
+    private sealed class TestSignalCustomSseSerializer : IHttpSseSignalSerializer<TestSignalWithCustomSerializer>
     {
         public string Serialize(IServiceProvider serviceProvider, TestSignalWithCustomSerializer signal)
         {
@@ -629,6 +749,28 @@ public static partial class HttpTestSignals
 
         public TestSignalWithCustomSerializer Deserialize(IServiceProvider serviceProvider, string serializedSignal)
         {
+            var result = int.Parse(serializedSignal.Split(':')[1]);
+
+            return new() { Payload = result };
+        }
+    }
+
+    private sealed class TestSignalCustomWebSocketsSerializer : IHttpWebSocketsSignalSerializer<TestSignalWithCustomSerializer>
+    {
+        public ValueTask Serialize(
+            IServiceProvider serviceProvider,
+            TestSignalWithCustomSerializer signal,
+            Stream stream,
+            CancellationToken cancellationToken)
+        {
+            return stream.WriteAsync(Encoding.UTF8.GetBytes($"payload:{signal.Payload}"), cancellationToken);
+        }
+
+        public async ValueTask<TestSignalWithCustomSerializer> Deserialize(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
+        {
+            using var streamReader = new StreamReader(stream, Encoding.UTF8);
+            var serializedSignal = await streamReader.ReadToEndAsync(cancellationToken);
+
             var result = int.Parse(serializedSignal.Split(':')[1]);
 
             return new() { Payload = result };
@@ -651,9 +793,13 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public sealed partial record TestSignalWithCustomJsonTypeInfo
     {
         public int MessagePayload { get; init; }
@@ -677,6 +823,9 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseUpper)]
@@ -684,6 +833,7 @@ public static partial class HttpTestSignals
     internal sealed partial class TestSignalWithCustomJsonTypeInfoJsonSerializerContext : JsonSerializerContext;
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public sealed partial record TestSignalWithMiddleware
     {
         public int Payload { get; init; }
@@ -710,6 +860,9 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     public sealed class TestSignalMiddleware<TSignal>(TestObservations observations) : ISignalMiddleware<TSignal>
@@ -724,6 +877,7 @@ public static partial class HttpTestSignals
     }
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public sealed partial record TestSignalForAssemblyScanning
     {
         public int Payload { get; init; }
@@ -745,6 +899,9 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     public sealed partial class WildMixTestSignalHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
@@ -799,12 +956,17 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public partial record TestSignalBase(int Payload);
 
     [HttpSseSignal]
+    [HttpWebSocketsSignal]
     public partial record TestSignalSub(int Payload, int PayloadSub) : TestSignalBase(Payload);
 
     public sealed record TestSignalSubSub(int Payload, int PayloadSub, int PayloadSubSub) : TestSignalSub(Payload, PayloadSub);
@@ -837,6 +999,9 @@ public static partial class HttpTestSignals
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
             => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
+            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
     }
 
     public sealed class TestObservations

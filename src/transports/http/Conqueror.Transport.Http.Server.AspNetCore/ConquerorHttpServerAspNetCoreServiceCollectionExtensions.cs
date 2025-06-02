@@ -1,6 +1,7 @@
 using Conqueror;
 using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 using Conqueror.Transport.Http.Server.AspNetCore.Signalling.Sse;
+using Conqueror.Transport.Http.Server.AspNetCore.Signalling.WebSockets;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -30,5 +31,8 @@ public static class ConquerorHttpServerAspNetCoreServiceCollectionExtensions
     {
         services.TryAddSingleton<IHttpSseSignalPublisherFactory, HttpSseSignalPublisherFactory>();
         services.TryAddSingleton<HttpSseSignalBroker>();
+
+        services.TryAddSingleton<IHttpWebSocketsSignalPublisherFactory, HttpWebSocketsSignalPublisherFactory>();
+        services.TryAddSingleton<HttpWebSocketsSignalBroker>();
     }
 }

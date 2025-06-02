@@ -22,7 +22,7 @@ internal sealed class HttpSseSignalReceiverRunner(
     public SignalReceiverRun Run(CancellationToken cancellationToken)
     {
         var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var connectionTaskCompletionSource = new TaskCompletionSource();
+        var connectionTaskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         return new(
             connectionTaskCompletionSource.Task,

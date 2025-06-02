@@ -11,6 +11,8 @@ public static class ConquerorTransportHttpConstants
 
     public const string ServersSentEventsTransportName = "http-server-sent-events";
 
+    public const string WebSocketsTransportName = "http-web-sockets";
+
     public static class MethodNames
     {
         public const string Delete = "DELETE";
@@ -43,5 +45,11 @@ public static class ConquerorTransportHttpConstants
     public static class QueryParameterNames
     {
         public const string SignalSseEventType = "signalEventType";
+
+        public const string SignalWebSocketsTag = "signalTag";
+
+        public const string HeartbeatInterval = "heartbeatInterval";
+
+        public const string HeartbeatTimeout = "hearbeatTimeout";
     }
 }

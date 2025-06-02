@@ -7,7 +7,11 @@ namespace Conqueror.Transport.Http.Tests.Signalling.Sse.Server;
 public sealed partial class SignallingHttpSseServerExecutionTests
 {
     [Test]
-    [TestCaseSource(typeof(HttpTestSignals), nameof(GenerateTestCaseData))]
+    [TestCaseSource(typeof(HttpTestSignals), nameof(GenerateTestCaseData), [TransportType.Sse])]
+    [SuppressMessage(
+        "Structure",
+        "NUnit1018:The number of parameters provided by the TestCaseSource does not match the number of parameters in the target method",
+        Justification = "false positive, the analyzer does not yet recognize collection expressions")]
     public async Task GivenTestHttpSseSignal_WhenSubscribingToSignals_ReturnsCorrectEventStream(HttpSignalTestCase testCase)
     {
         await using var host = await HttpTransportTestHost.Create(
@@ -69,8 +73,8 @@ public sealed partial class SignallingHttpSseServerExecutionTests
 
         await runTask;
 
-        Assert.That(result, Has.Count.EqualTo(testCase.ExpectedEventTypes.Count));
-        Assert.That(result.Select(r => r.EventType), Is.EqualTo(testCase.ExpectedEventTypes));
+        Assert.That(result, Has.Count.EqualTo(testCase.ExpectedEventTypesOrTags.Count));
+        Assert.That(result.Select(r => r.EventType), Is.EqualTo(testCase.ExpectedEventTypesOrTags));
         Assert.That(result.Select(r => r.Data.Split("\n")[0]), Is.EqualTo(testCase.ExpectedPayloads));
     }
 
