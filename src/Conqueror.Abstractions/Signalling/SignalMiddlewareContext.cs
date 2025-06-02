@@ -35,14 +35,14 @@ public readonly record struct SignalMiddlewareContext<TSignal>
 
     private int CurrentIndex { get; init; }
 
-    public Task Next(TSignal message, CancellationToken cancellationToken)
+    public Task Next(TSignal signal, CancellationToken cancellationToken)
     {
         var nextIndex = CurrentIndex + 1;
         if (nextIndex < middlewares.Count)
         {
             var updatedContext = this with
             {
-                Signal = message,
+                Signal = signal,
                 CancellationToken = cancellationToken,
                 CurrentIndex = nextIndex,
             };
@@ -50,6 +50,6 @@ public readonly record struct SignalMiddlewareContext<TSignal>
             return middlewares[nextIndex].Execute(updatedContext);
         }
 
-        return sender.Publish(message, ServiceProvider, ConquerorContext, cancellationToken);
+        return sender.Publish(signal, ServiceProvider, ConquerorContext, cancellationToken);
     }
 }
