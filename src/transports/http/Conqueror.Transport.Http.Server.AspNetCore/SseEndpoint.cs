@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Conqueror.Transport.Http.Server.AspNetCore;
 
-internal static class SseEndpoint
+internal static partial class SseEndpoint
 {
     [SuppressMessage(
         "Minor Code Smell",
@@ -39,7 +39,7 @@ internal static class SseEndpoint
             await context.Response.Body.FlushAsync(context.RequestAborted).ConfigureAwait(false);
 
             await SseFormatter.WriteAsync(
-                                  RunWithFlushing(items, context.Response.Body),
+                                  RunWithFlushing(items, context.Response.Body, logger),
                                   context.Response.Body,
                                   context.RequestAborted)
                               .ConfigureAwait(false);
@@ -47,11 +47,14 @@ internal static class SseEndpoint
             static async IAsyncEnumerable<SseItem<string>> RunWithFlushing(
                 IAsyncEnumerable<SseItem<string>> items,
                 Stream responseBody,
+                ILogger logger,
                 [EnumeratorCancellation] CancellationToken ct = default)
             {
                 await foreach (var item in items.ConfigureAwait(false).WithCancellation(ct))
                 {
                     yield return item;
+
+                    LogFlush(logger, item.EventType);
 
                     // flush the response body after each item (which unfortunately isn't done automatically
                     // in the SseFormatter
@@ -62,7 +65,7 @@ internal static class SseEndpoint
         catch (Exception) when (context.RequestAborted.IsCancellationRequested)
         {
             // nothing to do, the client just disconnected, which may have thrown spurious exceptions
-            logger.LogInformation("client disconnected from event stream");
+            logger.LogDebug("client disconnected from event stream");
         }
         catch (Exception e)
         {
@@ -72,4 +75,7 @@ internal static class SseEndpoint
             logger.LogError(e, "an error occurred while formatting event stream");
         }
     }
+
+    [LoggerMessage(LogLevel.Trace, "flushing item of event type '{EventType}'")]
+    private static partial void LogFlush(ILogger logger, string eventType);
 }

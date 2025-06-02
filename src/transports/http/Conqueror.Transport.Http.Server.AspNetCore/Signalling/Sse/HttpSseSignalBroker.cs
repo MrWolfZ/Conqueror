@@ -157,16 +157,16 @@ internal sealed partial class HttpSseSignalBroker(
     [LoggerMessage(LogLevel.Trace, "starting publish")]
     private static partial void LogPublishStart(ILogger logger);
 
-    [LoggerMessage(LogLevel.Trace, "writing signal with event type {EventType} to channel")]
+    [LoggerMessage(LogLevel.Trace, "writing signal with event type '{EventType}' to channel")]
     private static partial void LogWriteToChannel(ILogger logger, string eventType);
 
-    [LoggerMessage(LogLevel.Trace, "wrote signal with event type {EventType} to channel")]
+    [LoggerMessage(LogLevel.Trace, "wrote signal with event type '{EventType}' to channel")]
     private static partial void LogWroteToChannel(ILogger logger, string eventType);
 
-    [LoggerMessage(LogLevel.Trace, "got channel write completion for event type {EventType}")]
+    [LoggerMessage(LogLevel.Trace, "got channel write completion for event type '{EventType}'")]
     private static partial void LogGotChannelWriteCompletion(ILogger logger, string eventType);
 
-    [LoggerMessage(LogLevel.Trace, "subscribing to events {eventTypes}")]
+    [LoggerMessage(LogLevel.Trace, "subscribing to events with types [{eventTypes}]")]
     private static partial void LogSubscribe(ILogger logger, IEnumerable<string> eventTypes);
 
     [LoggerMessage(LogLevel.Trace, "closed subscription")]
@@ -175,9 +175,9 @@ internal sealed partial class HttpSseSignalBroker(
     [LoggerMessage(LogLevel.Trace, "waiting for read on channel")]
     private static partial void LogWaitForChannel(ILogger logger);
 
-    [LoggerMessage(LogLevel.Trace, "got message with event type {EventType} from channel")]
+    [LoggerMessage(LogLevel.Trace, "got message with event type '{EventType}' from channel")]
     private static partial void LogGotMessageFromChannel(ILogger logger, string eventType);
 
-    [LoggerMessage(LogLevel.Trace, "yielded item with event type {EventType}")]
+    [LoggerMessage(LogLevel.Trace, "yielded item with event type '{EventType}'")]
     private static partial void LogYieldedItem(ILogger logger, string eventType);
 }

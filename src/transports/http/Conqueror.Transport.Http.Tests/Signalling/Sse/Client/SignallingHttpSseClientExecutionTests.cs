@@ -230,8 +230,9 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         var httpClient = host.HttpClient;
         var observations = new TestObservations();
 
+        var handlerLogger = host.Resolve<ILogger<TestSignalHandler>>();
         var clientServices = new ServiceCollection().AddConquerorHttpClient()
-                                                    .AddSingleton(host.Resolve<ILogger<TestSignalHandler>>())
+                                                    .AddSingleton(handlerLogger)
                                                     .AddSignalHandler<TestSignalHandler>()
                                                     .AddSingleton<FnToCallFromHandler>((s, _) =>
                                                     {
@@ -240,7 +241,9 @@ public sealed partial class SignallingHttpSseClientExecutionTests
                                                         return Task.CompletedTask;
                                                     })
                                                     .AddSingleton<Action<IHttpSseSignalReceiver>>(r => r.Enable(SseAddress)
-                                                                                                        .WithHttpClient(httpClient));
+                                                                                                        .WithHttpClient(httpClient)
+                                                                                                        .WithSignalCallback(s => handlerLogger.LogInformation("signal callback: {Signal}", s))
+                                                                                                        .WithExceptionCallback(ex => handlerLogger.LogError(ex, "exception callback")));
 
         var clientServiceProvider = clientServices.BuildServiceProvider();
 

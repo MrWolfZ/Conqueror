@@ -32,6 +32,11 @@ public sealed class HttpSseSignalReceiverConfiguration
 
     public HttpSseSignalReceiverReconnectDelayFn? ReconnectDelayFn { get; private set; }
 
+    // for now, we'll keep these callback APIs internal for testing and debugging, but we may expose them in the future
+    internal Action<object>? SignalCallback { get; private set; }
+
+    internal Action<Exception>? ExceptionCallback { get; private set; }
+
     /// <summary>
     ///     Use the provided <see cref="HttpClient" /> to connect to the SEE endpoint.<br />
     ///     <br />
@@ -57,6 +62,20 @@ public sealed class HttpSseSignalReceiverConfiguration
     public HttpSseSignalReceiverConfiguration WithReconnectDelayFunction(HttpSseSignalReceiverReconnectDelayFn retryDelayFn)
     {
         ReconnectDelayFn = retryDelayFn;
+
+        return this;
+    }
+
+    internal HttpSseSignalReceiverConfiguration WithSignalCallback(Action<object>? signalCallback)
+    {
+        SignalCallback = signalCallback;
+
+        return this;
+    }
+
+    internal HttpSseSignalReceiverConfiguration WithExceptionCallback(Action<Exception>? exceptionCallback)
+    {
+        ExceptionCallback = exceptionCallback;
 
         return this;
     }

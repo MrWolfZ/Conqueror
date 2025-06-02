@@ -80,6 +80,8 @@ internal sealed class HttpSseSignalReceiverRunner(
 
                     await foreach (var item in parser.EnumerateAsync(cancellationToken).ConfigureAwait(false))
                     {
+                        config.SignalCallback?.Invoke(item.Data.Signal);
+
                         using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 
                         if (item.EventId is not null)
@@ -132,6 +134,8 @@ internal sealed class HttpSseSignalReceiverRunner(
         }
         catch (Exception ex)
         {
+            config.ExceptionCallback?.Invoke(ex);
+
             _ = connectionTaskCompletionSource.TrySetException(ex);
 
             throw;
