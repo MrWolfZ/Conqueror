@@ -813,6 +813,10 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
                            ctx.Response.OnStarting(() =>
                            {
+                               ctx.RequestServices
+                                  .GetRequiredService<ILogger<SignallingHttpSseClientExecutionTests>>()
+                                  .LogTrace("server response has begun");
+
                                _ = Interlocked.Increment(ref serverResponseHasBegunCount);
 
                                return Task.CompletedTask;
