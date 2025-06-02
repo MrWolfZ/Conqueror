@@ -1,6 +1,9 @@
 ﻿namespace Examples.BlazorWebAssembly.API.Chat;
 
-internal sealed partial class BroadcastChatEntryHandler(ChatRepository repository) : BroadcastChatEntry.IHandler
+internal sealed partial class BroadcastChatEntryHandler(
+    ChatRepository repository,
+    ISignalPublishers signalPublishers)
+    : BroadcastChatEntry.IHandler
 {
     public static void ConfigurePipeline(BroadcastChatEntry.IPipeline pipeline)
 
@@ -13,6 +16,12 @@ internal sealed partial class BroadcastChatEntryHandler(ChatRepository repositor
 
     public async Task Handle(BroadcastChatEntry message, CancellationToken cancellationToken = default)
     {
-        await repository.Add(new() { User = message.User, Content = message.Content, Timestamp = SystemTime.Now });
+        var timestamp = SystemTime.Now;
+        await repository.Add(new() { User = message.User, Content = message.Content, Timestamp = timestamp });
+
+        await signalPublishers.For(ChatEntryBroadcasted.T)
+                              .WithDefaultPublisherPipeline(typeof(BroadcastChatEntryHandler))
+                              .WithTransport(b => b.UseHttpServerSentEvents())
+                              .Handle(new() { User = message.User, Content = message.Content, Timestamp = timestamp }, cancellationToken);
     }
 }

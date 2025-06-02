@@ -28,5 +28,6 @@ app.UseAuthorization();
 
 app.UseConquerorWellKnownErrorHandling();
 app.MapMessageEndpoints();
+app.MapServerSentEventsSignalsEndpoint("api/signals/sse");
 
 app.Run();

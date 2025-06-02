@@ -18,6 +18,9 @@
         <ProjectReference Include="../../../src/transports/http/Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" Condition="$(ShouldReferenceProject)" />
         <ProjectReference Include="../Examples.BlazorWebAssembly.Contracts/Examples.BlazorWebAssembly.Contracts.csproj" />
         <ProjectReference Include="../Examples.BlazorWebAssembly.SharedMiddlewares/Examples.BlazorWebAssembly.SharedMiddlewares.csproj" />
+
+        <!-- only required when using project references; when using a package reference the source generator is included in the abstractions package -->
+        <ProjectReference Include="../../../src/Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" Condition="$(ShouldReferenceProject) == true" />
     </ItemGroup>
 
 </Project>

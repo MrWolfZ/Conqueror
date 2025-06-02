@@ -1,6 +1,5 @@
 ﻿@page "/"
-@inject IMessageSenders MessageSenders
-@implements IDisposable
+@implements IAsyncDisposable
 
 <PageTitle>Chat</PageTitle>
 
@@ -23,7 +22,7 @@
     {
         <div id="chatContent"
              class="chat-container">
-            @if (currentEntries.Length > 0)
+            @if (currentEntries.Count > 0)
             {
                 @foreach (var entry in currentEntries)
                 {
@@ -74,11 +73,22 @@
 </div>
 
 @code {
-    private ChatEntry[]? currentEntries;
+    private List<ChatEntry>? currentEntries;
     private string user = "";
     private string content = "";
-    private Timer? refreshTimer;
-    private readonly TimeSpan refreshInterval = TimeSpan.FromSeconds(2);
+    private SignalReceiverRun? receiverRun;
+
+    [Inject]
+    public required IMessageSenders MessageSenders { get; init; }
+
+    [Inject]
+    public required ISignalReceivers SignalReceivers { get; init; }
+
+    [Inject]
+    public required ILogger<Index> Logger { get; init; }
+
+    [Inject]
+    public required ChatEntryBroadcastedHandler ChatEntryBroadcastedHandler { get; init; }
 
     private async Task BroadcastEntry()
     {
@@ -90,8 +100,6 @@
                                 .Handle(new() { User = user, Content = content });
 
             content = "";
-
-            await RefreshChat();
         }
     }
 
@@ -105,55 +113,58 @@
 
     private async Task RefreshChat()
     {
-        currentEntries = await MessageSenders.For(GetChat.T)
-                                             .WithDefaultClientPipeline()
-                                             .WithPipeline(p => p.Use(async ctx =>
-                                             {
-                                                 try
-                                                 {
-                                                     return await ctx.Next(ctx.Message, ctx.CancellationToken);
-                                                 }
-                                                 catch (Exception ex)
-                                                 {
-                                                     Console.Error.WriteLine(ex);
+        var response = await MessageSenders.For(GetChat.T)
+                                           .WithDefaultClientPipeline()
+                                           .WithPipeline(p => p.Use(async ctx =>
+                                           {
+                                               try
+                                               {
+                                                   return await ctx.Next(ctx.Message, ctx.CancellationToken);
+                                               }
+                                               catch (Exception ex)
+                                               {
+                                                   Console.Error.WriteLine(ex);
 
-                                                     // return a fallback value
-                                                     return [];
-                                                 }
-                                             }))
-                                             .WithHttpApiTransport()
-                                             .Handle(new());
+                                                   // return a fallback value
+                                                   return [];
+                                               }
+                                           }))
+                                           .WithHttpApiTransport()
+                                           .Handle(new());
+
+        currentEntries = response.ToList();
 
         StateHasChanged();
+    }
+
+    private void OnChatEntryBroadcasted(object? sender, ChatEntryBroadcasted signal)
+    {
+        currentEntries!.Add(new() { Content = signal.Content, User = signal.User, Timestamp = signal.Timestamp });
+
+        Logger.LogInformation("received chat entry");
+
+        InvokeAsync(StateHasChanged);
     }
 
     protected override async Task OnInitializedAsync()
     {
         await RefreshChat();
 
-        refreshTimer = new(
-            async void (_) =>
-            {
-                try
-                {
-                    await InvokeAsync(async () =>
-                    {
-                        await RefreshChat();
-                    });
-                }
-                catch
-                {
-                    // let's ignore failing refreshes for now
-                }
-            },
-            null,
-            refreshInterval,
-            refreshInterval);
+        ChatEntryBroadcastedHandler.OnSignal += OnChatEntryBroadcasted;
+
+        // note that there are potential race conditions here that are left as an exercise for the reader
+        receiverRun = SignalReceivers.RunHttpSseSignalReceiver<ChatEntryBroadcastedHandler>(CancellationToken.None);
+        await receiverRun.InitialConnectionTask;
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        refreshTimer?.Dispose();
+        ChatEntryBroadcastedHandler.OnSignal -= OnChatEntryBroadcasted;
+
+        if (receiverRun is not null)
+        {
+            await receiverRun.DisposeAsync();
+        }
     }
 
 }
