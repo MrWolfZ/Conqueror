@@ -100,7 +100,7 @@ public sealed record CounterValue(string CounterName, long Value);
 
 // Signals are a pub/sub mechanism, and can be handled in-process (like we do in this quickstart)
 // or published via a transport like RabbitMQ (using the corresponding transport package)
-[Signal]
+[HttpSseSignal]
 public sealed partial record CounterIncremented(
     string CounterName,
     long NewValue,
@@ -133,7 +133,7 @@ public sealed partial record CounterIncremented(
 > 
 > public sealed record CounterValue(string CounterName, long Value);
 > 
-> [Signal]
+> [HttpSseSignal]
 > public sealed partial record CounterIncremented(
 >     string CounterName,
 >     long NewValue,
@@ -248,17 +248,21 @@ internal sealed partial class IncrementCounterByAmountHandler(
                         // is executed as well
                         .WithPipeline(p => p.UseLogging())
 
-                        // You can customize the transport which is used to publish the signal
-                        // (e.g. publishing it via RabbitMQ), but here we configure the in-process
-                        // transport to use parallel broadcasting for demonstration (instead of
-                        // the default sequential broadcasting). You can also pass your own custom
-                        // strategy if you need it
-                        .WithTransport(b => b.UseInProcess().WithParallelBroadcastingStrategy())
-
                         // The 'Handle' method is unique for each `IHandler`. This means that your
                         // IDE's "Go to Implementation" feature will show all signal handlers for
                         // this signal, making it simple to find all the places in your code where
                         // a signal is used
+                        .Handle(
+                            new(message.CounterName, newValue, message.IncrementBy),
+                            cancellationToken);
+
+        // You can also customize the transport which is used to publish the signal, for example,
+        // to publish it via HTTP server-sent events. Note that it is also possible to do publish
+        // to multiple transports at the same time using `b.UseAggregate()`; the details for this
+        // can be found in the recipes
+        await publishers.For(CounterIncremented.T)
+                        .WithPipeline(p => p.UseLogging())
+                        .WithTransport(b => b.UseHttpServerSentEvents())
                         .Handle(
                             new(message.CounterName, newValue, message.IncrementBy),
                             cancellationToken);
@@ -296,6 +300,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
 > 
 >         await publishers.For(CounterIncremented.T)
 >                         .WithDefaultPublisherPipeline(typeof(IncrementCounterByAmountHandler))
+>                         .WithInProcessAndServerSentEventsTransport()
 >                         .Handle(new(message.CounterName, newValue, message.IncrementBy),
 >                                 cancellationToken);
 > 
@@ -581,6 +586,24 @@ curl http://localhost:5000/api/v1/getCounters
 # prints [{"counterName":"test","value":2},{"counterName":"doubler","value":4},{"counterName":"confidential","value":1000}]
 ```
 
+You can also observe signals via SSE by launching the following in a separate shell:
+
+<!-- REPLACECODE examples/quickstart/call-sse.sh -->
+```sh
+curl http://localhost:5000/api/signals/sse?signalEventType=counterIncremented
+
+# follow the above by this in another shell to see the signal:
+# curl http://localhost:5000/api/v1/incrementCounterByAmount \
+# --data '{"counterName":"sseTest","incrementBy":2}' \
+# -H 'Content-Type: application/json'
+
+# this prints something like this on the SSE stream:
+# event: counterIncremented
+# data: {"counterName":"sseTest","newValue":2,"incrementBy":2}
+# data: d|conqueror-message-id:5227cf9ead99f26b|trace-id:b107e7cb47d8951996339d99baf4cd28
+# id: 2d98b4aca7ee02df
+```
+
 Thanks to the logging middleware we added to the pipelines, you will see output similar to this in the server console.
 
 > Are you able to spot a bug in our logging configuration for confidential counters?
@@ -593,11 +616,19 @@ info: Quickstart.IncrementCounterByAmountHandler[711195907]
         "CounterName": "test",
         "IncrementBy": 2
       }
-      (Message ID: 8d6593393b592be7, Trace ID: 9f49b02534df157313aa4fe5edc36bfe)
+      (Message ID: 3e525a72131960dd, Trace ID: ad0871fcc6bb2aabef62f2b24ab5b27c)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing in-process signal of type 'CounterIncremented' with payload {"CounterName":"test","NewValue":2,"IncrementBy":2} (Signal ID: e24899ea8053616a, Trace ID: ad0871fcc6bb2aabef62f2b24ab5b27c)
+info: Quickstart.CounterIncremented[1977864143]
+      Published in-process signal of type 'CounterIncremented' in 18.6353ms (Signal ID: e24899ea8053616a, Trace ID: ad0871fcc6bb2aabef62f2b24ab5b27c)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing http-server-sent-events signal of type 'CounterIncremented' with payload {"CounterName":"test","NewValue":2,"IncrementBy":2} (Signal ID: 0ae709d709480a49, Trace ID: ad0871fcc6bb2aabef62f2b24ab5b27c)
+info: Quickstart.CounterIncremented[1977864143]
+      Published http-server-sent-events signal of type 'CounterIncremented' in 5.5543ms (Signal ID: 0ae709d709480a49, Trace ID: ad0871fcc6bb2aabef62f2b24ab5b27c)
 info: Quickstart.IncrementCounterByAmountHandler[412531951]
-      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":2} in 33.2277ms (Message ID: 8d6593393b592be7, Trace ID: 9f49b02534df157313aa4fe5edc36bfe)
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":2} in 74.4882ms (Message ID: 3e525a72131960dd, Trace ID: ad0871fcc6bb2aabef62f2b24ab5b27c)
 info: Quickstart.GetCountersHandler[711195907]
-      Handling http message of type 'GetCounters' with payload {"Prefix":"tes"} (Message ID: 8c1ef6a764aed796, Trace ID: a804d8d086b2102afa2af651ad86fb36)
+      Handling http message of type 'GetCounters' with payload {"Prefix":"tes"} (Message ID: a8b8870794d685ac, Trace ID: 47572a64d30dfdd48b1d4f9c28810343)
 info: Quickstart.GetCountersHandler[412531951]
       Handled http message of type 'GetCounters' and got response
       [
@@ -606,14 +637,16 @@ info: Quickstart.GetCountersHandler[412531951]
           "Value": 2
         }
       ]
-      in 6.3624ms (Message ID: 8c1ef6a764aed796, Trace ID: a804d8d086b2102afa2af651ad86fb36)
+      in 9.4573ms (Message ID: a8b8870794d685ac, Trace ID: 47572a64d30dfdd48b1d4f9c28810343)
 info: Quickstart.IncrementCounterByAmountHandler[711195907]
       Handling http message of type 'IncrementCounterByAmount' with payload
       {
         "CounterName": "doubler",
         "IncrementBy": 2
       }
-      (Message ID: 2f2cb247021d2ee0, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+      (Message ID: 36b3258481257142, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing in-process signal of type 'CounterIncremented' with payload {"CounterName":"doubler","NewValue":2,"IncrementBy":2} (Signal ID: 60988c4de621536b, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
 info: Quickstart.DoublingCounterIncrementedHandler[441733974]
       Handling signal of type 'CounterIncremented' with payload
       {
@@ -621,26 +654,40 @@ info: Quickstart.DoublingCounterIncrementedHandler[441733974]
         "NewValue": 2,
         "IncrementBy": 2
       }
-      (Signal ID: 85d8955727f526aa, Trace ID: acc51361d87c132744e4d1ac40b31f46)
-info: Quickstart.IncrementCounterByAmount[0]
-      doubling increment of counter 'doubler'
+      (Signal ID: 60988c4de621536b, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.IncrementCounterByAmount[711195907]
+      Sending in-process message of type 'IncrementCounterByAmount' with payload {"CounterName":"doubler","IncrementBy":2} (Message ID: 9c1fc1a4a60859f4, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
 info: Quickstart.IncrementCounterByAmountHandler[711195907]
       Handling message of type 'IncrementCounterByAmount' with payload
       {
         "CounterName": "doubler",
         "IncrementBy": 2
       }
-      (Message ID: 5311de941ad7aa20, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+      (Message ID: 9c1fc1a4a60859f4, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing in-process signal of type 'CounterIncremented' with payload {"CounterName":"doubler","NewValue":4,"IncrementBy":2} (Signal ID: a0b26fbbd938941e, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.CounterIncremented[1977864143]
+      Published in-process signal of type 'CounterIncremented' in 1.7726ms (Signal ID: a0b26fbbd938941e, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing http-server-sent-events signal of type 'CounterIncremented' with payload {"CounterName":"doubler","NewValue":4,"IncrementBy":2} (Signal ID: 4163f38ccc92aaea, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.CounterIncremented[1977864143]
+      Published http-server-sent-events signal of type 'CounterIncremented' in 0.0852ms (Signal ID: 4163f38ccc92aaea, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
 info: Quickstart.IncrementCounterByAmountHandler[412531951]
-      Handled message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":4} in 3.8204ms (Message ID: 5311de941ad7aa20, Trace ID: acc51361d87c132744e4d1ac40b31f46)
-info: Quickstart.IncrementCounterByAmount[0]
-      doubled increment of counter 'doubler', it is now 4
+      Handled message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":4} in 6.5008ms (Message ID: 9c1fc1a4a60859f4, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.IncrementCounterByAmount[412531951]
+      Sent in-process message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":4} in 12.6340ms (Message ID: 9c1fc1a4a60859f4, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
 info: Quickstart.DoublingCounterIncrementedHandler[1977864143]
-      Handled signal of type 'CounterIncremented' in 16.7602ms (Signal ID: 85d8955727f526aa, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+      Handled signal of type 'CounterIncremented' in 28.2218ms (Signal ID: 60988c4de621536b, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.CounterIncremented[1977864143]
+      Published in-process signal of type 'CounterIncremented' in 31.8950ms (Signal ID: 60988c4de621536b, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing http-server-sent-events signal of type 'CounterIncremented' with payload {"CounterName":"doubler","NewValue":2,"IncrementBy":2} (Signal ID: 3d9ddb98bc8fb654, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
+info: Quickstart.CounterIncremented[1977864143]
+      Published http-server-sent-events signal of type 'CounterIncremented' in 0.3467ms (Signal ID: 3d9ddb98bc8fb654, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
 info: Quickstart.IncrementCounterByAmountHandler[412531951]
-      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":4} in 20.9651ms (Message ID: 2f2cb247021d2ee0, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":4} in 33.4722ms (Message ID: 36b3258481257142, Trace ID: e9623fa2087d6ad22d1ddc36ad0e7e11)
 info: Quickstart.GetCountersHandler[711195907]
-      Handling http message of type 'GetCounters' with payload {"Prefix":null} (Message ID: 411b31c9614b284e, Trace ID: f1b75fe47e043cbd1ac400d65ce91cb5)
+      Handling http message of type 'GetCounters' with payload {"Prefix":null} (Message ID: b533e0b87c07e88d, Trace ID: c4729469ee9bf9597b55ab65105a1c99)
 info: Quickstart.GetCountersHandler[412531951]
       Handled http message of type 'GetCounters' and got response
       [
@@ -653,20 +700,47 @@ info: Quickstart.GetCountersHandler[412531951]
           "Value": 4
         }
       ]
-      in 0.4262ms (Message ID: 411b31c9614b284e, Trace ID: f1b75fe47e043cbd1ac400d65ce91cb5)
+      in 0.5002ms (Message ID: b533e0b87c07e88d, Trace ID: c4729469ee9bf9597b55ab65105a1c99)
 info: Quickstart.IncrementCounterByAmountHandler[711195907]
       Handling http message of type 'IncrementCounterByAmount' with payload
       {
         "CounterName": "confidential",
         "IncrementBy": 1000
       }
-      (Message ID: 77884562dab999b1, Trace ID: 7fdf00fc3ef39a8076d0c48c9c545aef)
+      (Message ID: f5ce2cdef6add70f, Trace ID: 801d949d99273dac26376a77f172c418)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing in-process signal of type 'CounterIncremented' with payload {"CounterName":"confidential","NewValue":1000,"IncrementBy":1000} (Signal ID: 53afdf09cd14a316, Trace ID: 801d949d99273dac26376a77f172c418)
+info: Quickstart.CounterIncremented[1977864143]
+      Published in-process signal of type 'CounterIncremented' in 0.1800ms (Signal ID: 53afdf09cd14a316, Trace ID: 801d949d99273dac26376a77f172c418)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing http-server-sent-events signal of type 'CounterIncremented' with payload {"CounterName":"confidential","NewValue":1000,"IncrementBy":1000} (Signal ID: 45d34058c9921758, Trace ID: 801d949d99273dac26376a77f172c418)
+info: Quickstart.CounterIncremented[1977864143]
+      Published http-server-sent-events signal of type 'CounterIncremented' in 0.0776ms (Signal ID: 45d34058c9921758, Trace ID: 801d949d99273dac26376a77f172c418)
 info: Quickstart.IncrementCounterByAmountHandler[412531951]
-      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":1000} in 0.6406ms (Message ID: 77884562dab999b1, Trace ID: 7fdf00fc3ef39a8076d0c48c9c545aef)
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":1000} in 1.0167ms (Message ID: f5ce2cdef6add70f, Trace ID: 801d949d99273dac26376a77f172c418)
 info: Quickstart.GetCountersHandler[711195907]
-      Handling http message of type 'GetCounters' with payload {"Prefix":null} (Message ID: 85791577e3f50c87, Trace ID: 1e9560273e354aa7870dd1da736f44b8)
+      Handling http message of type 'GetCounters' with payload {"Prefix":null} (Message ID: 6f859893a3442f1e, Trace ID: a06963c6f5ed5e77d3d0646df4afc748)
+info: Quickstart.GetCountersHandler[0]
+      response omitted because of confidential data
 info: Quickstart.GetCountersHandler[412531951]
-      Handled http message of type 'GetCounters' in 0.5875ms (Message ID: 85791577e3f50c87, Trace ID: 1e9560273e354aa7870dd1da736f44b8)
+      Handled http message of type 'GetCounters' in 0.7302ms (Message ID: 6f859893a3442f1e, Trace ID: a06963c6f5ed5e77d3d0646df4afc748)
+info: Quickstart.IncrementCounterByAmountHandler[711195907]
+      Handling http message of type 'IncrementCounterByAmount' with payload
+      {
+        "CounterName": "sseTest",
+        "IncrementBy": 2
+      }
+      (Message ID: 5227cf9ead99f26b, Trace ID: b107e7cb47d8951996339d99baf4cd28)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing in-process signal of type 'CounterIncremented' with payload {"CounterName":"sseTest","NewValue":2,"IncrementBy":2} (Signal ID: 2aa6b849d45cef9f, Trace ID: b107e7cb47d8951996339d99baf4cd28)
+info: Quickstart.CounterIncremented[1977864143]
+      Published in-process signal of type 'CounterIncremented' in 0.1912ms (Signal ID: 2aa6b849d45cef9f, Trace ID: b107e7cb47d8951996339d99baf4cd28)
+info: Quickstart.CounterIncremented[441733974]
+      Publishing http-server-sent-events signal of type 'CounterIncremented' with payload {"CounterName":"sseTest","NewValue":2,"IncrementBy":2} (Signal ID: 2d98b4aca7ee02df, Trace ID: b107e7cb47d8951996339d99baf4cd28)
+info: Quickstart.CounterIncremented[1977864143]
+      Published http-server-sent-events signal of type 'CounterIncremented' in 8.6999ms (Signal ID: 2d98b4aca7ee02df, Trace ID: b107e7cb47d8951996339d99baf4cd28)
+info: Quickstart.IncrementCounterByAmountHandler[412531951]
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":2} in 9.7013ms (Message ID: 5227cf9ead99f26b, Trace ID: b107e7cb47d8951996339d99baf4cd28)
 ```
 <!-- 
 If you have swagger UI enabled, it will show the new messages and they can be called from there.

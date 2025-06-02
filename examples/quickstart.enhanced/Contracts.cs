@@ -17,7 +17,7 @@ public sealed partial record GetCounters(string? Prefix = null);
 
 public sealed record CounterValue(string CounterName, long Value);
 
-[Signal]
+[HttpSseSignal]
 public sealed partial record CounterIncremented(
     string CounterName,
     long NewValue,

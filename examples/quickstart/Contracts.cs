@@ -37,7 +37,7 @@ public sealed record CounterValue(string CounterName, long Value);
 
 // Signals are a pub/sub mechanism, and can be handled in-process (like we do in this quickstart)
 // or published via a transport like RabbitMQ (using the corresponding transport package)
-[Signal]
+[HttpSseSignal]
 public sealed partial record CounterIncremented(
     string CounterName,
     long NewValue,

@@ -19,6 +19,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
 
         await publishers.For(CounterIncremented.T)
                         .WithDefaultPublisherPipeline(typeof(IncrementCounterByAmountHandler))
+                        .WithInProcessAndServerSentEventsTransport()
                         .Handle(new(message.CounterName, newValue, message.IncrementBy),
                                 cancellationToken);
 

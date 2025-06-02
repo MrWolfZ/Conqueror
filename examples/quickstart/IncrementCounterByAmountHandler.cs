@@ -67,17 +67,21 @@ internal sealed partial class IncrementCounterByAmountHandler(
                         // is executed as well
                         .WithPipeline(p => p.UseLogging())
 
-                        // You can customize the transport which is used to publish the signal
-                        // (e.g. publishing it via RabbitMQ), but here we configure the in-process
-                        // transport to use parallel broadcasting for demonstration (instead of
-                        // the default sequential broadcasting). You can also pass your own custom
-                        // strategy if you need it
-                        .WithTransport(b => b.UseInProcess().WithParallelBroadcastingStrategy())
-
                         // The 'Handle' method is unique for each `IHandler`. This means that your
                         // IDE's "Go to Implementation" feature will show all signal handlers for
                         // this signal, making it simple to find all the places in your code where
                         // a signal is used
+                        .Handle(
+                            new(message.CounterName, newValue, message.IncrementBy),
+                            cancellationToken);
+
+        // You can also customize the transport which is used to publish the signal, for example,
+        // to publish it via HTTP server-sent events. Note that it is also possible to do publish
+        // to multiple transports at the same time using `b.UseAggregate()`; the details for this
+        // can be found in the recipes
+        await publishers.For(CounterIncremented.T)
+                        .WithPipeline(p => p.UseLogging())
+                        .WithTransport(b => b.UseHttpServerSentEvents())
                         .Handle(
                             new(message.CounterName, newValue, message.IncrementBy),
                             cancellationToken);
