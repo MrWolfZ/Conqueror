@@ -423,6 +423,15 @@ public static partial class HttpTestSignals
     public sealed partial class TestSignalHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestSignal.IHandler
     {
+        static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
+            => pipeline.Use(ctx =>
+               {
+                   ctx.ServiceProvider.GetRequiredService<ILogger<TestSignalHandler>>()
+                      .LogInformation("received signal");
+
+                   return ctx.Next(ctx.Signal, ctx.CancellationToken);
+               });
+
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();

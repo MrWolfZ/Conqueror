@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using NUnit.Framework.Internal;
 using static Conqueror.Transport.Http.Tests.Signalling.HttpTestSignals;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Conqueror.Transport.Http.Tests.Signalling.Sse.Client;
 
@@ -34,6 +36,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
         var clientServices = testCase.RegisterClientServices(new ServiceCollection())
                                      .AddConquerorHttpClient()
+                                     .AddSingleton(host.Resolve<ILogger<TestSignalHandler>>())
                                      .AddSingleton<FnToCallFromHandler>((s, p) =>
                                      {
                                          var observations = p.GetRequiredService<TestObservations>();
@@ -168,6 +171,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         var observations = new TestObservations();
 
         var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSingleton(host.Resolve<ILogger<TestSignalHandler>>())
                                                     .AddSignalHandler<TestSignalHandler>()
                                                     .AddSingleton<FnToCallFromHandler>((s, _) =>
                                                     {
@@ -213,6 +217,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
     [Test]
     [Combinatorial]
+    [Repeat(20)] // we repeat this test many times to catch any potential race conditions
     public async Task GivenHttpSseSignalHandler_WhenRunningAndStoppingReceiverMultipleTimes_SignalsAreReceivedMultipleTimes(
         [Values] bool runIndividually)
     {
@@ -226,6 +231,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         var observations = new TestObservations();
 
         var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSingleton(host.Resolve<ILogger<TestSignalHandler>>())
                                                     .AddSignalHandler<TestSignalHandler>()
                                                     .AddSingleton<FnToCallFromHandler>((s, _) =>
                                                     {
@@ -316,6 +322,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         var httpClient = host.HttpClient;
 
         var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSingleton(host.Resolve<ILogger<TestSignalHandler>>())
                                                     .AddSignalHandler<TestSignalHandler>()
                                                     .AddSingleton<Action<IHttpSseSignalReceiver>>(r => r.Enable(SseAddress)
                                                                                                         .WithHttpClient(httpClient));
@@ -367,6 +374,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
         var httpClient = host.HttpClient;
 
         var clientServices = new ServiceCollection().AddConquerorHttpClient()
+                                                    .AddSingleton(host.Resolve<ILogger<TestSignalHandler>>())
                                                     .AddSignalHandler<TestSignalHandler>()
                                                     .AddSignalHandler<MultiTestSignalHandler>()
                                                     .AddSingleton<Action<IHttpSseSignalReceiver>>(r => r.Enable(SseAddress)
@@ -405,7 +413,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
     [Test]
     [TestCaseSource(nameof(GenerateErrorTestCaseData))]
-    [Repeat(20)]
+    [Repeat(20)] // we repeat this test many times to catch any potential race conditions in the error handling
     public async Task GivenHttpSseSignalHandlers_WhenErrorsOccur_CorrectBehaviorIsExecuted(object testCaseParam)
     {
         var testCase = (HttpSseSignalErrorTestCase)testCaseParam; // cast instead of direct parameter type to keep the type private
@@ -491,21 +499,42 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
         if (connectionUnrecoverableErrorCount > 1)
         {
-            await Assert.ThatAsync(
-                () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                Throws.InstanceOf<AggregateException>()
-                      .With.Property("InnerExceptions")
-                      .Count.EqualTo(connectionUnrecoverableErrorCount)
-                      .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is HttpSseSignalReceiverRunFailedException)));
+            // necessary for try/catch below to work
+            using var d = new TestExecutionContext.IsolatedContext();
 
-            await Assert.ThatAsync(
-                () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                Throws.InstanceOf<AggregateException>()
-                      .With.Property("InnerExceptions")
-                      .Count.EqualTo(connectionUnrecoverableErrorCount)
-                      .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is HttpSseSignalReceiverRunFailedException)));
+            try
+            {
+                await Assert.ThatAsync(
+                    () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+                    Throws.InstanceOf<AggregateException>()
+                          .With.Property("InnerExceptions")
+                          .Count.EqualTo(connectionUnrecoverableErrorCount)
+                          .With.Property("InnerExceptions")
+                          .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is HttpSseSignalReceiverRunFailedException)));
+
+                await Assert.ThatAsync(
+                    () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+                    Throws.InstanceOf<AggregateException>()
+                          .With.Property("InnerExceptions")
+                          .Count.EqualTo(connectionUnrecoverableErrorCount)
+                          .With.Property("InnerExceptions")
+                          .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is HttpSseSignalReceiverRunFailedException)));
+            }
+
+            // there is a rare race condition that we cannot prevent where the client receives the first unrecoverable error
+            // before receiving the second unrecoverable error; in that case, the second request will be canceled, and therefore
+            // only a single exception will be thrown; in that case the assertions below should succeed, and if the assertion failure
+            // was due to some other reason (e.g. no exception was thrown), then the assertions will simply fail again
+            catch (AssertionException)
+            {
+                await Assert.ThatAsync(
+                    () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+                    Throws.InstanceOf<HttpSseSignalReceiverRunFailedException>());
+
+                await Assert.ThatAsync(
+                    () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+                    Throws.InstanceOf<HttpSseSignalReceiverRunFailedException>());
+            }
         }
 
         Assert.That(
@@ -558,17 +587,34 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
         if (handlerExceptions.Count > 1)
         {
-            await Assert.ThatAsync(
-                () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                Throws.InstanceOf<AggregateException>()
-                      .With.Property("InnerExceptions")
-                      .Count.EqualTo(handlerExceptions.Count)
-                      .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.OfType<HttpSseSignalReceiverRunFailedException>()
-                                                                        .Select(ex => ex.InnerException)
-                                                                        .OfType<Exception>()
-                                                                        .OrderBy(ex => ex.Message)
-                                                                        .SequenceEqual(handlerExceptions)));
+            // necessary for try/catch below to work
+            using var d = new TestExecutionContext.IsolatedContext();
+
+            try
+            {
+                await Assert.ThatAsync(
+                    () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+                    Throws.InstanceOf<AggregateException>()
+                          .With.Property("InnerExceptions")
+                          .Count.EqualTo(handlerExceptions.Count)
+                          .With.Property("InnerExceptions")
+                          .Matches<ReadOnlyCollection<Exception>>(exs => exs.OfType<HttpSseSignalReceiverRunFailedException>()
+                                                                            .Select(ex => ex.InnerException)
+                                                                            .OfType<Exception>()
+                                                                            .OrderBy(ex => ex.Message)
+                                                                            .SequenceEqual(handlerExceptions)));
+            }
+
+            // there is a rare race condition that we cannot prevent where the first handler throws before the second handler
+            // receives the signal; in that case, the second request will be canceled, and therefore only a single exception
+            // will be thrown; in that case the assertion below should succeed, and if the assertion failure
+            // was due to some other reason (e.g. no exception was thrown), then the assertion will simply fail again
+            catch (AssertionException)
+            {
+                await Assert.ThatAsync(
+                    () => run.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+                    Throws.InstanceOf<HttpSseSignalReceiverRunFailedException>());
+            }
         }
 
         if (handlerExceptions.Count > 0)
@@ -644,6 +690,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
         var clientServices = new ServiceCollection()
                              .AddConquerorHttpClient()
+                             .AddSingleton(host.Resolve<ILogger<TestSignalHandler>>())
                              .AddSignalHandler<TestSignalHandler>()
                              .AddSingleton<FnToCallFromHandler>((s, _) =>
                              {
@@ -1389,10 +1436,15 @@ public sealed partial class SignallingHttpSseClientExecutionTests
             HandlerCount = 2,
             HandlerExceptions =
             [
-                null,
-                null,
-                null,
-                new InvalidOperationException("handler exception"),
+                null, // on test signal 1 handler 1
+                null, // on test signal 1 handler 2
+                null, // on test signal 2 handler 1
+                null, // on test signal 3 handler 1
+
+                // throw the exception only in the second handler to work around rare race condition
+                // where the exception in the first handler is caught, and therefore the client disconnects
+                // before the second handler has a chance to run
+                new InvalidOperationException("handler exception"), // on test signal 3 handler 2
             ],
             PublishSignals = async (p, ct) =>
             {
@@ -1504,6 +1556,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
+                await Task.Delay(1, cancellationToken);
                 throw ex;
             }
         }
@@ -1524,6 +1577,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
+                await Task.Delay(1, cancellationToken);
                 throw ex;
             }
         }
@@ -1536,6 +1590,7 @@ public sealed partial class SignallingHttpSseClientExecutionTests
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
+                await Task.Delay(1, cancellationToken);
                 throw ex;
             }
         }
