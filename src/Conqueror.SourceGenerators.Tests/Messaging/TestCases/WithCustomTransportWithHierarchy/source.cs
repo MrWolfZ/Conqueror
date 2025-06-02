@@ -41,6 +41,8 @@ namespace Messaging.WithCustomTransportWithHierarchy
     public interface ITestTransportMessage<out TMessage, TResponse> : IMessage<TMessage, TResponse>
         where TMessage : class, ITestTransportMessage<TMessage, TResponse>;
 
+    public interface ITestTransportMessageHandler;
+
     public interface ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
         where TMessage : class, ITestTransportMessage<TMessage, TResponse>
         where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>

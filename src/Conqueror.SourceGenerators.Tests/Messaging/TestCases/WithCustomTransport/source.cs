@@ -55,6 +55,8 @@ namespace Messaging.WithCustomTransport
         static virtual string? UnsetProperty { get; }
     }
 
+    public interface ITestTransportMessageHandler;
+
     public interface ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
         where TMessage : class, ITestTransportMessage<TMessage, TResponse>
         where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>

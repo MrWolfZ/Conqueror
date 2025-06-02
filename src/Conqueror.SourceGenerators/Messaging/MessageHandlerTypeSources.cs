@@ -41,7 +41,7 @@ public static class MessageHandlerTypeSources
         using var ns = string.IsNullOrEmpty(handlerDescriptor.Namespace) ? null : sb.AppendNamespace(indentation, handlerDescriptor.Namespace);
 
         using var p = sb.AppendParentClasses(indentation, handlerDescriptor.ParentClasses);
-        using var mt = sb.AppendMessageHandlerType(indentation, in handlerDescriptor);
+        using var mt = sb.AppendMessageHandlerType(indentation, in handlerDescriptor, in descriptor.MessageTypes);
 
         return sb.AppendGetTypeInjectorsMethod(indentation, in handlerDescriptor, in descriptor.MessageTypes)
                  .AppendModuleInitializerMethod(indentation, in handlerDescriptor);
@@ -49,12 +49,23 @@ public static class MessageHandlerTypeSources
 
     private static IDisposable AppendMessageHandlerType(this StringBuilder sb,
                                                         Indentation indentation,
-                                                        in TypeDescriptor handlerDescriptor)
+                                                        in TypeDescriptor handlerDescriptor,
+                                                        in EquatableArray<MessageTypeDescriptor> messageDescriptors)
     {
         var keyword = handlerDescriptor.IsRecord ? "record" : "class";
-        return sb.AppendIndentation(indentation)
-                 .Append($"partial {keyword} {handlerDescriptor.Name} : global::Conqueror.IMessageHandlerWithSourceGeneration").AppendLine()
-                 .AppendBlock(indentation);
+        _ = sb.AppendIndentation(indentation)
+              .Append($"partial {keyword} {handlerDescriptor.Name} : global::Conqueror.IMessageHandlerWithSourceGeneration");
+
+        foreach (var (ns, prefix) in (from d in messageDescriptors
+                                      orderby d.MessageDescriptor.FullyQualifiedName
+                                      from a in d.Attributes
+                                      where a.Prefix != "Core"
+                                      select (a.Namespace, a.Prefix)).Distinct())
+        {
+            _ = sb.Append($", global::{ns}.I{prefix}MessageHandler");
+        }
+
+        return sb.AppendLine().AppendBlock(indentation);
     }
 
     private static StringBuilder AppendGetTypeInjectorsMethod(this StringBuilder sb,

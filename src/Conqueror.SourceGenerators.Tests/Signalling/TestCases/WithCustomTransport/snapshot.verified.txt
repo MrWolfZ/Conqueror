@@ -90,7 +90,7 @@ Conqueror.SourceGenerators/Conqueror.SourceGenerators.Signalling.SignalHandlerTy
 
 namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransport
 {
-    partial class TestSignalHandler : global::Conqueror.ISignalHandlerWithSourceGeneration
+    partial class TestSignalHandler : global::Conqueror.ISignalHandlerWithSourceGeneration, global::Signalling.WithCustomTransport.ITestTransportSignalHandler
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "FIXED_VERSION")]
         static global::System.Collections.Generic.IEnumerable<global::Conqueror.ISignalHandlerTypesInjector> global::Conqueror.ISignalHandler.GetTypeInjectors()

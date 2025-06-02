@@ -368,7 +368,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 
               // Message senders can also have pipelines and use different transports. The exact
               // same middlewares like logging, validation, error handling, etc. can be used on
-              // both senders/publishers and handlers
+              // both senders and handlers
               .WithPipeline(p => p.UseLogging())
               .WithTransport(b => b.UseInProcess())
 
@@ -379,6 +379,14 @@ internal sealed partial class DoublingCounterIncrementedHandler(
                   new(signal.CounterName) { IncrementBy = signal.IncrementBy },
                   cancellationToken);
     }
+
+    // Handlers for signal types which have a transport type that requires configuration must
+    // declare a method for configuring the receiver. However, since this handler is only used to
+    // handle in-process signals, we simply disable the HTTP SSE receiver. If you were to use this
+    // handler in a client application, you would need to enable the receiver with the correct
+    // configuration (see the recipes for more details)
+    static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
+        => receiver.Disable();
 }
 ```
 
@@ -411,6 +419,9 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 >                      .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
 >                              cancellationToken);
 >     }
+> 
+>     static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
+>         => receiver.Disable();
 > }
 > ```
 >

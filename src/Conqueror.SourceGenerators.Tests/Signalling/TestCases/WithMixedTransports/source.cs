@@ -33,6 +33,8 @@ public interface ITestTransport2Signal<out TSignal> : ISignal<TSignal>
     static virtual string? StringProperty { get; }
 }
 
+public interface ITestTransportSignalHandler;
+
 public interface ITestTransportSignalHandler<TSignal, TIHandler>
     where TSignal : class, ITestTransportSignal<TSignal>
     where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
@@ -41,6 +43,8 @@ public interface ITestTransportSignalHandler<TSignal, TIHandler>
         where THandler : class, TIHandler
         => throw new NotSupportedException();
 }
+
+public interface ITestTransport2SignalHandler;
 
 public interface ITestTransport2SignalHandler<TSignal, TIHandler>
     where TSignal : class, ITestTransport2Signal<TSignal>

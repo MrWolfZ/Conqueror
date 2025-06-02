@@ -49,6 +49,8 @@ namespace Signalling.WithCustomTransport
         static virtual string? UnsetProperty { get; }
     }
 
+    public interface ITestTransportSignalHandler;
+
     public interface ITestTransportSignalHandler<TSignal, TIHandler>
         where TSignal : class, ITestTransportSignal<TSignal>
         where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>

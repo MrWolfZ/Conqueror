@@ -35,6 +35,8 @@ namespace Signalling.WithCustomTransportWithHierarchy
     public interface ITestTransportSignal<out TSignal> : ISignal<TSignal>
         where TSignal : class, ITestTransportSignal<TSignal>;
 
+    public interface ITestTransportSignalHandler;
+
     public interface ITestTransportSignalHandler<TSignal, TIHandler>
         where TSignal : class, ITestTransportSignal<TSignal>
         where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>

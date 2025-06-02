@@ -156,7 +156,7 @@ Conqueror.SourceGenerators/Conqueror.SourceGenerators.Messaging.MessageHandlerTy
 
 namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy
 {
-    partial class TestMessageHandler : global::Conqueror.IMessageHandlerWithSourceGeneration
+    partial class TestMessageHandler : global::Conqueror.IMessageHandlerWithSourceGeneration, global::Messaging.WithCustomTransportWithHierarchy.ITestTransportMessageHandler
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "FIXED_VERSION")]
         static global::System.Collections.Generic.IEnumerable<global::Conqueror.IMessageHandlerTypesInjector> global::Conqueror.IMessageHandler.GetTypeInjectors()
@@ -190,7 +190,7 @@ Conqueror.SourceGenerators/Conqueror.SourceGenerators.Messaging.MessageHandlerTy
 
 namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy
 {
-    partial class TestMessageSubHandler : global::Conqueror.IMessageHandlerWithSourceGeneration
+    partial class TestMessageSubHandler : global::Conqueror.IMessageHandlerWithSourceGeneration, global::Messaging.WithCustomTransportWithHierarchy.ITestTransportMessageHandler
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "FIXED_VERSION")]
         static global::System.Collections.Generic.IEnumerable<global::Conqueror.IMessageHandlerTypesInjector> global::Conqueror.IMessageHandler.GetTypeInjectors()

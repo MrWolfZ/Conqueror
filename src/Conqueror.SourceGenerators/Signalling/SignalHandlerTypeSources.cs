@@ -41,7 +41,7 @@ public static class SignalHandlerTypeSources
         using var ns = string.IsNullOrEmpty(handlerDescriptor.Namespace) ? null : sb.AppendNamespace(indentation, handlerDescriptor.Namespace);
 
         using var p = sb.AppendParentClasses(indentation, handlerDescriptor.ParentClasses);
-        using var mt = sb.AppendSignalHandlerType(indentation, in handlerDescriptor);
+        using var mt = sb.AppendSignalHandlerType(indentation, in handlerDescriptor, in descriptor.SignalTypes);
 
         return sb.AppendGetTypeInjectorsMethod(indentation, in handlerDescriptor, in descriptor.SignalTypes)
                  .AppendModuleInitializerMethod(indentation, in handlerDescriptor);
@@ -49,12 +49,23 @@ public static class SignalHandlerTypeSources
 
     private static IDisposable AppendSignalHandlerType(this StringBuilder sb,
                                                        Indentation indentation,
-                                                       in TypeDescriptor handlerDescriptor)
+                                                       in TypeDescriptor handlerDescriptor,
+                                                       in EquatableArray<SignalTypeDescriptor> signalDescriptors)
     {
         var keyword = handlerDescriptor.IsRecord ? "record" : "class";
-        return sb.AppendIndentation(indentation)
-                 .Append($"partial {keyword} {handlerDescriptor.Name} : global::Conqueror.ISignalHandlerWithSourceGeneration").AppendLine()
-                 .AppendBlock(indentation);
+        _ = sb.AppendIndentation(indentation)
+              .Append($"partial {keyword} {handlerDescriptor.Name} : global::Conqueror.ISignalHandlerWithSourceGeneration");
+
+        foreach (var (ns, prefix) in (from d in signalDescriptors
+                                      orderby d.SignalDescriptor.FullyQualifiedName
+                                      from a in d.Attributes
+                                      where a.Prefix != "Core"
+                                      select (a.Namespace, a.Prefix)).Distinct())
+        {
+            _ = sb.Append($", global::{ns}.I{prefix}SignalHandler");
+        }
+
+        return sb.AppendLine().AppendBlock(indentation);
     }
 
     private static StringBuilder AppendGetTypeInjectorsMethod(this StringBuilder sb,

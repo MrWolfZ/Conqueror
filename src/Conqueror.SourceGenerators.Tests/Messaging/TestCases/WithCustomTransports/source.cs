@@ -42,6 +42,8 @@ namespace Messaging.WithCustomTransports.Transport1
         static virtual string StringProperty => "Default";
     }
 
+    public interface ITestTransportMessageHandler;
+
     public interface ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
         where TMessage : class, ITestTransportMessage<TMessage, TResponse>
         where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
@@ -70,6 +72,8 @@ namespace Messaging.WithCustomTransports.Transport2
     {
         static virtual string? StringProperty { get; }
     }
+
+    public interface ITestTransport2MessageHandler;
 
     public interface ITestTransport2MessageHandler<TMessage, TResponse, TIHandler>
         where TMessage : class, ITestTransport2Message<TMessage, TResponse>

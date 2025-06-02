@@ -12,13 +12,13 @@ public interface IHttpMessageHandler
     }
 }
 
-public interface IHttpMessageHandler<TMessage, TResponse, TIHandler> : IMessageHandler<TMessage, TResponse, TIHandler>, IHttpMessageHandler
+public interface IHttpMessageHandler<TMessage, TResponse, TIHandler> : IMessageHandler<TMessage, TResponse, TIHandler>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
     where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
 {
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
     static IMessageHandlerTypesInjector CreateHttpTypesInjector<THandler>()
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IHttpMessageHandler
         => new HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(THandler.ConfigureHttpReceiver);
 }

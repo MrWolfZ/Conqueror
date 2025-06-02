@@ -36,6 +36,8 @@ namespace Signalling.WithCustomTransports.Transport1
         static virtual string StringProperty => "Default";
     }
 
+    public interface ITestTransportSignalHandler;
+
     public interface ITestTransportSignalHandler<TSignal, TIHandler>
         where TSignal : class, ITestTransportSignal<TSignal>
         where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
@@ -60,6 +62,8 @@ namespace Signalling.WithCustomTransports.Transport2
     {
         static virtual string? StringProperty { get; }
     }
+
+    public interface ITestTransport2SignalHandler;
 
     public interface ITestTransport2SignalHandler<TSignal, TIHandler>
         where TSignal : class, ITestTransport2Signal<TSignal>

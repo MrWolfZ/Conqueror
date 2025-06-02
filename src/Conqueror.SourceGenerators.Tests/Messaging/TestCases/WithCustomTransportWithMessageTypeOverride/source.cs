@@ -40,6 +40,8 @@ namespace WithCustomTransportWithMessageTypeOverrideOriginalTransport
         static virtual string StringProperty => "Default";
     }
 
+    public interface ITestTransportMessageHandler;
+
     public interface ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
         where TMessage : class, ITestTransportMessage<TMessage, TResponse>
         where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>

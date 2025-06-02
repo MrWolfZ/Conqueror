@@ -20,4 +20,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
                      .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
                              cancellationToken);
     }
+
+    static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
+        => receiver.Disable();
 }
