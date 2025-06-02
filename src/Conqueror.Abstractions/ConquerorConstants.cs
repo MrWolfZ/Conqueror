@@ -6,4 +6,6 @@ namespace Conqueror;
 public static class ConquerorConstants
 {
     public const string InProcessTransportName = "in-process";
+
+    public const string AggregateTransportName = "aggregate";
 }

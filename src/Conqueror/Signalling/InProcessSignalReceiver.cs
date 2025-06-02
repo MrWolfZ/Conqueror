@@ -16,7 +16,7 @@ internal sealed class InProcessSignalReceiver(IServiceProvider serviceProviderFi
 
     private readonly ConcurrentDictionary<Type, IReadOnlyCollection<Delegate>> receiversBySignalType = new();
 
-    public async Task Broadcast<TSignal>(
+    public Task Broadcast<TSignal>(
         TSignal signal,
         IServiceProvider serviceProvider,
         ISignalBroadcastingStrategy broadcastingStrategy,
@@ -25,12 +25,11 @@ internal sealed class InProcessSignalReceiver(IServiceProvider serviceProviderFi
     {
         var fns = receiversBySignalType.GetOrAdd(signal.GetType(), GetSignalHandlerFnsForSignalType<TSignal>);
 
-        await broadcastingStrategy.BroadcastSignal(
-                                      (IReadOnlyCollection<SignalHandlerFn<TSignal>>)fns,
-                                      serviceProvider,
-                                      signal,
-                                      cancellationToken)
-                                  .ConfigureAwait(false);
+        return broadcastingStrategy.BroadcastSignal(
+            (IReadOnlyCollection<SignalHandlerFn<TSignal>>)fns,
+            serviceProvider,
+            signal,
+            cancellationToken);
     }
 
     /// <summary>
