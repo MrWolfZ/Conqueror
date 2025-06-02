@@ -17,7 +17,7 @@ internal sealed class HttpSseSignalBroker(IServiceProvider serviceProvider)
 
     public IAsyncEnumerable<SseItem<string>> Subscribe(IEnumerable<string> eventTypes) => SubscribeInternal(eventTypes);
 
-    public async Task Publish<TSignal>(
+    public Task Publish<TSignal>(
         TSignal signal,
         ConquerorContext conquerorContext,
         CancellationToken cancellationToken)
@@ -25,7 +25,7 @@ internal sealed class HttpSseSignalBroker(IServiceProvider serviceProvider)
     {
         if (!channelWritersByEventType.TryGetValue(TSignal.EventType, out var writers))
         {
-            return;
+            return Task.CompletedTask;
         }
 
         var content = TSignal.HttpSseSignalSerializer.Serialize(serviceProvider, signal);
@@ -43,8 +43,7 @@ internal sealed class HttpSseSignalBroker(IServiceProvider serviceProvider)
         };
 
         cancellationToken.ThrowIfCancellationRequested();
-        await Task.WhenAll(writers.Select(WriteToChannel)).ConfigureAwait(false);
-        cancellationToken.ThrowIfCancellationRequested();
+        return Task.WhenAll(writers.Select(WriteToChannel));
 
         async Task WriteToChannel(ChannelWriter<ChannelMessage> writer)
         {
