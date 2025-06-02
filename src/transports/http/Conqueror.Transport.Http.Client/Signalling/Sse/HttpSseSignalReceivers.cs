@@ -41,7 +41,7 @@ internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
 
         if (receiver is null)
         {
-            return new(Task.CompletedTask, Task.CompletedTask, null);
+            return new(Task.CompletedTask, Task.CompletedTask, cancellationTokenSource: null, onDispose: null);
         }
 
         return RunHttpSseSignalReceiver(receivers, receiver, cancellationToken);

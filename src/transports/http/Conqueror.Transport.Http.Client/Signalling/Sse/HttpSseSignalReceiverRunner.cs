@@ -13,6 +13,8 @@ internal sealed class HttpSseSignalReceiverRunner(
     HttpSseSignalReceiver receiver,
     IConquerorContextAccessor conquerorContextAccessor)
 {
+    private readonly Lazy<HttpClient> defaultHttpClientLazy = new(() => new());
+
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
@@ -25,7 +27,14 @@ internal sealed class HttpSseSignalReceiverRunner(
         return new(
             connectionTaskCompletionSource.Task,
             Run(receiver.HandlerType, connectionTaskCompletionSource, linkedSource.Token),
-            linkedSource);
+            linkedSource,
+            () =>
+            {
+                if (defaultHttpClientLazy.IsValueCreated)
+                {
+                    defaultHttpClientLazy.Value.Dispose();
+                }
+            });
     }
 
     private async Task Run(Type handlerType, TaskCompletionSource connectionTaskCompletionSource, CancellationToken cancellationToken)
@@ -135,7 +144,7 @@ internal sealed class HttpSseSignalReceiverRunner(
 
     private async Task<HttpResponseMessage> Connect(HttpSseSignalReceiverConfiguration config, CancellationToken cancellationToken)
     {
-        using var defaultHttpClient = config.HttpClient is null ? new HttpClient() : null;
+        var defaultHttpClient = config.HttpClient is null ? defaultHttpClientLazy.Value : null;
 
         HttpResponseMessage? response = null;
 

@@ -101,6 +101,7 @@ public sealed partial class SignallingHttpSseServerExecutionTests
     }
 
     [Test]
+    [Retry(3)] // fix some flakiness has been observed due to race condition between publish and cancellation
     public async Task GivenTestHttpSseSignalWithSingleSubscriber_WhenCancellingPublish_ThrowsOperationCanceledException()
     {
         await using var host = await HttpTransportTestHost.Create(

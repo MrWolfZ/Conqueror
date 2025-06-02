@@ -11,15 +11,21 @@ namespace Conqueror;
 
 public sealed class SignalReceiverRun : IAsyncDisposable
 {
+    private Action? onDispose;
     private CancellationTokenSource? cancellationTokenSource;
     private IReadOnlyCollection<SignalReceiverRun>? innerRuns;
 
     [SuppressMessage("ReSharper", "ConvertToPrimaryConstructor", Justification = "false positive")]
-    public SignalReceiverRun(Task initialConnectionTask, Task completionTask, CancellationTokenSource? cancellationTokenSource)
+    public SignalReceiverRun(
+        Task initialConnectionTask,
+        Task completionTask,
+        CancellationTokenSource? cancellationTokenSource,
+        Action? onDispose)
     {
         InitialConnectionTask = initialConnectionTask;
         CompletionTask = completionTask;
         this.cancellationTokenSource = cancellationTokenSource;
+        this.onDispose = onDispose;
     }
 
     public SignalReceiverRun(IReadOnlyCollection<SignalReceiverRun> runs)
@@ -51,6 +57,9 @@ public sealed class SignalReceiverRun : IAsyncDisposable
         {
             await Task.WhenAll(runs.Select(DisposeSingle)).ConfigureAwait(false);
         }
+
+        var onD = Interlocked.Exchange(ref onDispose, null);
+        onD?.Invoke();
     }
 
     private static async Task WhenAll(IEnumerable<Task> tasks)
