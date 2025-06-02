@@ -78,7 +78,7 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.PrivateNested
 {
     partial class Container
     {
-        partial class TestSignalHandler
+        partial class TestSignalHandler : global::Conqueror.ISignalHandlerWithSourceGeneration
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "FIXED_VERSION")]
             static global::System.Collections.Generic.IEnumerable<global::Conqueror.ISignalHandlerTypesInjector> global::Conqueror.ISignalHandler.GetTypeInjectors()

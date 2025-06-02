@@ -68,7 +68,7 @@ Conqueror.SourceGenerators/Conqueror.SourceGenerators.Signalling.SignalHandlerTy
 // Suppress warnings about [Obsolete] member usage in generated code.
 #pragma warning disable CS0612, CS0618
 
-partial class GlobalTestSignalHandler
+partial class GlobalTestSignalHandler : global::Conqueror.ISignalHandlerWithSourceGeneration
 {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "FIXED_VERSION")]
     static global::System.Collections.Generic.IEnumerable<global::Conqueror.ISignalHandlerTypesInjector> global::Conqueror.ISignalHandler.GetTypeInjectors()

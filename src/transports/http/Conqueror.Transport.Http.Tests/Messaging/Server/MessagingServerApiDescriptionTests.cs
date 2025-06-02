@@ -17,7 +17,7 @@ public sealed class MessagingServerApiDescriptionTests
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         await using var host = await HttpTransportTestHost.Create(
             services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
@@ -70,7 +70,7 @@ public sealed class MessagingServerApiDescriptionTests
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         await using var host = await HttpTransportTestHost.Create(
             services =>

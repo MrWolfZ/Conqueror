@@ -24,7 +24,7 @@ public sealed class LoggingMessageMiddlewareTests
         MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services => services.RegisterMessageType(testCase),
@@ -88,7 +88,7 @@ public sealed class LoggingMessageMiddlewareTests
         MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -147,7 +147,7 @@ public sealed class LoggingMessageMiddlewareTests
         MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -206,7 +206,7 @@ public sealed class LoggingMessageMiddlewareTests
         MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         SelfLog.Enable(Console.Error);
 
@@ -273,7 +273,7 @@ public sealed class LoggingMessageMiddlewareTests
         MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         SelfLog.Enable(Console.Error);
 

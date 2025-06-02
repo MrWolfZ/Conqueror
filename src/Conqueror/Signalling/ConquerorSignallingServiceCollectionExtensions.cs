@@ -16,7 +16,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
 {
     public static IServiceCollection AddSignalHandler<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(
         this IServiceCollection services)
-        where THandler : class, ISignalHandler
+        where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
         return services.AddSignalHandlerInternalGeneric<THandler>(new(typeof(THandler), typeof(THandler), ServiceLifetime.Transient), shouldOverwriteRegistration: true);
     }
@@ -24,7 +24,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
     public static IServiceCollection AddSignalHandler<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(
         this IServiceCollection services,
         ServiceLifetime lifetime)
-        where THandler : class, ISignalHandler
+        where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
         return services.AddSignalHandlerInternalGeneric<THandler>(new(typeof(THandler), typeof(THandler), lifetime), shouldOverwriteRegistration: true);
     }
@@ -32,7 +32,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
     public static IServiceCollection AddSignalHandler<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(
         this IServiceCollection services,
         Func<IServiceProvider, THandler> factory)
-        where THandler : class, ISignalHandler
+        where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
         return services.AddSignalHandlerInternalGeneric<THandler>(new(typeof(THandler), factory, ServiceLifetime.Transient), shouldOverwriteRegistration: true);
     }
@@ -41,7 +41,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         this IServiceCollection services,
         Func<IServiceProvider, THandler> factory,
         ServiceLifetime lifetime)
-        where THandler : class, ISignalHandler
+        where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
         return services.AddSignalHandlerInternalGeneric<THandler>(new(typeof(THandler), factory, lifetime), shouldOverwriteRegistration: true);
     }
@@ -49,7 +49,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
     public static IServiceCollection AddSignalHandler<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(
         this IServiceCollection services,
         THandler instance)
-        where THandler : class, ISignalHandler
+        where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
         return services.AddSignalHandlerInternalGeneric<THandler>(new(typeof(THandler), instance), shouldOverwriteRegistration: true);
     }

@@ -20,7 +20,7 @@ public static class HttpSseSignalReceiversExtensions
     }
 
     public static SignalReceiverRun RunHttpSseSignalReceiver<THandler>(this ISignalReceivers receivers, CancellationToken cancellationToken)
-        where THandler : class, IHttpSseSignalHandler
+        where THandler : class, IHttpSseSignalHandler, ISignalHandlerWithSourceGeneration
     {
         ArgumentNullException.ThrowIfNull(receivers);
 

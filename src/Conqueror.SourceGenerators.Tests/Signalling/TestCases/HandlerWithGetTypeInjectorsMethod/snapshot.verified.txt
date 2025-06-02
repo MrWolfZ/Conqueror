@@ -73,7 +73,7 @@ Conqueror.SourceGenerators/Conqueror.SourceGenerators.Signalling.SignalHandlerTy
 
 namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.HandlerWithGetTypeInjectorsMethod
 {
-    partial class TestSignalHandler
+    partial class TestSignalHandler : global::Conqueror.ISignalHandlerWithSourceGeneration
     {
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "FIXED_VERSION")]

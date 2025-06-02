@@ -23,7 +23,7 @@ public static partial class LoggingMiddlewareTestMessages
                                                                                      MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         _ = services.AddMessageHandler<THandler>()
                     .AddSingleton<IMessageTestCasePipelineConfiguration<TMessage, TResponse>>(testCase);

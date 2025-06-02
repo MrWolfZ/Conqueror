@@ -262,9 +262,6 @@ public sealed partial class SignalHandlerRegistrationTests
     [Test]
     public void GivenServiceCollection_WhenAddingInvalidHandlerType_ThrowsInvalidOperationException()
     {
-        Assert.That(() => new ServiceCollection().AddSignalHandler<TestSignal.IHandler>(),
-                    Throws.InvalidOperationException.With.Message.Match("must not be an interface or abstract class"));
-
         Assert.That(() => new ServiceCollection().AddSignalHandler<ITestSignalHandler>(),
                     Throws.InvalidOperationException.With.Message.Match("must not be an interface or abstract class"));
 
@@ -306,5 +303,5 @@ public sealed partial class SignalHandlerRegistrationTests
             => Task.CompletedTask;
     }
 
-    private interface ITestSignalHandler : TestSignal.IHandler;
+    private interface ITestSignalHandler : TestSignal.IHandler, ISignalHandlerWithSourceGeneration;
 }

@@ -73,7 +73,7 @@ Conqueror.SourceGenerators/Conqueror.SourceGenerators.Signalling.SignalHandlerTy
 
 namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.Generic
 {
-    partial class TestSignalHandler<TFirst, TSecond>
+    partial class TestSignalHandler<TFirst, TSecond> : global::Conqueror.ISignalHandlerWithSourceGeneration
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "FIXED_VERSION")]
         static global::System.Collections.Generic.IEnumerable<global::Conqueror.ISignalHandlerTypesInjector> global::Conqueror.ISignalHandler.GetTypeInjectors()
@@ -101,7 +101,7 @@ Conqueror.SourceGenerators/Conqueror.SourceGenerators.Signalling.SignalHandlerTy
 
 namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.Generic
 {
-    partial class TestSignalHandler2
+    partial class TestSignalHandler2 : global::Conqueror.ISignalHandlerWithSourceGeneration
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "FIXED_VERSION")]
         static global::System.Collections.Generic.IEnumerable<global::Conqueror.ISignalHandlerTypesInjector> global::Conqueror.ISignalHandler.GetTypeInjectors()

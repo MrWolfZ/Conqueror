@@ -24,7 +24,7 @@ public static partial class LoggingMiddlewareTestSignals
         SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
     {
         _ = services.AddSignalHandler<THandler>()
                     .AddSingleton<ISignalTestCasePipelineConfiguration<TSignal>>(testCase);

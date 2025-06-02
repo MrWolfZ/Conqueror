@@ -53,7 +53,7 @@ public static class SignalHandlerTypeSources
     {
         var keyword = handlerDescriptor.IsRecord ? "record" : "class";
         return sb.AppendIndentation(indentation)
-                 .Append($"partial {keyword} {handlerDescriptor.Name}").AppendLine()
+                 .Append($"partial {keyword} {handlerDescriptor.Name} : global::Conqueror.ISignalHandlerWithSourceGeneration").AppendLine()
                  .AppendBlock(indentation);
     }
 

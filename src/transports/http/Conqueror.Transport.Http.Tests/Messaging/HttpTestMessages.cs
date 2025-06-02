@@ -26,12 +26,12 @@ public static partial class HttpTestMessages
     public static void RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(this IServiceCollection services, MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         _ = services.AddSingleton<TestObservations>()
                     .AddTransient(typeof(TestMessageMiddleware<,>));
 
-        if (typeof(THandler) == typeof(TIHandler))
+        if (typeof(THandler) == typeof(TestMessageWithDelegateHandlerHandler))
         {
             _ = services.AddMessageHandlerDelegate(new MessageTypes<TMessage, TResponse, TIHandler>(),
                                                    async (_, _, _) =>
@@ -106,7 +106,7 @@ public static partial class HttpTestMessages
     {
         return GenerateTestCases().Select(c => new TestCaseData(c)
         {
-            TypeArgs = [c.MessageType, c.ResponseType ?? typeof(UnitMessageResponse), c.IHandlerType, c.HandlerType ?? c.IHandlerType],
+            TypeArgs = [c.MessageType, c.ResponseType ?? typeof(UnitMessageResponse), c.IHandlerType, c.HandlerType],
         });
     }
 
@@ -820,7 +820,7 @@ public static partial class HttpTestMessages
             {
                 MessageType = typeof(TestMessageWithDelegateHandler),
                 ResponseType = typeof(TestMessageResponse),
-                HandlerType = null,
+                HandlerType = typeof(TestMessageWithDelegateHandlerHandler),
                 IHandlerType = typeof(TestMessageWithDelegateHandler.IHandler),
                 HttpMethod = MethodNames.Post,
                 FullPath = "/api/testMessageWithDelegateHandler",
@@ -913,7 +913,7 @@ public static partial class HttpTestMessages
 
         public required Type? ResponseType { get; init; }
 
-        public required Type? HandlerType { get; init; }
+        public required Type HandlerType { get; init; }
 
         public required Type IHandlerType { get; init; }
 
@@ -1884,6 +1884,16 @@ public static partial class HttpTestMessages
     public sealed partial record TestMessageWithDelegateHandler
     {
         public int Payload { get; init; }
+    }
+
+    // only used to satisfy type constraints on test methods
+    public sealed partial class TestMessageWithDelegateHandlerHandler : TestMessageWithDelegateHandler.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessageWithDelegateHandler message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            throw new InvalidOperationException("This handler should not be called");
+        }
     }
 
     [CustomHttpMessage<TestMessageResponse>(CustomPathPrefix = "customApi")]

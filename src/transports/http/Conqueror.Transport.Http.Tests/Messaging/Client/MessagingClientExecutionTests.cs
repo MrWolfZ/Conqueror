@@ -23,7 +23,7 @@ public sealed class MessagingClientExecutionTests
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
         await using var host = await CreateTestHost(
             services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),

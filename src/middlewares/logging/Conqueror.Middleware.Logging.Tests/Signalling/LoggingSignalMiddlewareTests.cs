@@ -24,7 +24,7 @@ public sealed class LoggingSignalMiddlewareTests
         SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services => services.RegisterSignalType(testCase),
@@ -88,7 +88,7 @@ public sealed class LoggingSignalMiddlewareTests
         SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -147,7 +147,7 @@ public sealed class LoggingSignalMiddlewareTests
         SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -206,7 +206,7 @@ public sealed class LoggingSignalMiddlewareTests
         SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
     {
         SelfLog.Enable(Console.Error);
 
@@ -273,7 +273,7 @@ public sealed class LoggingSignalMiddlewareTests
         SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-        where THandler : class, TIHandler
+        where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
     {
         SelfLog.Enable(Console.Error);
 

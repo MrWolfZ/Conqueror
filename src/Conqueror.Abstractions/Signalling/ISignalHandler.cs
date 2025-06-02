@@ -33,6 +33,14 @@ public interface ISignalHandler
     }
 }
 
+/// <summary>
+///     This interface is added to handler types by the source generator and purely
+///     exists to cause a compiler error if the source generator is not correctly generating
+///     the extensions for the handler type.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface ISignalHandlerWithSourceGeneration;
+
 [EditorBrowsable(EditorBrowsableState.Never)]
 [SuppressMessage("ReSharper", "TypeParameterCanBeVariant", Justification = "false positive")]
 public interface ISignalHandler<TSignal, TIHandler> : ISignalHandler

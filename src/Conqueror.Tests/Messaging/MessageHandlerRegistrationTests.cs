@@ -398,9 +398,6 @@ public sealed partial class MessageHandlerRegistrationTests
     [Test]
     public void GivenServiceCollection_WhenAddingInvalidHandlerType_ThrowsInvalidOperationException()
     {
-        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessage.IHandler>(),
-                    Throws.InvalidOperationException.With.Message.Match("must not be an interface or abstract class"));
-
         Assert.That(() => new ServiceCollection().AddMessageHandler<ITestMessageHandler>(),
                     Throws.InvalidOperationException.With.Message.Match("must not be an interface or abstract class"));
 
@@ -469,5 +466,5 @@ public sealed partial class MessageHandlerRegistrationTests
             => Task.FromResult(new TestMessage2Response());
     }
 
-    private interface ITestMessageHandler : TestMessage.IHandler;
+    private interface ITestMessageHandler : TestMessage.IHandler, IMessageHandlerWithSourceGeneration;
 }

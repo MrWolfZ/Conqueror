@@ -35,7 +35,7 @@ internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
     }
 
     public SignalReceiverRun RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
-        where THandler : class, IHttpSseSignalHandler
+        where THandler : class, IHttpSseSignalHandler, ISignalHandlerWithSourceGeneration
     {
         var receiver = ConfigureHttpSseSignalReceiver<THandler>(receivers);
 
