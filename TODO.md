@@ -125,10 +125,8 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Transport.Http
 
-### Transport.Http Common
-
 - [ ] assert that well-known error handling middleware only sets response if it has not already started yet and otherwise rethrows
-- [ ] pull SEE endpoint logic into helper class
+- [ ] add API docs tests for [Microsoft OpenAPI](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-9.0) and [Scalar](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-9.0#use-scalar-for-interactive-api-documentation)
 
 ### Transport.Http Messaging
 
@@ -138,14 +136,16 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] in body serializer set content type with utf-8 encoding and in deserializer throw if content type is not json or encoding is explicitly set to something non-utf8
   - [ ] in both add support for binding from path template
 - [ ] add tests for running with compression middleware
-  - [ ] see also [here](https://stackoverflow.com/questions/28754673/httpclient-conditionally-set-acceptencoding-compression-at-runtime) for some inspiration
+  - [ ] see also [this article](https://stackoverflow.com/questions/28754673/httpclient-conditionally-set-acceptencoding-compression-at-runtime) and [this one](https://www.tpeczek.com/2017/08/aspnet-core-response-compression.html) for some inspiration
 - [ ] add tests for running with handler with disabled redirect following (should fail message)
 - [ ] allow adding endpoints explicitly or manually and then `MapMessageEndpoints` skips those message types
 - [ ] add tests that a custom base interface can be used to specify custom conventions
 - [ ] add `FailureStatusCodes` property to `IHttpMessage` (defaults to 400, 401, and 403)
   - [ ] generate appropriate endpoint metadata
   - [ ] ensure that swashbuckle can be used to customize it, e.g. adding `ProblemDetails` as body schema
-- [ ] add support for URI templates (see [here](https://github.com/modelcontextprotocol/csharp-sdk/blob/adb2098e4d847ae6075f98a06b8fbca8c057f6cb/src/ModelContextProtocol/UriTemplate.cs#L19) for reference)
+- [ ] add support for URI templates (see [this implementation](https://github.com/modelcontextprotocol/csharp-sdk/blob/adb2098e4d847ae6075f98a06b8fbca8c057f6cb/src/ModelContextProtocol/UriTemplate.cs#L19) for reference)
+  - [ ] the serializer interface gets the path parameters in a dictionary (see [this answer](https://stackoverflow.com/questions/56461701/how-to-read-uri-parameters-using-httpcontextaccessor-in-asp-net-core/56462148#56462148) for reference)
+  - [ ] for default body serialization, the URI parameters are only used for routing, the payload is still fully read from the content
 - [ ] add trace logging (only if ILoggerFactory is present)
 - [ ] add test to assert that messages support polymorphism
 - [ ] create `HttpMessageEndpointDescriptor` and pass that around internally when registering endpoints instead of accessing `TMessage` everywhere
@@ -166,6 +166,7 @@ This file contains all the open points for extensions and improvements to the **
     - [ ] configurable interval, either regular interval or debounced
   - [ ] in `MapSignalSseEndpoints` add overload which takes an `IHttpSseEndpointConfiguration`, which allows authorizing requests based on requested signal event types, and allows configuring a pipeline (with a `ConfigurePipeline<TSignal>(ISignalPipeline<TSignal> pipeline) where TSignal : IHttpSseSignal` method)
     - [ ] add option to enforce `Accept` header
+  - [ ] [for reference](https://github.com/tpeczek/Lib.AspNetCore.ServerSentEvents/blob/main/Lib.AspNetCore.ServerSentEvents/ServerSentEventsMiddleware.cs)
   - [ ] mention in recipe to use HTTP2+ if possible
 - [ ] provide HTTP websocket transport
   - [ ] add tests for behavior when websocket connection is interrupted (i.e. disconnect without proper close handshake)
@@ -209,6 +210,23 @@ This file contains all the open points for extensions and improvements to the **
 
 - [ ] provide file system transport
   - [ ] use file system as persistent queue and buffer with file watcher / poller on runner / receiver sides with sender indexing into the buffer
+
+## Transport.Redis
+
+- [ ] use [Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/testing/write-your-first-test?pivots=nunit) or [test containers](https://omerugi.medium.com/boost-your-integration-tests-sharing-a-redis-container-with-testcontainers-for-net-8fe8c01d98ec) to spawn a container during testing
+  - [ ] use [NUnit SetUpFixture](https://docs.nunit.org/articles/nunit/writing-tests/attributes/setupfixture.html) to start one container for all tests
+
+### Transport.Redis Messaging
+
+- [ ] provide redis transport
+
+### Transport.Redis Signalling
+
+- [ ] provide redis transport
+
+### Transport.Redis Iterators
+
+- [ ] provide redis transport
 
 ## Examples
 
