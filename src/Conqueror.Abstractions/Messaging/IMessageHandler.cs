@@ -42,8 +42,6 @@ public interface IMessageHandler<TMessage, TResponse, TIHandler> : IMessageHandl
     where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
 {
     static virtual MessageTypes<TMessage, TResponse, TIHandler> MessageTypes { get; } = new();
-
-    static abstract Task<TResponse> Invoke(TIHandler handler, TMessage message, CancellationToken cancellationToken);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -133,9 +131,6 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy
         };
 
     static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors()
-        => throw new NotSupportedException("this method should never be called on the proxy");
-
-    static Task<TResponse> IMessageHandler<TMessage, TResponse, TIHandler>.Invoke(TIHandler handler, TMessage message, CancellationToken cancellationToken)
         => throw new NotSupportedException("this method should never be called on the proxy");
 }
 

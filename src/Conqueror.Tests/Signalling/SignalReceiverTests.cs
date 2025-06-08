@@ -442,7 +442,7 @@ public sealed class TestTransportSignalAttribute : Attribute
     public int DefaultParameter { get; init; }
 }
 
-public interface ITestTransportSignal<out TSignal> : ISignal<TSignal>
+public interface ITestTransportSignal<TSignal> : ISignal<TSignal>
     where TSignal : class, ITestTransportSignal<TSignal>
 {
     [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "testing")]
@@ -577,7 +577,7 @@ public sealed record TestTransportSignalReceiverConfiguration
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class TestTransport2SignalAttribute : Attribute;
 
-public interface ITestTransport2Signal<out TSignal> : ISignal<TSignal>
+public interface ITestTransport2Signal<TSignal> : ISignal<TSignal>
     where TSignal : class, ITestTransport2Signal<TSignal>;
 
 [EditorBrowsable(EditorBrowsableState.Never)]

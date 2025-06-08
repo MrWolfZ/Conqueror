@@ -82,7 +82,7 @@ public sealed class MessagingClientExecutionTests
                                                                                                UnitMessageResponse>>()))
                                                                         .Handle(m, host.TestTimeoutToken),
 
-            _ => THandler.Invoke(
+            _ => TMessage.InvokeHandler(
                 messageClients.For(THandler.MessageTypes).WithTransport(ConfigureTransport),
                 (TMessage)testCase.Message,
                 host.TestTimeoutToken),

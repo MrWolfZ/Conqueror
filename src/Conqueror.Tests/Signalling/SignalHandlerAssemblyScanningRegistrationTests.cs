@@ -119,9 +119,6 @@ public partial class SignalHandlerAssemblyScanningRegistrationTests
     {
         public Task Handle(ExplicitTestSignal signal, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
-
-        static Task ISignalHandler<ExplicitTestSignal, ExplicitTestSignalHandler>.Invoke(ExplicitTestSignalHandler handler, ExplicitTestSignal signal, CancellationToken cancellationToken)
-            => throw new NotSupportedException();
     }
 
     public abstract partial class AbstractTestSignalHandler : TestSignal.IHandler
@@ -144,9 +141,6 @@ public partial class SignalHandlerAssemblyScanningRegistrationTests
     {
         public Task Handle(TM signal, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
-
-        static Task ISignalHandler<TM, GenericTestSignalHandler<TM>>.Invoke(GenericTestSignalHandler<TM> handler, TM signal, CancellationToken cancellationToken)
-            => throw new NotSupportedException();
     }
 
     protected sealed partial class ProtectedTestSignalHandler : ProtectedTestSignal.IHandler

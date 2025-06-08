@@ -21,13 +21,13 @@ public sealed class TestTransport2SignalAttribute : Attribute
     public string? StringProperty { get; init; }
 }
 
-public interface ITestTransportSignal<out TSignal> : ISignal<TSignal>
+public interface ITestTransportSignal<TSignal> : ISignal<TSignal>
     where TSignal : class, ITestTransportSignal<TSignal>
 {
     static virtual string StringProperty => "Default";
 }
 
-public interface ITestTransport2Signal<out TSignal> : ISignal<TSignal>
+public interface ITestTransport2Signal<TSignal> : ISignal<TSignal>
     where TSignal : class, ITestTransport2Signal<TSignal>
 {
     static virtual string? StringProperty { get; }

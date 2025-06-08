@@ -36,7 +36,7 @@ namespace Messaging.WithCustomTransports.Transport1
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransportMessageAttribute<TResponse> : TestTransportMessageAttribute;
 
-    public interface ITestTransportMessage<out TMessage, TResponse> : IMessage<TMessage, TResponse>
+    public interface ITestTransportMessage<TMessage, TResponse> : IMessage<TMessage, TResponse>
         where TMessage : class, ITestTransportMessage<TMessage, TResponse>
     {
         static virtual string StringProperty => "Default";
@@ -67,7 +67,7 @@ namespace Messaging.WithCustomTransports.Transport2
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransport2MessageAttribute<TResponse> : TestTransport2MessageAttribute;
 
-    public interface ITestTransport2Message<out TMessage, TResponse> : IMessage<TMessage, TResponse>
+    public interface ITestTransport2Message<TMessage, TResponse> : IMessage<TMessage, TResponse>
         where TMessage : class, ITestTransport2Message<TMessage, TResponse>
     {
         static virtual string? StringProperty { get; }

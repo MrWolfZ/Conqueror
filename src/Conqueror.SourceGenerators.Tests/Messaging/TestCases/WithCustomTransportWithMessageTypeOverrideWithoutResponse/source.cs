@@ -35,7 +35,7 @@ namespace WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResp
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransportMessageAttribute<TResponse> : TestTransportMessageAttribute;
 
-    public interface ITestTransportMessage<out TMessage, TResponse> : IMessage<TMessage, TResponse>
+    public interface ITestTransportMessage<TMessage, TResponse> : IMessage<TMessage, TResponse>
         where TMessage : class, ITestTransportMessage<TMessage, TResponse>
     {
         static virtual string StringProperty => "Default";
@@ -68,7 +68,7 @@ namespace WithCustomTransportWithMessageTypeOverrideCustomTransportWithoutRespon
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class CustomTestTransportMessageAttribute<TResponse> : CustomTestTransportMessageAttribute;
 
-    public interface ICustomTestTransportMessage<out TMessage, TResponse> : ITestTransportMessage<TMessage, TResponse>
+    public interface ICustomTestTransportMessage<TMessage, TResponse> : ITestTransportMessage<TMessage, TResponse>
         where TMessage : class, ICustomTestTransportMessage<TMessage, TResponse>
     {
         static string ITestTransportMessage<TMessage, TResponse>.StringProperty { get; } = TMessage.ExtraProperty ?? "Default";

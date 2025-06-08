@@ -213,7 +213,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
 
             var invoker = new SignalHandlerInvoker<TSignal>(
                 configurePipeline,
-                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(arg.HandlerType), n, ct),
+                (n, p, ct) => TSignal.InvokeHandler((TIHandler)p.GetRequiredService(arg.HandlerType), n, ct),
                 arg.HandlerType);
 
             var registration = new SignalHandlerRegistration(typeof(TSignal), arg.HandlerType, null, invoker, arg.TypeInjectors);

@@ -45,6 +45,7 @@ public static class SignalTypeSources
             _ = sb.AppendSignalTypesProperty(indentation, in signalTypeDescriptor)
                   .AppendCoreSignalHandlerTypesInjectorProperty(indentation, in signalTypeDescriptor)
                   .AppendSignalHandlerInterface(indentation, in signalTypeDescriptor)
+                  .AppendSignalHandlerInvokeMethod(indentation, in signalTypeDescriptor)
                   .AppendSignalEmptyInstanceProperty(indentation, in signalTypeDescriptor)
                   .AppendJsonSerializerContext(indentation, in signalTypeDescriptor, descriptor.HasJsonSerializerContext)
                   .AppendPublicConstructorsProperty(indentation, in signalTypeDescriptor)
@@ -128,16 +129,21 @@ public static class SignalTypeSources
                  .AppendIndentation(indentation)
                  .Append($"global::System.Threading.Tasks.Task Handle({signalTypeDescriptor.Name} signal, global::System.Threading.CancellationToken cancellationToken = default);").AppendLine()
                  .AppendLine()
-                 .AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append($"static global::System.Threading.Tasks.Task global::Conqueror.ISignalHandler<{signalTypeDescriptor.Name}, IHandler>.Invoke(IHandler handler, {signalTypeDescriptor.Name} signal, global::System.Threading.CancellationToken cancellationToken)").AppendLineWithIndentation(indentation)
-                 .AppendSingleIndent()
-                 .Append("=> handler.Handle(signal, cancellationToken);").AppendLine()
-                 .AppendLine()
                  .AppendEditorBrowsableNeverAttribute(indentation)
                  .AppendSignalTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
                  .Append($"public sealed class Proxy : global::Conqueror.SignalHandlerProxy<{signalTypeDescriptor.Name}, IHandler, Proxy>, IHandler;").AppendLine();
+    }
+
+    private static StringBuilder AppendSignalHandlerInvokeMethod(this StringBuilder sb,
+                                                                 Indentation indentation,
+                                                                 in TypeDescriptor signalTypeDescriptor)
+    {
+        return sb.AppendSignalTypeGeneratedCodeAttribute(indentation)
+                 .AppendIndentation(indentation)
+                 .Append($"static global::System.Threading.Tasks.Task global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.InvokeHandler<TIHandler>(TIHandler handler, {signalTypeDescriptor.Name} signal, global::System.Threading.CancellationToken cancellationToken)").AppendLineWithIndentation(indentation)
+                 .AppendSingleIndent()
+                 .Append("=> ((IHandler)handler).Handle(signal, cancellationToken);").AppendLine();
     }
 
     private static StringBuilder AppendTransportSignalHandlerInterface(this StringBuilder sb,

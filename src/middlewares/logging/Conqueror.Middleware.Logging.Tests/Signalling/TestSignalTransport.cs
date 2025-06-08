@@ -8,7 +8,7 @@ namespace Conqueror.Middleware.Logging.Tests.Signalling;
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class TestTransportSignalAttribute : Attribute;
 
-public interface ITestTransportSignal<out TSignal> : ISignal<TSignal>
+public interface ITestTransportSignal<TSignal> : ISignal<TSignal>
     where TSignal : class, ITestTransportSignal<TSignal>;
 
 public interface ITestTransportSignalHandler;

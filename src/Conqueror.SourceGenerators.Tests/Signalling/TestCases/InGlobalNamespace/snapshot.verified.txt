@@ -31,14 +31,13 @@ partial record GlobalTestSignal : global::Conqueror.ISignal<GlobalTestSignal>
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         global::System.Threading.Tasks.Task Handle(GlobalTestSignal signal, global::System.Threading.CancellationToken cancellationToken = default);
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
-        static global::System.Threading.Tasks.Task global::Conqueror.ISignalHandler<GlobalTestSignal, IHandler>.Invoke(IHandler handler, GlobalTestSignal signal, global::System.Threading.CancellationToken cancellationToken)
-            => handler.Handle(signal, cancellationToken);
-
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         public sealed class Proxy : global::Conqueror.SignalHandlerProxy<GlobalTestSignal, IHandler, Proxy>, IHandler;
     }
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
+    static global::System.Threading.Tasks.Task global::Conqueror.ISignal<GlobalTestSignal>.InvokeHandler<TIHandler>(TIHandler handler, GlobalTestSignal signal, global::System.Threading.CancellationToken cancellationToken)
+        => ((IHandler)handler).Handle(signal, cancellationToken);
 
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
     static GlobalTestSignal global::Conqueror.ISignal<GlobalTestSignal>.EmptyInstance => new();

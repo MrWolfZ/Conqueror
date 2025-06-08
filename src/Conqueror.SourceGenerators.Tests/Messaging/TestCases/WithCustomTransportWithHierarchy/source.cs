@@ -38,7 +38,7 @@ namespace Messaging.WithCustomTransportWithHierarchy
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransportMessageAttribute<TResponse> : TestTransportMessageAttribute;
 
-    public interface ITestTransportMessage<out TMessage, TResponse> : IMessage<TMessage, TResponse>
+    public interface ITestTransportMessage<TMessage, TResponse> : IMessage<TMessage, TResponse>
         where TMessage : class, ITestTransportMessage<TMessage, TResponse>;
 
     public interface ITestTransportMessageHandler;

@@ -59,9 +59,6 @@ public sealed partial class MessageTypeGenerationTests
         {
             Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default);
 
-            static Task<TestMessageResponse> IMessageHandler<TestMessage, TestMessageResponse, IHandler>.Invoke(IHandler handler, TestMessage message, CancellationToken cancellationToken)
-                => handler.Handle(message, cancellationToken);
-
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Proxy : MessageHandlerProxy<TestMessage, TestMessageResponse, IHandler, Proxy>, IHandler;
         }
@@ -71,6 +68,9 @@ public sealed partial class MessageTypeGenerationTests
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Proxy : MessagePipelineProxy<TestMessage, TestMessageResponse>, IPipeline;
         }
+
+        static Task<TestMessageResponse> IMessage<TestMessage, TestMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, TestMessage message, CancellationToken cancellationToken)
+            => ((IHandler)handler).Handle(message, cancellationToken);
     }
 
     private sealed partial class TestMessageHandler : TestMessage.IHandler
@@ -113,12 +113,6 @@ public sealed partial class MessageTypeGenerationTests
         {
             Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default);
 
-            static async Task<UnitMessageResponse> IMessageHandler<TestMessageWithoutResponse, UnitMessageResponse, IHandler>.Invoke(IHandler handler, TestMessageWithoutResponse message, CancellationToken cancellationToken)
-            {
-                await handler.Handle(message, cancellationToken).ConfigureAwait(false);
-                return UnitMessageResponse.Instance;
-            }
-
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Proxy : MessageHandlerProxy<TestMessageWithoutResponse, IHandler, Proxy>, IHandler;
         }
@@ -127,6 +121,12 @@ public sealed partial class MessageTypeGenerationTests
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Proxy : MessagePipelineProxy<TestMessageWithoutResponse, UnitMessageResponse>, IPipeline;
+        }
+
+        static async Task<UnitMessageResponse> IMessage<TestMessageWithoutResponse, UnitMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, TestMessageWithoutResponse message, CancellationToken cancellationToken)
+        {
+            await ((IHandler)handler).Handle(message, cancellationToken).ConfigureAwait(false);
+            return UnitMessageResponse.Instance;
         }
     }
 

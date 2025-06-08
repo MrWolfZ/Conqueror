@@ -30,7 +30,7 @@ namespace WithCustomTransportWithSignalTypeOverrideOriginalTransport
         public string? StringProperty { get; init; }
     }
 
-    public interface ITestTransportSignal<out TSignal> : ISignal<TSignal>
+    public interface ITestTransportSignal<TSignal> : ISignal<TSignal>
         where TSignal : class, ITestTransportSignal<TSignal>
     {
         static virtual string StringProperty => "Default";
@@ -58,7 +58,7 @@ namespace WithCustomTransportWithSignalTypeOverrideCustomTransport
         public string? ExtraProperty { get; init; }
     }
 
-    public interface ICustomTestTransportSignal<out TSignal> : WithCustomTransportWithSignalTypeOverrideOriginalTransport.ITestTransportSignal<TSignal>
+    public interface ICustomTestTransportSignal<TSignal> : WithCustomTransportWithSignalTypeOverrideOriginalTransport.ITestTransportSignal<TSignal>
         where TSignal : class, ICustomTestTransportSignal<TSignal>
     {
         static string WithCustomTransportWithSignalTypeOverrideOriginalTransport.ITestTransportSignal<TSignal>.StringProperty { get; } = TSignal.ExtraProperty ?? "Default";

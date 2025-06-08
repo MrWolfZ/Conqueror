@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -12,7 +14,7 @@ namespace Conqueror;
 ///     the types.
 /// </summary>
 /// <typeparam name="TSignal">the signal type</typeparam>
-public interface ISignal<out TSignal>
+public interface ISignal<TSignal>
     where TSignal : class, ISignal<TSignal>
 {
     /// <summary>
@@ -45,6 +47,9 @@ public interface ISignal<out TSignal>
     static abstract IEnumerable<ConstructorInfo> PublicConstructors { get; }
 
     static abstract IEnumerable<PropertyInfo> PublicProperties { get; }
+
+    static abstract Task InvokeHandler<TIHandler>(TIHandler handler, TSignal signal, CancellationToken cancellationToken)
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>;
 }
 
 /// <summary>

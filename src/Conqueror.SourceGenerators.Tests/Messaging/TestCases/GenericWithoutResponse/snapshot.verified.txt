@@ -33,13 +33,6 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithoutRes
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             global::System.Threading.Tasks.Task Handle(TestMessage<TFirst, TSecond> message, global::System.Threading.CancellationToken cancellationToken = default);
 
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            static async global::System.Threading.Tasks.Task<global::Conqueror.UnitMessageResponse> global::Conqueror.IMessageHandler<TestMessage<TFirst, TSecond>, global::Conqueror.UnitMessageResponse, IHandler>.Invoke(IHandler handler, TestMessage<TFirst, TSecond> message, global::System.Threading.CancellationToken cancellationToken)
-            {
-                await handler.Handle(message, cancellationToken).ConfigureAwait(false);
-                return global::Conqueror.UnitMessageResponse.Instance;
-            }
-
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage<TFirst, TSecond>, IHandler, Proxy>, IHandler;
@@ -51,6 +44,13 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithoutRes
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             public sealed class Proxy : global::Conqueror.MessagePipelineProxy<TestMessage<TFirst, TSecond>, global::Conqueror.UnitMessageResponse>, IPipeline;
+        }
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static async global::System.Threading.Tasks.Task<global::Conqueror.UnitMessageResponse> global::Conqueror.IMessage<TestMessage<TFirst, TSecond>, global::Conqueror.UnitMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, TestMessage<TFirst, TSecond> message, global::System.Threading.CancellationToken cancellationToken)
+        {
+            await ((IHandler)handler).Handle(message, cancellationToken).ConfigureAwait(false);
+            return global::Conqueror.UnitMessageResponse.Instance;
         }
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]

@@ -55,7 +55,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TSignal.InvokeHandler(handler, testCase.Signal, host.TestTimeoutToken);
 
             if (testCase.Exception != null)
             {
@@ -128,7 +128,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TSignal.InvokeHandler(handler, testCase.Signal, host.TestTimeoutToken);
         }
         catch
         {
@@ -187,7 +187,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TSignal.InvokeHandler(handler, testCase.Signal, host.TestTimeoutToken);
         }
         catch
         {
@@ -254,7 +254,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TSignal.InvokeHandler(handler, testCase.Signal, host.TestTimeoutToken);
         }
         catch
         {
@@ -322,7 +322,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TSignal.InvokeHandler(handler, testCase.Signal, host.TestTimeoutToken);
         }
         catch
         {

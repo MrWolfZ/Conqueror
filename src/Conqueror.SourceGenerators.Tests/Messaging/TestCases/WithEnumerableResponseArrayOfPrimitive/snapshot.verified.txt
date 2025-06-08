@@ -33,10 +33,6 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithEnumerableRes
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             global::System.Threading.Tasks.Task<int[]> Handle(TestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
 
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            static global::System.Threading.Tasks.Task<int[]> global::Conqueror.IMessageHandler<TestMessage, int[], IHandler>.Invoke(IHandler handler, TestMessage message, global::System.Threading.CancellationToken cancellationToken)
-                => handler.Handle(message, cancellationToken);
-
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, int[], IHandler, Proxy>, IHandler;
@@ -49,6 +45,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithEnumerableRes
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             public sealed class Proxy : global::Conqueror.MessagePipelineProxy<TestMessage, int[]>, IPipeline;
         }
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::System.Threading.Tasks.Task<int[]> global::Conqueror.IMessage<TestMessage, int[]>.InvokeHandler<TIHandler>(TIHandler handler, TestMessage message, global::System.Threading.CancellationToken cancellationToken)
+            => ((IHandler)handler).Handle(message, cancellationToken);
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         static TestMessage global::Conqueror.IMessage<TestMessage, int[]>.EmptyInstance => new();

@@ -31,10 +31,6 @@ partial record GlobalTestMessage : global::Conqueror.IMessage<GlobalTestMessage,
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         global::System.Threading.Tasks.Task<global::GlobalTestMessageResponse> Handle(GlobalTestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-        static global::System.Threading.Tasks.Task<global::GlobalTestMessageResponse> global::Conqueror.IMessageHandler<GlobalTestMessage, global::GlobalTestMessageResponse, IHandler>.Invoke(IHandler handler, GlobalTestMessage message, global::System.Threading.CancellationToken cancellationToken)
-            => handler.Handle(message, cancellationToken);
-
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public sealed class Proxy : global::Conqueror.MessageHandlerProxy<GlobalTestMessage, global::GlobalTestMessageResponse, IHandler, Proxy>, IHandler;
@@ -47,6 +43,10 @@ partial record GlobalTestMessage : global::Conqueror.IMessage<GlobalTestMessage,
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public sealed class Proxy : global::Conqueror.MessagePipelineProxy<GlobalTestMessage, global::GlobalTestMessageResponse>, IPipeline;
     }
+
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+    static global::System.Threading.Tasks.Task<global::GlobalTestMessageResponse> global::Conqueror.IMessage<GlobalTestMessage, global::GlobalTestMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, GlobalTestMessage message, global::System.Threading.CancellationToken cancellationToken)
+        => ((IHandler)handler).Handle(message, cancellationToken);
 
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
     static GlobalTestMessage global::Conqueror.IMessage<GlobalTestMessage, global::GlobalTestMessageResponse>.EmptyInstance => new();

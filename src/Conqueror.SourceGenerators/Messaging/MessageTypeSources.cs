@@ -47,6 +47,7 @@ public static class MessageTypeSources
                   .AppendCoreMessageHandlerTypesInjectorProperty(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
                   .AppendMessageHandlerInterface(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
                   .AppendMessagePipelineInterface(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
+                  .AppendMessageHandlerInvokeMethod(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
                   .AppendMessageEmptyInstanceProperty(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
                   .AppendJsonSerializerContext(indentation, in messageTypeDescriptor, in responseTypeDescriptor, descriptor.HasJsonSerializerContext)
                   .AppendPublicConstructorsProperty(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
@@ -131,34 +132,12 @@ public static class MessageTypeSources
 
         using var d = sb.AppendBlock(indentation);
 
-        _ = sb.AppendMessageTypeGeneratedCodeAttribute(indentation)
-              .AppendIndentation(indentation)
-              .Append("global::System.Threading.Tasks.Task")
-              .AppendResponseTypeParameterIfNotUnitResponse(in responseTypeDescriptor)
-              .Append($" Handle({messageTypeDescriptor.Name} message, global::System.Threading.CancellationToken cancellationToken = default);").AppendLine()
-              .AppendLine()
-              .AppendMessageTypeGeneratedCodeAttribute(indentation)
-              .AppendIndentation(indentation)
-              .Append("static ").Append(responseTypeDescriptor.IsUnitMessageResponse() ? "async " : string.Empty)
-              .Append($"global::System.Threading.Tasks.Task<{responseTypeDescriptor.FullyQualifiedName()}> global::Conqueror.IMessageHandler<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}, IHandler>.Invoke(IHandler handler, {messageTypeDescriptor.Name} message, global::System.Threading.CancellationToken cancellationToken)").AppendLine();
-
-        if (responseTypeDescriptor.IsUnitMessageResponse())
-        {
-            using (sb.AppendBlock(indentation))
-            {
-                _ = sb.AppendIndentation(indentation)
-                      .Append("await handler.Handle(message, cancellationToken).ConfigureAwait(false);").AppendLineWithIndentation(indentation)
-                      .Append("return global::Conqueror.UnitMessageResponse.Instance;").AppendLine();
-            }
-        }
-        else
-        {
-            _ = sb.AppendIndentation(indentation)
-                  .AppendSingleIndent()
-                  .Append("=> handler.Handle(message, cancellationToken);").AppendLine();
-        }
-
-        return sb.AppendLine()
+        return sb.AppendMessageTypeGeneratedCodeAttribute(indentation)
+                 .AppendIndentation(indentation)
+                 .Append("global::System.Threading.Tasks.Task")
+                 .AppendResponseTypeParameterIfNotUnitResponse(in responseTypeDescriptor)
+                 .Append($" Handle({messageTypeDescriptor.Name} message, global::System.Threading.CancellationToken cancellationToken = default);").AppendLine()
+                 .AppendLine()
                  .AppendEditorBrowsableNeverAttribute(indentation)
                  .AppendMessageTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
@@ -175,6 +154,36 @@ public static class MessageTypeSources
     {
         return sb.AppendIndentation(indentation)
                  .Append($"partial interface IHandler : global::{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}MessageHandler<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}, IHandler>;").AppendLine();
+    }
+
+    private static StringBuilder AppendMessageHandlerInvokeMethod(this StringBuilder sb,
+                                                                  Indentation indentation,
+                                                                  in TypeDescriptor messageTypeDescriptor,
+                                                                  in TypeDescriptor responseTypeDescriptor)
+    {
+        _ = sb.AppendLine()
+              .AppendMessageTypeGeneratedCodeAttribute(indentation)
+              .AppendIndentation(indentation)
+              .Append("static ").Append(responseTypeDescriptor.IsUnitMessageResponse() ? "async " : string.Empty)
+              .Append($"global::System.Threading.Tasks.Task<{responseTypeDescriptor.FullyQualifiedName()}> global::Conqueror.IMessage<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>.InvokeHandler<TIHandler>(TIHandler handler, {messageTypeDescriptor.Name} message, global::System.Threading.CancellationToken cancellationToken)").AppendLine();
+
+        if (responseTypeDescriptor.IsUnitMessageResponse())
+        {
+            using (sb.AppendBlock(indentation))
+            {
+                _ = sb.AppendIndentation(indentation)
+                      .Append("await ((IHandler)handler).Handle(message, cancellationToken).ConfigureAwait(false);").AppendLineWithIndentation(indentation)
+                      .Append("return global::Conqueror.UnitMessageResponse.Instance;").AppendLine();
+            }
+        }
+        else
+        {
+            _ = sb.AppendIndentation(indentation)
+                  .AppendSingleIndent()
+                  .Append("=> ((IHandler)handler).Handle(message, cancellationToken);").AppendLine();
+        }
+
+        return sb;
     }
 
     private static StringBuilder AppendMessagePipelineInterface(this StringBuilder sb,

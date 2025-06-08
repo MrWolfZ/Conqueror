@@ -33,10 +33,6 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse> Handle(TestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
 
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            static global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse> global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler>.Invoke(IHandler handler, TestMessage message, global::System.Threading.CancellationToken cancellationToken)
-                => handler.Handle(message, cancellationToken);
-
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler, Proxy>, IHandler;
@@ -49,6 +45,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             public sealed class Proxy : global::Conqueror.MessagePipelineProxy<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>, IPipeline;
         }
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse> global::Conqueror.IMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, TestMessage message, global::System.Threading.CancellationToken cancellationToken)
+            => ((IHandler)handler).Handle(message, cancellationToken);
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         static TestMessage? global::Conqueror.IMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>.EmptyInstance => null;
@@ -103,10 +103,6 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse> Handle(TestMessageSub message, global::System.Threading.CancellationToken cancellationToken = default);
 
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            static global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse> global::Conqueror.IMessageHandler<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler>.Invoke(IHandler handler, TestMessageSub message, global::System.Threading.CancellationToken cancellationToken)
-                => handler.Handle(message, cancellationToken);
-
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler, Proxy>, IHandler;
@@ -119,6 +115,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             public sealed class Proxy : global::Conqueror.MessagePipelineProxy<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>, IPipeline;
         }
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse> global::Conqueror.IMessage<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, TestMessageSub message, global::System.Threading.CancellationToken cancellationToken)
+            => ((IHandler)handler).Handle(message, cancellationToken);
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         static TestMessageSub global::Conqueror.IMessage<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>.EmptyInstance => new();

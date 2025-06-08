@@ -269,7 +269,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
             var invoker = new MessageHandlerInvoker<TMessage, TResponse>(
                 p => configurePipeline(new TPipelineProxy { Wrapped = p }),
-                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(arg.HandlerType), n, ct),
+                (n, p, ct) => TMessage.InvokeHandler((TIHandler)p.GetRequiredService(arg.HandlerType), n, ct),
                 arg.HandlerType);
 
             var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), arg.HandlerType, null, invoker, arg.TypeInjectors);

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -13,7 +15,7 @@ namespace Conqueror;
 /// </summary>
 /// <typeparam name="TMessage">the message type</typeparam>
 /// <typeparam name="TResponse">the response type</typeparam>
-public interface IMessage<out TMessage, TResponse>
+public interface IMessage<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
     /// <summary>
@@ -47,6 +49,9 @@ public interface IMessage<out TMessage, TResponse>
     static abstract IEnumerable<ConstructorInfo> PublicConstructors { get; }
 
     static abstract IEnumerable<PropertyInfo> PublicProperties { get; }
+
+    static abstract Task<TResponse> InvokeHandler<TIHandler>(TIHandler handler, TMessage message, CancellationToken cancellationToken)
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>;
 }
 
 /// <summary>

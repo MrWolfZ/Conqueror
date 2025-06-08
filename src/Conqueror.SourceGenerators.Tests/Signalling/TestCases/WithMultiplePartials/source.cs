@@ -26,4 +26,7 @@ public partial record TestSignal
     public static System.Collections.Generic.IEnumerable<System.Reflection.ConstructorInfo> PublicConstructors => null!;
 
     public static System.Collections.Generic.IEnumerable<System.Reflection.PropertyInfo> PublicProperties => null!;
+
+    static Task ISignal<TestSignal>.InvokeHandler<TIHandler>(TIHandler handler, TestSignal signal, CancellationToken cancellationToken)
+        => throw new NotSupportedException();
 }

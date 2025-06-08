@@ -84,14 +84,14 @@ public sealed class MessagingClientContextTests : IDisposable
 
         if (!testCase.HandlerIsEnabled)
         {
-            await Assert.ThatAsync(() => THandler.Invoke(handler, (TMessage)testCase.Message, host.TestTimeoutToken), Throws.TypeOf<HttpMessageFailedOnClientException>());
+            await Assert.ThatAsync(() => TMessage.InvokeHandler(handler, (TMessage)testCase.Message, host.TestTimeoutToken), Throws.TypeOf<HttpMessageFailedOnClientException>());
 
             Assert.That(seenMessageIdOnServer, Is.Null);
             Assert.That(seenTraceIdOnServer, Is.Null);
             return;
         }
 
-        _ = await THandler.Invoke(handler, (TMessage)testCase.Message, host.TestTimeoutToken);
+        _ = await TMessage.InvokeHandler(handler, (TMessage)testCase.Message, host.TestTimeoutToken);
 
         Assert.That(seenMessageIdOnServer, Is.EqualTo(seenMessageIdOnClient));
         Assert.That(seenTraceIdOnServer, Is.EqualTo(seenTraceIdOnClient));

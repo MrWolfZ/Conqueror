@@ -28,4 +28,7 @@ public partial record TestMessage
     public static System.Collections.Generic.IEnumerable<System.Reflection.ConstructorInfo> PublicConstructors => null!;
 
     public static System.Collections.Generic.IEnumerable<System.Reflection.PropertyInfo> PublicProperties => null!;
+
+    static Task<TestMessageResponse> IMessage<TestMessage, TestMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, TestMessage message, CancellationToken cancellationToken)
+        => throw new NotSupportedException();
 }

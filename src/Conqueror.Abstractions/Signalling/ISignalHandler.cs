@@ -48,8 +48,6 @@ public interface ISignalHandler<TSignal, TIHandler> : ISignalHandler
     where TIHandler : class, ISignalHandler<TSignal, TIHandler>
 {
     static virtual SignalTypes<TSignal, TIHandler> SignalTypes { get; } = new();
-
-    static abstract Task Invoke(TIHandler handler, TSignal signal, CancellationToken cancellationToken);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -131,9 +129,6 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
         };
 
     static IEnumerable<ISignalHandlerTypesInjector> ISignalHandler.GetTypeInjectors()
-        => throw new NotSupportedException("this method should never be called on the proxy");
-
-    static Task ISignalHandler<TSignal, TIHandler>.Invoke(TIHandler handler, TSignal signal, CancellationToken cancellationToken)
         => throw new NotSupportedException("this method should never be called on the proxy");
 }
 

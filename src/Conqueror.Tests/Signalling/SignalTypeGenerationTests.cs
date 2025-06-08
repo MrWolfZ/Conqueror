@@ -41,12 +41,12 @@ public sealed partial class SignalTypeGenerationTests
         {
             Task Handle(TestSignal signal, CancellationToken cancellationToken = default);
 
-            static Task ISignalHandler<TestSignal, IHandler>.Invoke(IHandler handler, TestSignal signal, CancellationToken cancellationToken)
-                => handler.Handle(signal, cancellationToken);
-
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Proxy : SignalHandlerProxy<TestSignal, IHandler, Proxy>, IHandler;
         }
+
+        static Task ISignal<TestSignal>.InvokeHandler<TIHandler>(TIHandler handler, TestSignal signal, CancellationToken cancellationToken)
+            => ((IHandler)handler).Handle(signal, cancellationToken);
 
         static TestSignal? ISignal<TestSignal>.EmptyInstance => null;
 
@@ -72,12 +72,12 @@ public sealed partial class SignalTypeGenerationTests
         {
             Task Handle(TestSignal2 signal, CancellationToken cancellationToken = default);
 
-            static Task ISignalHandler<TestSignal2, IHandler>.Invoke(IHandler handler, TestSignal2 signal, CancellationToken cancellationToken)
-                => handler.Handle(signal, cancellationToken);
-
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Proxy : SignalHandlerProxy<TestSignal2, IHandler, Proxy>, IHandler;
         }
+
+        static Task ISignal<TestSignal2>.InvokeHandler<TIHandler>(TIHandler handler, TestSignal2 signal, CancellationToken cancellationToken)
+            => ((IHandler)handler).Handle(signal, cancellationToken);
 
         static TestSignal2? ISignal<TestSignal2>.EmptyInstance => null;
 
@@ -105,12 +105,12 @@ public sealed partial class SignalTypeGenerationTests
         {
             Task Handle(GenericTestSignal<TPayload> signal, CancellationToken cancellationToken = default);
 
-            static Task ISignalHandler<GenericTestSignal<TPayload>, IHandler>.Invoke(IHandler handler, GenericTestSignal<TPayload> signal, CancellationToken cancellationToken)
-                => handler.Handle(signal, cancellationToken);
-
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Proxy : SignalHandlerProxy<GenericTestSignal<TPayload>, IHandler, Proxy>, IHandler;
         }
+
+        static Task ISignal<GenericTestSignal<TPayload>>.InvokeHandler<TIHandler>(TIHandler handler, GenericTestSignal<TPayload> signal, CancellationToken cancellationToken)
+            => ((IHandler)handler).Handle(signal, cancellationToken);
 
         static GenericTestSignal<TPayload>? ISignal<GenericTestSignal<TPayload>>.EmptyInstance => null;
 

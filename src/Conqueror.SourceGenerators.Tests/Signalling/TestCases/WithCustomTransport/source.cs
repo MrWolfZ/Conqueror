@@ -35,7 +35,7 @@ namespace Signalling.WithCustomTransport
         public string? UnsetProperty { get; init; }
     }
 
-    public interface ITestTransportSignal<out TSignal> : ISignal<TSignal>
+    public interface ITestTransportSignal<TSignal> : ISignal<TSignal>
         where TSignal : class, ITestTransportSignal<TSignal>
     {
         static virtual string StringProperty => "Default";
