@@ -17,6 +17,12 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
     private readonly Timer heartbeatTimer;
     private readonly WebSocket socket;
 
+    // small state machine to track whether someone is reading so that we can gracefully close the connection
+    // 0 - idle
+    // 1 - read in progress
+    // 2 - close in progress
+    private int readState;
+
     // small state machine to ensure that heartbeats and normal messages are never sent concurrently
     // 0 - idle
     // 1 - normal send in progress
@@ -69,6 +75,12 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
 
     public async IAsyncEnumerable<Stream> Read([EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        if (Interlocked.CompareExchange(ref readState, 1, 0) != 0)
+        {
+            // if someone is already reading, or we are closing the connection, we just break
+            yield break;
+        }
+
         while (socket.State is WebSocketState.Open)
         {
             // we read ahead on the socket with an empty buffer to be notified when
@@ -101,6 +113,8 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
 
             yield return ReadStream;
         }
+
+        _ = Interlocked.CompareExchange(ref readState, 0, 1);
     }
 
     public ValueTask<ValueWebSocketReceiveResult> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
@@ -157,6 +171,15 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
                             nameof(WebSocketCloseStatus.NormalClosure),
                             cancellationToken)
                         .ConfigureAwait(false);
+
+            if (Interlocked.CompareExchange(ref readState, 2, 0) == 0)
+            {
+                while (socket.State is not WebSocketState.Closed)
+                {
+                    // nobody is reading, so we read to conclude the close handshake
+                    _ = await socket.ReceiveAsync(Memory<byte>.Empty, cancellationToken).ConfigureAwait(false);
+                }
+            }
         }
         catch (Exception ex) when (ex is ObjectDisposedException or IOException { InnerException: ObjectDisposedException })
         {
