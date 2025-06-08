@@ -153,7 +153,7 @@
         ChatEntryBroadcastedHandler.OnSignal += OnChatEntryBroadcasted;
 
         // note that there are potential race conditions here that are left as an exercise for the reader
-        receiverRun = SignalReceivers.RunHttpSseSignalReceiver<ChatEntryBroadcastedHandler>(CancellationToken.None);
+        receiverRun = SignalReceivers.RunHttpWebSocketsSignalReceiver<ChatEntryBroadcastedHandler>(CancellationToken.None);
         await receiverRun.InitialConnectionTask;
     }
 

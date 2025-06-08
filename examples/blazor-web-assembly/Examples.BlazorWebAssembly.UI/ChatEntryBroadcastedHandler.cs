@@ -9,11 +9,38 @@ public sealed partial class ChatEntryBroadcastedHandler : ChatEntryBroadcasted.I
     public Task Handle(ChatEntryBroadcasted signal, CancellationToken cancellationToken = default)
     {
         OnSignal?.Invoke(this, signal);
+
         return Task.CompletedTask;
     }
 
-    static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
+    static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
     {
-        _ = receiver.Enable(new(receiver.ServiceProvider.GetApiBaseAddress(), "api/signals/sse"));
+        var apiBaseAddress = receiver.ServiceProvider.GetApiBaseAddress();
+
+        var uri = new UriBuilder
+        {
+            Scheme = "wss",
+            Host = apiBaseAddress.Host,
+            Port = apiBaseAddress.Port,
+            Path = "api/signals/ws",
+        }.Uri;
+
+        var attempt = 0;
+
+        _ = receiver.Enable(uri)
+
+                    // exponential back-off
+                    .WithReconnectDelayFunction(async (
+                                                    _,
+                                                    _,
+                                                    _,
+                                                    token) =>
+                                                {
+                                                    var delay = TimeSpan.FromSeconds(Math.Min(60, 2 ^ attempt));
+
+                                                    await Task.Delay(delay, token);
+
+                                                    attempt += 1;
+                                                });
     }
 }

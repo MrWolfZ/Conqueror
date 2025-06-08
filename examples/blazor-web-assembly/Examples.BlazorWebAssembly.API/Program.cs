@@ -25,9 +25,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.UseWebSockets();
 
 app.UseConquerorWellKnownErrorHandling();
 app.MapMessageEndpoints();
-app.MapServerSentEventsSignalsEndpoint("api/signals/sse");
+app.MapWebSocketsSignalsEndpoint("api/signals/ws");
 
 app.Run();

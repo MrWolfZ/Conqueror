@@ -21,7 +21,7 @@ internal sealed partial class BroadcastChatEntryHandler(
 
         await signalPublishers.For(ChatEntryBroadcasted.T)
                               .WithDefaultPublisherPipeline(typeof(BroadcastChatEntryHandler))
-                              .WithTransport(b => b.UseHttpServerSentEvents())
+                              .WithTransport(b => b.UseHttpWebSockets())
                               .Handle(new() { User = message.User, Content = message.Content, Timestamp = timestamp }, cancellationToken);
     }
 }

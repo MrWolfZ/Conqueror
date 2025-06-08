@@ -1,6 +1,6 @@
 ﻿namespace Examples.BlazorWebAssembly.Contracts;
 
-[HttpSseSignal]
+[HttpWebSocketsSignal]
 public sealed partial record ChatEntryBroadcasted
 {
     public required string User { get; init; }
