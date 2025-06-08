@@ -169,6 +169,9 @@ internal sealed class HttpSseSignalReceiverRunner(
             };
 
             using var request = new HttpRequestMessage(new("GET"), targetUriBuilder.Uri);
+
+            request.Version = config.HttpVersion;
+            request.VersionPolicy = config.HttpVersionPolicy;
             config.ConfigureHeaders?.Invoke(request.Headers);
 
             response = await httpClient!.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)

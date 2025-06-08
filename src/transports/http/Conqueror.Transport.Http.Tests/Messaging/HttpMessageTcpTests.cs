@@ -60,7 +60,7 @@ public sealed class HttpMessageTcpTests
                        TestMessage.T,
                        (m, _, _) => new() { Payload = m.Payload + 1 });
 
-        var app = builder.Build();
+        await using var app = builder.Build();
 
         _ = app.UseConquerorWellKnownErrorHandling();
         _ = app.MapMessageEndpoint(TestMessage.T);

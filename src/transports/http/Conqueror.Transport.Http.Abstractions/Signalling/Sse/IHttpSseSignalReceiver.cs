@@ -9,8 +9,6 @@ namespace Conqueror;
 
 public interface IHttpSseSignalReceiver
 {
-    HttpSseSignalReceiverConfiguration Enable(Uri address);
-
     /// <summary>
     ///     Note that this is (usually) the service provider from the global scope,
     ///     and <i>not</i> the service provider from the scope of the send operation.
@@ -18,6 +16,8 @@ public interface IHttpSseSignalReceiver
     IServiceProvider ServiceProvider { get; }
 
     bool IsEnabled { get; }
+
+    HttpSseSignalReceiverConfiguration Enable(Uri address);
 
     void Disable();
 }
@@ -27,6 +27,10 @@ public sealed class HttpSseSignalReceiverConfiguration
     public required Uri Address { get; init; }
 
     public HttpClient? HttpClient { get; private set; }
+
+    public Version HttpVersion { get; private set; } = System.Net.HttpVersion.Version20;
+
+    public HttpVersionPolicy HttpVersionPolicy { get; private set; } = HttpVersionPolicy.RequestVersionOrLower;
 
     public Action<HttpRequestHeaders>? ConfigureHeaders { get; private set; }
 
@@ -55,6 +59,14 @@ public sealed class HttpSseSignalReceiverConfiguration
     public HttpSseSignalReceiverConfiguration WithHeaders(Action<HttpRequestHeaders> configureHeaders)
     {
         ConfigureHeaders = configureHeaders;
+
+        return this;
+    }
+
+    public HttpSseSignalReceiverConfiguration WithHttpVersion(Version httpVersion, HttpVersionPolicy versionPolicy)
+    {
+        HttpVersion = httpVersion;
+        HttpVersionPolicy = versionPolicy;
 
         return this;
     }
