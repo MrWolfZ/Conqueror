@@ -19,4 +19,6 @@ public interface IHttpMessageSender<in TMessage, TResponse> : IMessageSender<TMe
     IHttpMessageSender<TMessage, TResponse> WithHttpClient(HttpClient httpClient);
 
     IHttpMessageSender<TMessage, TResponse> WithHeaders(Action<HttpRequestHeaders> configureHeaders);
+
+    IHttpMessageSender<TMessage, TResponse> WithHttpVersion(Version httpVersion, HttpVersionPolicy versionPolicy);
 }

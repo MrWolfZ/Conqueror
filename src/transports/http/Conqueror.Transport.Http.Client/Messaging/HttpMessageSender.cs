@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -16,6 +17,9 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
     private HttpClient? configuredHttpClient;
     private Action<HttpRequestHeaders> configureRequestHeaders = _ => { };
 
+    private Version httpVersionField = HttpVersion.Version11;
+    private HttpVersionPolicy httpVersionPolicyField = HttpVersionPolicy.RequestVersionOrLower;
+
     public string TransportTypeName => TransportName;
 
     public async Task<TResponse> Send(TMessage message,
@@ -26,6 +30,9 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
         var httpClient = configuredHttpClient ?? defaultHttpClientSingletonLazy.Value;
 
         using var requestMessage = new HttpRequestMessage();
+
+        requestMessage.Version = httpVersionField;
+        requestMessage.VersionPolicy = httpVersionPolicyField;
         requestMessage.Method = new(TMessage.HttpMethod);
 
         SetHeaders(conquerorContext, requestMessage.Headers);
@@ -85,6 +92,14 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
             previousConfigureHeaders(h);
             configureHeaders(h);
         };
+
+        return this;
+    }
+
+    public IHttpMessageSender<TMessage, TResponse> WithHttpVersion(Version httpVersion, HttpVersionPolicy versionPolicy)
+    {
+        httpVersionField = httpVersion;
+        httpVersionPolicyField = versionPolicy;
 
         return this;
     }
