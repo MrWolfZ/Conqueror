@@ -127,6 +127,7 @@ This file contains all the open points for extensions and improvements to the **
 
 - [ ] assert that well-known error handling middleware only sets response if it has not already started yet and otherwise rethrows
 - [ ] add API docs tests for [Microsoft OpenAPI](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-9.0) and [Scalar](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-9.0#use-scalar-for-interactive-api-documentation)
+- [ ] add chaos tests
 
 ### Transport.Http Messaging
 
@@ -167,9 +168,8 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] in `MapSignalSseEndpoints` add overload which takes an `IHttpSseEndpointConfiguration`, which allows authorizing requests based on requested signal event types, and allows configuring a pipeline (with a `ConfigurePipeline<TSignal>(ISignalPipeline<TSignal> pipeline) where TSignal : IHttpSseSignal` method)
     - [ ] add option to enforce `Accept` header
   - [ ] [for reference](https://github.com/tpeczek/Lib.AspNetCore.ServerSentEvents/blob/main/Lib.AspNetCore.ServerSentEvents/ServerSentEventsMiddleware.cs)
-  - [ ] mention in recipe to use HTTP2+ if possible
-- [ ] provide HTTP websocket transport
-  - [ ] add tests for behavior when websocket connection is interrupted (i.e. disconnect without proper close handshake)
+- [ ] in web sockets recipes, explain that the web sockets middleware needs to be added
+- [ ] in web sockets recipes, explain how to handle CORS (see [for reference](https://www.siakabaro.com/raw-websocket-in-csharp-aspnet-core/))
 
 ### Transport.Http Iterators
 
