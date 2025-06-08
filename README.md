@@ -4,6 +4,10 @@
 
 **Conqueror** is a .NET library that simplifies writing modular, scalable applications by unifying messages, signals, and async iterators into a consistent, extensible transport-agnostic model. It uses modern features of .NET like source generators and static abstract interface methods to reduce boilerplate, support advanced uses cases like AOT compilation, and to provide a highly ergonomic user-friendly API.
 
+## Why does Conqueror exist?
+
+Author's note: In my opinion, all of the many existing .NET messaging libraries lack in one or more of the areas developer experience, testability, and documentation. With **Conqueror** I set out to design an API that closes that gap.
+
 ## Core Design Principles of Conqueror
 
 - provide an excellent developer experience with discoverable APIs, proper IDE integration (e.g. ensuring that "Go to ..." shortcuts work as expected), and great use-case-driven documentation
