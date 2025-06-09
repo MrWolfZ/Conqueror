@@ -44,7 +44,10 @@ public sealed partial class HttpSseSignalTcpTests
 
         var builder = WebApplication.CreateBuilder();
 
-        _ = builder.Logging.SetMinimumLevel(LogLevel.Trace);
+        _ = builder.Logging
+                   .ClearProviders()
+                   .AddTestLogger()
+                   .SetMinimumLevel(LogLevel.Trace);
 
         _ = builder.WebHost.ConfigureKestrel(options =>
         {
