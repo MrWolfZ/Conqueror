@@ -40,7 +40,18 @@ internal sealed class HttpWebSocketsSignalBrokerStream(Task<WebSocketWriteStream
             return;
         }
 
-        await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+        {
+            // nothing to do here, the client disconnected in the middle of sending a signal
+        }
+        catch (ObjectDisposedException)
+        {
+            // nothing to do here, the client disconnected in the middle of sending a signal
+        }
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -88,6 +99,10 @@ internal sealed class HttpWebSocketsSignalBrokerStream(Task<WebSocketWriteStream
             await stream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
         catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+        {
+            // nothing to do here, the client disconnected in the middle of sending a signal
+        }
+        catch (ObjectDisposedException)
         {
             // nothing to do here, the client disconnected in the middle of sending a signal
         }

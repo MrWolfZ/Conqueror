@@ -56,10 +56,11 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
 
                     if (statusCode is >= 400 and < 500)
                     {
-                        throw new HttpSseSignalReceiverRunFailedException(
+                        throw new SignalReceiverRunFailedException(
                             $"failed to connect signal receiver for handler type '{handlerType}' to address '{config.Address}'; got status code {statusCode}")
                         {
                             HandlerType = handlerType,
+                            SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
                         };
                     }
 
@@ -114,17 +115,18 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                                     .ConfigureAwait(false);
                     }
                 }
-                catch (HttpWebSocketsSignalReceiverRunFailedException)
+                catch (SignalReceiverRunFailedException)
                 {
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    throw new HttpWebSocketsSignalReceiverRunFailedException(
+                    throw new SignalReceiverRunFailedException(
                         $"an exception occured while running receiver for signal handler type '{handlerType}'",
                         ex)
                     {
                         HandlerType = handlerType,
+                        SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
                     };
                 }
                 finally

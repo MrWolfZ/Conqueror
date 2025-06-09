@@ -263,18 +263,18 @@ public static partial class HttpTestSignals
                 ExpectedEventTypesOrTags = ["testSignalWithCustomJsonTypeInfo", "testSignalWithCustomJsonTypeInfo"],
                 ExpectedReceivedSignals =
                 [
-                    new TestSignalWithCustomJsonTypeInfo { MessagePayload = 10 },
-                    new TestSignalWithCustomJsonTypeInfo { MessagePayload = 20 },
+                    new TestSignalWithCustomJsonTypeInfo2 { MessagePayload = 10 },
+                    new TestSignalWithCustomJsonTypeInfo2 { MessagePayload = 20 },
                 ],
                 RegisterHandler = s => s.AddSignalHandler<TestSignalWithCustomJsonTypeInfoHandler>(),
-                JsonSerializerContext = GetJsonSerializerContext<TestSignalWithCustomJsonTypeInfo>(),
+                JsonSerializerContext = GetJsonSerializerContext<TestSignalWithCustomJsonTypeInfo2>(),
                 PublishSignals = async p =>
                 {
-                    await p.For(TestSignalWithCustomJsonTypeInfo.T)
+                    await p.For(TestSignalWithCustomJsonTypeInfo2.T)
                            .WithTransport(CreatePublisher)
                            .Handle(new() { MessagePayload = 10 });
 
-                    await p.For(TestSignalWithCustomJsonTypeInfo.T)
+                    await p.For(TestSignalWithCustomJsonTypeInfo2.T)
                            .WithTransport(CreatePublisher)
                            .Handle(new() { MessagePayload = 20 });
                 },
@@ -343,7 +343,7 @@ public static partial class HttpTestSignals
                     new TestSignal { Payload = 10 },
                     new TestSignalWithoutPayload(),
                     new TestSignalWithCustomSerializer { Payload = 20 },
-                    new TestSignalWithCustomJsonTypeInfo { MessagePayload = 30 },
+                    new TestSignalWithCustomJsonTypeInfo2 { MessagePayload = 30 },
                     new TestSignal { Payload = 40 },
                 ],
                 RegisterHandler = s => s.AddSignalHandler<WildMixTestSignalHandler>(),
@@ -361,7 +361,7 @@ public static partial class HttpTestSignals
                            .WithTransport(CreatePublisher)
                            .Handle(new() { Payload = 20 });
 
-                    await p.For(TestSignalWithCustomJsonTypeInfo.T)
+                    await p.For(TestSignalWithCustomJsonTypeInfo2.T)
                            .WithTransport(CreatePublisher)
                            .Handle(new() { MessagePayload = 30 });
 
@@ -490,8 +490,7 @@ public static partial class HttpTestSignals
         static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
             => pipeline.Use(ctx =>
                {
-                   ctx.ServiceProvider.GetRequiredService<ILogger<TestSignalHandler>>()
-                      .LogInformation("received signal");
+                   ctx.ServiceProvider.GetRequiredService<ILogger>().LogInformation("received signal");
 
                    return ctx.Next(ctx.Signal, ctx.CancellationToken);
                });
@@ -800,16 +799,16 @@ public static partial class HttpTestSignals
 
     [HttpSseSignal]
     [HttpWebSocketsSignal]
-    public sealed partial record TestSignalWithCustomJsonTypeInfo
+    public sealed partial record TestSignalWithCustomJsonTypeInfo2
     {
         public int MessagePayload { get; init; }
     }
 
     public sealed partial class TestSignalWithCustomJsonTypeInfoHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
-        : TestSignalWithCustomJsonTypeInfo.IHandler
+        : TestSignalWithCustomJsonTypeInfo2.IHandler
     {
         public async Task Handle(
-            TestSignalWithCustomJsonTypeInfo signal,
+            TestSignalWithCustomJsonTypeInfo2 signal,
             CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -829,8 +828,8 @@ public static partial class HttpTestSignals
     }
 
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseUpper)]
-    [JsonSerializable(typeof(TestSignalWithCustomJsonTypeInfo))]
-    internal sealed partial class TestSignalWithCustomJsonTypeInfoJsonSerializerContext : JsonSerializerContext;
+    [JsonSerializable(typeof(TestSignalWithCustomJsonTypeInfo2))]
+    internal sealed partial class TestSignalWithCustomJsonTypeInfo2JsonSerializerContext : JsonSerializerContext;
 
     [HttpSseSignal]
     [HttpWebSocketsSignal]
@@ -908,7 +907,7 @@ public static partial class HttpTestSignals
         : TestSignal.IHandler,
           TestSignalWithoutPayload.IHandler,
           TestSignalWithCustomSerializer.IHandler,
-          TestSignalWithCustomJsonTypeInfo.IHandler
+          TestSignalWithCustomJsonTypeInfo2.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -943,7 +942,7 @@ public static partial class HttpTestSignals
             }
         }
 
-        public async Task Handle(TestSignalWithCustomJsonTypeInfo signal, CancellationToken cancellationToken = default)
+        public async Task Handle(TestSignalWithCustomJsonTypeInfo2 signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();

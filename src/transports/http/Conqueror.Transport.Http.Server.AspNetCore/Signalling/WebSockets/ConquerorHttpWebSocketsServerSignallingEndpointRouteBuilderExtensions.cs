@@ -59,7 +59,7 @@ public static class ConquerorHttpWebSocketsServerSignallingEndpointRouteBuilderE
 
                     using var sub = context.RequestServices
                                            .GetRequiredService<HttpWebSocketsSignalBroker>()
-                                           .Subscribe(stream, tags);
+                                           .Subscribe(stream, tags, context.RequestAborted);
 
                     await WebSocketEndpoint.Run(
                                                context,

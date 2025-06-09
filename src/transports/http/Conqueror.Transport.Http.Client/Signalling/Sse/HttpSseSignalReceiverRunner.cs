@@ -53,10 +53,11 @@ internal sealed class HttpSseSignalReceiverRunner(
 
                     if ((int)response.StatusCode is >= 400 and < 500)
                     {
-                        throw new HttpSseSignalReceiverRunFailedException(
+                        throw new SignalReceiverRunFailedException(
                             $"failed to connect signal receiver for handler type '{handlerType}' to address '{config.Address}'; got status code {response.StatusCode}")
                         {
                             HandlerType = handlerType,
+                            SignalTransportType = new(ServersSentEventsTransportName, SignalTransportRole.Receiver),
                         };
                     }
 
@@ -113,17 +114,18 @@ internal sealed class HttpSseSignalReceiverRunner(
                     // the http stream reader might throw an IOException instead of an OperationCanceledException when
                     // the token is canceled, so we catch it here and return gracefully
                 }
-                catch (HttpSseSignalReceiverRunFailedException)
+                catch (SignalReceiverRunFailedException)
                 {
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    throw new HttpSseSignalReceiverRunFailedException(
+                    throw new SignalReceiverRunFailedException(
                         $"an exception occured while running receiver for signal handler type '{handlerType}'",
                         ex)
                     {
                         HandlerType = handlerType,
+                        SignalTransportType = new(ServersSentEventsTransportName, SignalTransportRole.Receiver),
                     };
                 }
                 finally

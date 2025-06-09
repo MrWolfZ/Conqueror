@@ -37,9 +37,10 @@ internal sealed class HttpSseSignalReceiversRunner(IServiceProvider serviceProvi
         }
         catch (Exception ex)
         {
-            throw new HttpSseSignalReceiverRunFailedException($"failed to run the signal receiver for handler type '{handlerType}'", ex)
+            throw new SignalReceiverRunFailedException($"failed to run the signal receiver for handler type '{handlerType}'", ex)
             {
                 HandlerType = handlerType,
+                SignalTransportType = new(ServersSentEventsTransportName, SignalTransportRole.Receiver),
             };
         }
     }
@@ -56,9 +57,10 @@ internal sealed class HttpSseSignalReceiversRunner(IServiceProvider serviceProvi
         }
         catch (Exception ex)
         {
-            throw new HttpSseSignalReceiverRunFailedException($"failed to run the signal receiver for handler type '{receiver.HandlerType}'", ex)
+            throw new SignalReceiverRunFailedException($"failed to run the signal receiver for handler type '{receiver.HandlerType}'", ex)
             {
                 HandlerType = receiver.HandlerType,
+                SignalTransportType = new(ServersSentEventsTransportName, SignalTransportRole.Receiver),
             };
         }
     }

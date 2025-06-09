@@ -60,6 +60,8 @@ internal static class WebSocketEndpoint
             setStream(conquerorWebSocket.WriteStream);
 
             await Read(conquerorWebSocket, onMessage, context.RequestAborted).ConfigureAwait(false);
+
+            logger.LogDebug("client disconnected from socket");
         }
         catch (Exception) when (context.RequestAborted.IsCancellationRequested)
         {

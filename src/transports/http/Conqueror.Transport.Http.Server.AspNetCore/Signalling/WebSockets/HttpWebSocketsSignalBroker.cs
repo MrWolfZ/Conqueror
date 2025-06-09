@@ -18,7 +18,7 @@ internal sealed partial class HttpWebSocketsSignalBroker(
 {
     private readonly ConcurrentDictionary<string, ImmutableList<HttpWebSocketsSignalBrokerStream>> streamsBySignalTag = new();
 
-    public IDisposable Subscribe(HttpWebSocketsSignalBrokerStream stream, IEnumerable<string> signalTags)
+    public IDisposable Subscribe(HttpWebSocketsSignalBrokerStream stream, IEnumerable<string> signalTags, CancellationToken cancellationToken)
     {
         var signalTagsList = signalTags.ToList();
 
@@ -29,7 +29,7 @@ internal sealed partial class HttpWebSocketsSignalBroker(
             _ = streamsBySignalTag.AddOrUpdate(tag, _ => [stream], (_, list) => list.Add(stream));
         }
 
-        return new AnonymousDisposable(() =>
+        return cancellationToken.Register(() =>
         {
             LogSubscriptionClosed(logger);
 
@@ -92,9 +92,4 @@ internal sealed partial class HttpWebSocketsSignalBroker(
 
     [LoggerMessage(LogLevel.Trace, "closed subscription")]
     private static partial void LogSubscriptionClosed(ILogger logger);
-
-    private sealed class AnonymousDisposable(Action onDispose) : IDisposable
-    {
-        public void Dispose() => onDispose();
-    }
 }

@@ -40,7 +40,7 @@ internal sealed class HttpWebSocketsSignalReceiver(IServiceProvider serviceProvi
         if (!signalTypeByEventType.TryAdd(TSignal.Tag, typeof(TSignal)))
         {
             throw new InvalidOperationException(
-                $"the event type '{TSignal.Tag}' is already used by signal type '{signalTypeByEventType[TSignal.Tag]}'");
+                $"the tag '{TSignal.Tag}' is already used by signal type '{signalTypeByEventType[TSignal.Tag]}'");
         }
 
         invokers.Add(invoker);

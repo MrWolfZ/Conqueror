@@ -9,7 +9,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Conqueror.Transport.Http.Tests;
 
-internal sealed class HttpTransportTestHost : IAsyncDisposable
+public sealed class HttpTransportTestHost
 {
     private static readonly bool IsRunningInGithubActionField = Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
 
