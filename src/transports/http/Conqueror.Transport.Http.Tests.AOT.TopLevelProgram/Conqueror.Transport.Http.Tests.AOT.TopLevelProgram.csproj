@@ -21,4 +21,9 @@
         <ProjectReference Include="../Conqueror.Transport.Http.Server.AspNetCore/Conqueror.Transport.Http.Server.AspNetCore.csproj" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <TrimmerRootAssembly>Conqueror.Transport.Http.Client</TrimmerRootAssembly>
+        <TrimmerRootAssembly>Conqueror.Transport.Http.Server.AspNetCore</TrimmerRootAssembly>
+    </PropertyGroup>
+
 </Project>
