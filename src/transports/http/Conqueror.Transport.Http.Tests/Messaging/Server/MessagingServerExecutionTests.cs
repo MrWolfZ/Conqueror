@@ -1,8 +1,6 @@
-using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.Options;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Server;

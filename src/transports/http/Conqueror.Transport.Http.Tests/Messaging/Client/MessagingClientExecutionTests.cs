@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Claims;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 

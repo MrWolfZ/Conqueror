@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Transports.ConformityTests;
+﻿namespace Conqueror.Transport.ConformityTests;
 
 internal static class ConquerorContextDataExtensions
 {

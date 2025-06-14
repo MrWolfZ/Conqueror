@@ -1,7 +1,4 @@
-﻿using System.Collections.Concurrent;
-using Conqueror.Transports.ConformityTests.Signalling;
-
-namespace Conqueror.Transport.Http.Tests.Signalling;
+﻿namespace Conqueror.Transport.Http.Tests.Signalling;
 
 public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConformityExecutionTestCase,
                                                         ISignalTransportConformityExecutionErrorTestCase<HttpSignalTransportConformityTestHost>

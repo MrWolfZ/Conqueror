@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Transports.ConformityTests.Signalling;
+﻿namespace Conqueror.Transport.ConformityTests.Signalling;
 
 public interface ISignalTransportConformityTestHost<TTestHost> : ITransportConformityTestHost
     where TTestHost : ISignalTransportConformityTestHost<TTestHost>

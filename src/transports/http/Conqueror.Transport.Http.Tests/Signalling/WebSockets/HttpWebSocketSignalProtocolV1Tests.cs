@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Conqueror.Signalling.WebSockets;
+﻿using Conqueror.Signalling.WebSockets;
 
 namespace Conqueror.Transport.Http.Tests.Signalling.WebSockets;
 

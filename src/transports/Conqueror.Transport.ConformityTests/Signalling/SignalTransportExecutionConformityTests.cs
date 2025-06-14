@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using NUnit.Framework.Internal;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
-namespace Conqueror.Transports.ConformityTests.Signalling;
+namespace Conqueror.Transport.ConformityTests.Signalling;
 
 public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestHost, TSuccessTestCase, TErrorTestCase>
     where TTestClass : SignalTransportExecutionConformityTests<TTestClass, TTestHost, TSuccessTestCase, TErrorTestCase>,

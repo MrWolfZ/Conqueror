@@ -1,5 +1,3 @@
-using Conqueror.Transports.ConformityTests.Signalling;
-
 namespace Conqueror.Transport.Http.Tests.Signalling.Sse;
 
 [TestFixture]

@@ -1,6 +1,4 @@
-﻿using System.Net.WebSockets;
-using System.Text;
-using Conqueror.Transport.Http.Client.WebSockets;
+﻿using Conqueror.Transport.Http.Client.WebSockets;
 using Conqueror.Transport.Http.Server.AspNetCore.WebSockets;
 
 namespace Conqueror.Transport.Http.Tests.WebSockets;

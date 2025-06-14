@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
-using Microsoft.Extensions.Options;
 using NUnit.Framework.Interfaces;
 
 namespace Conqueror.Transport.Http.Tests;

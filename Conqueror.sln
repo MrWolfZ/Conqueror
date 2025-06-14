@@ -180,7 +180,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "recipes", "recipes", "{D740
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "recipes", "recipes", "{8BA04662-56CD-4DB0-B64B-A56F02FC2120}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transports.ConformityTests", "src\transports\Conqueror.Transports.ConformityTests\Conqueror.Transports.ConformityTests.csproj", "{FA43B439-733A-4E2C-B518-5E237D7D352C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.ConformityTests", "src\transports\Conqueror.Transport.ConformityTests\Conqueror.Transport.ConformityTests.csproj", "{FA43B439-733A-4E2C-B518-5E237D7D352C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

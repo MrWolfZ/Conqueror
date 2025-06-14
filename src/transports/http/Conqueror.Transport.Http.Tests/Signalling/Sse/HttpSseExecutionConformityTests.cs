@@ -1,4 +1,3 @@
-using Conqueror.Transports.ConformityTests.Signalling;
 using static Conqueror.Transport.Http.Tests.Signalling.HttpSignalTestCases;
 
 namespace Conqueror.Transport.Http.Tests.Signalling.Sse;

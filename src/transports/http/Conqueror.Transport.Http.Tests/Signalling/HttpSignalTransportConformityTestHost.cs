@@ -1,8 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Net.WebSockets;
-using Conqueror.Transports.ConformityTests.Signalling;
-
-namespace Conqueror.Transport.Http.Tests.Signalling;
+﻿namespace Conqueror.Transport.Http.Tests.Signalling;
 
 public sealed class HttpSignalTransportConformityTestHost : ISignalTransportConformityTestHost<HttpSignalTransportConformityTestHost>
 {

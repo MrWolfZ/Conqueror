@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Conqueror.Transports.ConformityTests;
+namespace Conqueror.Transport.ConformityTests;
 
 public sealed class DisposableActivity(Activity activity, params IDisposable[] disposables) : IDisposable
 {

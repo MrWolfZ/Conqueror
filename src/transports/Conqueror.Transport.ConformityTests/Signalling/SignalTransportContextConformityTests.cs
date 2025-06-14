@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
-namespace Conqueror.Transports.ConformityTests.Signalling;
+namespace Conqueror.Transport.ConformityTests.Signalling;
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "by design")]
 public abstract class SignalTransportContextConformityTests<TTestClass, TTestHost, TTestCase>

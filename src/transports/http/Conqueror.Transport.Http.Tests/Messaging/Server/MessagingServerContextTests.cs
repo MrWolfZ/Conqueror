@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Net.Mime;
 using static Conqueror.Transport.Http.Tests.HttpTestContextData;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;

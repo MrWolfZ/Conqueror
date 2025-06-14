@@ -1,7 +1,4 @@
-﻿using System.Net.WebSockets;
-using Conqueror.Transports.ConformityTests.Signalling;
-
-namespace Conqueror.Transport.Http.Tests.Signalling;
+﻿namespace Conqueror.Transport.Http.Tests.Signalling;
 
 public delegate Task FnToCallFromHandler(object signal, CancellationToken cancellationToken);
 
