@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework.Internal;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -601,6 +602,15 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             testCase => testCase.ShouldCompleteImmediately,
             testCase => testCase.ExpectedReceivedSignals.Count == 0,
             testCase => testCase.ExpectedReceivedSignals.Count > 0,
+            testCase => testCase.ExpectedReceivedSignals.Count > 1,
+            testCase => testCase.ExpectedReceivedSignals.Any(s => s.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Static)
+                                                                   .Any(p => p.Name.EndsWith(".JsonSerializerContext") && p.GetValue(s) != null)),
+            testCase => testCase.ExpectedReceivedSignals.Any(s => s.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Static)
+                                                                   .Any(p => p.Name.EndsWith(".EmptyInstance") && p.GetValue(s) != null)),
+            testCase => testCase.ExpectedReceivedSignals.Any(s => s.GetType().Name.EndsWith("ForAssemblyScanning")),
+            testCase => testCase.ExpectedReceivedSignals.Any(s => s.GetType().BaseType != null
+                                                                  && s.GetType().BaseType!.GetCustomAttributes()
+                                                                      .Any(a => a.GetType().Name.EndsWith("SignalAttribute"))),
         ];
 
         Assert.Multiple(() =>
