@@ -39,7 +39,7 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive, object is disposed")]
-    private async Task Run(Type handlerType, TaskCompletionSource connectionTaskCompletionSource, CancellationToken cancellationToken)
+    private async Task Run(Type? handlerType, TaskCompletionSource connectionTaskCompletionSource, CancellationToken cancellationToken)
     {
         var config = receiver.Configuration ?? throw new InvalidOperationException($"the receiver for handler type '{handlerType}' is not enabled");
 

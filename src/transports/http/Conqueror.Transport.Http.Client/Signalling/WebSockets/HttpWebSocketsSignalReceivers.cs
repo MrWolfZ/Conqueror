@@ -20,7 +20,16 @@ internal sealed class HttpWebSocketsSignalReceivers : IHttpWebSocketsSignalRecei
 
         var configuredReceivers = invokers.Select(i =>
                                           {
-                                              if (i.HandlerType is null || !configuredHandlerTypes.Add(i.HandlerType))
+                                              // for delegate handlers
+                                              if (i.HandlerType is null)
+                                              {
+                                                  return ConfigureHttpWebSocketsSignalReceiver(
+                                                      receivers,
+                                                      i,
+                                                      i.TypesInjector.ConfigureHttpWebSocketsReceiver);
+                                              }
+
+                                              if (!configuredHandlerTypes.Add(i.HandlerType))
                                               {
                                                   // if the receiver was already configured, we can skip it
                                                   return null;
@@ -28,7 +37,7 @@ internal sealed class HttpWebSocketsSignalReceivers : IHttpWebSocketsSignalRecei
 
                                               return ConfigureHttpWebSocketsSignalReceiver(
                                                   receivers,
-                                                  i.HandlerType!,
+                                                  i.HandlerType,
                                                   i.TypesInjector.ConfigureHttpWebSocketsReceiver);
                                           })
                                           .OfType<HttpWebSocketsSignalReceiver>()
@@ -68,6 +77,16 @@ internal sealed class HttpWebSocketsSignalReceivers : IHttpWebSocketsSignalRecei
         return receivers.ServiceProvider
                         .GetRequiredService<HttpWebSocketsSignalReceiversRunner>()
                         .ConfigureReceiver(handlerType, configureReceiver);
+    }
+
+    private static HttpWebSocketsSignalReceiver? ConfigureHttpWebSocketsSignalReceiver(
+        ISignalReceivers receivers,
+        ISignalReceiverHandlerInvoker<IHttpWebSocketsSignalHandlerTypesInjector> receiverHandlerInvoker,
+        Action<IHttpWebSocketsSignalReceiver> configureReceiver)
+    {
+        return receivers.ServiceProvider
+                        .GetRequiredService<HttpWebSocketsSignalReceiversRunner>()
+                        .ConfigureReceiver(receiverHandlerInvoker, configureReceiver);
     }
 
     private static SignalReceiverExecutionHandle RunHttpWebSocketsSignalReceiver(

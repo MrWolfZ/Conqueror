@@ -61,7 +61,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return services.AddSignalHandlerDelegateInternal(signalTypes, fn, null);
+        return services.AddSignalHandlerDelegateInternal(signalTypes, fn, null, null);
     }
 
     public static IServiceCollection AddSignalHandlerDelegate<TSignal, TIHandler>(
@@ -75,7 +75,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         {
             fn(m, p);
             return Task.CompletedTask;
-        }, null);
+        }, null, null);
     }
 
     public static IServiceCollection AddSignalHandlerDelegate<TSignal, TIHandler>(
@@ -86,7 +86,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return services.AddSignalHandlerDelegateInternal(signalTypes, fn, configurePipeline);
+        return services.AddSignalHandlerDelegateInternal(signalTypes, fn, configurePipeline, null);
     }
 
     public static IServiceCollection AddSignalHandlerDelegate<TSignal, TIHandler>(
@@ -101,7 +101,18 @@ public static class ConquerorSignallingServiceCollectionExtensions
         {
             fn(m, p);
             return Task.CompletedTask;
-        }, configurePipeline);
+        }, configurePipeline, null);
+    }
+
+    public static IServiceCollection AddSignalHandlerDelegate<TSignal, TIHandler>(this IServiceCollection services,
+                                                                                  SignalTypes<TSignal, TIHandler> signalTypes,
+                                                                                  SignalHandlerFn<TSignal> fn,
+                                                                                  Action<ISignalPipeline<TSignal>>? configurePipeline,
+                                                                                  ISignalHandlerTypesInjector typesInjector)
+        where TSignal : class, ISignal<TSignal>
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+    {
+        return services.AddSignalHandlerDelegateInternal(signalTypes, fn, configurePipeline, typesInjector);
     }
 
     public static IServiceCollection AddSignalHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
@@ -160,7 +171,8 @@ public static class ConquerorSignallingServiceCollectionExtensions
         this IServiceCollection services,
         SignalTypes<TSignal, TIHandler> _, // for type inference
         SignalHandlerFn<TSignal> fn,
-        Action<ISignalPipeline<TSignal>>? configurePipeline)
+        Action<ISignalPipeline<TSignal>>? configurePipeline,
+        ISignalHandlerTypesInjector? typesInjector)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
@@ -168,9 +180,8 @@ public static class ConquerorSignallingServiceCollectionExtensions
 
         var invoker = new SignalHandlerInvoker<TSignal>(configurePipeline, fn, null);
 
-        // we do not support configuring the receiver for delegate handlers (yet), since they are mostly
-        // designed to support simple testing scenarios, not be used as full-fledged signal handlers
-        services.AddSingleton(new SignalHandlerRegistration(typeof(TSignal), null, fn, invoker, [TSignal.CoreTypesInjector]));
+        var typesInjectors = typesInjector is null ? new[] { TSignal.CoreTypesInjector } : [TSignal.CoreTypesInjector, typesInjector];
+        services.AddSingleton(new SignalHandlerRegistration(typeof(TSignal), null, fn, invoker, typesInjectors));
 
         return services;
     }

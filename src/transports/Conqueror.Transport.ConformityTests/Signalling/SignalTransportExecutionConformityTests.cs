@@ -608,6 +608,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             testCase => testCase.ExpectedReceivedSignals.Any(s => s.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Static)
                                                                    .Any(p => p.Name.EndsWith(".EmptyInstance") && p.GetValue(s) != null)),
             testCase => testCase.ExpectedReceivedSignals.Any(s => s.GetType().Name.EndsWith("ForAssemblyScanning")),
+            testCase => testCase.ExpectedReceivedSignals.Any(s => s.GetType().Name.EndsWith("WithDelegateHandler")),
             testCase => testCase.ExpectedReceivedSignals.Any(s => s.GetType().BaseType != null
                                                                   && s.GetType().BaseType!.GetCustomAttributes()
                                                                       .Any(a => a.GetType().Name.EndsWith("SignalAttribute"))),

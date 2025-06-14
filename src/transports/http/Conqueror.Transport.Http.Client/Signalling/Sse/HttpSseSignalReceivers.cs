@@ -20,13 +20,22 @@ internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
 
         var configuredReceivers = invokers.Select(i =>
                                           {
-                                              if (i.HandlerType is null || !configuredHandlerTypes.Add(i.HandlerType))
+                                              // for delegate handlers
+                                              if (i.HandlerType is null)
+                                              {
+                                                  return ConfigureHttpSseSignalReceiver(
+                                                      receivers,
+                                                      i,
+                                                      i.TypesInjector.ConfigureHttpSseReceiver);
+                                              }
+
+                                              if (!configuredHandlerTypes.Add(i.HandlerType))
                                               {
                                                   // if the receiver was already configured, we can skip it
                                                   return null;
                                               }
 
-                                              return ConfigureHttpSseSignalReceiver(receivers, i.HandlerType!, i.TypesInjector.ConfigureHttpSseReceiver);
+                                              return ConfigureHttpSseSignalReceiver(receivers, i.HandlerType, i.TypesInjector.ConfigureHttpSseReceiver);
                                           })
                                           .OfType<HttpSseSignalReceiver>()
                                           .ToList();
@@ -61,6 +70,16 @@ internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
         return receivers.ServiceProvider
                         .GetRequiredService<HttpSseSignalReceiversRunner>()
                         .ConfigureReceiver(handlerType, configureReceiver);
+    }
+
+    private static HttpSseSignalReceiver? ConfigureHttpSseSignalReceiver(
+        ISignalReceivers receivers,
+        ISignalReceiverHandlerInvoker<IHttpSseSignalHandlerTypesInjector> receiverHandlerInvoker,
+        Action<IHttpSseSignalReceiver> configureReceiver)
+    {
+        return receivers.ServiceProvider
+                        .GetRequiredService<HttpSseSignalReceiversRunner>()
+                        .ConfigureReceiver(receiverHandlerInvoker, configureReceiver);
     }
 
     private static SignalReceiverExecutionHandle RunHttpSseSignalReceiver(

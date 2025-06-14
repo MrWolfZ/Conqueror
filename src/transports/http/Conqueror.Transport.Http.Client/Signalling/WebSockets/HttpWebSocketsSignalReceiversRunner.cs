@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,10 +9,6 @@ internal sealed class HttpWebSocketsSignalReceiversRunner(IServiceProvider servi
 {
     private static readonly ConfigurationInjectable ConfigInjectable = new();
 
-    [SuppressMessage(
-        "Reliability",
-        "CA2000:Dispose objects before losing scope",
-        Justification = "false positive, the source is returned to the caller")]
     public HttpWebSocketsSignalReceiver? ConfigureReceiver(Type handlerType, Action<IHttpWebSocketsSignalReceiver> configureReceiver)
     {
         try
@@ -40,6 +35,34 @@ internal sealed class HttpWebSocketsSignalReceiversRunner(IServiceProvider servi
             throw new SignalReceiverExecutionFailedException($"failed to run the signal receiver for handler type '{handlerType}'", ex)
             {
                 HandlerType = handlerType,
+                SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
+            };
+        }
+    }
+
+    public HttpWebSocketsSignalReceiver? ConfigureReceiver(
+        ISignalReceiverHandlerInvoker<IHttpWebSocketsSignalHandlerTypesInjector> receiverHandlerInvoker,
+        Action<IHttpWebSocketsSignalReceiver> configureReceiver)
+    {
+        try
+        {
+            var receiver = new HttpWebSocketsSignalReceiver(serviceProvider, receiverHandlerInvoker.HandlerType);
+            configureReceiver(receiver);
+
+            if (!receiver.IsEnabled)
+            {
+                return null;
+            }
+
+            _ = receiverHandlerInvoker.TypesInjector.Inject(ConfigInjectable, new(receiverHandlerInvoker, receiver));
+
+            return receiver;
+        }
+        catch (Exception ex)
+        {
+            throw new SignalReceiverExecutionFailedException($"failed to run the signal receiver for handler type '{receiverHandlerInvoker.HandlerType}'", ex)
+            {
+                HandlerType = receiverHandlerInvoker.HandlerType,
                 SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
             };
         }

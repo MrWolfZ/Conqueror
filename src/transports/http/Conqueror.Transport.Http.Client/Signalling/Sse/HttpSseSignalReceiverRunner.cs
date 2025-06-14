@@ -37,7 +37,7 @@ internal sealed class HttpSseSignalReceiverRunner(
             });
     }
 
-    private async Task Run(Type handlerType, TaskCompletionSource connectionTaskCompletionSource, CancellationToken cancellationToken)
+    private async Task Run(Type? handlerType, TaskCompletionSource connectionTaskCompletionSource, CancellationToken cancellationToken)
     {
         var config = receiver.Configuration ?? throw new InvalidOperationException($"the receiver for handler type '{handlerType}' is not enabled");
 

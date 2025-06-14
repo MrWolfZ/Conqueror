@@ -20,7 +20,10 @@ public sealed class SignalReceiverExecutionFailedException : Exception
     {
     }
 
-    public required Type HandlerType { get; init; }
+    /// <summary>
+    ///     <c>null</c> when the handler is a delegate handler.
+    /// </summary>
+    public required Type? HandlerType { get; init; }
 
     public required SignalTransportType SignalTransportType { get; init; }
 }
