@@ -755,11 +755,10 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         _ = services.AddMessageHandlerDelegate(
                         TestMessage.T,
-                        (message, p, cancellationToken) =>
+                        (message, p) =>
                         {
                             var obs = p.GetRequiredService<TestObservations>();
                             obs.MessagesFromHandlers.Add(message);
-                            obs.CancellationTokensFromHandlers.Add(cancellationToken);
                             return new(message.Payload + 1);
                         }, pipeline =>
                         {
@@ -827,11 +826,10 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         _ = services.AddMessageHandlerDelegate(
                         TestMessageWithoutResponse.T,
-                        (message, p, cancellationToken) =>
+                        (message, p) =>
                         {
                             var obs = p.GetRequiredService<TestObservations>();
                             obs.MessagesFromHandlers.Add(message);
-                            obs.CancellationTokensFromHandlers.Add(cancellationToken);
                         }, pipeline =>
                         {
                             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();

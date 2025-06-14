@@ -82,7 +82,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), null, null);
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, _) => Task.FromResult(fn(m, p)), null, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
@@ -91,9 +91,9 @@ public static class ConquerorMessagingServiceCollectionExtensions
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
         where TIHandler : class, IMessageHandler<TMessage, UnitMessageResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) =>
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, _) =>
         {
-            fn(m, p, ct);
+            fn(m, p);
             return Task.FromResult(UnitMessageResponse.Instance);
         }, null, null);
     }
@@ -129,7 +129,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline, null);
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, _) => Task.FromResult(fn(m, p)), configurePipeline, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
@@ -139,9 +139,9 @@ public static class ConquerorMessagingServiceCollectionExtensions
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
         where TIHandler : class, IMessageHandler<TMessage, UnitMessageResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) =>
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, _) =>
         {
-            fn(m, p, ct);
+            fn(m, p);
             return Task.FromResult(UnitMessageResponse.Instance);
         }, configurePipeline, null);
     }

@@ -837,7 +837,7 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
         await using var provider = RegisterHandler(new ServiceCollection())
                                    .AddMessageHandlerDelegate(
                                        TestMessage.T,
-                                       (message, _, _) =>
+                                       (message, _) =>
                                        {
                                            handlerWasCalled = true;
 
@@ -863,7 +863,7 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
         await using var provider = RegisterHandler(new ServiceCollection())
                                    .AddMessageHandlerDelegate(
                                        TestMessageWithoutResponse.T,
-                                       (_, _, _) =>
+                                       (_, _) =>
                                        {
                                            handlerWasCalled = true;
                                        })

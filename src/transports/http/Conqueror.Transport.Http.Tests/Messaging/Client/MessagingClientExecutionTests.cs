@@ -266,10 +266,10 @@ public sealed class MessagingClientExecutionTests
                         (_, _, _) => Task.FromResult(new TestMessageResponse())),
                     (false, true, false, false) => services.AddHttpMessageHandlerDelegate(
                         TestMessageWithoutResponse.T,
-                        (_, _, _) =>
+                        (_, _) =>
                         {
                         }),
-                    (true, true, false, false) => services.AddHttpMessageHandlerDelegate(TestMessage.T, (_, _, _) => new()),
+                    (true, true, false, false) => services.AddHttpMessageHandlerDelegate(TestMessage.T, (_, _) => new()),
                     (false, false, true, false) => services.AddHttpMessageHandlerDelegate(
                         TestMessageWithoutResponse.T,
                         (_, _, _) => Task.CompletedTask,
@@ -290,7 +290,7 @@ public sealed class MessagingClientExecutionTests
                         })),
                     (false, true, true, false) => services.AddHttpMessageHandlerDelegate(
                         TestMessageWithoutResponse.T,
-                        (_, _, _) =>
+                        (_, _) =>
                         {
                         },
                         p => p.Use(ctx =>
@@ -301,7 +301,7 @@ public sealed class MessagingClientExecutionTests
                         })),
                     (true, true, true, false) => services.AddHttpMessageHandlerDelegate(
                         TestMessage.T,
-                        (_, _, _) => new(),
+                        (_, _) => new(),
                         p => p.Use(ctx =>
                         {
                             middlewareWasCalled = true;
@@ -326,7 +326,7 @@ public sealed class MessagingClientExecutionTests
                         }),
                     (false, true, false, true) => services.AddHttpMessageHandlerDelegate(
                         TestMessageWithoutResponse.T,
-                        (_, _, _) =>
+                        (_, _) =>
                         {
                         },
                         configureReceiver: r =>
@@ -336,7 +336,7 @@ public sealed class MessagingClientExecutionTests
                         }),
                     (true, true, false, true) => services.AddHttpMessageHandlerDelegate(
                         TestMessage.T,
-                        (_, _, _) => new(),
+                        (_, _) => new(),
                         configureReceiver: r =>
                         {
                             receiverWasConfigured = true;
@@ -372,7 +372,7 @@ public sealed class MessagingClientExecutionTests
                         }),
                     (false, true, true, true) => services.AddHttpMessageHandlerDelegate(
                         TestMessageWithoutResponse.T,
-                        (_, _, _) =>
+                        (_, _) =>
                         {
                         },
                         p => p.Use(ctx =>
@@ -388,7 +388,7 @@ public sealed class MessagingClientExecutionTests
                         }),
                     (true, true, true, true) => services.AddHttpMessageHandlerDelegate(
                         TestMessage.T,
-                        (_, _, _) => new(),
+                        (_, _) => new(),
                         p => p.Use(ctx =>
                         {
                             middlewareWasCalled = true;

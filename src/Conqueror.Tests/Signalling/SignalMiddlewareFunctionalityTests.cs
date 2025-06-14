@@ -651,11 +651,10 @@ public sealed partial class SignalMiddlewareFunctionalityTests
 
         _ = services.AddSignalHandlerDelegate(
                         TestSignal.T,
-                        (signal, p, cancellationToken) =>
+                        (signal, p) =>
                         {
                             var obs = p.GetRequiredService<TestObservations>();
                             obs.SignalsFromHandlers.Add(signal);
-                            obs.CancellationTokensFromHandlers.Add(cancellationToken);
                         }, pipeline =>
                         {
                             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();

@@ -77,7 +77,7 @@ public static class ConquerorHttpServerMessagingServiceCollectionExtensions
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
     {
         var typesInjector = new HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(null);
-        return services.AddMessageHandlerDelegate(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), null, typesInjector);
+        return services.AddMessageHandlerDelegate(messageTypes, (m, p, _) => Task.FromResult(fn(m, p)), null, typesInjector);
     }
 
     public static IServiceCollection AddHttpMessageHandlerDelegate<TMessage, TResponse, TIHandler>(
@@ -89,7 +89,7 @@ public static class ConquerorHttpServerMessagingServiceCollectionExtensions
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
     {
         var typesInjector = new HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(configureReceiver);
-        return services.AddMessageHandlerDelegate(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), null, typesInjector);
+        return services.AddMessageHandlerDelegate(messageTypes, (m, p, _) => Task.FromResult(fn(m, p)), null, typesInjector);
     }
 
     public static IServiceCollection AddHttpMessageHandlerDelegate<TMessage, TIHandler>(
@@ -102,9 +102,9 @@ public static class ConquerorHttpServerMessagingServiceCollectionExtensions
         var typesInjector = new HttpMessageHandlerTypesInjector<TMessage, UnitMessageResponse, TIHandler>(null);
         return services.AddMessageHandlerDelegate(
             messageTypes,
-            (m, p, ct) =>
+            (m, p, _) =>
             {
-                fn(m, p, ct);
+                fn(m, p);
 
                 return Task.FromResult(UnitMessageResponse.Instance);
             },
@@ -122,9 +122,9 @@ public static class ConquerorHttpServerMessagingServiceCollectionExtensions
         var typesInjector = new HttpMessageHandlerTypesInjector<TMessage, UnitMessageResponse, TIHandler>(configureReceiver);
         return services.AddMessageHandlerDelegate(
             messageTypes,
-            (m, p, ct) =>
+            (m, p, _) =>
             {
-                fn(m, p, ct);
+                fn(m, p);
 
                 return Task.FromResult(UnitMessageResponse.Instance);
             },
@@ -206,7 +206,7 @@ public static class ConquerorHttpServerMessagingServiceCollectionExtensions
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
     {
         var typesInjector = new HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(null);
-        return services.AddMessageHandlerDelegate(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline, typesInjector);
+        return services.AddMessageHandlerDelegate(messageTypes, (m, p, _) => Task.FromResult(fn(m, p)), configurePipeline, typesInjector);
     }
 
     public static IServiceCollection AddHttpMessageHandlerDelegate<TMessage, TResponse, TIHandler>(
@@ -219,7 +219,7 @@ public static class ConquerorHttpServerMessagingServiceCollectionExtensions
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
     {
         var typesInjector = new HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(configureReceiver);
-        return services.AddMessageHandlerDelegate(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline, typesInjector);
+        return services.AddMessageHandlerDelegate(messageTypes, (m, p, _) => Task.FromResult(fn(m, p)), configurePipeline, typesInjector);
     }
 
     public static IServiceCollection AddHttpMessageHandlerDelegate<TMessage, TIHandler>(
@@ -233,9 +233,9 @@ public static class ConquerorHttpServerMessagingServiceCollectionExtensions
         var typesInjector = new HttpMessageHandlerTypesInjector<TMessage, UnitMessageResponse, TIHandler>(null);
         return services.AddMessageHandlerDelegate(
             messageTypes,
-            (m, p, ct) =>
+            (m, p, _) =>
             {
-                fn(m, p, ct);
+                fn(m, p);
 
                 return Task.FromResult(UnitMessageResponse.Instance);
             },
@@ -254,9 +254,9 @@ public static class ConquerorHttpServerMessagingServiceCollectionExtensions
         var typesInjector = new HttpMessageHandlerTypesInjector<TMessage, UnitMessageResponse, TIHandler>(configureReceiver);
         return services.AddMessageHandlerDelegate(
             messageTypes,
-            (m, p, ct) =>
+            (m, p, _) =>
             {
-                fn(m, p, ct);
+                fn(m, p);
 
                 return Task.FromResult(UnitMessageResponse.Instance);
             },

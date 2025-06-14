@@ -85,7 +85,7 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollectionWithDelegateHandlerAlreadyRegistered_WhenAddingAllHandlersFromAssembly_DoesNotAddHandlerAgain()
     {
-        var services = new ServiceCollection().AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => new())
+        var services = new ServiceCollection().AddMessageHandlerDelegate(TestMessage.T, (_, _) => new())
                                               .AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r

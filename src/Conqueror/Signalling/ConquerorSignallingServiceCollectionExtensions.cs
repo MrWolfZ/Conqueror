@@ -71,9 +71,9 @@ public static class ConquerorSignallingServiceCollectionExtensions
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return services.AddSignalHandlerDelegateInternal(signalTypes, (m, p, ct) =>
+        return services.AddSignalHandlerDelegateInternal(signalTypes, (m, p, _) =>
         {
-            fn(m, p, ct);
+            fn(m, p);
             return Task.CompletedTask;
         }, null);
     }
@@ -97,9 +97,9 @@ public static class ConquerorSignallingServiceCollectionExtensions
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return services.AddSignalHandlerDelegateInternal(signalTypes, (m, p, ct) =>
+        return services.AddSignalHandlerDelegateInternal(signalTypes, (m, p, _) =>
         {
-            fn(m, p, ct);
+            fn(m, p);
             return Task.CompletedTask;
         }, configurePipeline);
     }

@@ -40,8 +40,8 @@ public sealed partial class SignalHandlerRegistrationTests
                                   .AddSignalHandler(new TestSignal2Handler()),
             "delegate" => services.AddSignalHandlerDelegate(TestSignal.T, (_, _, _) => Task.CompletedTask)
                                   .AddSignalHandlerDelegate(TestSignal2.T, (_, _, _) => Task.CompletedTask),
-            "sync_delegate" => services.AddSignalHandlerDelegate(TestSignal.T, (_, _, _) => { })
-                                       .AddSignalHandlerDelegate(TestSignal2.T, (_, _, _) => { }),
+            "sync_delegate" => services.AddSignalHandlerDelegate(TestSignal.T, (_, _) => { })
+                                       .AddSignalHandlerDelegate(TestSignal2.T, (_, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
         };
 
@@ -184,7 +184,7 @@ public sealed partial class SignalHandlerRegistrationTests
             (var l, "factory") => services.AddSignalHandler(factory, l.Value),
             (_, "instance") => services.AddSignalHandler(instance),
             (_, "delegate") => services.AddSignalHandlerDelegate(TestSignal.T, (_, _, _) => Task.CompletedTask),
-            (_, "sync_delegate") => services.AddSignalHandlerDelegate(TestSignal.T, (_, _, _) => { }),
+            (_, "sync_delegate") => services.AddSignalHandlerDelegate(TestSignal.T, (_, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(firstRegistrationMethod), firstRegistrationMethod, null),
         };
 
@@ -196,7 +196,7 @@ public sealed partial class SignalHandlerRegistrationTests
             (var l, "factory") => services.AddSignalHandler(duplicateFactory, l.Value),
             (_, "instance") => services.AddSignalHandler(duplicateInstance),
             (_, "delegate") => services.AddSignalHandlerDelegate(TestSignal.T, (_, _, _) => Task.CompletedTask),
-            (_, "sync_delegate") => services.AddSignalHandlerDelegate(TestSignal.T, (_, _, _) => { }),
+            (_, "sync_delegate") => services.AddSignalHandlerDelegate(TestSignal.T, (_, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(secondRegistrationMethod), secondRegistrationMethod, null),
         };
 

@@ -19,7 +19,7 @@ public sealed partial class PollyMessageMiddlewareTests
         {
             _ = services.AddMessageHandlerDelegate(
                 TestMessage.T,
-                (msg, _, _) =>
+                (msg, _) =>
                 {
                     Assert.That(msg, Is.SameAs(message));
 

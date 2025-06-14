@@ -19,7 +19,7 @@ public sealed partial class PollySignalMiddlewareTests
         {
             _ = services.AddSignalHandlerDelegate(
                 TestSignal.T,
-                (s, _, _) =>
+                (s, _) =>
                 {
                     Assert.That(s, Is.SameAs(signal));
 

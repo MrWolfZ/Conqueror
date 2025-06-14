@@ -58,9 +58,7 @@ public sealed class HttpMessageTcpTests
 
         _ = builder.Services
                    .AddConquerorHttpServerAspNetCore()
-                   .AddHttpMessageHandlerDelegate(
-                       TestMessage.T,
-                       (m, _, _) => new() { Payload = m.Payload + 1 });
+                   .AddHttpMessageHandlerDelegate(TestMessage.T, (m, _) => new() { Payload = m.Payload + 1 });
 
         await using var app = builder.Build();
 

@@ -85,7 +85,7 @@ public sealed partial class SignalContextDataTests
                     // second handler
                     .AddSignalHandlerDelegate(
                         TestSignal.T,
-                        (_, p, _) =>
+                        (_, p) =>
                         {
                             SetAndObserveContextData(
                                 p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
@@ -108,7 +108,7 @@ public sealed partial class SignalContextDataTests
                         })
                     .AddSignalHandlerDelegate(
                         NestedTestSignal.T,
-                        (_, p, _) =>
+                        (_, p) =>
                         {
                             SetAndObserveContextData(
                                 p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,

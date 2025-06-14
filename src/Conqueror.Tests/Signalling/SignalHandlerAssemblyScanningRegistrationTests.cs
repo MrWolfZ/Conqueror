@@ -58,7 +58,7 @@ public partial class SignalHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollectionWithDelegateHandlerAlreadyRegistered_WhenAddingAllHandlersFromAssembly_AddsOtherHandlers()
     {
-        var services = new ServiceCollection().AddSignalHandlerDelegate(TestSignal.T, (_, _, _) => { })
+        var services = new ServiceCollection().AddSignalHandlerDelegate(TestSignal.T, (_, _) => { })
                                               .AddSignalHandlersFromAssembly(typeof(SignalHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is SignalHandlerRegistration r

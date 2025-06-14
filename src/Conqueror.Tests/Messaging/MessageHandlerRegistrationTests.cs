@@ -46,10 +46,10 @@ public sealed partial class MessageHandlerRegistrationTests
                                   .AddMessageHandlerDelegate(TestMessage2.T, (_, _, _) => Task.FromResult(new TestMessage2Response()))
                                   .AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => Task.CompletedTask)
                                   .AddMessageHandlerDelegate(TestMessageWithoutResponse2.T, (_, _, _) => Task.CompletedTask),
-            "sync_delegate" => services.AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => new())
-                                       .AddMessageHandlerDelegate(TestMessage2.T, (_, _, _) => new())
-                                       .AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => { })
-                                       .AddMessageHandlerDelegate(TestMessageWithoutResponse2.T, (_, _, _) => { }),
+            "sync_delegate" => services.AddMessageHandlerDelegate(TestMessage.T, (_, _) => new())
+                                       .AddMessageHandlerDelegate(TestMessage2.T, (_, _) => new())
+                                       .AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _) => { })
+                                       .AddMessageHandlerDelegate(TestMessageWithoutResponse2.T, (_, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
         };
 
@@ -265,7 +265,7 @@ public sealed partial class MessageHandlerRegistrationTests
             (var l, "factory") => services.AddMessageHandler(duplicateFactory, l.Value),
             (_, "instance") => services.AddMessageHandler(duplicateInstance),
             (_, "delegate") => services.AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => Task.FromResult(new TestMessageResponse())),
-            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => new()),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessage.T, (_, _) => new()),
             _ => throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null),
         };
 
@@ -336,8 +336,8 @@ public sealed partial class MessageHandlerRegistrationTests
             (var l, "type") => services.AddMessageHandler<TestMessageWithoutResponseHandler>(l.Value),
             (var l, "factory") => services.AddMessageHandler(factory, l.Value),
             (_, "instance") => services.AddMessageHandler(instance),
-            (_, "delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => Task.FromException<TestMessageResponse>(new NotSupportedException())),
-            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (MessageHandlerSyncFn<TestMessageWithoutResponse>)((_, _, _) => throw new NotSupportedException())),
+            (_, "delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => throw new NotSupportedException()),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _) => throw new NotSupportedException()),
             _ => throw new ArgumentOutOfRangeException(nameof(initialRegistrationMethod), initialRegistrationMethod, null),
         };
 
@@ -349,7 +349,7 @@ public sealed partial class MessageHandlerRegistrationTests
             (var l, "factory") => services.AddMessageHandler(duplicateFactory, l.Value),
             (_, "instance") => services.AddMessageHandler(duplicateInstance),
             (_, "delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => Task.CompletedTask),
-            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => { }),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null),
         };
 
