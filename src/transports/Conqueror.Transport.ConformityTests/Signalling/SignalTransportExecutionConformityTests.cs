@@ -316,7 +316,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             var signalReceivers = host.SignalReceivers;
             Assert.That(
                 () => testCase.RunReceivers(signalReceivers, ct),
-                Throws.InstanceOf<SignalReceiverExecutionFailedException>()
+                Throws.InstanceOf<ReceiverExecutionFailedException>()
                       .With.InnerException.SameAs(configurationException));
 
             await testCase.OnConfigurationException(host);
@@ -344,11 +344,11 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
         {
             await Assert.ThatAsync(
                 () => handle.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                Throws.InstanceOf<SignalReceiverExecutionFailedException>());
+                Throws.InstanceOf<ReceiverExecutionFailedException>());
 
             await Assert.ThatAsync(
                 () => handle.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                Throws.InstanceOf<SignalReceiverExecutionFailedException>());
+                Throws.InstanceOf<ReceiverExecutionFailedException>());
         }
 
         if (testCase.NumOfExpectedUnrecoverableConnectionErrors > 1)
@@ -364,7 +364,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
                           .With.Property("InnerExceptions")
                           .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
                           .With.Property("InnerExceptions")
-                          .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is SignalReceiverExecutionFailedException)));
+                          .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is ReceiverExecutionFailedException)));
 
                 await Assert.ThatAsync(
                     () => handle.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
@@ -372,7 +372,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
                           .With.Property("InnerExceptions")
                           .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
                           .With.Property("InnerExceptions")
-                          .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is SignalReceiverExecutionFailedException)));
+                          .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is ReceiverExecutionFailedException)));
             }
 
             // there is a rare race condition that we cannot prevent where the client receives the first unrecoverable error
@@ -383,11 +383,11 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             {
                 await Assert.ThatAsync(
                     () => handle.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                    Throws.InstanceOf<SignalReceiverExecutionFailedException>());
+                    Throws.InstanceOf<ReceiverExecutionFailedException>());
 
                 await Assert.ThatAsync(
                     () => handle.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                    Throws.InstanceOf<SignalReceiverExecutionFailedException>());
+                    Throws.InstanceOf<ReceiverExecutionFailedException>());
             }
         }
 
@@ -432,7 +432,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
         {
             await Assert.ThatAsync(
                 () => handle.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                Throws.InstanceOf<SignalReceiverExecutionFailedException>()
+                Throws.InstanceOf<ReceiverExecutionFailedException>()
                       .With.InnerException.SameAs(handlerExceptions[0]));
         }
 
@@ -449,7 +449,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
                           .With.Property("InnerExceptions")
                           .Count.EqualTo(handlerExceptions.Count)
                           .With.Property("InnerExceptions")
-                          .Matches<ReadOnlyCollection<Exception>>(exs => exs.OfType<SignalReceiverExecutionFailedException>()
+                          .Matches<ReadOnlyCollection<Exception>>(exs => exs.OfType<ReceiverExecutionFailedException>()
                                                                             .Select(ex => ex.InnerException)
                                                                             .OfType<Exception>()
                                                                             .OrderBy(ex => ex.Message)
@@ -464,7 +464,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             {
                 await Assert.ThatAsync(
                     () => handle.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                    Throws.InstanceOf<SignalReceiverExecutionFailedException>());
+                    Throws.InstanceOf<ReceiverExecutionFailedException>());
             }
         }
 

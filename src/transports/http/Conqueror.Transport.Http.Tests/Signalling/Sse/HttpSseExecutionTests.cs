@@ -24,7 +24,7 @@ public sealed partial class HttpSseExecutionTests
             () => runIndividually
                 ? signalReceivers.RunHttpSseSignalReceiver<TestSignalWithDuplicateEventTypeHandler>(CancellationToken.None)
                 : signalReceivers.RunHttpSseSignalReceivers(CancellationToken.None),
-            Throws.InstanceOf<SignalReceiverExecutionFailedException>()
+            Throws.InstanceOf<ReceiverExecutionFailedException>()
                   .With.InnerException.InstanceOf<InvalidOperationException>()
                   .With.InnerException.Message.Contains("is already used by signal type"));
     }

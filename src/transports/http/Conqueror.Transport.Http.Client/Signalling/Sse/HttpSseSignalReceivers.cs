@@ -11,7 +11,7 @@ namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
 {
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive, the source is returned to the caller")]
-    public SignalReceiverExecutionHandle RunReceivers(ISignalReceivers receivers, CancellationToken cancellationToken)
+    public ReceiverExecutionHandle RunReceivers(ISignalReceivers receivers, CancellationToken cancellationToken)
     {
         var registry = receivers.ServiceProvider.GetRequiredService<ISignalHandlerRegistry>();
         var invokers = registry.GetReceiverHandlerInvokers<IHttpSseSignalHandlerTypesInjector>();
@@ -43,7 +43,7 @@ internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
         return receivers.CombineExecutions(configuredReceivers.Select(r => RunHttpSseSignalReceiver(receivers, r, cancellationToken)).ToList());
     }
 
-    public SignalReceiverExecutionHandle RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
+    public ReceiverExecutionHandle RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
         where THandler : class, IHttpSseSignalHandler, ISignalHandlerWithSourceGeneration
     {
         var receiver = ConfigureHttpSseSignalReceiver<THandler>(receivers);
@@ -82,7 +82,7 @@ internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
                         .ConfigureReceiver(receiverHandlerInvoker, configureReceiver);
     }
 
-    private static SignalReceiverExecutionHandle RunHttpSseSignalReceiver(
+    private static ReceiverExecutionHandle RunHttpSseSignalReceiver(
         ISignalReceivers receivers,
         HttpSseSignalReceiver receiver,
         CancellationToken cancellationToken)

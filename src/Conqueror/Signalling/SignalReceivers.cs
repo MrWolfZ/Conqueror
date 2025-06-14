@@ -9,14 +9,14 @@ internal sealed class SignalReceivers(IServiceProvider serviceProvider) : ISigna
 {
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    public SignalReceiverExecutionHandle CombineExecutions(IReadOnlyCollection<SignalReceiverExecutionHandle> executionHandles)
+    public ReceiverExecutionHandle CombineExecutions(IReadOnlyCollection<ReceiverExecutionHandle> executionHandles)
     {
-        var combinedRun = new SignalReceiverExecutionHandle(executionHandles);
+        var combinedRun = new ReceiverExecutionHandle(executionHandles);
         HandleErrors(combinedRun);
 
         return combinedRun;
 
-        static async void HandleErrors(SignalReceiverExecutionHandle combinedExecutionHandle)
+        static async void HandleErrors(ReceiverExecutionHandle combinedExecutionHandle)
         {
             try
             {

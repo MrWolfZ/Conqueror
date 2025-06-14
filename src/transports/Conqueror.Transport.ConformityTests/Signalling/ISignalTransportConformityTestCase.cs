@@ -5,7 +5,7 @@ public interface ISignalTransportConformityTestCase<TTestHost> : ITransportConfo
 {
     Task<TTestHost> CreateTestHost();
 
-    SignalReceiverExecutionHandle RunReceivers(
+    ReceiverExecutionHandle RunReceivers(
         ISignalReceivers receivers,
         CancellationToken cancellationToken,
         Func<object, ConquerorContext, CancellationToken, Task>? signalCallback = null,

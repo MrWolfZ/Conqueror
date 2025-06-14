@@ -76,7 +76,7 @@
     private List<ChatEntry>? currentEntries;
     private string user = "";
     private string content = "";
-    private SignalReceiverExecutionHandle? signalReceiverExecutionHandle;
+    private ReceiverExecutionHandle? signalReceiverExecutionHandle;
 
     [Inject]
     public required IMessageSenders MessageSenders { get; init; }

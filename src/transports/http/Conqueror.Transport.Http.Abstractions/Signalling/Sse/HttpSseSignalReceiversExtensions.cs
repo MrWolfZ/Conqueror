@@ -6,7 +6,7 @@ namespace Conqueror;
 
 public static class HttpSseSignalReceiversExtensions
 {
-    public static SignalReceiverExecutionHandle RunHttpSseSignalReceivers(this ISignalReceivers receivers, CancellationToken cancellationToken)
+    public static ReceiverExecutionHandle RunHttpSseSignalReceivers(this ISignalReceivers receivers, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(receivers);
 
@@ -19,7 +19,7 @@ public static class HttpSseSignalReceiversExtensions
         return httpReceivers.RunReceivers(receivers, cancellationToken);
     }
 
-    public static SignalReceiverExecutionHandle RunHttpSseSignalReceiver<THandler>(this ISignalReceivers receivers, CancellationToken cancellationToken)
+    public static ReceiverExecutionHandle RunHttpSseSignalReceiver<THandler>(this ISignalReceivers receivers, CancellationToken cancellationToken)
         where THandler : class, IHttpSseSignalHandler, ISignalHandlerWithSourceGeneration
     {
         ArgumentNullException.ThrowIfNull(receivers);

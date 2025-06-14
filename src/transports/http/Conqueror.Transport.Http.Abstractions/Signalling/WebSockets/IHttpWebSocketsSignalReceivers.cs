@@ -5,8 +5,8 @@ namespace Conqueror;
 
 public interface IHttpWebSocketsSignalReceivers
 {
-    SignalReceiverExecutionHandle RunReceivers(ISignalReceivers receivers, CancellationToken cancellationToken);
+    ReceiverExecutionHandle RunReceivers(ISignalReceivers receivers, CancellationToken cancellationToken);
 
-    SignalReceiverExecutionHandle RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
+    ReceiverExecutionHandle RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
         where THandler : class, IHttpWebSocketsSignalHandler, ISignalHandlerWithSourceGeneration;
 }

@@ -4,19 +4,19 @@ using System;
 namespace Conqueror;
 
 [Serializable]
-public sealed class SignalReceiverExecutionFailedException : Exception
+public sealed class ReceiverExecutionFailedException : Exception
 {
-    public SignalReceiverExecutionFailedException(string message, Exception innerException)
+    public ReceiverExecutionFailedException(string message, Exception innerException)
         : base(message, innerException)
     {
     }
 
-    public SignalReceiverExecutionFailedException(string message)
+    public ReceiverExecutionFailedException(string message)
         : base(message)
     {
     }
 
-    private SignalReceiverExecutionFailedException()
+    private ReceiverExecutionFailedException()
     {
     }
 

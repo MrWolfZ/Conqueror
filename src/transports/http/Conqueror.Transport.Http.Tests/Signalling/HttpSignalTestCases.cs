@@ -1114,7 +1114,7 @@ public static partial class HttpSignalTestCases
         };
     }
 
-    private static SignalReceiverExecutionHandle RunReceiverForTransport<THandler>(
+    private static ReceiverExecutionHandle RunReceiverForTransport<THandler>(
         ISignalReceivers r,
         HttpSignalTransportType transportType,
         CancellationToken ct)
@@ -1128,7 +1128,7 @@ public static partial class HttpSignalTestCases
         };
     }
 
-    private static SignalReceiverExecutionHandle RunReceiversForTransport(
+    private static ReceiverExecutionHandle RunReceiversForTransport(
         ISignalReceivers r,
         HttpSignalTransportType transportType,
         CancellationToken ct)

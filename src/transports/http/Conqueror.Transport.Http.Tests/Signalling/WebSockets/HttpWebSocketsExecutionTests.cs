@@ -24,7 +24,7 @@ public sealed partial class HttpWebSocketsExecutionTests
             () => runIndividually
                 ? signalReceivers.RunHttpWebSocketsSignalReceiver<TestSignalWithDuplicateTagHandler>(CancellationToken.None)
                 : signalReceivers.RunHttpWebSocketsSignalReceivers(CancellationToken.None),
-            Throws.InstanceOf<SignalReceiverExecutionFailedException>()
+            Throws.InstanceOf<ReceiverExecutionFailedException>()
                   .With.InnerException.InstanceOf<InvalidOperationException>()
                   .With.InnerException.Message.Contains("is already used by signal type"));
     }

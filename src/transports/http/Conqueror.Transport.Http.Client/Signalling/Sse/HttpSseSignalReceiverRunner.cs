@@ -19,7 +19,7 @@ internal sealed class HttpSseSignalReceiverRunner(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
         Justification = "false positive, the source is returned to the caller")]
-    public SignalReceiverExecutionHandle Run(CancellationToken cancellationToken)
+    public ReceiverExecutionHandle Run(CancellationToken cancellationToken)
     {
         var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var connectionTaskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -53,7 +53,7 @@ internal sealed class HttpSseSignalReceiverRunner(
 
                     if ((int)response.StatusCode is >= 400 and < 500)
                     {
-                        throw new SignalReceiverExecutionFailedException(
+                        throw new ReceiverExecutionFailedException(
                             $"failed to connect signal receiver for handler type '{handlerType}' to address '{config.Address}'; got status code {response.StatusCode}")
                         {
                             HandlerType = handlerType,
@@ -114,13 +114,13 @@ internal sealed class HttpSseSignalReceiverRunner(
                     // the http stream reader might throw an IOException instead of an OperationCanceledException when
                     // the token is canceled, so we catch it here and return gracefully
                 }
-                catch (SignalReceiverExecutionFailedException)
+                catch (ReceiverExecutionFailedException)
                 {
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    throw new SignalReceiverExecutionFailedException(
+                    throw new ReceiverExecutionFailedException(
                         $"an exception occured while running receiver for signal handler type '{handlerType}'",
                         ex)
                     {

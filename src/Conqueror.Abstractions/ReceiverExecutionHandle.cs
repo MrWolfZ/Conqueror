@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public sealed class SignalReceiverExecutionHandle : IAsyncDisposable
+public sealed class ReceiverExecutionHandle : IAsyncDisposable
 {
     private Action? onDispose;
     private CancellationTokenSource? cancellationTokenSource;
-    private IReadOnlyCollection<SignalReceiverExecutionHandle>? innerHandles;
+    private IReadOnlyCollection<ReceiverExecutionHandle>? innerHandles;
 
-    public SignalReceiverExecutionHandle(
+    public ReceiverExecutionHandle(
         Task initialConnectionTask,
         Task completionTask,
         CancellationTokenSource? cancellationTokenSource,
@@ -26,7 +26,7 @@ public sealed class SignalReceiverExecutionHandle : IAsyncDisposable
         this.onDispose = onDispose;
     }
 
-    public SignalReceiverExecutionHandle(IReadOnlyCollection<SignalReceiverExecutionHandle> handles)
+    public ReceiverExecutionHandle(IReadOnlyCollection<ReceiverExecutionHandle> handles)
     {
         InitialConnectionTask = WhenAll(handles.Select(r => r.InitialConnectionTask));
         CompletionTask = WhenAll(handles.Select(r => r.CompletionTask));
@@ -37,7 +37,7 @@ public sealed class SignalReceiverExecutionHandle : IAsyncDisposable
 
     public Task CompletionTask { get; }
 
-    public IReadOnlyCollection<SignalReceiverExecutionHandle>? InnerHandles => innerHandles;
+    public IReadOnlyCollection<ReceiverExecutionHandle>? InnerHandles => innerHandles;
 
     public async ValueTask DisposeAsync()
     {
@@ -80,7 +80,7 @@ public sealed class SignalReceiverExecutionHandle : IAsyncDisposable
         }
     }
 
-    private static async Task DisposeSingle(SignalReceiverExecutionHandle handle)
+    private static async Task DisposeSingle(ReceiverExecutionHandle handle)
     {
         try
         {

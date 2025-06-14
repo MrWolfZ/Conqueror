@@ -11,7 +11,7 @@ namespace Conqueror.Transport.Http.Client.Signalling.WebSockets;
 internal sealed class HttpWebSocketsSignalReceivers : IHttpWebSocketsSignalReceivers
 {
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive, the source is returned to the caller")]
-    public SignalReceiverExecutionHandle RunReceivers(ISignalReceivers receivers, CancellationToken cancellationToken)
+    public ReceiverExecutionHandle RunReceivers(ISignalReceivers receivers, CancellationToken cancellationToken)
     {
         var registry = receivers.ServiceProvider.GetRequiredService<ISignalHandlerRegistry>();
         var invokers = registry.GetReceiverHandlerInvokers<IHttpWebSocketsSignalHandlerTypesInjector>();
@@ -46,7 +46,7 @@ internal sealed class HttpWebSocketsSignalReceivers : IHttpWebSocketsSignalRecei
         return receivers.CombineExecutions(configuredReceivers.Select(r => RunHttpWebSocketsSignalReceiver(receivers, r, cancellationToken)).ToList());
     }
 
-    public SignalReceiverExecutionHandle RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
+    public ReceiverExecutionHandle RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
         where THandler : class, IHttpWebSocketsSignalHandler, ISignalHandlerWithSourceGeneration
     {
         var receiver = ConfigureHttpWebSocketsSignalReceiver<THandler>(receivers);
@@ -89,7 +89,7 @@ internal sealed class HttpWebSocketsSignalReceivers : IHttpWebSocketsSignalRecei
                         .ConfigureReceiver(receiverHandlerInvoker, configureReceiver);
     }
 
-    private static SignalReceiverExecutionHandle RunHttpWebSocketsSignalReceiver(
+    private static ReceiverExecutionHandle RunHttpWebSocketsSignalReceiver(
         ISignalReceivers receivers,
         HttpWebSocketsSignalReceiver receiver,
         CancellationToken cancellationToken)
