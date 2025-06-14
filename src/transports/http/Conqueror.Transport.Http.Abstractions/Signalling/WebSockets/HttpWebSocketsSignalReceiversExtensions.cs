@@ -6,7 +6,7 @@ namespace Conqueror;
 
 public static class HttpWebSocketsSignalReceiversExtensions
 {
-    public static SignalReceiverRun RunHttpWebSocketsSignalReceivers(this ISignalReceivers receivers, CancellationToken cancellationToken)
+    public static SignalReceiverExecutionHandle RunHttpWebSocketsSignalReceivers(this ISignalReceivers receivers, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(receivers);
 
@@ -19,7 +19,7 @@ public static class HttpWebSocketsSignalReceiversExtensions
         return httpReceivers.RunReceivers(receivers, cancellationToken);
     }
 
-    public static SignalReceiverRun RunHttpWebSocketsSignalReceiver<THandler>(this ISignalReceivers receivers, CancellationToken cancellationToken)
+    public static SignalReceiverExecutionHandle RunHttpWebSocketsSignalReceiver<THandler>(this ISignalReceivers receivers, CancellationToken cancellationToken)
         where THandler : class, IHttpWebSocketsSignalHandler, ISignalHandlerWithSourceGeneration
     {
         ArgumentNullException.ThrowIfNull(receivers);

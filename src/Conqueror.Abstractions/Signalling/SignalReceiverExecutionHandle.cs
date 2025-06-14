@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -9,14 +8,13 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public sealed class SignalReceiverRun : IAsyncDisposable
+public sealed class SignalReceiverExecutionHandle : IAsyncDisposable
 {
     private Action? onDispose;
     private CancellationTokenSource? cancellationTokenSource;
-    private IReadOnlyCollection<SignalReceiverRun>? innerRuns;
+    private IReadOnlyCollection<SignalReceiverExecutionHandle>? innerHandles;
 
-    [SuppressMessage("ReSharper", "ConvertToPrimaryConstructor", Justification = "false positive")]
-    public SignalReceiverRun(
+    public SignalReceiverExecutionHandle(
         Task initialConnectionTask,
         Task completionTask,
         CancellationTokenSource? cancellationTokenSource,
@@ -28,18 +26,18 @@ public sealed class SignalReceiverRun : IAsyncDisposable
         this.onDispose = onDispose;
     }
 
-    public SignalReceiverRun(IReadOnlyCollection<SignalReceiverRun> runs)
+    public SignalReceiverExecutionHandle(IReadOnlyCollection<SignalReceiverExecutionHandle> handles)
     {
-        InitialConnectionTask = WhenAll(runs.Select(r => r.InitialConnectionTask));
-        CompletionTask = WhenAll(runs.Select(r => r.CompletionTask));
-        innerRuns = runs;
+        InitialConnectionTask = WhenAll(handles.Select(r => r.InitialConnectionTask));
+        CompletionTask = WhenAll(handles.Select(r => r.CompletionTask));
+        innerHandles = handles;
     }
 
     public Task InitialConnectionTask { get; }
 
     public Task CompletionTask { get; }
 
-    public IReadOnlyCollection<SignalReceiverRun>? InnerRuns => innerRuns;
+    public IReadOnlyCollection<SignalReceiverExecutionHandle>? InnerHandles => innerHandles;
 
     public async ValueTask DisposeAsync()
     {
@@ -51,11 +49,11 @@ public sealed class SignalReceiverRun : IAsyncDisposable
             cts.Dispose();
         }
 
-        var runs = Interlocked.Exchange(ref innerRuns, null);
+        var handles = Interlocked.Exchange(ref innerHandles, null);
 
-        if (runs is not null)
+        if (handles is not null)
         {
-            await Task.WhenAll(runs.Select(DisposeSingle)).ConfigureAwait(false);
+            await Task.WhenAll(handles.Select(DisposeSingle)).ConfigureAwait(false);
         }
 
         var onD = Interlocked.Exchange(ref onDispose, null);
@@ -82,16 +80,16 @@ public sealed class SignalReceiverRun : IAsyncDisposable
         }
     }
 
-    private static async Task DisposeSingle(SignalReceiverRun run)
+    private static async Task DisposeSingle(SignalReceiverExecutionHandle handle)
     {
         try
         {
-            await run.DisposeAsync().ConfigureAwait(false);
-            await run.CompletionTask.ConfigureAwait(false);
+            await handle.DisposeAsync().ConfigureAwait(false);
+            await handle.CompletionTask.ConfigureAwait(false);
         }
         catch
         {
-            // during disposal we don't care about exceptions
+            // during disposal, we don't care about exceptions
         }
     }
 }

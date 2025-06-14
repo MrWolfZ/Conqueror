@@ -66,7 +66,7 @@ public static partial class HttpTestSignals
             };
         }
 
-        SignalReceiverRun RunReceiverForTransport<THandler>(ISignalReceivers r, CancellationToken ct)
+        SignalReceiverExecutionHandle RunReceiverForTransport<THandler>(ISignalReceivers r, CancellationToken ct)
             where THandler : class, ISignalHandlerWithSourceGeneration, IHttpSseSignalHandler, IHttpWebSocketsSignalHandler
         {
             return transportType switch
@@ -77,7 +77,7 @@ public static partial class HttpTestSignals
             };
         }
 
-        SignalReceiverRun RunReceiversForTransport(ISignalReceivers r, CancellationToken ct)
+        SignalReceiverExecutionHandle RunReceiversForTransport(ISignalReceivers r, CancellationToken ct)
         {
             return transportType switch
             {
@@ -451,7 +451,7 @@ public static partial class HttpTestSignals
 
         public required Func<ISignalPublishers, Task> PublishSignals { get; init; }
 
-        public required Func<ISignalReceivers, CancellationToken, SignalReceiverRun> RunReceiver { get; init; }
+        public required Func<ISignalReceivers, CancellationToken, SignalReceiverExecutionHandle> RunReceiver { get; init; }
 
         public IServiceCollection RegisterClientServices(IServiceCollection services)
         {

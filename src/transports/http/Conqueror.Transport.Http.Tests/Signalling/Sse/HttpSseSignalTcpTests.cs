@@ -90,10 +90,10 @@ public sealed partial class HttpSseSignalTcpTests
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(testTimeoutToken);
 
-        await using var run = clientServices.GetRequiredService<ISignalReceivers>()
+        await using var handle = clientServices.GetRequiredService<ISignalReceivers>()
                                             .RunHttpSseSignalReceiver<TestSignalHandler>(cts.Token);
 
-        await run.InitialConnectionTask;
+        await handle.InitialConnectionTask;
 
         var signal1 = new TestSignal(1);
         var signal2 = new TestSignal(2);

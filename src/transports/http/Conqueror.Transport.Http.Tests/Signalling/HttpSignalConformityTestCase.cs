@@ -24,7 +24,7 @@ public abstract class HttpSignalConformityTestCase : ISignalTransportConformityT
 
     public Action<IServiceCollection>? RegisterOnServer { get; init; }
 
-    public required Func<ISignalReceivers, CancellationToken, SignalReceiverRun> RunReceivers { get; init; }
+    public required Func<ISignalReceivers, CancellationToken, SignalReceiverExecutionHandle> RunReceivers { get; init; }
 
     public required Func<ISignalPublishers, CancellationToken, Func<object, ConquerorContext, CancellationToken, Task>?, Task> PublishSignals { get; init; }
 
@@ -58,7 +58,7 @@ public abstract class HttpSignalConformityTestCase : ISignalTransportConformityT
             });
     }
 
-    SignalReceiverRun ISignalTransportConformityTestCase<HttpSignalTransportConformityTestHost>.RunReceivers(
+    SignalReceiverExecutionHandle ISignalTransportConformityTestCase<HttpSignalTransportConformityTestHost>.RunReceivers(
         ISignalReceivers receivers,
         CancellationToken cancellationToken,
         Func<object, ConquerorContext, CancellationToken, Task>? signalCallback,

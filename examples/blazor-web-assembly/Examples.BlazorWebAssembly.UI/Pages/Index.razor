@@ -76,7 +76,7 @@
     private List<ChatEntry>? currentEntries;
     private string user = "";
     private string content = "";
-    private SignalReceiverRun? receiverRun;
+    private SignalReceiverExecutionHandle? signalReceiverExecutionHandle;
 
     [Inject]
     public required IMessageSenders MessageSenders { get; init; }
@@ -153,17 +153,17 @@
         ChatEntryBroadcastedHandler.OnSignal += OnChatEntryBroadcasted;
 
         // note that there are potential race conditions here that are left as an exercise for the reader
-        receiverRun = SignalReceivers.RunHttpWebSocketsSignalReceiver<ChatEntryBroadcastedHandler>(CancellationToken.None);
-        await receiverRun.InitialConnectionTask;
+        signalReceiverExecutionHandle = SignalReceivers.RunHttpWebSocketsSignalReceiver<ChatEntryBroadcastedHandler>(CancellationToken.None);
+        await signalReceiverExecutionHandle.InitialConnectionTask;
     }
 
     public async ValueTask DisposeAsync()
     {
         ChatEntryBroadcastedHandler.OnSignal -= OnChatEntryBroadcasted;
 
-        if (receiverRun is not null)
+        if (signalReceiverExecutionHandle is not null)
         {
-            await receiverRun.DisposeAsync();
+            await signalReceiverExecutionHandle.DisposeAsync();
         }
     }
 

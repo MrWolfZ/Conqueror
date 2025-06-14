@@ -1,0 +1,26 @@
+using System;
+
+// ReSharper disable once CheckNamespace
+namespace Conqueror;
+
+[Serializable]
+public sealed class SignalReceiverExecutionFailedException : Exception
+{
+    public SignalReceiverExecutionFailedException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
+
+    public SignalReceiverExecutionFailedException(string message)
+        : base(message)
+    {
+    }
+
+    private SignalReceiverExecutionFailedException()
+    {
+    }
+
+    public required Type HandlerType { get; init; }
+
+    public required SignalTransportType SignalTransportType { get; init; }
+}

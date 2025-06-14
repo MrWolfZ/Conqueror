@@ -11,7 +11,7 @@ namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
 {
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive, the source is returned to the caller")]
-    public SignalReceiverRun RunReceivers(ISignalReceivers receivers, CancellationToken cancellationToken)
+    public SignalReceiverExecutionHandle RunReceivers(ISignalReceivers receivers, CancellationToken cancellationToken)
     {
         var registry = receivers.ServiceProvider.GetRequiredService<ISignalHandlerRegistry>();
         var invokers = registry.GetReceiverHandlerInvokers<IHttpSseSignalHandlerTypesInjector>();
@@ -31,10 +31,10 @@ internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
                                           .OfType<HttpSseSignalReceiver>()
                                           .ToList();
 
-        return receivers.CombineRuns(configuredReceivers.Select(r => RunHttpSseSignalReceiver(receivers, r, cancellationToken)).ToList());
+        return receivers.CombineExecutions(configuredReceivers.Select(r => RunHttpSseSignalReceiver(receivers, r, cancellationToken)).ToList());
     }
 
-    public SignalReceiverRun RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
+    public SignalReceiverExecutionHandle RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
         where THandler : class, IHttpSseSignalHandler, ISignalHandlerWithSourceGeneration
     {
         var receiver = ConfigureHttpSseSignalReceiver<THandler>(receivers);
@@ -63,7 +63,7 @@ internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
                         .ConfigureReceiver(handlerType, configureReceiver);
     }
 
-    private static SignalReceiverRun RunHttpSseSignalReceiver(
+    private static SignalReceiverExecutionHandle RunHttpSseSignalReceiver(
         ISignalReceivers receivers,
         HttpSseSignalReceiver receiver,
         CancellationToken cancellationToken)

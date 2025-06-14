@@ -20,7 +20,7 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
         Justification = "false positive, the source is returned to the caller")]
-    public SignalReceiverRun Run(CancellationToken cancellationToken)
+    public SignalReceiverExecutionHandle Run(CancellationToken cancellationToken)
     {
         var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var connectionTaskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -56,7 +56,7 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
 
                     if (statusCode is >= 400 and < 500)
                     {
-                        throw new SignalReceiverRunFailedException(
+                        throw new SignalReceiverExecutionFailedException(
                             $"failed to connect signal receiver for handler type '{handlerType}' to address '{config.Address}'; got status code {statusCode}")
                         {
                             HandlerType = handlerType,
@@ -115,13 +115,13 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                                     .ConfigureAwait(false);
                     }
                 }
-                catch (SignalReceiverRunFailedException)
+                catch (SignalReceiverExecutionFailedException)
                 {
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    throw new SignalReceiverRunFailedException(
+                    throw new SignalReceiverExecutionFailedException(
                         $"an exception occured while running receiver for signal handler type '{handlerType}'",
                         ex)
                     {

@@ -24,7 +24,7 @@ public sealed partial class HttpSseExecutionTests
             () => runIndividually
                 ? signalReceivers.RunHttpSseSignalReceiver<TestSignalWithDuplicateEventTypeHandler>(CancellationToken.None)
                 : signalReceivers.RunHttpSseSignalReceivers(CancellationToken.None),
-            Throws.InstanceOf<SignalReceiverRunFailedException>()
+            Throws.InstanceOf<SignalReceiverExecutionFailedException>()
                   .With.InnerException.InstanceOf<InvalidOperationException>()
                   .With.InnerException.Message.Contains("is already used by signal type"));
     }
@@ -58,10 +58,10 @@ public sealed partial class HttpSseExecutionTests
         var signalReceivers = clientServiceProvider.GetRequiredService<ISignalReceivers>();
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
-        await using var run = signalReceivers.RunHttpSseSignalReceivers(cts.Token);
+        await using var handle = signalReceivers.RunHttpSseSignalReceivers(cts.Token);
 
         await Assert.ThatAsync(
-            () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
+            () => handle.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
             Throws.Nothing);
 
         Assert.That(configCount, Is.EqualTo(1));

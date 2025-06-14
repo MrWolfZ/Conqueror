@@ -8,5 +8,5 @@ public interface ISignalReceivers
 {
     IServiceProvider ServiceProvider { get; }
 
-    SignalReceiverRun CombineRuns(IReadOnlyCollection<SignalReceiverRun> runs);
+    SignalReceiverExecutionHandle CombineExecutions(IReadOnlyCollection<SignalReceiverExecutionHandle> executionHandles);
 }

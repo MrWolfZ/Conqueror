@@ -47,7 +47,7 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
         DisposableActivity? activity = null;
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
-        await using var run = testCase.RunReceivers(host.SignalReceivers, cts.Token, signalCallback: (_, ctx, _) =>
+        await using var handle = testCase.RunReceivers(host.SignalReceivers, cts.Token, signalCallback: (_, ctx, _) =>
         {
             receivedSignalIds.Enqueue(ctx.GetSignalId());
             receivedTraceIds.Enqueue(ctx.GetTraceId());
@@ -58,7 +58,7 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
             return Task.CompletedTask;
         });
 
-        _ = run.CompletionTask.ContinueWith(
+        _ = handle.CompletionTask.ContinueWith(
             (t, logger) =>
             {
                 ((ILogger)logger!).LogError(t.Exception!, "error in run");
@@ -69,7 +69,7 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
             TaskScheduler.Default);
 
         await Assert.ThatAsync(
-            () => run.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
+            () => handle.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
             Throws.Nothing);
 
         await testCase.OnConnectionSuccess(host, 1);
