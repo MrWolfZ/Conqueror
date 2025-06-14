@@ -52,6 +52,10 @@ internal sealed class HttpWebSocketsSignalBrokerStream(Task<WebSocketWriteStream
         {
             // nothing to do here, the client disconnected in the middle of sending a signal
         }
+        catch (IOException iex) when (iex.InnerException is ObjectDisposedException)
+        {
+            // nothing to do here, the client disconnected in the middle of sending a signal
+        }
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -103,6 +107,10 @@ internal sealed class HttpWebSocketsSignalBrokerStream(Task<WebSocketWriteStream
             // nothing to do here, the client disconnected in the middle of sending a signal
         }
         catch (ObjectDisposedException)
+        {
+            // nothing to do here, the client disconnected in the middle of sending a signal
+        }
+        catch (IOException iex) when (iex.InnerException is ObjectDisposedException)
         {
             // nothing to do here, the client disconnected in the middle of sending a signal
         }

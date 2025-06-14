@@ -65,6 +65,10 @@ public sealed class WebSocketTests
             {
                 // nothing to do
             }
+            catch (IOException iex) when (iex.InnerException is ObjectDisposedException)
+            {
+                // nothing to do
+            }
         }
 
         var runTask = Run(conquerorWebSocket, cts.Token);
@@ -154,6 +158,10 @@ public sealed class WebSocketTests
             {
                 // nothing to do
             }
+            catch (IOException iex) when (iex.InnerException is ObjectDisposedException)
+            {
+                // nothing to do
+            }
         }
 
         var runTask = Run(conquerorWebSocket, cts.Token);
@@ -203,6 +211,10 @@ public sealed class WebSocketTests
             {
                 // nothing to do
             }
+            catch (IOException iex) when (iex.InnerException is ObjectDisposedException)
+            {
+                // nothing to do
+            }
         }
 
         var runTask = Run(conquerorWebSocket, cts.Token);
@@ -249,6 +261,10 @@ public sealed class WebSocketTests
                 // nothing to do
             }
             catch (ObjectDisposedException)
+            {
+                // nothing to do
+            }
+            catch (IOException iex) when (iex.InnerException is ObjectDisposedException)
             {
                 // nothing to do
             }
