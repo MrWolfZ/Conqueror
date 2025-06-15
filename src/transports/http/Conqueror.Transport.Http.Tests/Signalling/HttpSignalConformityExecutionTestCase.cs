@@ -5,5 +5,7 @@ public abstract class HttpSignalConformityExecutionTestCase : HttpSignalConformi
 {
     public int NumOfReceivers { get; init; } = 1;
 
+    public bool SignalsArePublishedInParallel { get; init; }
+
     public required IReadOnlyCollection<object> ExpectedReceivedSignals { get; init; }
 }

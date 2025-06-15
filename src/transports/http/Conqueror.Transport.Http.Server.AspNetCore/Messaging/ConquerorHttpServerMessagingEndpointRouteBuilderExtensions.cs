@@ -51,7 +51,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
         if (invoker is null)
         {
-            throw new InvalidOperationException($"either no or only a delegate handler is registered for HTTP message type '{typeof(TMessage)}'");
+            throw new InvalidOperationException($"no handler is registered for HTTP message type '{typeof(TMessage)}'");
         }
 
         return invoker.TypesInjector.Inject(EndpointConfigurationInjectable, new(builder, invoker));
@@ -68,7 +68,21 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             .WithInjectedTypes<TMessage, TResponse, TIHandler>(EndpointTypeInjectableArg arg)
         {
             var receiver = new HttpMessageReceiver<TMessage, TResponse>(arg.Builder.ServiceProvider);
-            arg.Invoker.TypesInjector.ConfigureHttpReceiver(receiver);
+
+            try
+            {
+                arg.Invoker.TypesInjector.ConfigureHttpReceiver(receiver);
+            }
+            catch (Exception ex)
+            {
+                throw new MessageReceiverExecutionFailedException(
+                    $"failed to configure HTTP endpoint for message type '{typeof(TMessage)}' and handler type '{arg.Invoker.HandlerType}'",
+                    ex)
+                {
+                    HandlerType = arg.Invoker.HandlerType,
+                    MessageTransportType = new(TransportName, MessageTransportRole.Receiver),
+                };
+            }
 
             if (!receiver.IsEnabled)
             {

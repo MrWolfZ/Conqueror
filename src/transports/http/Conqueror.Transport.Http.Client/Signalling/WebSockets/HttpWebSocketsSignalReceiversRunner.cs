@@ -32,7 +32,7 @@ internal sealed class HttpWebSocketsSignalReceiversRunner(IServiceProvider servi
         }
         catch (Exception ex)
         {
-            throw new ReceiverExecutionFailedException($"failed to run the signal receiver for handler type '{handlerType}'", ex)
+            throw new SignalReceiverExecutionFailedException($"failed to run the signal receiver for handler type '{handlerType}'", ex)
             {
                 HandlerType = handlerType,
                 SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
@@ -60,7 +60,7 @@ internal sealed class HttpWebSocketsSignalReceiversRunner(IServiceProvider servi
         }
         catch (Exception ex)
         {
-            throw new ReceiverExecutionFailedException($"failed to run the signal receiver for handler type '{receiverHandlerInvoker.HandlerType}'", ex)
+            throw new SignalReceiverExecutionFailedException($"failed to run the signal receiver for handler type '{receiverHandlerInvoker.HandlerType}'", ex)
             {
                 HandlerType = receiverHandlerInvoker.HandlerType,
                 SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
@@ -80,7 +80,7 @@ internal sealed class HttpWebSocketsSignalReceiversRunner(IServiceProvider servi
         }
         catch (Exception ex)
         {
-            throw new ReceiverExecutionFailedException($"failed to run the signal receiver for handler type '{receiver.HandlerType}'", ex)
+            throw new SignalReceiverExecutionFailedException($"failed to run the signal receiver for handler type '{receiver.HandlerType}'", ex)
             {
                 HandlerType = receiver.HandlerType,
                 SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),

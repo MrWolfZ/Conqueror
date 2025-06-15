@@ -36,7 +36,7 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
             var propName = Uncapitalize(prop.Name);
             var propValue = prop.GetValue(message);
 
-            if (propValue is IEnumerable enumerable)
+            if (propValue is IEnumerable enumerable and not string)
             {
                 foreach (var v in enumerable)
                 {

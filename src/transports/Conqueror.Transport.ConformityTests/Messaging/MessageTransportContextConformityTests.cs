@@ -4,53 +4,57 @@ using Microsoft.Extensions.Logging;
 using static Conqueror.Transport.ConformityTests.TestContextData;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
-namespace Conqueror.Transport.ConformityTests.Signalling;
+namespace Conqueror.Transport.ConformityTests.Messaging;
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "by design")]
-public abstract class SignalTransportContextConformityTests<TTestClass, TTestHost, TTestCase>
-    where TTestClass : SignalTransportContextConformityTests<TTestClass, TTestHost, TTestCase>,
-    ISignalTransportContextConformityTests<TTestHost, TTestCase>
-    where TTestHost : ISignalTransportConformityTestHost
-    where TTestCase : ISignalTransportConformityContextTestCase<TTestHost>
+public abstract class MessageTransportContextConformityTests<TTestClass, TTestHost, TTestCase>
+    where TTestClass : MessageTransportContextConformityTests<TTestClass, TTestHost, TTestCase>,
+    IMessageTransportContextConformityTests<TTestHost, TTestCase>
+    where TTestHost : IMessageTransportConformityTestHost
+    where TTestCase : IMessageTransportConformityContextTestCase<TTestHost>
 {
     [Test]
     [TestCaseSource(nameof(CreateTestCasesPrivate))]
-    public async Task GivenContextData_WhenPublishingHttpWebSocketsSignal_DataIsCorrectlySent(TTestCase testCase)
+    public async Task GivenContextData_WhenPublishingHttpWebSocketsMessage_DataIsCorrectlySent(TTestCase testCase)
     {
         await using var host = testCase.CreateTestHost();
 
-        var seenSignalIdsOnPublisher = new ConcurrentQueue<string?>();
-        var seenTraceIdsOnPublisher = new ConcurrentQueue<string>();
-
-        await using var publisherHost = await host.CreatePublisherTestHost(
-            host.TestTimeoutToken,
-            (_, ctx, _) =>
-            {
-                seenSignalIdsOnPublisher.Enqueue(ctx.GetSignalId());
-                seenTraceIdsOnPublisher.Enqueue(ctx.GetTraceId());
-
-                return Task.CompletedTask;
-            });
-
-        var receivedSignalIds = new ConcurrentQueue<string?>();
+        var receivedMessageIds = new ConcurrentQueue<string?>();
         var receivedTraceIds = new ConcurrentQueue<string>();
 
         var receivedDownstreamContextDatas = new ConcurrentQueue<IReadOnlyCollection<KeyValuePair<string, string>>>();
         var receivedBidirectionalContextDatas = new ConcurrentQueue<IReadOnlyCollection<KeyValuePair<string, string>>>();
 
-        DisposableActivity? activity = null;
-
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
-
         await using var receiverHost = await host.CreateReceiverTestHost(
-            cts.Token,
+            host.TestTimeoutToken,
             (_, ctx, _) =>
             {
-                receivedSignalIds.Enqueue(ctx.GetSignalId());
+                receivedMessageIds.Enqueue(ctx.GetMessageId());
                 receivedTraceIds.Enqueue(ctx.GetTraceId());
 
                 receivedDownstreamContextDatas.Enqueue(ctx.DownstreamContextData.AsKeyValuePairs());
                 receivedBidirectionalContextDatas.Enqueue(ctx.ContextData.AsKeyValuePairs());
+
+                if (testCase.HasUpstreamData)
+                {
+                    foreach (var item in ContextDataUpstreamAcrossTransports)
+                    {
+                        ctx?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                    }
+
+                    foreach (var item in InProcessContextData)
+                    {
+                        ctx?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                    }
+                }
+
+                if (testCase.HasBidirectionalData)
+                {
+                    foreach (var item in ContextDataUpstreamBidirectionalAcrossTransports)
+                    {
+                        ctx?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                    }
+                }
 
                 return Task.CompletedTask;
             });
@@ -65,6 +69,23 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
             TaskContinuationOptions.OnlyOnFaulted,
             TaskScheduler.Default);
 
+        var seenMessageIdsOnSender = new ConcurrentQueue<string?>();
+        var seenTraceIdsOnSender = new ConcurrentQueue<string>();
+
+        DisposableActivity? activity = null;
+
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
+
+        await using var senderHost = await host.CreateSenderTestHost(
+            cts.Token,
+            (_, ctx, _) =>
+            {
+                seenMessageIdsOnSender.Enqueue(ctx.GetMessageId());
+                seenTraceIdsOnSender.Enqueue(ctx.GetTraceId());
+
+                return Task.CompletedTask;
+            });
+
         await Assert.ThatAsync(
             () => receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
             Throws.Nothing);
@@ -73,11 +94,11 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
 
         if (testCase.HasActivity)
         {
-            activity = DisposableActivity.Create(nameof(GivenContextData_WhenPublishingHttpWebSocketsSignal_DataIsCorrectlySent));
+            activity = DisposableActivity.Create(nameof(GivenContextData_WhenPublishingHttpWebSocketsMessage_DataIsCorrectlySent));
             _ = activity.Activity.Start();
         }
 
-        using var conquerorContext = publisherHost.ConquerorContextAccessor.GetOrCreate();
+        using var conquerorContext = senderHost.ConquerorContextAccessor.GetOrCreate();
 
         using var d = activity;
 
@@ -107,24 +128,24 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
             }
         }
 
-        await testCase.PublishSignals(publisherHost.SignalPublishers, host.TestTimeoutToken);
+        _ = await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken);
 
         Assert.That(
-            () => receivedSignalIds,
-            Is.EquivalentTo(Enumerable.Repeat(seenSignalIdsOnPublisher, testCase.NumOfReceivers).SelectMany(e => e))
+            () => receivedMessageIds,
+            Is.EqualTo(seenMessageIdsOnSender)
               .After(host.AssertionTimeoutInMs)
               .MilliSeconds
               .PollEvery(10)
               .MilliSeconds);
 
-        Assert.That(receivedTraceIds, Is.EquivalentTo(Enumerable.Repeat(seenTraceIdsOnPublisher, testCase.NumOfReceivers).SelectMany(e => e)));
+        Assert.That(receivedTraceIds, Is.EqualTo(seenTraceIdsOnSender));
 
         if (activity is not null)
         {
-            Assert.That(receivedTraceIds, Is.EqualTo(Enumerable.Repeat(activity.TraceId, seenTraceIdsOnPublisher.Count * testCase.NumOfReceivers)));
+            Assert.That(receivedTraceIds, Is.EqualTo(Enumerable.Repeat(activity.TraceId, seenTraceIdsOnSender.Count)));
         }
 
-        Assert.That(receivedDownstreamContextDatas, Has.Count.EqualTo(seenTraceIdsOnPublisher.Count * testCase.NumOfReceivers));
+        Assert.That(receivedDownstreamContextDatas, Has.Count.EqualTo(seenTraceIdsOnSender.Count));
         foreach (var receivedDownstreamContextData in receivedDownstreamContextDatas)
         {
             if (testCase.HasDownstreamData)
@@ -137,7 +158,7 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
             }
         }
 
-        Assert.That(receivedBidirectionalContextDatas, Has.Count.EqualTo(seenTraceIdsOnPublisher.Count * testCase.NumOfReceivers));
+        Assert.That(receivedBidirectionalContextDatas, Has.Count.EqualTo(seenTraceIdsOnSender.Count));
         foreach (var receivedBidirectionalContextData in receivedBidirectionalContextDatas)
         {
             if (testCase.HasBidirectionalData)
@@ -149,6 +170,28 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
                 Assert.That(receivedBidirectionalContextData, Is.Empty);
             }
         }
+
+        if (testCase.HasUpstreamData)
+        {
+            Assert.That(conquerorContext.UpstreamContextData.AsKeyValuePairs(), Is.EquivalentTo(ContextDataUpstreamAcrossTransports));
+        }
+        else
+        {
+            Assert.That(conquerorContext.UpstreamContextData, Is.Empty);
+        }
+
+        if (testCase.HasBidirectionalData)
+        {
+            Assert.That(
+                conquerorContext.ContextData.AsKeyValuePairs(),
+                Is.EquivalentTo(ContextDataUpstreamBidirectionalAcrossTransports
+                                    .Concat(ContextDataDownstreamBidirectionalAcrossTransports)
+                                    .Concat(InProcessContextData)));
+        }
+        else
+        {
+            Assert.That(conquerorContext.ContextData, Is.Empty);
+        }
     }
 
     [Test]
@@ -156,16 +199,16 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
     {
         var testCases = TTestClass.CreateTestCases().ToList();
 
-        List<Expression<Func<ISignalTransportConformityContextTestCase<TTestHost>, bool>>> predicates =
+        List<Expression<Func<IMessageTransportConformityContextTestCase<TTestHost>, bool>>> predicates =
         [
-            testCase => testCase.NumOfReceivers == 1,
-            testCase => testCase.NumOfReceivers > 1,
             testCase => testCase.HasActivity,
             testCase => !testCase.HasActivity,
             testCase => testCase.HasDownstreamData,
             testCase => !testCase.HasDownstreamData,
             testCase => testCase.HasBidirectionalData,
             testCase => !testCase.HasBidirectionalData,
+            testCase => testCase.HasUpstreamData,
+            testCase => !testCase.HasUpstreamData,
         ];
 
         Assert.Multiple(() =>
@@ -174,7 +217,7 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
             {
                 Assert.That(
                     testCases,
-                    Has.Some.Matches<ISignalTransportConformityContextTestCase<TTestHost>>(tc => predicate.Compile().Invoke(tc)),
+                    Has.Some.Matches<IMessageTransportConformityContextTestCase<TTestHost>>(tc => predicate.Compile().Invoke(tc)),
                     $"missing expected test case: {predicate.Body}");
             }
         });

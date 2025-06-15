@@ -22,10 +22,10 @@ public static partial class HttpSignalTestCases
             TransportType = transportType,
             ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
             RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
         };
@@ -36,10 +36,10 @@ public static partial class HttpSignalTestCases
             TransportType = transportType,
             ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
             RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
             ConfigureHeaders = h =>
@@ -47,15 +47,56 @@ public static partial class HttpSignalTestCases
                 h.Authorization = AuthorizationHeader;
                 h.Append(TestHeaderName, TestHeaderValue);
             },
-            OnConnectionSuccess = (tc, _) =>
+            BeforePublish = host =>
             {
-                Assert.That(tc.ServerResponseHasBegunCount, Is.EqualTo(1));
+                Assert.That(host.PublisherHost.ServerResponseHasBegunCount, Is.EqualTo(1));
 
-                Assert.That(tc.ReceivedHeadersOnServer!.Authorization.ToString(), Is.EqualTo(AuthorizationHeader));
-                Assert.That(tc.ReceivedHeadersOnServer, Does.ContainKey(TestHeaderName).WithValue(TestHeaderValue));
+                Assert.That(host.PublisherHost.ReceivedHeadersOnServer!.Authorization.ToString(), Is.EqualTo(AuthorizationHeader));
+                Assert.That(host.PublisherHost.ReceivedHeadersOnServer, Does.ContainKey(TestHeaderName).WithValue(TestHeaderValue));
 
                 return Task.CompletedTask;
             },
+        };
+
+        yield return new()
+        {
+            Name = "single receiver with parallel publish",
+            TransportType = transportType,
+            ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
+            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
+            PublishSignals = async (p, ct) =>
+            {
+                await Task.WhenAll(
+                    CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct),
+                    CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct));
+            },
+            RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
+            SignalsArePublishedInParallel = true,
+        };
+
+        yield return new()
+        {
+            Name = "single receiver multiple times",
+            TransportType = transportType,
+            ExpectedReceivedSignals =
+            [
+                new TestSignal { Payload = 10 },
+                new TestSignal { Payload = 10 },
+                new TestSignal { Payload = 20 },
+                new TestSignal { Payload = 20 },
+            ],
+            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
+            PublishSignals = async (p, ct) =>
+            {
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
+            },
+            RunReceivers = (r, ct) => r.CombineExecutions(
+            [
+                RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
+                RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
+            ]),
+            NumOfReceivers = 2,
         };
 
         yield return new()
@@ -72,14 +113,40 @@ public static partial class HttpSignalTestCases
             ],
             RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
                                     .AddSignalHandler<MultiTestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignal2.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload2 = 20 }, ct);
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
             NumOfReceivers = 2,
+        };
+
+        yield return new()
+        {
+            Name = "multiple receivers with parallel publish",
+            TransportType = transportType,
+            ExpectedReceivedSignals =
+            [
+                new TestSignal { Payload = 10 },
+                new TestSignal { Payload = 10 },
+                new TestSignal2 { Payload2 = 20 },
+                new TestSignal { Payload = 30 },
+                new TestSignal { Payload = 30 },
+            ],
+            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
+                                    .AddSignalHandler<MultiTestSignalHandler>(),
+            PublishSignals = async (p, ct) =>
+            {
+                await Task.WhenAll(
+                    CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct),
+                    CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct),
+                    CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct));
+            },
+            RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
+            NumOfReceivers = 2,
+            SignalsArePublishedInParallel = true,
         };
 
         yield return new()
@@ -89,10 +156,10 @@ public static partial class HttpSignalTestCases
             ExpectedReceivedSignals = [],
             ShouldCompleteImmediately = true,
             RegisterHandler = s => s.AddSignalHandler<DisabledTestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<DisabledTestSignalHandler>(r, transportType, ct),
         };
@@ -109,12 +176,12 @@ public static partial class HttpSignalTestCases
                 new TestSignal2 { Payload2 = 21 },
             ],
             RegisterHandler = s => s.AddSignalHandler<MultiTestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignal2.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload2 = 11 }, ct);
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 20 }, ct);
-                await CreatePublisher(p, TestSignal2.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload2 = 21 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 11 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 21 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<MultiTestSignalHandler>(r, transportType, ct),
         };
@@ -125,12 +192,11 @@ public static partial class HttpSignalTestCases
             TransportType = transportType,
             ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
             RegisterHandler = s => s.AddSignalHandler<MixedWithNonHttpTestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
                 await p.For(NonHttpTestSignal.T).Handle(new() { Payload = 11 }, ct);
-
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
                 await p.For(NonHttpTestSignal.T).Handle(new() { Payload = 21 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<MixedWithNonHttpTestSignalHandler>(r, transportType, ct),
@@ -142,14 +208,10 @@ public static partial class HttpSignalTestCases
             TransportType = transportType,
             ExpectedReceivedSignals = [new TestSignalWithCustomEventTypeOrTag { Payload = 10 }, new TestSignalWithCustomEventTypeOrTag { Payload = 20 }],
             RegisterHandler = s => s.AddSignalHandler<TestSignalWithCustomEventTypeOrTagHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithCustomEventTypeOrTag.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignalWithCustomEventTypeOrTag.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomEventTypeOrTag.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomEventTypeOrTag.T, transportType).Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithCustomEventTypeOrTagHandler>(r, transportType, ct),
         };
@@ -160,10 +222,10 @@ public static partial class HttpSignalTestCases
             TransportType = transportType,
             ExpectedReceivedSignals = [new TestSignalWithoutPayload(), new TestSignalWithoutPayload()],
             RegisterHandler = s => s.AddSignalHandler<TestSignalWithoutPayloadHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithoutPayload.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new(), ct);
-                await CreatePublisher(p, TestSignalWithoutPayload.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new(), ct);
+                await CreatePublisher(p, TestSignalWithoutPayload.T, transportType).Handle(new(), ct);
+                await CreatePublisher(p, TestSignalWithoutPayload.T, transportType).Handle(new(), ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithoutPayloadHandler>(r, transportType, ct),
         };
@@ -198,15 +260,10 @@ public static partial class HttpSignalTestCases
                                 .Add(new TestSignalWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
                      });
             },
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithCustomSerializedPayloadType.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = new(10) }, ct);
-
-                await CreatePublisher(p, TestSignalWithCustomSerializedPayloadType.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = new(20) }, ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializedPayloadType.T, transportType).Handle(new() { Payload = new(10) }, ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializedPayloadType.T, transportType).Handle(new() { Payload = new(20) }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithCustomSerializedPayloadTypeHandler>(r, transportType, ct),
         };
@@ -221,15 +278,10 @@ public static partial class HttpSignalTestCases
                 new TestSignalWithCustomSerializer { Payload = 20 },
             ],
             RegisterHandler = s => s.AddSignalHandler<TestSignalWithCustomSerializerHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType).Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithCustomSerializerHandler>(r, transportType, ct),
         };
@@ -244,15 +296,10 @@ public static partial class HttpSignalTestCases
                 new TestSignalWithCustomJsonTypeInfo { MessagePayload = 20 },
             ],
             RegisterHandler = s => s.AddSignalHandler<TestSignalWithCustomJsonTypeInfoHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { MessagePayload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { MessagePayload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType).Handle(new() { MessagePayload = 10 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType).Handle(new() { MessagePayload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithCustomJsonTypeInfoHandler>(r, transportType, ct),
         };
@@ -267,23 +314,21 @@ public static partial class HttpSignalTestCases
                                     .AddSingleton<TestObservations>(),
             RegisterOnServer = s => s.AddTransient<TestSignalMiddleware<TestSignalWithMiddleware>>()
                                      .AddSingleton<TestObservations>(),
-            PublishSignals = async (sp, ct, publishCallback) =>
+            PublishSignals = async (sp, ct) =>
             {
                 await CreatePublisher(sp, TestSignalWithMiddleware.T, transportType)
                       .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>()))
-                      .WithDefaultPublisherPipeline(publishCallback)
                       .Handle(new() { Payload = 10 }, ct);
 
                 await CreatePublisher(sp, TestSignalWithMiddleware.T, transportType)
                       .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>()))
-                      .WithDefaultPublisherPipeline(publishCallback)
                       .Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithMiddlewareHandler>(r, transportType, ct),
 
-            OnReceiveSuccess = host =>
+            AfterSignalsAreReceived = host =>
             {
-                var seenTransportTypeOnServer = host.ResolveOnServer<TestObservations>().SeenTransportTypeInMiddleware;
+                var seenTransportTypeOnServer = host.PublisherHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
                 var isCorrectTransportTypeOnServer = transportType switch
                 {
                     HttpSignalTransportType.Sse => seenTransportTypeOnServer?.IsHttpServerSentEvents(),
@@ -294,16 +339,19 @@ public static partial class HttpSignalTestCases
                 Assert.That(isCorrectTransportTypeOnServer, Is.True, $"transport type is {seenTransportTypeOnServer?.Name}");
                 Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(SignalTransportRole.Publisher));
 
-                var seenTransportTypeOnClient = host.ResolveOnClient<TestObservations>().SeenTransportTypeInMiddleware;
-                var isCorrectTransportTypeOnClient = transportType switch
+                foreach (var receiverHost in host.ReceiverHosts)
                 {
-                    HttpSignalTransportType.Sse => seenTransportTypeOnClient?.IsHttpServerSentEvents(),
-                    HttpSignalTransportType.WebSockets => seenTransportTypeOnClient?.IsHttpWebSockets(),
-                    _ => false,
-                };
+                    var seenTransportTypeOnClient = receiverHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
+                    var isCorrectTransportTypeOnClient = transportType switch
+                    {
+                        HttpSignalTransportType.Sse => seenTransportTypeOnClient?.IsHttpServerSentEvents(),
+                        HttpSignalTransportType.WebSockets => seenTransportTypeOnClient?.IsHttpWebSockets(),
+                        _ => false,
+                    };
 
-                Assert.That(isCorrectTransportTypeOnClient, Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
-                Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(SignalTransportRole.Receiver));
+                    Assert.That(isCorrectTransportTypeOnClient, Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
+                    Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(SignalTransportRole.Receiver));
+                }
 
                 return Task.CompletedTask;
             },
@@ -315,15 +363,10 @@ public static partial class HttpSignalTestCases
             TransportType = transportType,
             ExpectedReceivedSignals = [new TestSignalForAssemblyScanning { Payload = 10 }, new TestSignalForAssemblyScanning { Payload = 20 }],
             RegisterHandler = s => s.AddSignalHandlersFromAssembly(typeof(TestSignalForAssemblyScanning).Assembly),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalForAssemblyScanning.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignalForAssemblyScanning.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalForAssemblyScanning.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignalForAssemblyScanning.T, transportType).Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalForAssemblyScanningHandler>(r, transportType, ct),
         };
@@ -344,15 +387,10 @@ public static partial class HttpSignalTestCases
                 new TestSignalWithDelegateHandler { Payload = 20 },
             ],
             RegisterHandler = s => AddDelegateHandlers(s, TestSignalWithDelegateHandler.T, transportType),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithDelegateHandler.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignalWithDelegateHandler.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithDelegateHandler.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignalWithDelegateHandler.T, transportType).Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
             NumOfReceivers = 4,
@@ -371,21 +409,13 @@ public static partial class HttpSignalTestCases
                 new TestSignal { Payload = 40 },
             ],
             RegisterHandler = s => s.AddSignalHandler<WildMixTestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignalWithoutPayload.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new(), ct);
-
-                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 20 }, ct);
-
-                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { MessagePayload = 30 }, ct);
-
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 40 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignalWithoutPayload.T, transportType).Handle(new(), ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType).Handle(new() { MessagePayload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 40 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<WildMixTestSignalHandler>(r, transportType, ct),
         };
@@ -415,21 +445,13 @@ public static partial class HttpSignalTestCases
                 new TestSignalSub(40, 41),
             ],
             RegisterHandler = s => s.AddSignalHandler<MultiHierarchyTestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalBase.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new(1), ct);
-
-                await CreatePublisher(p, TestSignalBase.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new TestSignalSub(10, 11), ct);
-
-                await CreatePublisher(p, TestSignalBase.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new TestSignalSubSub(20, 21, 22), ct);
-
-                await CreatePublisher(p, TestSignalSub.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new(30, 31), ct);
-
-                await CreatePublisher(p, TestSignalSub.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new TestSignalSubSub(40, 41, 42), ct);
+                await CreatePublisher(p, TestSignalBase.T, transportType).Handle(new(1), ct);
+                await CreatePublisher(p, TestSignalBase.T, transportType).Handle(new TestSignalSub(10, 11), ct);
+                await CreatePublisher(p, TestSignalBase.T, transportType).Handle(new TestSignalSubSub(20, 21, 22), ct);
+                await CreatePublisher(p, TestSignalSub.T, transportType).Handle(new(30, 31), ct);
+                await CreatePublisher(p, TestSignalSub.T, transportType).Handle(new TestSignalSubSub(40, 41, 42), ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<MultiHierarchyTestSignalHandler>(r, transportType, ct),
         };
@@ -443,10 +465,10 @@ public static partial class HttpSignalTestCases
             TransportType = transportType,
             ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
             RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
         };
@@ -465,11 +487,11 @@ public static partial class HttpSignalTestCases
             ],
             RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
                                     .AddSignalHandler<MultiTestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignal2.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload2 = 20 }, ct);
-                await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
             NumOfReceivers = 2,
@@ -489,7 +511,7 @@ public static partial class HttpSignalTestCases
             ExpectedInitialConnectionCount = 0,
             HandlerExceptions = [],
             RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
-            PublishSignals = (_, _, _) => Task.CompletedTask,
+            PublishSignals = (_, _) => Task.CompletedTask,
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
         };
 
@@ -504,7 +526,7 @@ public static partial class HttpSignalTestCases
             ExpectedInitialConnectionCount = 0,
             NumOfReceivers = 2,
             HandlerExceptions = [],
-            PublishSignals = (_, _, _) => Task.CompletedTask,
+            PublishSignals = (_, _) => Task.CompletedTask,
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
                                     .AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
@@ -524,15 +546,10 @@ public static partial class HttpSignalTestCases
             ConnectionResponses = [],
             ExpectedInitialConnectionCount = 1,
             HandlerExceptions = [],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
             RunReceivers = (r, ct) => RunReceiverForTransport<ThrowingTestSignalHandler>(r, transportType, ct),
@@ -556,21 +573,14 @@ public static partial class HttpSignalTestCases
             ExpectedInitialConnectionCount = 2,
             NumOfReceivers = 2,
             HandlerExceptions = [],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
 
                 await Task.Delay(10, ct);
 
-                await CreatePublisher(p, TestSignal2.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload2 = 20 }, ct);
-
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
                                     .AddSignalHandler<ThrowingTestSignalHandler2>(),
@@ -587,7 +597,7 @@ public static partial class HttpSignalTestCases
             ConnectionResponses = [(StatusCodes.Status400BadRequest, ContentTypes.TextPlain, KeepAlive: false)],
             ExpectedInitialConnectionCount = 1,
             HandlerExceptions = [],
-            PublishSignals = (_, _, _) => Task.CompletedTask,
+            PublishSignals = (_, _) => Task.CompletedTask,
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
             RunReceivers = (r, ct) => RunReceiverForTransport<ThrowingTestSignalHandler>(r, transportType, ct),
         };
@@ -607,7 +617,7 @@ public static partial class HttpSignalTestCases
             ExpectedInitialConnectionCount = 2,
             NumOfReceivers = 2,
             HandlerExceptions = [],
-            PublishSignals = (_, _, _) => Task.CompletedTask,
+            PublishSignals = (_, _) => Task.CompletedTask,
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
                                     .AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
@@ -628,7 +638,7 @@ public static partial class HttpSignalTestCases
             ExpectedInitialConnectionCount = 2,
             NumOfReceivers = 2,
             HandlerExceptions = [],
-            PublishSignals = (_, _, _) => Task.CompletedTask,
+            PublishSignals = (_, _) => Task.CompletedTask,
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
                                     .AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
@@ -648,19 +658,11 @@ public static partial class HttpSignalTestCases
             ConnectionResponses = [(StatusCodes.Status500InternalServerError, ContentTypes.TextPlain, KeepAlive: true)],
             ExpectedInitialConnectionCount = 2,
             HandlerExceptions = [],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignal2.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload2 = 20 }, ct);
-
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
             RunReceivers = (r, ct) => RunReceiverForTransport<ThrowingTestSignalHandler>(r, transportType, ct),
@@ -684,19 +686,11 @@ public static partial class HttpSignalTestCases
             ],
             ExpectedInitialConnectionCount = 3,
             HandlerExceptions = [],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignal2.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload2 = 20 }, ct);
-
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
             RunReceivers = (r, ct) => RunReceiverForTransport<ThrowingTestSignalHandler>(r, transportType, ct),
@@ -724,19 +718,11 @@ public static partial class HttpSignalTestCases
             ExpectedInitialConnectionCount = 4,
             NumOfReceivers = 2,
             HandlerExceptions = [],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignal2.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload2 = 20 }, ct);
-
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
                                     .AddSignalHandler<ThrowingTestSignalHandler2>(),
@@ -765,19 +751,11 @@ public static partial class HttpSignalTestCases
             ExpectedInitialConnectionCount = 3,
             NumOfReceivers = 2,
             HandlerExceptions = [],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
-
-                await CreatePublisher(p, TestSignal2.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload2 = 20 }, ct);
-
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
                                     .AddSignalHandler<ThrowingTestSignalHandler2>(),
@@ -802,29 +780,21 @@ public static partial class HttpSignalTestCases
                 null,
                 new InvalidOperationException("handler exception"),
             ],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
 
                 await Task.Delay(10, ct);
 
-                await CreatePublisher(p, TestSignal2.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
 
                 await Task.Delay(10, ct);
 
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
 
                 await Task.Delay(10, ct);
 
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 40 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 40 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
             RunReceivers = (r, ct) => RunReceiverForTransport<ThrowingTestSignalHandler>(r, transportType, ct),
@@ -855,29 +825,21 @@ public static partial class HttpSignalTestCases
                 new InvalidOperationException("handler exception 1"),
                 new InvalidOperationException("handler exception 2"),
             ],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
 
                 await Task.Delay(10, ct);
 
-                await CreatePublisher(p, TestSignal2.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
 
                 await Task.Delay(10, ct);
 
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
 
                 await Task.Delay(10, ct);
 
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 40 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 40 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
                                     .AddSignalHandler<ThrowingTestSignalHandler2>(),
@@ -913,30 +875,22 @@ public static partial class HttpSignalTestCases
                 // before the second handler has a chance to run
                 new InvalidOperationException("handler exception"), // on test signal 3 handler 2
             ],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
 
                 await Task.Delay(10, ct);
 
-                await CreatePublisher(p, TestSignal2.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload2 = 20 }, ct);
+                await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
 
                 await Task.Delay(10, ct);
 
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 30 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
 
                 // give client time to disconnect due to handler failure
                 await Task.Delay(50, ct);
 
-                await CreatePublisher(p, TestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new() { Payload = 40 }, ct);
+                await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 40 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
                                     .AddSignalHandler<ThrowingTestSignalHandler2>(),
@@ -954,11 +908,9 @@ public static partial class HttpSignalTestCases
             ExpectedInitialConnectionCount = 1,
             HandlerExceptions = [],
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, ThrowingTestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new(), ct);
+                await CreatePublisher(p, ThrowingTestSignal.T, transportType).Handle(new(), ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<ThrowingTestSignalHandler>(r, transportType, ct),
         };
@@ -974,11 +926,9 @@ public static partial class HttpSignalTestCases
             ExpectedInitialConnectionCount = 2,
             NumOfReceivers = 2,
             HandlerExceptions = [],
-            PublishSignals = async (p, ct, publishCallback) =>
+            PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, ThrowingTestSignal.T, transportType)
-                      .WithDefaultPublisherPipeline(publishCallback)
-                      .Handle(new(), ct);
+                await CreatePublisher(p, ThrowingTestSignal.T, transportType).Handle(new(), ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
                                     .AddSignalHandler<ThrowingTestSignalHandler2>(),
@@ -998,7 +948,7 @@ public static partial class HttpSignalTestCases
             ConnectionResponses = [(StatusCodes.Status503ServiceUnavailable, ContentTypes.TextPlain, KeepAlive: false)],
             ExpectedInitialConnectionCount = 2,
             HandlerExceptions = [],
-            PublishSignals = (_, _, _) => Task.CompletedTask,
+            PublishSignals = (_, _) => Task.CompletedTask,
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
             RunReceivers = (r, ct) => RunReceiverForTransport<ThrowingTestSignalHandler>(r, transportType, ct),
         };
@@ -1020,10 +970,10 @@ public static partial class HttpSignalTestCases
                 HasDownstreamData = hasDownstream,
                 HasBidirectionalData = hasBidirectional,
                 RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
-                PublishSignals = async (p, ct, publishCallback) =>
+                PublishSignals = async (p, ct) =>
                 {
-                    await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-                    await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 20 }, ct);
+                    await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                    await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
                 },
                 RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
             };
@@ -1038,11 +988,11 @@ public static partial class HttpSignalTestCases
                 HasBidirectionalData = hasBidirectional,
                 RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
                                         .AddSignalHandler<MultiTestSignalHandler>(),
-                PublishSignals = async (p, ct, publishCallback) =>
+                PublishSignals = async (p, ct) =>
                 {
-                    await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 10 }, ct);
-                    await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 20 }, ct);
-                    await CreatePublisher(p, TestSignal.T, transportType).WithDefaultPublisherPipeline(publishCallback).Handle(new() { Payload = 30 }, ct);
+                    await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
+                    await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
+                    await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
                 },
                 RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
                 NumOfReceivers = 2,
@@ -1059,8 +1009,8 @@ public static partial class HttpSignalTestCases
     {
         return transportType switch
         {
-            HttpSignalTransportType.Sse => publishers.For(signalTypes).WithTransport(b => b.UseHttpServerSentEvents()),
-            HttpSignalTransportType.WebSockets => publishers.For(signalTypes).WithTransport(b => b.UseHttpWebSockets()),
+            HttpSignalTransportType.Sse => publishers.For(signalTypes).WithTransport(b => b.UseHttpServerSentEvents()).WithDefaultPublisherPipeline(),
+            HttpSignalTransportType.WebSockets => publishers.For(signalTypes).WithTransport(b => b.UseHttpWebSockets()).WithDefaultPublisherPipeline(),
             _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, null),
         };
     }
@@ -1728,10 +1678,11 @@ public static partial class HttpSignalTestCases
 file static class PipelineExtensions
 {
     public static ISignalPipeline<TSignal> UsePublishCallback<TSignal>(
-        this ISignalPipeline<TSignal> pipeline,
-        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback)
+        this ISignalPipeline<TSignal> pipeline)
         where TSignal : class, ISignal<TSignal>
     {
+        var publishCallback = pipeline.ServiceProvider.GetService<Func<object, ConquerorContext, CancellationToken, Task>>();
+
         if (publishCallback is null)
         {
             return pipeline;
@@ -1771,11 +1722,10 @@ file static class PipelineExtensions
     }
 
     public static TIHandler WithDefaultPublisherPipeline<TSignal, TIHandler>(
-        this ISignalHandler<TSignal, TIHandler> handler,
-        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback)
+        this ISignalHandler<TSignal, TIHandler> handler)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return handler.WithPipeline(p => _ = p.UseLogging().UsePublishCallback(publishCallback));
+        return handler.WithPipeline(p => _ = p.UseLogging().UsePublishCallback());
     }
 }

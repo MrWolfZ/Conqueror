@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Repositories;
@@ -8,11 +7,9 @@ using Microsoft.Extensions.Hosting;
 
 namespace Conqueror.Transport.Http.Tests;
 
-public sealed class HttpTransportTestHost
+public sealed class HttpTransportTestWebHost : IAsyncDisposable
 {
-    private static readonly bool IsRunningInGithubActionField = Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
-
-    private HttpTransportTestHost()
+    private HttpTransportTestWebHost()
     {
     }
 
@@ -20,24 +17,9 @@ public sealed class HttpTransportTestHost
 
     public required IHost Host { get; init; }
 
-    public required TimeSpan TestTimeout { get; init; }
-
-    public TimeSpan AssertionTimeout => TimeSpan.FromMilliseconds(AssertionTimeoutInMs);
-
-    public required int AssertionTimeoutInMs { get; init; }
-
-    public required TimeSpan ShortDelay { get; init; }
-
-    public CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
-
-    private CancellationTokenSource TimeoutCancellationTokenSource { get; } = new();
-
-    public bool IsRunningInGithubAction => IsRunningInGithubActionField;
-
-    public static async Task<HttpTransportTestHost> Create(
+    public static async Task<HttpTransportTestWebHost> Create(
         Action<IServiceCollection>? configureServices = null,
-        Action<IApplicationBuilder>? configure = null,
-        TimeSpan? testTimeout = null)
+        Action<IApplicationBuilder>? configure = null)
     {
         var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddTestLogger()
                                                                                .SetMinimumLevel(LogLevel.Trace)
@@ -66,25 +48,11 @@ public sealed class HttpTransportTestHost
         var host = await hostBuilder.StartAsync();
         var client = host.GetTestClient();
 
-        client.BaseAddress = new("http://conqueror.test/");
-
-        var assertionTimeout = Debugger.IsAttached
-            ? TimeSpan.FromMinutes(1)
-            : TimeSpan.FromMilliseconds(IsRunningInGithubActionField ? 10_000 : 1_000);
-
-        var testHost = new HttpTransportTestHost
+        var testHost = new HttpTransportTestWebHost
         {
             HttpClient = client,
             Host = host,
-            TestTimeout = testTimeout ?? TimeSpan.FromSeconds(IsRunningInGithubActionField ? 30 : 3),
-            AssertionTimeoutInMs = (int)assertionTimeout.TotalMilliseconds,
-            ShortDelay = TimeSpan.FromMilliseconds(IsRunningInGithubActionField ? 1_000 : 100),
         };
-
-        if (!Debugger.IsAttached)
-        {
-            testHost.TimeoutCancellationTokenSource.CancelAfter(testHost.TestTimeout);
-        }
 
         return testHost;
     }
@@ -94,7 +62,6 @@ public sealed class HttpTransportTestHost
 
     public async ValueTask DisposeAsync()
     {
-        await CastAndDispose(TimeoutCancellationTokenSource);
         await CastAndDispose(HttpClient);
         await CastAndDispose(Host);
 
@@ -111,7 +78,10 @@ public sealed class HttpTransportTestHost
         }
     }
 
-    public async Task<WebSocket> ConnectToWebSocket(Uri address, Action<IHeaderDictionary>? configureHeaders = null)
+    public async Task<WebSocket> ConnectToWebSocket(
+        Uri address,
+        CancellationToken cancellationToken,
+        Action<IHeaderDictionary>? configureHeaders = null)
     {
         var webSocketClient = Host.GetTestServer().CreateWebSocketClient();
 
@@ -122,7 +92,7 @@ public sealed class HttpTransportTestHost
 
         try
         {
-            return await webSocketClient.ConnectAsync(address, TestTimeoutToken);
+            return await webSocketClient.ConnectAsync(address, cancellationToken);
         }
         finally
         {

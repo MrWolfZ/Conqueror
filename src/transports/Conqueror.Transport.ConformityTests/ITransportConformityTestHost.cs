@@ -8,6 +8,8 @@ public interface ITransportConformityTestHost : IAsyncDisposable
 
     TimeSpan AssertionTimeout { get; }
 
+    TimeSpan ShortDelay { get; }
+
     int AssertionTimeoutInMs { get; }
 
     ILogger Logger { get; }

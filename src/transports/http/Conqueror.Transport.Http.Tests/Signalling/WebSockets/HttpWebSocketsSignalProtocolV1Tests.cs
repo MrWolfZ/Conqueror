@@ -3,7 +3,7 @@
 namespace Conqueror.Transport.Http.Tests.Signalling.WebSockets;
 
 [TestFixture]
-public sealed class HttpWebSocketSignalProtocolV1Tests
+public sealed class HttpWebSocketsSignalProtocolV1Tests
 {
     private const string Tag = "testTag";
 
@@ -19,7 +19,7 @@ public sealed class HttpWebSocketSignalProtocolV1Tests
     {
         await using var ms = new FlushResetMemoryStream();
 
-        await HttpWebSocketSignalProtocolV1.Write(
+        await HttpWebSocketsSignalProtocolV1.Write(
             ms,
             Tag,
             contextData,
@@ -28,7 +28,7 @@ public sealed class HttpWebSocketSignalProtocolV1Tests
 
         Assert.That(ms.Position, Is.EqualTo(0));
 
-        var (signal, cData) = await HttpWebSocketSignalProtocolV1.Read(
+        var (signal, cData) = await HttpWebSocketsSignalProtocolV1.Read(
             ms,
             async (tag, s, ct) =>
             {
@@ -56,7 +56,7 @@ public sealed class HttpWebSocketSignalProtocolV1Tests
         await ms.FlushAsync();
 
         await Assert.ThatAsync(
-            () => HttpWebSocketSignalProtocolV1.Read(
+            () => HttpWebSocketsSignalProtocolV1.Read(
                 ms,
                 (_, _, _) =>
                 {
@@ -78,7 +78,7 @@ public sealed class HttpWebSocketSignalProtocolV1Tests
         await ms.FlushAsync();
 
         await Assert.ThatAsync(
-            () => HttpWebSocketSignalProtocolV1.Read(
+            () => HttpWebSocketsSignalProtocolV1.Read(
                 ms,
                 (_, _, _) =>
                 {

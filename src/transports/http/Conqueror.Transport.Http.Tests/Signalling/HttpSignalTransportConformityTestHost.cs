@@ -1,213 +1,111 @@
 ﻿namespace Conqueror.Transport.Http.Tests.Signalling;
 
-public sealed class HttpSignalTransportConformityTestHost : ISignalTransportConformityTestHost<HttpSignalTransportConformityTestHost>
+public sealed class HttpSignalTransportConformityTestHost : ISignalTransportConformityTestHost
 {
-    private readonly CancellationTokenSource serverCts = new();
+    public static readonly Uri SseAddress = new("http://conqueror.test/api/signals/sse");
+    public static readonly Uri WebSocketsAddress = new("ws://localhost/api/signals/ws");
 
-    private int serverCallCount;
-    private CancellationToken? serverCancellationToken;
-    private int serverResponseHasBegunCount;
-    private int serverResponseHasFinishedCount;
+    private readonly List<HttpSignalTransportConformityReceiverTestHost> receiverHosts = [];
 
-    private HttpSignalTransportConformityTestHost()
+    private readonly ServiceProvider serviceProvider = new ServiceCollection().AddLogging(l => l.AddTestLogger().SetMinimumLevel(LogLevel.Trace))
+                                                                              .BuildServiceProvider();
+
+    private readonly HttpTransportTestTimeouts timeouts = HttpTransportTestTimeouts.Create();
+    private HttpSignalTransportConformityPublisherTestHost? publisherHost;
+
+    private HttpSignalTransportConformityTestHost(HttpSignalConformityTestCase testCase)
     {
+        TestCase = testCase;
     }
 
-    private HttpTransportTestHost HttpTransportTestHost { get; set; } = null!;
+    private HttpSignalConformityTestCase TestCase { get; }
 
-    private ServiceProvider ClientServiceProvider { get; set; } = null!;
+    public HttpSignalTransportConformityPublisherTestHost PublisherHost => publisherHost ?? throw new InvalidOperationException("publisher host not created");
 
-    public HttpClient HttpClient => HttpTransportTestHost.HttpClient;
+    public IReadOnlyCollection<HttpSignalTransportConformityReceiverTestHost> ReceiverHosts => receiverHosts;
 
-    public CancellationToken TestTimeoutToken => HttpTransportTestHost.TestTimeoutToken;
+    public CancellationToken TestTimeoutToken => timeouts.TestTimeoutToken;
 
-    public TimeSpan AssertionTimeout => HttpTransportTestHost.AssertionTimeout;
+    public TimeSpan AssertionTimeout => timeouts.AssertionTimeout;
 
-    public int AssertionTimeoutInMs => HttpTransportTestHost.AssertionTimeoutInMs;
+    public TimeSpan ShortDelay => timeouts.ShortDelay;
 
-    public ILogger Logger => HttpTransportTestHost.Resolve<ILogger<HttpSignalTransportConformityTestHost>>();
+    public int AssertionTimeoutInMs => timeouts.AssertionTimeoutInMs;
 
-    public ISignalReceivers SignalReceivers => ClientServiceProvider.GetRequiredService<ISignalReceivers>();
+    public ILogger Logger => serviceProvider.GetRequiredService<ILogger<HttpSignalTransportConformityTestHost>>();
 
-    public ISignalPublishers SignalPublishers => HttpTransportTestHost.Resolve<ISignalPublishers>();
+    public List<(int StatusCode, string ContentType, bool KeepAlive)?> ServerConnectionResponses { get; } = [];
 
-    public IConquerorContextAccessor PublisherConquerorContextAccessor => HttpTransportTestHost.Resolve<IConquerorContextAccessor>();
+    public ConcurrentQueue<Exception?> ReceiverConfigurationExceptions { get; } = new();
 
-    public int ServerCallCount => serverCallCount;
-
-    public int ServerResponseHasBegunCount
-    {
-        get => serverResponseHasBegunCount;
-        set => serverResponseHasBegunCount = value;
-    }
-
-    public int ServerResponseHasFinishedCount => serverResponseHasFinishedCount;
-
-    public Queue<Exception?> ReceiverConfigurationExceptions { get; } = new();
-
-    public IHeaderDictionary? ReceivedHeadersOnServer { get; private set; }
-
-    public ConcurrentQueue<(int StatusCode, string ContentType, bool KeepAlive)?> ServerConnectionResponses { get; } = [];
-
-    public static async Task<HttpSignalTransportConformityTestHost> Create(
-        HttpSignalConformityTestCase testCase,
-        Action<IApplicationBuilder> configure)
-    {
-        var host = new HttpSignalTransportConformityTestHost();
-
-        host.HttpTransportTestHost = await HttpTransportTestHost.Create(
-            services =>
-            {
-                testCase.RegisterOnServer?.Invoke(services);
-
-                _ = services.AddConquerorHttpServerAspNetCore()
-                            .AddRouting()
-                            .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<HttpSignalTransportConformityTestHost>>());
-
-                testCase.RegisterServerServices(services);
-            },
-            app =>
-            {
-                _ = app.Use(async (ctx, next) =>
-                       {
-                           _ = Interlocked.Increment(ref host.serverCallCount);
-                           host.ReceivedHeadersOnServer = ctx.Request.Headers;
-
-                           ctx.Response.OnStarting(() =>
-                           {
-                               ctx.RequestServices
-                                  .GetRequiredService<ILogger>()
-                                  .LogTrace("server response has begun");
-
-                               _ = Interlocked.Increment(ref host.serverResponseHasBegunCount);
-
-                               return Task.CompletedTask;
-                           });
-
-                           try
-                           {
-                               await next();
-                           }
-                           finally
-                           {
-                               _ = Interlocked.Increment(ref host.serverResponseHasFinishedCount);
-                           }
-                       })
-                       .Use(async (ctx, next) =>
-                       {
-                           try
-                           {
-                               await next();
-                           }
-                           catch (Exception ex)
-                           {
-                               ctx.RequestServices.GetRequiredService<ILogger>()
-                                  .LogError(ex, "exception in request pipeline");
-
-                               if (ctx.Response.HasStarted)
-                               {
-                                   return;
-                               }
-
-                               ctx.Response.StatusCode = 500;
-                               await ctx.Response.WriteAsync($"internal server error\n{ex}");
-                           }
-                       })
-                       .Use(async (ctx, next) =>
-                       {
-                           if (host.serverCancellationToken is null)
-                           {
-                               await next();
-
-                               return;
-                           }
-
-                           var logger = ctx.RequestServices.GetRequiredService<ILogger>();
-
-                           using var cts = CancellationTokenSource.CreateLinkedTokenSource(
-                               ctx.RequestAborted,
-                               host.serverCancellationToken.Value);
-
-                           ctx.RequestAborted = cts.Token;
-
-                           ctx.RequestAborted.ThrowIfCancellationRequested();
-
-                           await using var d = ctx.RequestAborted.Register(static l => ((ILogger)l!).LogInformation("request aborted"), logger);
-
-                           await next();
-                       })
-                       .Use(async (ctx, next) =>
-                       {
-                           if (host.ServerConnectionResponses.TryDequeue(out var res) && res.HasValue)
-                           {
-                               ctx.Response.ContentType = res.Value.ContentType;
-                               ctx.Response.StatusCode = res.Value.StatusCode;
-                               await ctx.Response.Body.FlushAsync(ctx.RequestAborted);
-
-                               if (res.Value.KeepAlive)
-                               {
-                                   try
-                                   {
-                                       await Task.Delay(TimeSpan.FromMinutes(1), ctx.RequestAborted);
-                                   }
-                                   catch (OperationCanceledException)
-                                   {
-                                       // nothing to do
-                                   }
-                               }
-
-                               return;
-                           }
-
-                           await next();
-                       });
-
-                configure(app);
-            });
-
-        var services = new ServiceCollection()
-                       .AddConquerorHttpClient()
-                       .AddSingleton<Action<IHttpSseSignalReceiver>>(p => testCase.ConfigureSseReceiver(host, p))
-                       .AddSingleton<Action<IHttpWebSocketsSignalReceiver>>(p => testCase.ConfigureWebSocketsReceiver(host, p))
-                       .AddSingleton(host)
-                       .AddSingleton(host.Logger)
-                       .AddTransient(typeof(HttpSignalTestCases.TestSignalMiddleware<>));
-
-        testCase.RegisterHandler(services);
-
-        testCase.RegisterClientServices(services);
-
-        host.ClientServiceProvider = services.BuildServiceProvider();
-
-        host.serverCancellationToken = host.serverCts.Token;
-
-        return host;
-    }
-
-    public T ResolveOnServer<T>()
-        where T : notnull
-        => HttpTransportTestHost.Resolve<T>();
-
-    public T ResolveOnClient<T>()
-        where T : notnull
-        => ClientServiceProvider.GetRequiredService<T>();
+    public static HttpSignalTransportConformityTestHost Create(HttpSignalConformityTestCase testCase) => new(testCase);
 
     public Task<WebSocket> ConnectToWebSocket(Uri address, Action<IHeaderDictionary>? configureHeaders = null)
-        => HttpTransportTestHost.ConnectToWebSocket(address, configureHeaders);
+        => PublisherHost.ConnectToWebSocket(address, configureHeaders);
 
-    public async Task TriggerReconnect()
+    public Task TriggerReconnect() => PublisherHost.TriggerReconnect();
+
+    public Task<HttpSignalTransportConformityReceiverTestHost> CreateReceiverTestHost(
+        CancellationToken cancellationToken,
+        Func<object, ConquerorContext, CancellationToken, Task>? signalCallback = null,
+        Func<CancellationToken, Task>? reconnectDelayCallback = null)
     {
-        ServerResponseHasBegunCount = 0;
-        serverCancellationToken = null;
+        var receiverHost = HttpSignalTransportConformityReceiverTestHost.CreateReceiverHost(
+            this,
+            TestCase,
+            signalCallback,
+            reconnectDelayCallback,
+            h => receiverHosts.Remove(h),
+            cancellationToken);
 
-        // this should trigger reconnections
-        await serverCts.CancelAsync();
+        receiverHosts.Add(receiverHost);
+
+        return Task.FromResult(receiverHost);
     }
+
+    public async Task<HttpSignalTransportConformityPublisherTestHost> CreatePublisherTestHost(
+        CancellationToken cancellationToken,
+        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback = null)
+    {
+        if (publisherHost is not null)
+        {
+            throw new InvalidOperationException("publisher host already created");
+        }
+
+        publisherHost = await HttpSignalTransportConformityPublisherTestHost.CreatePublisherHost(TestCase, publishCallback);
+
+        foreach (var response in ServerConnectionResponses)
+        {
+            publisherHost.ServerConnectionResponses.Enqueue(response);
+        }
+
+        return publisherHost;
+    }
+
+    async Task<ISignalTransportConformityReceiverTestHost> ISignalTransportConformityTestHost.CreateReceiverTestHost(
+        CancellationToken cancellationToken,
+        Func<object, ConquerorContext, CancellationToken, Task>? signalCallback)
+        => await CreateReceiverTestHost(cancellationToken, signalCallback);
+
+    async Task<ISignalTransportConformityPublisherTestHost> ISignalTransportConformityTestHost.CreatePublisherTestHost(
+        CancellationToken cancellationToken,
+        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback)
+        => await CreatePublisherTestHost(cancellationToken, publishCallback);
 
     public async ValueTask DisposeAsync()
     {
-        serverCts.Dispose();
-        await ClientServiceProvider.DisposeAsync();
-        await HttpTransportTestHost.DisposeAsync();
+        timeouts.Dispose();
+
+        await serviceProvider.DisposeAsync();
+
+        foreach (var receiverHost in receiverHosts)
+        {
+            await receiverHost.DisposeAsync();
+        }
+
+        if (publisherHost != null)
+        {
+            await publisherHost.DisposeAsync();
+        }
     }
 }

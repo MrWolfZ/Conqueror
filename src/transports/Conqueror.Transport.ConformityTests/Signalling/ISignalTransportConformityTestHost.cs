@@ -1,11 +1,24 @@
 ﻿namespace Conqueror.Transport.ConformityTests.Signalling;
 
-public interface ISignalTransportConformityTestHost<TTestHost> : ITransportConformityTestHost
-    where TTestHost : ISignalTransportConformityTestHost<TTestHost>
+public interface ISignalTransportConformityTestHost : ITransportConformityTestHost
 {
-    ISignalReceivers SignalReceivers { get; }
+    Task<ISignalTransportConformityReceiverTestHost> CreateReceiverTestHost(
+        CancellationToken cancellationToken,
+        Func<object, ConquerorContext, CancellationToken, Task>? signalCallback = null);
 
+    Task<ISignalTransportConformityPublisherTestHost> CreatePublisherTestHost(
+        CancellationToken cancellationToken,
+        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback = null);
+}
+
+public interface ISignalTransportConformityPublisherTestHost : IAsyncDisposable
+{
     ISignalPublishers SignalPublishers { get; }
 
-    IConquerorContextAccessor PublisherConquerorContextAccessor { get; }
+    IConquerorContextAccessor ConquerorContextAccessor { get; }
+}
+
+public interface ISignalTransportConformityReceiverTestHost : IAsyncDisposable
+{
+    ReceiverExecutionHandle? ReceiverExecutionHandle { get; }
 }

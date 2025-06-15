@@ -1,9 +1,9 @@
 namespace Conqueror.Transport.Http.Tests.Signalling.WebSockets;
 
 [TestFixture]
-public sealed class HttpWebSocketsExecutionConformityTests
+public sealed class HttpWebSocketsSignalExecutionConformityTests
     : SignalTransportExecutionConformityTests<
-          HttpWebSocketsExecutionConformityTests,
+          HttpWebSocketsSignalExecutionConformityTests,
           HttpSignalTransportConformityTestHost,
           HttpSignalConformityExecutionSuccessTestCase,
           HttpSignalConformityExecutionErrorTestCase>,
@@ -12,6 +12,10 @@ public sealed class HttpWebSocketsExecutionConformityTests
           HttpSignalConformityExecutionSuccessTestCase,
           HttpSignalConformityExecutionErrorTestCase>
 {
+    public static bool TransportBuffersSignalsDuringReceiverDowntime => false;
+
+    public static bool TransportSupportsReconnectingReceivers => true;
+
     public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
         => HttpSignalTestCases.CreateSuccessTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
 
@@ -20,7 +24,4 @@ public sealed class HttpWebSocketsExecutionConformityTests
 
     public static IEnumerable<HttpSignalConformityExecutionErrorTestCase> CreateErrorTestCases()
         => HttpSignalTestCases.CreateErrorTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
-
-    public static IEnumerable<HttpSignalConformityExecutionErrorTestCase> CreateReconnectDelayTestCases()
-        => HttpSignalTestCases.CreateReconnectDelayTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
 }

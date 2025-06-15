@@ -5,11 +5,11 @@ public sealed class HttpSignalConformityContextTestCase : HttpSignalConformityTe
 {
     public HttpSignalConformityContextTestCase()
     {
-        OnConnectionSuccess = (host, numOfRuns) =>
+        BeforePublish = host =>
         {
-            Assert.That(host.ServerResponseHasBegunCount, Is.EqualTo(NumOfReceivers * numOfRuns));
+            Assert.That(host.PublisherHost.ServerResponseHasBegunCount, Is.EqualTo(NumOfReceivers * host.ReceiverHosts.Count));
 
-            host.ServerResponseHasBegunCount = 0;
+            host.PublisherHost.ServerResponseHasBegunCount = 0;
 
             return Task.CompletedTask;
         };
@@ -23,10 +23,9 @@ public sealed class HttpSignalConformityContextTestCase : HttpSignalConformityTe
 
     public required bool HasBidirectionalData { get; init; }
 
-    public Func<HttpSignalTransportConformityTestHost, int, Task> OnConnectionSuccess { get; init; }
+    public Func<HttpSignalTransportConformityTestHost, Task> BeforePublish { get; init; }
 
-    Task ISignalTransportConformityContextTestCase<HttpSignalTransportConformityTestHost>.OnConnectionSuccess(
-        HttpSignalTransportConformityTestHost testHost,
-        int numOfRuns)
-        => OnConnectionSuccess(testHost, numOfRuns);
+    Task ISignalTransportConformityContextTestCase<HttpSignalTransportConformityTestHost>.BeforePublish(
+        HttpSignalTransportConformityTestHost testHost)
+        => BeforePublish(testHost);
 }

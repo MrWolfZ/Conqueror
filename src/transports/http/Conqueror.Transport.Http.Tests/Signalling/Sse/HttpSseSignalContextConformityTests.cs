@@ -1,9 +1,9 @@
-namespace Conqueror.Transport.Http.Tests.Signalling.WebSockets;
+namespace Conqueror.Transport.Http.Tests.Signalling.Sse;
 
 [TestFixture]
-public sealed class HttpWebSocketsContextConformityTests
+public sealed class HttpSseSignalContextConformityTests
     : SignalTransportContextConformityTests<
-          HttpWebSocketsContextConformityTests,
+          HttpSseSignalContextConformityTests,
           HttpSignalTransportConformityTestHost,
           HttpSignalConformityContextTestCase>,
       ISignalTransportContextConformityTests<
@@ -11,5 +11,5 @@ public sealed class HttpWebSocketsContextConformityTests
           HttpSignalConformityContextTestCase>
 {
     public static IEnumerable<HttpSignalConformityContextTestCase> CreateTestCases()
-        => HttpSignalTestCases.CreateContextTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
+        => HttpSignalTestCases.CreateContextTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.Sse);
 }

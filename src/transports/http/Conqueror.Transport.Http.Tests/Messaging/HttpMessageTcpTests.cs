@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
+using static Conqueror.Transport.Http.Tests.Messaging.HttpMessageTestCases;
 
 namespace Conqueror.Transport.Http.Tests.Messaging;
 

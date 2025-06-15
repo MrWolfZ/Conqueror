@@ -3,9 +3,9 @@ using static Conqueror.Transport.Http.Tests.Signalling.HttpSignalTestCases;
 namespace Conqueror.Transport.Http.Tests.Signalling.Sse;
 
 [TestFixture]
-public sealed class HttpSseExecutionConformityTests
+public sealed class HttpSseSignalExecutionConformityTests
     : SignalTransportExecutionConformityTests<
-          HttpSseExecutionConformityTests,
+          HttpSseSignalExecutionConformityTests,
           HttpSignalTransportConformityTestHost,
           HttpSignalConformityExecutionSuccessTestCase,
           HttpSignalConformityExecutionErrorTestCase>,
@@ -14,6 +14,10 @@ public sealed class HttpSseExecutionConformityTests
           HttpSignalConformityExecutionSuccessTestCase,
           HttpSignalConformityExecutionErrorTestCase>
 {
+    public static bool TransportBuffersSignalsDuringReceiverDowntime => false;
+
+    public static bool TransportSupportsReconnectingReceivers => true;
+
     public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
         => HttpSignalTestCases.CreateSuccessTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.Sse);
 
@@ -36,7 +40,7 @@ public sealed class HttpSseExecutionConformityTests
                                       ExpectedInitialConnectionCount = 1,
                                       HandlerExceptions = [],
                                       RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
-                                      PublishSignals = (_, _, _) => Task.CompletedTask,
+                                      PublishSignals = (_, _) => Task.CompletedTask,
                                       RunReceivers = (r, ct) => r.RunHttpSseSignalReceiver<TestSignalHandler>(ct),
                                   },
                                   new()
@@ -56,11 +60,8 @@ public sealed class HttpSseExecutionConformityTests
                                       HandlerExceptions = [],
                                       RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
                                                               .AddSignalHandler<MultiTestSignalHandler>(),
-                                      PublishSignals = (_, _, _) => Task.CompletedTask,
+                                      PublishSignals = (_, _) => Task.CompletedTask,
                                       RunReceivers = (r, ct) => r.RunHttpSseSignalReceivers(ct),
                                   },
                               ]);
-
-    public static IEnumerable<HttpSignalConformityExecutionErrorTestCase> CreateReconnectDelayTestCases()
-        => HttpSignalTestCases.CreateReconnectDelayTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.Sse);
 }

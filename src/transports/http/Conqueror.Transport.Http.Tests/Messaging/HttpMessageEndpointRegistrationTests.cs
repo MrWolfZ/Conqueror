@@ -1,8 +1,8 @@
 // not using top-level namespace here since we use nested namespaces in tests below
-namespace Conqueror.Transport.Http.Tests.Messaging.Server
+namespace Conqueror.Transport.Http.Tests.Messaging
 {
     [TestFixture]
-    public sealed partial class MessagingServerRegistrationTests
+    public sealed partial class HttpMessageEndpointRegistrationTests
     {
         [Test]
         public void GivenServiceCollectionWithDuplicateMessageName_WhenStartingHost_ThrowsInvalidOperationException()

@@ -56,7 +56,7 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
 
                     if (statusCode is >= 400 and < 500)
                     {
-                        throw new ReceiverExecutionFailedException(
+                        throw new SignalReceiverExecutionFailedException(
                             $"failed to connect signal receiver for handler type '{handlerType}' to address '{config.Address}'; got status code {statusCode}")
                         {
                             HandlerType = handlerType,
@@ -71,7 +71,7 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                         await foreach (var stream in socket.Read(cancellationToken).ConfigureAwait(false))
                         {
                             var (signal, contextData) =
-                                await HttpWebSocketSignalProtocolV1.Read(stream, receiver.ReadSignal, cancellationToken).ConfigureAwait(false);
+                                await HttpWebSocketsSignalProtocolV1.Read(stream, receiver.ReadSignal, cancellationToken).ConfigureAwait(false);
 
                             config.SignalCallback?.Invoke(signal);
 
@@ -115,13 +115,13 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                                     .ConfigureAwait(false);
                     }
                 }
-                catch (ReceiverExecutionFailedException)
+                catch (SignalReceiverExecutionFailedException)
                 {
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    throw new ReceiverExecutionFailedException(
+                    throw new SignalReceiverExecutionFailedException(
                         $"an exception occured while running receiver for signal handler type '{handlerType}'",
                         ex)
                     {

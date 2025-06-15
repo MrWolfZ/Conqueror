@@ -63,7 +63,7 @@ internal sealed partial class HttpWebSocketsSignalBroker(
 
         LogWriteStream(logger, streams.Count);
 
-        await HttpWebSocketSignalProtocolV1.Write(
+        await HttpWebSocketsSignalProtocolV1.Write(
                                                stream,
                                                TSignal.Tag,
                                                conquerorContext.EncodeDownstreamContextData(),

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Signalling.WebSockets;
 
-internal static class HttpWebSocketSignalProtocolV1
+internal static class HttpWebSocketsSignalProtocolV1
 {
     private const int Version = 1;
 

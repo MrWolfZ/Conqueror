@@ -1,9 +1,9 @@
 ﻿namespace Conqueror.Transport.Http.Tests.Signalling;
 
 public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConformityExecutionTestCase,
-                                                        ISignalTransportConformityExecutionErrorTestCase<HttpSignalTransportConformityTestHost>
+                                                                 ISignalTransportConformityExecutionErrorTestCase<HttpSignalTransportConformityTestHost>
 {
-    public Exception? ConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
+    public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
 
     public required IReadOnlyCollection<Exception?> ConfigurationExceptions { get; init; }
 
@@ -11,7 +11,7 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
 
     public required IReadOnlyCollection<Exception?> HandlerExceptions { get; init; }
 
-    public int NumOfExpectedUnrecoverableConnectionErrors => ConnectionResponses
+    public int? NumOfExpectedUnrecoverableConnectionErrors => ConnectionResponses
         .Count(r => r is not null
                     && (r.Value.StatusCode is >= 400 and < 500
                         || (TransportType == HttpSignalTransportType.Sse
@@ -22,18 +22,15 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
 
     public required int ExpectedInitialConnectionCount { get; init; }
 
-    public override async Task<HttpSignalTransportConformityTestHost> CreateTestHost()
+    public override HttpSignalTransportConformityTestHost CreateTestHost()
     {
-        var host = await base.CreateTestHost();
+        var host = base.CreateTestHost();
 
-        foreach (var statusCode in ConnectionResponses)
-        {
-            host.ServerConnectionResponses.Enqueue(statusCode);
-        }
+        host.ServerConnectionResponses.AddRange(ConnectionResponses);
 
-        foreach (var exception in ConfigurationExceptions)
+        foreach (var ex in ConfigurationExceptions)
         {
-            host.ReceiverConfigurationExceptions.Enqueue(exception);
+            host.ReceiverConfigurationExceptions.Enqueue(ex);
         }
 
         return host;
@@ -76,17 +73,17 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
         base.ConfigureSseReceiver(host, receiver);
     }
 
-    public Task OnConfigurationException(HttpSignalTransportConformityTestHost testHost)
+    public Task OnReceiverConfigurationException(HttpSignalTransportConformityTestHost testHost)
     {
-        Assert.That(testHost.ServerCallCount, Is.EqualTo(0));
+        Assert.That(testHost.PublisherHost.ServerCallCount, Is.EqualTo(0));
 
         return Task.CompletedTask;
     }
 
-    public async Task OnInitialConnection(HttpSignalTransportConformityTestHost testHost)
+    public async Task OnInitialReceiverConnection(HttpSignalTransportConformityTestHost testHost)
     {
         Assert.That(
-            () => testHost.ServerCallCount,
+            () => testHost.PublisherHost.ServerCallCount,
             Is.EqualTo(ExpectedInitialConnectionCount)
               .After(testHost.AssertionTimeoutInMs)
               .MilliSeconds
@@ -98,7 +95,7 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
         if (NumOfExpectedUnrecoverableConnectionErrors > 0)
         {
             Assert.That(
-                () => testHost.ServerResponseHasFinishedCount,
+                () => testHost.PublisherHost.ServerResponseHasFinishedCount,
                 Is.EqualTo(NumOfReceivers)
                   .After(testHost.AssertionTimeoutInMs)
                   .MilliSeconds
@@ -109,7 +106,7 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
         }
 
         Assert.That(
-            () => testHost.ServerResponseHasBegunCount,
+            () => testHost.PublisherHost.ServerResponseHasBegunCount,
             Is.EqualTo(ExpectedInitialConnectionCount)
               .After(testHost.AssertionTimeoutInMs)
               .MilliSeconds
@@ -120,7 +117,7 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
     public Task OnHandlerExceptions(HttpSignalTransportConformityTestHost testHost)
     {
         Assert.That(
-            () => testHost.ServerResponseHasFinishedCount,
+            () => testHost.PublisherHost.ServerResponseHasFinishedCount,
             Is.EqualTo(NumOfReceivers)
               .After(testHost.AssertionTimeoutInMs)
               .MilliSeconds
@@ -135,7 +132,7 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
     public Task AfterSuccessfulReconnect(HttpSignalTransportConformityTestHost testHost)
     {
         Assert.That(
-            () => testHost.ServerResponseHasBegunCount,
+            () => testHost.PublisherHost.ServerResponseHasBegunCount,
             Is.EqualTo(NumOfReceivers)
               .After(testHost.AssertionTimeoutInMs)
               .MilliSeconds

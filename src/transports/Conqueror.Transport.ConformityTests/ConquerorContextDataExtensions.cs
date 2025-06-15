@@ -2,13 +2,13 @@
 
 internal static class ConquerorContextDataExtensions
 {
-    public static IEnumerable<KeyValuePair<string, T>> AsKeyValuePairs<T>(this IConquerorContextData contextData)
+    public static IReadOnlyCollection<KeyValuePair<string, string>> AsKeyValuePairs(this IConquerorContextData contextData)
     {
-        return contextData.Where(t => t.Value is T).Select(t => new KeyValuePair<string, T>(t.Key, (T)t.Value));
+        return contextData.AsKeyValuePairs<string>().ToList();
     }
 
-    public static IEnumerable<KeyValuePair<string, string>> WhereScopeIsAcrossTransports(this IConquerorContextData contextData)
+    private static IEnumerable<KeyValuePair<string, T>> AsKeyValuePairs<T>(this IConquerorContextData contextData)
     {
-        return contextData.Where(t => t.Scope == ConquerorContextDataScope.AcrossTransports).Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value));
+        return contextData.Where(t => t.Value is T).Select(t => new KeyValuePair<string, T>(t.Key, (T)t.Value));
     }
 }
