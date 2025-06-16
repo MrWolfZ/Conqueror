@@ -194,6 +194,22 @@ This file contains all the open points for extensions and improvements to the **
 
 - [ ] provide SignalR transport
 
+## Transport.Database
+
+- [ ] write a generic database transport which defines the abstractions (`DatabaseSignalAttribute`, `UseDatabase`, `RunDatabaseSignalReceiver`, etc.) and provides interfaces like `ISignalDatabaseWriter` and `ISignalDatabaseReader` to be implemented by specific database packages
+
+### Transport.Database Messaging
+
+- [ ] provide database transport
+
+### Transport.Database Signalling
+
+- [ ] provide database transport
+
+### Transport.Database Iterators
+
+- [ ] provide database transport
+
 ## Transport.FileSystem
 
 ### Transport.FileSystem Messaging
