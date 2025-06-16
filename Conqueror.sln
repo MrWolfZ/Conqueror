@@ -182,6 +182,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "recipes", "recipes", "{8BA0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.ConformityTests", "src\transports\Conqueror.Transport.ConformityTests\Conqueror.Transport.ConformityTests.csproj", "{FA43B439-733A-4E2C-B518-5E237D7D352C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Benchmarks", "src\transports\http\Conqueror.Transport.Http.Benchmarks\Conqueror.Transport.Http.Benchmarks.csproj", "{BD977AFC-AC25-401F-9B44-01922783DF32}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -335,6 +337,10 @@ Global
 		{FA43B439-733A-4E2C-B518-5E237D7D352C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA43B439-733A-4E2C-B518-5E237D7D352C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA43B439-733A-4E2C-B518-5E237D7D352C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD977AFC-AC25-401F-9B44-01922783DF32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD977AFC-AC25-401F-9B44-01922783DF32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD977AFC-AC25-401F-9B44-01922783DF32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD977AFC-AC25-401F-9B44-01922783DF32}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -400,5 +406,6 @@ Global
 		{81F827C1-77D6-48D3-9167-6CED2D06DF73} = {84A9E825-D5FD-449D-96E7-40D758E85133}
 		{F5F1C095-6970-45DE-AE43-EFF17A75B148} = {84A9E825-D5FD-449D-96E7-40D758E85133}
 		{FA43B439-733A-4E2C-B518-5E237D7D352C} = {060F13CA-55B0-4D28-9010-008B87BEA087}
+		{BD977AFC-AC25-401F-9B44-01922783DF32} = {5FC6292B-996F-4970-8B96-45C65882DA49}
 	EndGlobalSection
 EndGlobal
