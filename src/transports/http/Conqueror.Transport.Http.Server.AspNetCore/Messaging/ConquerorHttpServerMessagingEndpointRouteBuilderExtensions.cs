@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Net.Mime;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
+using System.Text;
 using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
@@ -41,8 +40,9 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
         => builder.MapMessageEndpoint(new MessageTypes<TMessage, TResponse, TIHandler>());
 
-    public static IEndpointConventionBuilder? MapMessageEndpoint<TMessage, TResponse, TIHandler>(this IEndpointRouteBuilder builder,
-                                                                                                 MessageTypes<TMessage, TResponse, TIHandler> messageTypes)
+    public static IEndpointConventionBuilder? MapMessageEndpoint<TMessage, TResponse, TIHandler>(
+        this IEndpointRouteBuilder builder,
+        MessageTypes<TMessage, TResponse, TIHandler> messageTypes)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
     {
@@ -100,7 +100,8 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             if (duplicates.Count > 0)
             {
                 var duplicateMessageTypes = duplicates.Select(d => d.MessageType).Concat([typeof(TMessage)]);
-                var msg = $"path: {TMessage.FullPath}{Environment.NewLine}messageTypes:{Environment.NewLine}{string.Join(Environment.NewLine, duplicateMessageTypes)}";
+                var msg =
+                    $"path: {TMessage.FullPath}{Environment.NewLine}messageTypes:{Environment.NewLine}{string.Join(Environment.NewLine, duplicateMessageTypes)}";
 
                 throw new InvalidOperationException($"found multiple Conqueror message types with identical path!{Environment.NewLine}{msg}");
             }
@@ -117,28 +118,41 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         {
             var message = TMessage.EmptyInstance;
 
+            var mediaType = GetMediaTypeFromContentType(context.Request.ContentType);
+
+            var expectedContentType = message is null ? TMessage.HttpMessageSerializer.ContentType : string.Empty;
+            if ((mediaType?.MediaType ?? string.Empty) != expectedContentType)
+            {
+                context.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
+
+                if (context.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() ?? false)
+                {
+                    await context.Response.WriteAsync($"invalid request; expected content type '{expectedContentType}' but got '{mediaType?.MediaType}'").ConfigureAwait(false);
+                }
+
+                return;
+            }
+
             // handle messages without payload
             if (message is not null)
             {
                 await Handle<TMessage, TResponse, TIHandler>(message, context, invoker).ConfigureAwait(false);
+
                 return;
             }
 
-            if (TMessage.HttpMessageSerializer is { } ms)
-            {
-                var query = context.Request.Query.ToDictionary(p => p.Key, p => (IReadOnlyList<string?>)p.Value);
-                message = await ms.Deserialize(context.RequestServices,
-                                               context.Request.Body,
-                                               context.Request.Path,
-                                               query,
-                                               context.RequestAborted)
-                                  .ConfigureAwait(false);
-            }
-            else
-            {
-                var jsonTypeInfo = GetJsonTypeInfo<TMessage>(context, TMessage.HttpJsonSerializerContext);
-                message = await context.Request.ReadFromJsonAsync(jsonTypeInfo).ConfigureAwait(false);
-            }
+            var encoding = string.IsNullOrWhiteSpace(mediaType?.CharSet) ? null : Encoding.GetEncoding(mediaType.CharSet);
+
+            var query = context.Request.Query.Select(p => new KeyValuePair<string, IReadOnlyList<string?>>(p.Key, p.Value));
+
+            message = await TMessage.HttpMessageSerializer.Deserialize(
+                                        context.RequestServices,
+                                        context.Request.Body,
+                                        encoding,
+                                        context.Request.Path,
+                                        query,
+                                        context.RequestAborted)
+                                    .ConfigureAwait(false);
 
             await Handle<TMessage, TResponse, TIHandler>(message, context, invoker).ConfigureAwait(false);
         }
@@ -153,7 +167,12 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             if (message is null)
             {
                 httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-                await httpContext.Response.WriteAsync("Invalid request").ConfigureAwait(false);
+
+                if (httpContext.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() ?? false)
+                {
+                    await httpContext.Response.WriteAsync("invalid request; empty message").ConfigureAwait(false);
+                }
+
                 return;
             }
 
@@ -165,7 +184,9 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             }
             catch (FormattedConquerorContextDataInvalidException ex)
             {
-                throw new MessageFailedDueToInvalidFormattedConquerorContextDataException($"badly formatted context data while processing HTTP message of type '{typeof(TMessage)}'", ex)
+                throw new MessageFailedDueToInvalidFormattedConquerorContextDataException(
+                    $"badly formatted context data while processing HTTP message of type '{typeof(TMessage)}'",
+                    ex)
                 {
                     MessagePayload = message,
                     TransportType = new(TransportName, MessageTransportRole.Receiver),
@@ -179,10 +200,11 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             using var principal = conquerorContext.SetCurrentPrincipalInternal(httpContext.User);
 
-            var response = await invoker.Invoke<TMessage, TResponse>(message,
-                                                                     httpContext.RequestServices,
-                                                                     TransportName,
-                                                                     httpContext.RequestAborted)
+            var response = await invoker.Invoke<TMessage, TResponse>(
+                                            message,
+                                            httpContext.RequestServices,
+                                            TransportName,
+                                            httpContext.RequestAborted)
                                         .ConfigureAwait(false);
 
             httpContext.Response.StatusCode = TMessage.SuccessStatusCode;
@@ -197,14 +219,14 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 return;
             }
 
-            if (TMessage.HttpMessageResponseSerializer is { } rs)
-            {
-                await rs.Serialize(httpContext.RequestServices, httpContext.Response.Body, response, httpContext.RequestAborted).ConfigureAwait(false);
-                return;
-            }
+            httpContext.Response.Headers.ContentType = TMessage.HttpMessageResponseSerializer.ContentType;
 
-            var jsonTypeInfo = GetJsonTypeInfo<TResponse>(httpContext, TMessage.HttpJsonSerializerContext);
-            await httpContext.Response.WriteAsJsonAsync(response, jsonTypeInfo).ConfigureAwait(false);
+            await TMessage.HttpMessageResponseSerializer.Serialize(
+                              httpContext.RequestServices,
+                              httpContext.Response.Body,
+                              response,
+                              httpContext.RequestAborted)
+                          .ConfigureAwait(false);
 
             static IEnumerable<string> ReadContextDataFromRequest(HttpContext httpContext)
                 => httpContext.Request.Headers.TryGetValue(HeaderNames.ConquerorContext, out var values) ? values : [];
@@ -220,6 +242,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 if (httpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues) && traceParentValues is [{ } traceParent])
                 {
                     using var a = new Activity(string.Empty);
+
                     return a.SetParentId(traceParent).TraceId.ToString();
                 }
 
@@ -227,38 +250,31 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             }
         }
 
-        private static JsonTypeInfo<T> GetJsonTypeInfo<T>(HttpContext context, JsonSerializerContext? serializerContext)
-        {
-            var jsonSerializerOptions = context.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions;
-
-            // this will throw when no type info is available for the type (e.g. in AOT context); we do not do anything
-            // to prevent this so that the user is informed that they must add the correct json serializer source gen
-            // config; in non-AOT scenarios, there will be a default json serializer set by ASP
-            return (JsonTypeInfo<T>)(serializerContext?.GetTypeInfo(typeof(T)) ?? jsonSerializerOptions.GetTypeInfo(typeof(T)));
-        }
-
-        private static IEndpointConventionBuilder ConfigureRoute<TMessage, TResponse>(IEndpointConventionBuilder builder,
-                                                                                      bool hasPayload,
-                                                                                      bool isOmittedFromApiDescription)
+        private static IEndpointConventionBuilder ConfigureRoute<TMessage, TResponse>(
+            IEndpointConventionBuilder builder,
+            bool hasPayload,
+            bool isOmittedFromApiDescription)
             where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
-            builder = builder.WithMetadata(typeof(TResponse) == typeof(UnitMessageResponse)
-                                               ? new ProducesResponseTypeMetadata(TMessage.SuccessStatusCode)
-                                               : new(TMessage.SuccessStatusCode, typeof(TResponse), [MediaTypeNames.Application.Json]))
-                             .WithMetadata(new ConquerorHttpMessageEndpointMetadata
-                             {
-                                 Name = TMessage.Name,
-                                 FullPath = TMessage.FullPath,
-                                 ApiGroupName = TMessage.ApiGroupName,
-                                 HttpMethod = TMessage.HttpMethod,
-                                 MessageContentType = TMessage.HttpMessageSerializer?.ContentType ?? MediaTypeNames.Application.Json,
-                                 ResponseContentType = TMessage.HttpMessageResponseSerializer?.ContentType ?? MediaTypeNames.Application.Json,
-                                 MessageType = typeof(TMessage),
-                                 HasPayload = hasPayload,
-                                 QueryParams = TMessage.HttpMethod == MethodNames.Get ? GetQueryParams() : [],
-                                 ResponseType = typeof(TResponse),
-                                 SuccessStatusCode = TMessage.SuccessStatusCode,
-                             })
+            builder = builder.WithMetadata(
+                                 typeof(TResponse) == typeof(UnitMessageResponse)
+                                     ? new ProducesResponseTypeMetadata(TMessage.SuccessStatusCode)
+                                     : new(TMessage.SuccessStatusCode, typeof(TResponse), [TMessage.HttpMessageResponseSerializer.ContentType]))
+                             .WithMetadata(
+                                 new ConquerorHttpMessageEndpointMetadata
+                                 {
+                                     Name = TMessage.Name,
+                                     FullPath = TMessage.FullPath,
+                                     ApiGroupName = TMessage.ApiGroupName,
+                                     HttpMethod = TMessage.HttpMethod,
+                                     MessageContentType = TMessage.HttpMessageSerializer.ContentType,
+                                     ResponseContentType = TMessage.HttpMessageResponseSerializer.ContentType,
+                                     MessageType = typeof(TMessage),
+                                     HasPayload = hasPayload,
+                                     QueryParams = TMessage.HttpMethod == MethodNames.Get ? GetQueryParams() : [],
+                                     ResponseType = typeof(TResponse),
+                                     SuccessStatusCode = TMessage.SuccessStatusCode,
+                                 })
                              .WithName(TMessage.Name);
 
             if (isOmittedFromApiDescription)
@@ -315,6 +331,24 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             static string Uncapitalize(string str)
                 => char.ToLower(str[0], CultureInfo.InvariantCulture) + str[1..];
+        }
+
+        private static MediaTypeHeaderValue? GetMediaTypeFromContentType(string? contentType)
+        {
+            if (string.IsNullOrEmpty(contentType))
+            {
+                return null;
+            }
+
+            try
+            {
+                return MediaTypeHeaderValue.Parse(contentType);
+            }
+            catch
+            {
+                // Ignore and fall back to default
+                return null;
+            }
         }
     }
 }

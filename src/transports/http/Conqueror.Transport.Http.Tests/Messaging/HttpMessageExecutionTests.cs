@@ -175,7 +175,9 @@ public sealed class HttpMessageExecutionTests
 
             using var request = new HttpRequestMessage(new(testCase.HttpMethod), targetUriBuilder.Uri);
 
-            using var content = payload is not null ? CreateJsonStringContent(payload) : new(string.Empty);
+            using StringContent? content = payload is not null
+                ? new(payload, new MediaTypeHeaderValue(testCase.MessageContentType ?? MediaTypeNames.Application.Json))
+                : null;
 
             if (testCase.HttpMethod != MethodNames.Get)
             {
@@ -196,16 +198,92 @@ public sealed class HttpMessageExecutionTests
 
             Assert.That(resultString, Is.EqualTo(responsePayload));
         }
+    }
 
-        static StringContent CreateJsonStringContent(string content)
+    [Test]
+    [TestCaseSource(nameof(CreateServerTestCases))]
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
+    public async Task GivenTestHttpMessage_WhenCallingHttpEndpointDirectlyWithWrongContentType_ReturnsError(
+        HttpMessageConformityExecutionSuccessTestCase testCase)
+    {
+        await using var host = testCase.CreateTestHost();
+
+        await using var receiverHost = await host.CreateReceiverTestHost(host.TestTimeoutToken);
+
+        var targetUriBuilder = new UriBuilder
         {
-            return new(content, new MediaTypeHeaderValue(MediaTypeNames.Application.Json));
+            Host = "localhost",
+            Path = testCase.FullPath,
+        };
+
+        for (var i = 0; i < testCase.ExpectedReceivedMessages.Count; i += 1)
+        {
+            using var request = new HttpRequestMessage(new(testCase.HttpMethod), targetUriBuilder.Uri);
+
+            using StringContent content = new("wrong", new MediaTypeHeaderValue("application/wrong"));
+            request.Content = content;
+
+            var response = await receiverHost.HttpClient.SendAsync(request);
+
+            if (!testCase.HandlerIsEnabled)
+            {
+                await response.AssertStatusCode(StatusCodes.Status404NotFound);
+
+                return;
+            }
+
+            await response.AssertStatusCode(StatusCodes.Status415UnsupportedMediaType);
+        }
+    }
+
+    [Test]
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
+    public async Task GivenTestHttpMessage_WhenCallingHttpEndpointDirectlyWithDifferentEncoding_ReturnsResponse()
+    {
+        var testCase = CreateSuccessTestCases()
+            .First(tc => tc is
+            {
+                NumOfReceivers: 1,
+                HandlerIsEnabled: true,
+                ExpectedReceivedMessages.Count: > 0,
+                HttpMethod: MethodNames.Post,
+                MessageContentType: MediaTypeNames.Application.Json,
+                ResponseContentType: MediaTypeNames.Application.Json,
+            });
+
+        await using var host = testCase.CreateTestHost();
+
+        await using var receiverHost = await host.CreateReceiverTestHost(host.TestTimeoutToken);
+
+        var targetUriBuilder = new UriBuilder
+        {
+            Host = "localhost",
+            Path = testCase.FullPath,
+        };
+
+        for (var i = 0; i < testCase.ExpectedReceivedMessages.Count; i += 1)
+        {
+            var payload = testCase.MessagePayloads.ElementAt(i);
+            var responsePayload = testCase.ResponsePayloads.Skip(i).FirstOrDefault() ?? string.Empty;
+
+            using var request = new HttpRequestMessage(new(testCase.HttpMethod), targetUriBuilder.Uri);
+
+            using StringContent content = new(payload!, Encoding.Unicode, new MediaTypeHeaderValue($"{MediaTypeNames.Application.Json}", "utf-16"));
+            request.Content = content;
+
+            var response = await receiverHost.HttpClient.SendAsync(request);
+
+            await response.AssertStatusCode(testCase.SuccessStatusCode);
+            var resultString = await response.Content.ReadAsStringAsync();
+
+            Assert.That(resultString, Is.EqualTo(responsePayload));
         }
     }
 
     private static IEnumerable<TestCaseData> CreateServerTestCases()
-        => CreateSuccessTestCases().Where(tc => tc is { NumOfReceivers: 1, SingleMessageType: not null })
-                                   .Select(tc => new TestCaseData(tc).SetName(tc.Name));
+        => CreateSuccessTestCases()
+           .Where(tc => tc is { NumOfReceivers: 1, SingleMessageType: not null })
+           .Select(tc => new TestCaseData(tc).SetName(tc.Name));
 
     private sealed class TestWellKnownException(string wellKnownReason) : MessageFailedException
     {

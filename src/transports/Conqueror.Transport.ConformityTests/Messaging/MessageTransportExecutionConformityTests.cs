@@ -456,7 +456,7 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
             // we expect the test case to internally handle that the send exception is thrown
             await Assert.ThatAsync(
                 () => testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken),
-                Throws.Exception.SameAs(sendException));
+                Throws.Exception.With.InnerException.SameAs(sendException));
 
             await testCase.OnSendException(host);
 

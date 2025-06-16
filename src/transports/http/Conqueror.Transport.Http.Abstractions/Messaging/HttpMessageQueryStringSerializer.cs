@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -13,20 +12,20 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHttpMessageSerializer<TMessage, TResponse>
+internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHttpMessageSerializer<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
-    public string? ContentType => null;
+    public static readonly HttpMessageQueryStringSerializer<TMessage, TResponse> Default = new();
 
-    public async Task<(HttpContent? Content, string? Path, string? QueryString)> Serialize(IServiceProvider serviceProvider, TMessage message, CancellationToken cancellationToken)
+    public string ContentType => string.Empty;
+
+    public string? SerializeToQuery(IServiceProvider serviceProvider, TMessage message)
     {
         var props = TMessage.PublicProperties.ToList();
         if (props.Count == 0)
         {
-            return (null, null, string.Empty);
+            return null;
         }
-
-        await Task.CompletedTask.ConfigureAwait(false);
 
         var uriBuilder = new StringBuilder();
         var isFirst = true;
@@ -59,38 +58,51 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
             isFirst = false;
         }
 
-        return (null, null, uriBuilder.ToString());
+        return uriBuilder.ToString();
     }
 
-    public async Task<TMessage> Deserialize(IServiceProvider serviceProvider,
-                                            Stream body,
-                                            string path,
-                                            IReadOnlyDictionary<string, IReadOnlyList<string?>>? query, CancellationToken cancellationToken)
+    public Task SerializeToBody(
+        IServiceProvider serviceProvider,
+        TMessage message,
+        Stream bodyStream,
+        CancellationToken cancellationToken)
     {
-        await Task.CompletedTask.ConfigureAwait(false);
+        return Task.CompletedTask;
+    }
 
-        if (query is null)
-        {
-            throw new ArgumentException("query must not be null", nameof(query));
-        }
+    public Task<TMessage> Deserialize(
+        IServiceProvider serviceProvider,
+        Stream bodyStream,
+        Encoding? encoding,
+        string path,
+        IEnumerable<KeyValuePair<string, IReadOnlyList<string?>>> query,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
 
         if (TMessage.EmptyInstance is not null)
         {
-            return TMessage.EmptyInstance;
+            return Task.FromResult(TMessage.EmptyInstance);
         }
 
-        if (FindMatchingConstructor(query) is { } constructor)
+        var queryDict = query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        if (FindMatchingConstructor(queryDict) is { } constructor)
         {
-            var parameters = BuildConstructorParameters(constructor, query);
-            return constructor.Invoke(parameters) as TMessage
+            var parameters = BuildConstructorParameters(constructor, queryDict);
+
+            var messageFromConstructor = constructor.Invoke(parameters) as TMessage
                    ?? throw new InvalidOperationException($"failed to invoke constructor for message type '{typeof(TMessage)}'");
+
+            return Task.FromResult(messageFromConstructor);
         }
 
         var parameterlessConstructor = TMessage.PublicConstructors.FirstOrDefault(c => c.GetParameters().Length == 0);
 
         if (parameterlessConstructor is null)
         {
-            throw new InvalidOperationException($"could not find a matching constructor or public parameterless constructor for message type '{typeof(TMessage)}'");
+            throw new InvalidOperationException(
+                $"could not find a matching constructor or public parameterless constructor for message type '{typeof(TMessage)}'");
         }
 
         var message = parameterlessConstructor.Invoke([]) as TMessage
@@ -98,7 +110,7 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
 
         foreach (var prop in TMessage.PublicProperties)
         {
-            var values = query.GetValueOrDefault(Uncapitalize(prop.Name)) ?? query.GetValueOrDefault(prop.Name);
+            var values = queryDict.GetValueOrDefault(Uncapitalize(prop.Name)) ?? queryDict.GetValueOrDefault(prop.Name);
 
             if (values is null || values.Count == 0)
             {
@@ -129,7 +141,7 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
             }
         }
 
-        return message;
+        return Task.FromResult(message);
     }
 
     private static ConstructorInfo? FindMatchingConstructor(IReadOnlyDictionary<string, IReadOnlyList<string?>> query)
@@ -148,8 +160,9 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
                        ?.Constructor;
     }
 
-    private static object?[] BuildConstructorParameters(ConstructorInfo constructor,
-                                                        IReadOnlyDictionary<string, IReadOnlyList<string?>> query)
+    private static object?[] BuildConstructorParameters(
+        ConstructorInfo constructor,
+        IReadOnlyDictionary<string, IReadOnlyList<string?>> query)
     {
         var parameters = constructor.GetParameters();
         var paramValues = new object?[parameters.Length];
@@ -158,9 +171,11 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
         {
             var param = parameters[i];
 
-            if (param.Name is not null && (
-                    query.TryGetValue(param.Name, out var values) || (query.TryGetValue(Uncapitalize(param.Name), out values)
-                                                                      && values.Count > 0)))
+            if (param.Name is not null
+                && (
+                    query.TryGetValue(param.Name, out var values)
+                    || (query.TryGetValue(Uncapitalize(param.Name), out values)
+                        && values.Count > 0)))
             {
                 if (IsCollectionType(param.ParameterType))
                 {
@@ -203,12 +218,12 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
             var genericTypeDefinition = type.GetGenericTypeDefinition();
 
             // Check for common collection interfaces and types
-            if (genericTypeDefinition == typeof(IEnumerable<>) ||
-                genericTypeDefinition == typeof(ICollection<>) ||
-                genericTypeDefinition == typeof(IList<>) ||
-                genericTypeDefinition == typeof(List<>) ||
-                genericTypeDefinition == typeof(IReadOnlyCollection<>) ||
-                genericTypeDefinition == typeof(IReadOnlyList<>))
+            if (genericTypeDefinition == typeof(IEnumerable<>)
+                || genericTypeDefinition == typeof(ICollection<>)
+                || genericTypeDefinition == typeof(IList<>)
+                || genericTypeDefinition == typeof(List<>)
+                || genericTypeDefinition == typeof(IReadOnlyCollection<>)
+                || genericTypeDefinition == typeof(IReadOnlyList<>))
             {
                 return true;
             }
@@ -248,14 +263,22 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
         }
         else if (underlyingType == typeof(double))
         {
-            if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            if (double.TryParse(
+                    value,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out var result))
             {
                 return result;
             }
         }
         else if (underlyingType == typeof(decimal))
         {
-            if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            if (decimal.TryParse(
+                    value,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out var result))
             {
                 return result;
             }
@@ -269,7 +292,11 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
         }
         else if (underlyingType == typeof(DateTime))
         {
-            if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
+            if (DateTime.TryParse(
+                    value,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var result))
             {
                 return result;
             }
@@ -283,7 +310,13 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
         }
         else if (underlyingType.IsEnum)
         {
-            return Enum.TryParse(underlyingType, value, true, out var result) ? result : null;
+            return Enum.TryParse(
+                underlyingType,
+                value,
+                true,
+                out var result)
+                ? result
+                : null;
         }
 
         throw new InvalidOperationException($"unable to convert value '{value}' to type '{targetType.FullName}'");
@@ -382,12 +415,12 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
             var genericTypeDef = collectionType.GetGenericTypeDefinition();
 
             // For all supported collection types, return a List<T>
-            if (genericTypeDef == typeof(List<>) ||
-                genericTypeDef == typeof(IList<>) ||
-                genericTypeDef == typeof(ICollection<>) ||
-                genericTypeDef == typeof(IEnumerable<>) ||
-                genericTypeDef == typeof(IReadOnlyCollection<>) ||
-                genericTypeDef == typeof(IReadOnlyList<>))
+            if (genericTypeDef == typeof(List<>)
+                || genericTypeDef == typeof(IList<>)
+                || genericTypeDef == typeof(ICollection<>)
+                || genericTypeDef == typeof(IEnumerable<>)
+                || genericTypeDef == typeof(IReadOnlyCollection<>)
+                || genericTypeDef == typeof(IReadOnlyList<>))
             {
                 // Handle specific element types directly using generic methods
                 if (itemType == typeof(string))
@@ -471,6 +504,7 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
             // If we had null values, resize the array
             var resizedArray = new T[validCount];
             Array.Copy(array, resizedArray, validCount);
+
             return resizedArray;
         }
 

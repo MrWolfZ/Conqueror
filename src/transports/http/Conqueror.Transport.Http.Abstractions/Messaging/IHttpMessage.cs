@@ -30,12 +30,13 @@ public interface IHttpMessage<TMessage, TResponse> : IMessage<TMessage, TRespons
 
     static virtual JsonSerializerContext? HttpJsonSerializerContext => TMessage.JsonSerializerContext;
 
-    static virtual IHttpMessageSerializer<TMessage, TResponse>? HttpMessageSerializer
-        => TMessage.HttpMethod == ConquerorTransportHttpConstants.MethodNames.Get
-            ? new HttpMessageQueryStringSerializer<TMessage, TResponse>()
-            : null;
+    internal static virtual IHttpMessageSerializer<TMessage, TResponse> HttpMessageSerializer { get; }
+        = TMessage.HttpMethod == ConquerorTransportHttpConstants.MethodNames.Get
+            ? HttpMessageQueryStringSerializer<TMessage, TResponse>.Default
+            : HttpMessageBodyJsonSerializer<TMessage, TResponse>.Default;
 
-    static virtual IHttpMessageResponseSerializer<TMessage, TResponse>? HttpMessageResponseSerializer => null;
+    internal static virtual IHttpMessageResponseSerializer<TMessage, TResponse> HttpMessageResponseSerializer
+        => HttpMessageResponseBodyJsonSerializer<TMessage, TResponse>.Default;
 
     private static string Uncapitalize(string str)
         => char.ToLower(str[0], CultureInfo.InvariantCulture) + str[1..];

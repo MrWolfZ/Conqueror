@@ -1,6 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 using Conqueror.Messaging;
 using Microsoft.AspNetCore.Mvc;
 
@@ -611,8 +609,8 @@ public static partial class HttpMessageTestCases
             },
             MapEndpoints = e => e.MapMessageEndpoint(TestMessageWithCustomSerializer.T),
             QueryStrings = ["?query-payload=10", "?query-payload=20"],
-            MessagePayloads = ["{\"bodyPayload\":11}", "{\"bodyPayload\":21}"],
-            ResponsePayloads = ["{\"total-payload\":33}", "{\"total-payload\":53}"],
+            MessagePayloads = ["bodyPayload:11", "bodyPayload:21"],
+            ResponsePayloads = ["total-payload:33", "total-payload:53"],
         };
 
         yield return new()
@@ -1269,7 +1267,7 @@ public static partial class HttpMessageTestCases
             },
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(ThrowingTestMessage.T).WithDefaultSenderConfiguration().Handle(new(), ct);
+                var r1 = await s.For(ThrowingTestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
 
                 return [r1];
             },
@@ -1282,10 +1280,10 @@ public static partial class HttpMessageTestCases
     public static IEnumerable<HttpMessageConformityContextTestCase> CreateContextTestCases()
     {
         foreach (var t in from hasActivity in new[] { true, false }
-                                                                       from hasDownstream in new[] { true, false }
-                                                                       from hasUpstream in new[] { true, false }
-                                                                       from hasBidirectional in new[] { true, false }
-                                                                       select (hasActivity, hasDownstream, hasUpstream, hasBidirectional))
+                          from hasDownstream in new[] { true, false }
+                          from hasUpstream in new[] { true, false }
+                          from hasBidirectional in new[] { true, false }
+                          select (hasActivity, hasDownstream, hasUpstream, hasBidirectional))
         {
             yield return new()
             {
@@ -1425,7 +1423,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>(PathPrefix = "/custom/prefix")]
     public sealed partial record TestMessageWithPathPrefix
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithPathPrefixHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -1449,7 +1447,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>(Version = "v2")]
     public sealed partial record TestMessageWithVersion
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithVersionHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -1473,7 +1471,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>(Path = "/custom/path")]
     public sealed partial record TestMessageWithPath
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithPathHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -1497,7 +1495,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>(PathPrefix = "/custom/prefix", Version = "v3", Path = "/custom/path")]
     public sealed partial record TestMessageWithPathPrefixAndPathAndVersion
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithPathPrefixAndPathAndVersionHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -1521,7 +1519,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>(FullPath = "/custom/full/path/for/message")]
     public sealed partial record TestMessageWithFullPath
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithFullPathHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -1545,7 +1543,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>(FullPath = "/custom/full/path/for/message/ignoring/version", Version = "v2")]
     public sealed partial record TestMessageWithFullPathAndVersion
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithFullPathAndVersionHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -1569,7 +1567,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>(SuccessStatusCode = 201)]
     public sealed partial record TestMessageWithSuccessStatusCode
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithSuccessStatusCodeHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -1593,7 +1591,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>(Name = "custom-message-name")]
     public sealed partial record TestMessageWithName
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithNameHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -1617,7 +1615,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>(ApiGroupName = "Custom Message Group")]
     public sealed partial record TestMessageWithApiGroupName
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithApiGroupNameHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -1897,16 +1895,18 @@ public static partial class HttpMessageTestCases
 
         public static string FullPath => "/api/custom/path/for/serializer/{pathPayload:int}";
 
-        public static IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse> HttpMessageSerializer
-            => new TestMessageCustomSerializer();
+        static IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
+            IHttpMessage<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.HttpMessageSerializer { get; }
+            = new TestMessageCustomSerializer();
 
-        public static IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse> HttpMessageResponseSerializer
-            => new TestMessageCustomSerializer();
+        static IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
+            IHttpMessage<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.HttpMessageResponseSerializer { get; }
+            = new TestMessageCustomSerializer();
     }
 
     public sealed record TestMessageWithCustomSerializerResponse
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     private sealed class TestMessageCustomSerializer : IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>,
@@ -1914,58 +1914,67 @@ public static partial class HttpMessageTestCases
     {
         string IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType => "application/custom-message";
 
-        string IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType
-            => "application/custom-response";
+        public string SerializeToPath(IServiceProvider serviceProvider, TestMessageWithCustomSerializer message)
+            => $"/api/custom/path/for/serializer/{message.PathPayload}";
 
-        public async Task<(HttpContent? Content, string? Path, string? QueryString)> Serialize(
+        public string SerializeToQuery(IServiceProvider serviceProvider, TestMessageWithCustomSerializer message)
+            => $"?query-payload={message.QueryPayload}";
+
+        public async Task SerializeToBody(
             IServiceProvider serviceProvider,
             TestMessageWithCustomSerializer message,
+            Stream bodyStream,
             CancellationToken cancellationToken)
         {
             await Task.Yield();
-            var httpContent = JsonContent.Create(new { message.BodyPayload }, new MediaTypeHeaderValue("application/custom-message"));
 
-            return (httpContent, $"/api/custom/path/for/serializer/{message.PathPayload}", $"?query-payload={message.QueryPayload}");
+            await using var writer = new StreamWriter(bodyStream, Encoding.UTF8, leaveOpen: true);
+            await writer.WriteAsync($"payload:{message.BodyPayload}");
         }
 
         public async Task<TestMessageWithCustomSerializer> Deserialize(
             IServiceProvider serviceProvider,
-            Stream body,
+            Stream bodyStream,
+            Encoding? encoding,
             string path,
-            IReadOnlyDictionary<string, IReadOnlyList<string?>>? query,
+            IEnumerable<KeyValuePair<string, IReadOnlyList<string?>>> query,
             CancellationToken cancellationToken)
         {
             await Task.Yield();
-            using var reader = new StreamReader(body);
+            using var reader = new StreamReader(bodyStream, encoding ?? Encoding.UTF8, leaveOpen: true);
             var bodyContent = await reader.ReadToEndAsync(cancellationToken);
-            var bodyMessage = JsonSerializer.Deserialize<TestMessageWithCustomSerializer>(
-                bodyContent,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var bodyPayload = int.Parse(bodyContent.Split(':')[1]);
             var pathParam = int.Parse(path.Trim('/').Replace("api/custom/path/for/serializer/", string.Empty));
-            var queryParam = int.Parse(query!["query-payload"].Single()!);
+            var queryParam = int.Parse(query.First(p => p.Key == "query-payload").Value[0]!);
 
-            return new() { BodyPayload = bodyMessage!.BodyPayload, PathPayload = pathParam, QueryPayload = queryParam };
+            return new() { BodyPayload = bodyPayload, PathPayload = pathParam, QueryPayload = queryParam };
         }
+
+        string IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType
+            => "application/custom-response";
 
         public async Task Serialize(
             IServiceProvider serviceProvider,
-            Stream body,
+            Stream bodyStream,
             TestMessageWithCustomSerializerResponse response,
             CancellationToken cancellationToken)
         {
-            await using var writer = new StreamWriter(body);
-            await writer.WriteAsync($"{{\"total-payload\":{response.Payload}}}");
+            await using var writer = new StreamWriter(bodyStream);
+            await writer.WriteAsync($"total-payload:{response.Payload}");
         }
 
         public async Task<TestMessageWithCustomSerializerResponse> Deserialize(
             IServiceProvider serviceProvider,
-            HttpContent content,
+            Stream bodyStream,
+            Encoding? encoding,
             CancellationToken cancellationToken)
         {
-            var stream = await content.ReadAsStreamAsync(cancellationToken);
-            var result = await JsonNode.ParseAsync(stream, cancellationToken: cancellationToken) as JsonObject;
+            await Task.Yield();
+            using var reader = new StreamReader(bodyStream, encoding ?? Encoding.UTF8, leaveOpen: true);
+            var bodyContent = await reader.ReadToEndAsync(cancellationToken);
+            var payload = int.Parse(bodyContent.Split(':')[1]);
 
-            return new() { Payload = result!["total-payload"].Deserialize<int>() };
+            return new() { Payload = payload };
         }
     }
 
@@ -2028,7 +2037,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>]
     public sealed partial record TestMessageWithMiddleware
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithMiddlewareHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -2054,7 +2063,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage]
     public sealed partial record TestMessageWithMiddlewareWithoutResponse
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithMiddlewareWithoutResponseHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -2089,7 +2098,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse[]>]
     public sealed partial record TestMessageWithArrayResponse
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithArrayResponseHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -2113,7 +2122,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<List<TestMessageResponse>>]
     public sealed partial record TestMessageWithListResponse
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithListResponseHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -2137,7 +2146,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage<IEnumerable<TestMessageResponse>>]
     public sealed partial record TestMessageWithEnumerableResponse
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithEnumerableResponseHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -2161,12 +2170,12 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageForAssemblyScanningResponse>]
     public sealed partial record TestMessageForAssemblyScanning
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed record TestMessageForAssemblyScanningResponse
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageForAssemblyScanningHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -2190,7 +2199,7 @@ public static partial class HttpMessageTestCases
     [HttpMessage]
     public sealed partial record TestMessageWithoutResponseForAssemblyScanning
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithoutResponseForAssemblyScanningHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -2212,7 +2221,7 @@ public static partial class HttpMessageTestCases
     [CustomHttpMessage<TestMessageResponse>(CustomPathPrefix = "customApi")]
     public sealed partial record TestMessageWithCustomConventions
     {
-        public int Payload { get; init; }
+        public required int Payload { get; init; }
     }
 
     public sealed partial class TestMessageWithCustomConventionsHandler(FnToCallFromHandler fnToCallFromHandler)
@@ -2320,17 +2329,20 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>]
     private sealed partial record ThrowingTestMessage
     {
+        public required int Payload { get; init; }
+
         static IHttpMessageSerializer<ThrowingTestMessage, TestMessageResponse> IHttpMessage<ThrowingTestMessage, TestMessageResponse>
             .HttpMessageSerializer { get; } = new ThrowingTestMessageSerializer();
     }
 
     private sealed class ThrowingTestMessageSerializer : IHttpMessageSerializer<ThrowingTestMessage, TestMessageResponse>
     {
-        public string? ContentType => null;
+        public string ContentType => "application/throwing";
 
-        public Task<(HttpContent? Content, string? Path, string? QueryString)> Serialize(
+        public Task SerializeToBody(
             IServiceProvider serviceProvider,
             ThrowingTestMessage message,
+            Stream bodyStream,
             CancellationToken cancellationToken)
         {
             throw serviceProvider.GetRequiredService<Exception>();
@@ -2338,9 +2350,10 @@ public static partial class HttpMessageTestCases
 
         public Task<ThrowingTestMessage> Deserialize(
             IServiceProvider serviceProvider,
-            Stream body,
+            Stream bodyStream,
+            Encoding? encoding,
             string path,
-            IReadOnlyDictionary<string, IReadOnlyList<string?>>? query,
+            IEnumerable<KeyValuePair<string, IReadOnlyList<string?>>> query,
             CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
