@@ -8,6 +8,7 @@ namespace Conqueror.Signalling;
 
 internal sealed class SignalPipeline<TSignal>(
     Type? handlerType,
+    TSignal signal,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
     SignalTransportType transportType,
@@ -18,6 +19,8 @@ internal sealed class SignalPipeline<TSignal>(
     private readonly List<ISignalMiddleware<TSignal>> middlewares = new(initialCapacity);
 
     public Type? HandlerType { get; } = handlerType;
+
+    public TSignal Signal { get; } = signal;
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 

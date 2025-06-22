@@ -65,6 +65,7 @@ internal sealed class SignalDispatcher(
 
         var pipeline = new SignalPipeline<TSignal>(
             handlerType,
+            signal,
             serviceProvider,
             conquerorContext,
             transportType,
