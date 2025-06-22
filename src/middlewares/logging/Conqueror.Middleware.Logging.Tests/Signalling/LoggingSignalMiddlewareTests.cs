@@ -353,6 +353,7 @@ public sealed class LoggingSignalMiddlewareTests
             Signal = new() { Payload = 10 },
             SignalJson = "{\"Payload\":10}",
             Exception = exception,
+            StackTraceCaptureIsDisabled = false,
             ConfiguredLogLevel = LogLevel.Information,
             PreExecutionLogLevel = null,
             PostExecutionLogLevel = null,
@@ -384,7 +385,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         var handler = host.Resolve<ISignalPublishers>()
                           .For(TestSignal.T)
-                          .WithPipeline(p => p.UseLogging());
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         try
         {
@@ -400,14 +401,77 @@ public sealed class LoggingSignalMiddlewareTests
 
             var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
-            // three matches: server, hook on server, client
-            Assert.That(logEntries, Has.Exactly(3).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Error && e.Msg.Contains(nameof(GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace))));
+            // four matches: server, hook on server, client, hook on client
+            Assert.That(logEntries, Has.Exactly(4).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Error && e.Msg.Contains(nameof(GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace))));
 
             var numberOfTimesExceptionMessageContainsStack = thrownException.ToString()
                                                                             .Split([nameof(GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace)],
                                                                                    StringSplitOptions.None).Length - 1;
 
             Assert.That(numberOfTimesExceptionMessageContainsStack, Is.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public async Task GivenHandlerWithLoggingMiddlewareWithStackTraceCaptureDisabled_WhenHandlerThrows_ExceptionGetsLoggedWithReducedStackTrace()
+    {
+        var exception = new TestException();
+
+        var testCase = new SignalTestCase<TestSignal, TestSignal.IHandler, TestSignalHandler>
+        {
+            Signal = new() { Payload = 10 },
+            SignalJson = "{\"Payload\":10}",
+            Exception = exception,
+            StackTraceCaptureIsDisabled = true,
+            ConfiguredLogLevel = LogLevel.Information,
+            PreExecutionLogLevel = null,
+            PostExecutionLogLevel = null,
+            ExceptionLogLevel = null,
+            PayloadLoggingStrategy = null,
+            PayloadLoggingStrategyFromFactory = null,
+            LoggerCategoryFactory = null,
+            HookBehavior = HookTestBehavior.HookLogsAndReturnsTrue,
+            TransportTypeName = null,
+        };
+
+        await using var host = await LoggingMiddlewareTestHost.Create(
+            services => services.RegisterSignalType(testCase),
+            logging =>
+            {
+                _ = logging.AddTestLogger(shouldTruncate: false)
+
+                           // log to console during local development for easier debugging
+                           .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
+                           .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
+                           .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
+
+                if (IsRunningInGithubAction)
+                {
+                    _ = logging.Services.Remove(logging.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
+                                                                             && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+                }
+            });
+
+        var handler = host.Resolve<ISignalPublishers>()
+                          .For(TestSignal.T)
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
+
+        try
+        {
+            await handler.Handle(testCase.Signal, host.TestTimeoutToken);
+            Assert.Fail("Exception should have been thrown");
+        }
+        catch (TestException thrownException)
+        {
+            if (!IsRunningInGithubAction)
+            {
+                await Console.Error.WriteLineAsync(thrownException.ToString());
+            }
+
+            var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
+
+            // the test method should be missing from the stack trace since the caller capture is disabled
+            Assert.That(logEntries, Has.Exactly(0).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Error && e.Msg.Contains(nameof(GivenHandlerWithLoggingMiddlewareWithStackTraceCaptureDisabled_WhenHandlerThrows_ExceptionGetsLoggedWithReducedStackTrace))));
         }
     }
 
@@ -424,6 +488,7 @@ public sealed class LoggingSignalMiddlewareTests
             Signal = new() { Payload = 10 },
             SignalJson = "{\"Payload\":10}",
             Exception = hookThrowLocation is "exception" ? handlerException : null,
+            StackTraceCaptureIsDisabled = false,
             ConfiguredLogLevel = LogLevel.Information,
             PreExecutionLogLevel = null,
             PostExecutionLogLevel = null,

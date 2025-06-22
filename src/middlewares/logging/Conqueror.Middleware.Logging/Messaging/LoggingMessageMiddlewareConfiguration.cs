@@ -100,6 +100,18 @@ public sealed class LoggingMessageMiddlewareConfiguration<TMessage, TResponse>
     /// </summary>
     public Func<LoggingMessageExceptionContext<TMessage, TResponse>, bool>? ExceptionHook { get; set; }
 
+    /// <summary>
+    ///     By default, the logging middleware will capture the calling stack trace on every execution
+    ///     so that it can build an exception with the full stack trace when an exception is thrown.
+    ///     Without this explicit capture the stack trace of the exception would only contain the stack
+    ///     frames between the location of the exception and the middleware execution, so we would not
+    ///     see where the call originated. However, while this is very convenient for debugging, it has
+    ///     a significant impact on performance. We believe that in most cases the improved debuggability
+    ///     is worth the trade-off for worse performance. However, for performance-critical applications
+    ///     or specific handlers, you can use this property to disable the stack trace capture.
+    /// </summary>
+    public bool StackTraceCaptureIsDisabled { get; set; }
+
     internal Type? HandlerType { get; }
 }
 
@@ -247,9 +259,9 @@ public sealed record LoggingMessageExceptionContext<TMessage, TResponse>
     ///     can be combined with <see cref="Exception.StackTrace" /> to get the
     ///     full stack trace of the exception, since the exception's stack trace
     ///     only contains the stack frames from the middleware execution to the
-    ///     handler.
+    ///     handler. Is <c>null</c> when capturing of the stack trace is disabled.
     /// </summary>
-    public required StackTrace ExecutionStackTrace { get; init; }
+    public required StackTrace? ExecutionStackTrace { get; init; }
 
     /// <summary>
     ///     The time which has elapsed while executing the message.

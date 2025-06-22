@@ -46,11 +46,10 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                 traceId,
                 ctx);
 
-            // we are aware that capturing the current stack trace like this has a performance impact, but
-            // we believe that the trade-off between performance and debuggability is worth it here; if this
-            // becomes an issue in the future, we can easily add a configuration option to disable this behavior
-            // selectively
-            executionStackTrace = new(skipFrames: 1, fNeedFileInfo: true);
+            if (!Configuration.StackTraceCaptureIsDisabled)
+            {
+                executionStackTrace = new(skipFrames: 1, fNeedFileInfo: true);
+            }
 
             await ctx.Next(ctx.Signal, ctx.CancellationToken).ConfigureAwait(false);
 
@@ -63,7 +62,6 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
         }
         catch (Exception e)
         {
-            executionStackTrace ??= new(skipFrames: 1, fNeedFileInfo: true);
             OnException(
                 logger,
                 signalId,
@@ -353,7 +351,7 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
         string signalId,
         string traceId,
         Exception exception,
-        StackTrace executionStackTrace,
+        StackTrace? executionStackTrace,
         TimeSpan elapsedTime,
         SignalMiddlewareContext<TSignal> ctx)
     {
@@ -398,7 +396,7 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
         // exception that contains the stack trace from the invocation of the middleware; an alternative might be
         // to do the logging asynchronously so that the unwind of the exception has finished, and it contains the
         // full stack trace, but that could introduce subtle race conditions, so we prefer the former approach
-        var exceptionToLog = new WrappingException(exception, executionStackTrace.ToString());
+        var exceptionToLog = executionStackTrace is null ? exception : new WrappingException(exception, executionStackTrace.ToString());
 
         if (ctx.TransportType.Role == SignalTransportRole.Publisher)
         {

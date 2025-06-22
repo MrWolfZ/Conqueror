@@ -74,6 +74,7 @@ public static partial class LoggingMiddlewareTestMessages
                                                             t.postExecutionLogLevel,
                                                             t.exceptionLogLevel,
                                                             t.hasException,
+                                                            stackTraceCaptureIsDisabled: false,
                                                             t.messagePayloadLoggingStrategy,
                                                             t.messagePayloadLoggingStrategyFromFactory,
                                                             t.responsePayloadLoggingStrategy,
@@ -91,15 +92,17 @@ public static partial class LoggingMiddlewareTestMessages
         PayloadLoggingStrategy?[] allPayloadLoggingStrategies = [null, ..Enum.GetValues<PayloadLoggingStrategy>()];
 
         foreach (var t in from hasException in new[] { true, false }
+                          from stackTraceCaptureIsDisabled in hasException ? new[] { true, false } : [false]
                           from hasCustomCategoryFactory in new[] { true, false }
                           from payloadLoggingStrategy in allPayloadLoggingStrategies
-                          select (hasException, hasCustomCategoryFactory, payloadLoggingStrategy))
+                          select (hasException, stackTraceCaptureIsDisabled, hasCustomCategoryFactory, payloadLoggingStrategy))
         {
             foreach (var c in GenerateTestCasesWithSettings(configuredLogLevel: LogLevel.Information,
                                                             preExecutionLogLevel: null,
                                                             postExecutionLogLevel: null,
                                                             exceptionLogLevel: null,
                                                             t.hasException,
+                                                            t.stackTraceCaptureIsDisabled,
                                                             t.payloadLoggingStrategy,
                                                             messagePayloadLoggingStrategyFromFactory: null,
                                                             t.payloadLoggingStrategy,
@@ -118,6 +121,7 @@ public static partial class LoggingMiddlewareTestMessages
         LogLevel? postExecutionLogLevel,
         LogLevel? exceptionLogLevel,
         bool hasException,
+        bool stackTraceCaptureIsDisabled,
         PayloadLoggingStrategy? messagePayloadLoggingStrategy,
         PayloadLoggingStrategy? messagePayloadLoggingStrategyFromFactory,
         PayloadLoggingStrategy? responsePayloadLoggingStrategy,
@@ -132,6 +136,7 @@ public static partial class LoggingMiddlewareTestMessages
             Response = new() { Payload = 11 },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
+            StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
             ConfiguredLogLevel = configuredLogLevel,
             PreExecutionLogLevel = preExecutionLogLevel,
             PostExecutionLogLevel = postExecutionLogLevel,
@@ -152,6 +157,7 @@ public static partial class LoggingMiddlewareTestMessages
             Response = null,
             ResponseJson = null,
             Exception = hasException ? new TestException() : null,
+            StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
             ConfiguredLogLevel = configuredLogLevel,
             PreExecutionLogLevel = preExecutionLogLevel,
             PostExecutionLogLevel = postExecutionLogLevel,
@@ -172,6 +178,7 @@ public static partial class LoggingMiddlewareTestMessages
             Response = new() { Payload = 11 },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
+            StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
             ConfiguredLogLevel = configuredLogLevel,
             PreExecutionLogLevel = preExecutionLogLevel,
             PostExecutionLogLevel = postExecutionLogLevel,
@@ -192,6 +199,7 @@ public static partial class LoggingMiddlewareTestMessages
             Response = null,
             ResponseJson = null,
             Exception = hasException ? new TestException() : null,
+            StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
             ConfiguredLogLevel = configuredLogLevel,
             PreExecutionLogLevel = preExecutionLogLevel,
             PostExecutionLogLevel = postExecutionLogLevel,
@@ -212,6 +220,7 @@ public static partial class LoggingMiddlewareTestMessages
             Response = new() { Payload = 33 },
             ResponseJson = "{\"Payload\":33}",
             Exception = hasException ? new TestException() : null,
+            StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
             ConfiguredLogLevel = configuredLogLevel,
             PreExecutionLogLevel = preExecutionLogLevel,
             PostExecutionLogLevel = postExecutionLogLevel,
@@ -232,6 +241,7 @@ public static partial class LoggingMiddlewareTestMessages
             Response = new() { Payload = new(11) },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
+            StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
             ConfiguredLogLevel = configuredLogLevel,
             PreExecutionLogLevel = preExecutionLogLevel,
             PostExecutionLogLevel = postExecutionLogLevel,
@@ -252,6 +262,7 @@ public static partial class LoggingMiddlewareTestMessages
             Response = new() { ResponsePayload = 11 },
             ResponseJson = "{\"RESPONSE_PAYLOAD\":11}",
             Exception = hasException ? new TestException() : null,
+            StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
             ConfiguredLogLevel = configuredLogLevel,
             PreExecutionLogLevel = preExecutionLogLevel,
             PostExecutionLogLevel = postExecutionLogLevel,
@@ -272,6 +283,7 @@ public static partial class LoggingMiddlewareTestMessages
             Response = new() { Payload = 11 },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
+            StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
             ConfiguredLogLevel = configuredLogLevel,
             PreExecutionLogLevel = preExecutionLogLevel,
             PostExecutionLogLevel = postExecutionLogLevel,
@@ -292,6 +304,7 @@ public static partial class LoggingMiddlewareTestMessages
             Response = new() { Payload = 11 },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
+            StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
             ConfiguredLogLevel = configuredLogLevel,
             PreExecutionLogLevel = preExecutionLogLevel,
             PostExecutionLogLevel = postExecutionLogLevel,
@@ -352,6 +365,8 @@ public static partial class LoggingMiddlewareTestMessages
                 c.LoggerCategoryFactory = testCase.LoggerCategoryFactory;
             }
 
+            c.StackTraceCaptureIsDisabled = testCase.StackTraceCaptureIsDisabled;
+
             if (testCase.HookBehavior is { } hookTestBehavior)
             {
                 var hookReturn = hookTestBehavior is HookTestBehavior.HookLogsAndReturnsTrue or HookTestBehavior.HookDoesNotLogAndReturnsTrue;
@@ -403,7 +418,7 @@ public static partial class LoggingMiddlewareTestMessages
 
                     if (hookLogs)
                     {
-                        var exceptionToLog = new WrappingException(ctx.Exception, ctx.ExecutionStackTrace.ToString());
+                        var exceptionToLog = ctx.ExecutionStackTrace is null ? ctx.Exception : new WrappingException(ctx.Exception, ctx.ExecutionStackTrace.ToString());
                         ctx.Logger.Log(ctx.LogLevel,
                                        exceptionToLog,
                                        "ExceptionHook:{ExceptionType},{MessageId},{TraceId},{TransportTypeName},{TransportRole}",
@@ -449,6 +464,8 @@ public static partial class LoggingMiddlewareTestMessages
         public required string? ResponseJson { get; init; }
 
         public required Exception? Exception { get; init; }
+
+        public required bool StackTraceCaptureIsDisabled { get; init; }
 
         public required LogLevel ConfiguredLogLevel { get; init; }
 
@@ -660,6 +677,7 @@ public static partial class LoggingMiddlewareTestMessages
                                                            .Append($",{MessagePayloadLoggingStrategyFromFactory?.ToString() ?? string.Empty}")
                                                            .Append($",{LoggerCategoryFactory is not null}")
                                                            .Append($",{Exception is not null}")
+                                                           .Append($",{StackTraceCaptureIsDisabled}")
                                                            .Append($",{HookBehavior?.ToString() ?? "None"}")
                                                            .ToString();
 
@@ -670,6 +688,7 @@ public static partial class LoggingMiddlewareTestMessages
                                                        .Append($",stratFromFac:{MessagePayloadLoggingStrategyFromFactory?.ToString() ?? string.Empty}")
                                                        .Append($",has cat:{LoggerCategoryFactory is not null}")
                                                        .Append($",has ex:{Exception is not null}")
+                                                       .Append($",no stack:{StackTraceCaptureIsDisabled}")
                                                        .Append($",hook:{HookBehavior?.ToString() ?? "None"}")
                                                        .ToString();
 
@@ -702,6 +721,8 @@ public static partial class LoggingMiddlewareTestMessages
         PayloadLoggingStrategy? ResponsePayloadLoggingStrategy { get; }
 
         PayloadLoggingStrategy? ResponsePayloadLoggingStrategyFromFactory { get; }
+
+        bool StackTraceCaptureIsDisabled { get; }
 
         HookTestBehavior? HookBehavior { get; }
     }
