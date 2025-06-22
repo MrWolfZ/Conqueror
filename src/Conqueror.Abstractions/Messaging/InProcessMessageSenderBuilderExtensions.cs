@@ -6,7 +6,7 @@ namespace Conqueror;
 public static class InProcessMessageSenderBuilderExtensions
 {
     public static IMessageSender<TMessage, TResponse> UseInProcess<TMessage, TResponse>(
-        this IMessageSenderBuilder<TMessage, TResponse> builder)
+        this MessageSenderBuilder<TMessage, TResponse> builder)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         if (builder.ServiceProvider.GetService(typeof(IInProcessMessageSenderFactory)) is not IInProcessMessageSenderFactory senderFactory)
@@ -19,7 +19,7 @@ public static class InProcessMessageSenderBuilderExtensions
     }
 
     public static IMessageSender<TMessage, TResponse>? UseInProcessIfAvailable<TMessage, TResponse>(
-        this IMessageSenderBuilder<TMessage, TResponse> builder)
+        this MessageSenderBuilder<TMessage, TResponse> builder)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         if (builder.ServiceProvider.GetService(typeof(IInProcessMessageSenderFactory)) is not IInProcessMessageSenderFactory senderFactory)

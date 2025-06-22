@@ -4,7 +4,7 @@ namespace Examples.BlazorWebAssembly.UI;
 
 public static class MessageSenderBuilderExtensions
 {
-    public static IMessageSender<TMessage, TResponse> UseHttpApi<TMessage, TResponse>(this IMessageSenderBuilder<TMessage, TResponse> builder)
+    public static IMessageSender<TMessage, TResponse> UseHttpApi<TMessage, TResponse>(this MessageSenderBuilder<TMessage, TResponse> builder)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
     {
         return builder.UseHttp(builder.ServiceProvider.GetApiBaseAddress());

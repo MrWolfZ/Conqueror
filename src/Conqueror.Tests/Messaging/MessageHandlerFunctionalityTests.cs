@@ -948,11 +948,11 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
 
     protected abstract TestMessage.IHandler ConfigureWithTransport(
         TestMessage.IHandler handler,
-        Func<IMessageSenderBuilder<TestMessage, TestMessageResponse>, IMessageSender<TestMessage, TestMessageResponse>?>? baseConfigure = null);
+        Func<MessageSenderBuilder<TestMessage, TestMessageResponse>, IMessageSender<TestMessage, TestMessageResponse>?>? baseConfigure = null);
 
     protected abstract TestMessageWithoutResponse.IHandler ConfigureWithTransportWithoutResponse(
         TestMessageWithoutResponse.IHandler handler,
-        Func<IMessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>?
+        Func<MessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>?
             baseConfigure = null);
 
     protected sealed override IServiceCollection RegisterHandler(IServiceCollection services)
@@ -1039,7 +1039,7 @@ public sealed class MessageHandlerFunctionalityClientWithSyncTransportFactoryTes
 {
     protected override TestMessage.IHandler ConfigureWithTransport(
         TestMessage.IHandler handler,
-        Func<IMessageSenderBuilder<TestMessage, TestMessageResponse>, IMessageSender<TestMessage, TestMessageResponse>?>? baseConfigure = null)
+        Func<MessageSenderBuilder<TestMessage, TestMessageResponse>, IMessageSender<TestMessage, TestMessageResponse>?>? baseConfigure = null)
     {
         return handler.WithTransport(b =>
         {
@@ -1051,7 +1051,7 @@ public sealed class MessageHandlerFunctionalityClientWithSyncTransportFactoryTes
 
     protected override TestMessageWithoutResponse.IHandler ConfigureWithTransportWithoutResponse(
         TestMessageWithoutResponse.IHandler handler,
-        Func<IMessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>?
+        Func<MessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>?
             baseConfigure = null)
     {
         return handler.WithTransport(b =>
@@ -1068,7 +1068,7 @@ public sealed class MessageHandlerFunctionalityClientWithAsyncTransportFactoryTe
 {
     protected override TestMessage.IHandler ConfigureWithTransport(
         TestMessage.IHandler handler,
-        Func<IMessageSenderBuilder<TestMessage, TestMessageResponse>, IMessageSender<TestMessage, TestMessageResponse>?>? baseConfigure = null)
+        Func<MessageSenderBuilder<TestMessage, TestMessageResponse>, IMessageSender<TestMessage, TestMessageResponse>?>? baseConfigure = null)
     {
         return handler.WithTransport(async b =>
         {
@@ -1081,7 +1081,7 @@ public sealed class MessageHandlerFunctionalityClientWithAsyncTransportFactoryTe
 
     protected override TestMessageWithoutResponse.IHandler ConfigureWithTransportWithoutResponse(
         TestMessageWithoutResponse.IHandler handler,
-        Func<IMessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>?
+        Func<MessageSenderBuilder<TestMessageWithoutResponse, UnitMessageResponse>, IMessageSender<TestMessageWithoutResponse, UnitMessageResponse>?>?
             baseConfigure = null)
     {
         return handler.WithTransport(async b =>

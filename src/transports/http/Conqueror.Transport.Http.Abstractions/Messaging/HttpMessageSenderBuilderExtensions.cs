@@ -6,7 +6,7 @@ namespace Conqueror;
 public static class HttpMessageSenderBuilderExtensions
 {
     public static IHttpMessageSender<TMessage, TResponse> UseHttp<TMessage, TResponse>(
-        this IMessageSenderBuilder<TMessage, TResponse> builder,
+        this MessageSenderBuilder<TMessage, TResponse> builder,
         Uri baseAddress)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
     {

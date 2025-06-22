@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 namespace Conqueror;
 
 public delegate IMessageSender<TMessage, TResponse> ConfigureMessageSender<TMessage, TResponse>(
-    IMessageSenderBuilder<TMessage, TResponse> builder)
+    MessageSenderBuilder<TMessage, TResponse> builder)
     where TMessage : class, IMessage<TMessage, TResponse>;
 
 public delegate ValueTask<IMessageSender<TMessage, TResponse>> ConfigureMessageSenderAsync<TMessage, TResponse>(
-    IMessageSenderBuilder<TMessage, TResponse> builder)
+    MessageSenderBuilder<TMessage, TResponse> builder)
     where TMessage : class, IMessage<TMessage, TResponse>;
