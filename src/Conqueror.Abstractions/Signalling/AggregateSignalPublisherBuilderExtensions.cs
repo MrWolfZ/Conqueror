@@ -7,7 +7,7 @@ namespace Conqueror;
 public static class AggregateSignalPublisherBuilderExtensions
 {
     public static IAggregateSignalPublisher<TSignal> UseAggregate<TSignal>(
-        this ISignalPublisherBuilder<TSignal> builder,
+        this SignalPublisherBuilder<TSignal> builder,
         ISignalPublisher<TSignal> firstPublisher,
         ISignalPublisher<TSignal> secondPublisher,
         params ISignalPublisher<TSignal>[] additionalPublishers)
@@ -15,7 +15,7 @@ public static class AggregateSignalPublisherBuilderExtensions
         => builder.UseAggregate([firstPublisher, secondPublisher, ..additionalPublishers]);
 
     public static IAggregateSignalPublisher<TSignal> UseAggregate<TSignal>(
-        this ISignalPublisherBuilder<TSignal> builder,
+        this SignalPublisherBuilder<TSignal> builder,
         IReadOnlyCollection<ISignalPublisher<TSignal>> publishers)
         where TSignal : class, ISignal<TSignal>
     {

@@ -6,7 +6,7 @@ namespace Conqueror;
 public static class HttpWebSocketsSignalPublisherBuilderExtensions
 {
     public static IHttpWebSocketsSignalPublisher<TSignal> UseHttpWebSockets<TSignal>(
-        this ISignalPublisherBuilder<TSignal> builder)
+        this SignalPublisherBuilder<TSignal> builder)
         where TSignal : class, IHttpWebSocketsSignal<TSignal>
     {
         ArgumentNullException.ThrowIfNull(builder);

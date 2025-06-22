@@ -4,9 +4,9 @@
 namespace Conqueror;
 
 public delegate ISignalPublisher<TSignal> ConfigureSignalPublisher<TSignal>(
-    ISignalPublisherBuilder<TSignal> builder)
+    SignalPublisherBuilder<TSignal> builder)
     where TSignal : class, ISignal<TSignal>;
 
 public delegate ValueTask<ISignalPublisher<TSignal>> ConfigureSignalPublisherAsync<TSignal>(
-    ISignalPublisherBuilder<TSignal> builder)
+    SignalPublisherBuilder<TSignal> builder)
     where TSignal : class, ISignal<TSignal>;

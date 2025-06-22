@@ -6,7 +6,7 @@ namespace Conqueror;
 public static class InProcessSignalPublisherBuilderExtensions
 {
     public static IInProcessSignalPublisher<TSignal> UseInProcess<TSignal>(
-        this ISignalPublisherBuilder<TSignal> builder)
+        this SignalPublisherBuilder<TSignal> builder)
         where TSignal : class, ISignal<TSignal>
     {
         if (builder.ServiceProvider.GetService(typeof(IInProcessSignalPublisherFactory)) is not IInProcessSignalPublisherFactory publisherFactory)

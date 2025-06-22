@@ -5,7 +5,7 @@ namespace Quickstart.Enhanced;
 public static class SignalPublisherBuilderExtensions
 {
     public static ISignalPublisher<TSignal> UseInProcessAndServerSentEvents<TSignal>(
-        this ISignalPublisherBuilder<TSignal> builder)
+        this SignalPublisherBuilder<TSignal> builder)
         where TSignal : class, IHttpSseSignal<TSignal>
     {
         return builder.UseAggregate(builder.UseInProcess(), builder.UseHttpServerSentEvents());

@@ -677,7 +677,7 @@ public abstract class SignalHandlerFunctionalityPublisherTests : SignalHandlerFu
 
     protected abstract TestSignal.IHandler ConfigureWithPublisher(
         TestSignal.IHandler builder,
-        Func<ISignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null);
+        Func<SignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null);
 
     protected sealed override IServiceCollection RegisterHandler(IServiceCollection services)
     {
@@ -734,7 +734,7 @@ public sealed class SignalHandlerFunctionalityPublisherWithSyncTransportFactoryT
 {
     protected override TestSignal.IHandler ConfigureWithPublisher(
         TestSignal.IHandler builder,
-        Func<ISignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null)
+        Func<SignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null)
     {
         return builder.WithTransport(b =>
         {
@@ -750,7 +750,7 @@ public sealed class SignalHandlerFunctionalityPublisherWithAsyncTransportFactory
 {
     protected override TestSignal.IHandler ConfigureWithPublisher(
         TestSignal.IHandler builder,
-        Func<ISignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null)
+        Func<SignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null)
     {
         return builder.WithTransport(async b =>
         {

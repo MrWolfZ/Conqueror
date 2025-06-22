@@ -6,7 +6,7 @@ namespace Conqueror;
 public static class HttpSseSignalPublisherBuilderExtensions
 {
     public static IHttpSseSignalPublisher<TSignal> UseHttpServerSentEvents<TSignal>(
-        this ISignalPublisherBuilder<TSignal> builder)
+        this SignalPublisherBuilder<TSignal> builder)
         where TSignal : class, IHttpSseSignal<TSignal>
     {
         ArgumentNullException.ThrowIfNull(builder);
