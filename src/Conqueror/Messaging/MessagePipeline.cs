@@ -27,6 +27,8 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
 
     public int Count => middlewares.Count;
 
+    internal int Capacity => middlewares.Capacity;
+
     public IMessagePipeline<TMessage, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>
     {

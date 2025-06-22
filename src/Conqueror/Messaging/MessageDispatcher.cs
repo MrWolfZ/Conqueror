@@ -72,15 +72,15 @@ internal sealed class MessageDispatcher(
 
         configurePipeline?.Invoke(pipeline);
 
-        if (pipeline.Count > initialCapacity)
+        if (pipeline.Capacity > initialCapacity)
         {
             if (transportRole is MessageTransportRole.Sender)
             {
-                PipelineCapacityCache<TMessage>.MaxObservedSenderPipelineCapacity = pipeline.Count;
+                PipelineCapacityCache<TMessage>.MaxObservedSenderPipelineCapacity = pipeline.Capacity;
             }
             else
             {
-                PipelineCapacityCache<TMessage>.MaxObservedHandlerPipelineCapacity = pipeline.Count;
+                PipelineCapacityCache<TMessage>.MaxObservedHandlerPipelineCapacity = pipeline.Capacity;
             }
         }
 

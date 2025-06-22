@@ -72,15 +72,15 @@ internal sealed class SignalDispatcher(
 
         configurePipeline?.Invoke(pipeline);
 
-        if (pipeline.Count > initialCapacity)
+        if (pipeline.Capacity > initialCapacity)
         {
             if (transportRole is SignalTransportRole.Publisher)
             {
-                PipelineCapacityCache<TSignal>.MaxObservedPublisherPipelineCapacity = pipeline.Count;
+                PipelineCapacityCache<TSignal>.MaxObservedPublisherPipelineCapacity = pipeline.Capacity;
             }
             else
             {
-                PipelineCapacityCache<TSignal>.MaxObservedHandlerPipelineCapacity = pipeline.Count;
+                PipelineCapacityCache<TSignal>.MaxObservedHandlerPipelineCapacity = pipeline.Capacity;
             }
         }
 

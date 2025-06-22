@@ -27,6 +27,8 @@ internal sealed class SignalPipeline<TSignal>(
 
     public int Count => middlewares.Count;
 
+    internal int Capacity => middlewares.Capacity;
+
     public ISignalPipeline<TSignal> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : ISignalMiddleware<TSignal>
     {
