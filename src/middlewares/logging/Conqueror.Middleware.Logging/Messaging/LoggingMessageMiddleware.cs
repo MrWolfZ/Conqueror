@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -567,21 +569,36 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             traceId);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [UnconditionalSuppressMessage(
+        "AOT",
+        "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+        Justification = "we explicitly check for support")]
     private ILogger GetLogger(MessageMiddlewareContext<TMessage, TResponse> ctx)
     {
-        var loggerFactory = ctx.ServiceProvider.GetRequiredService<ILoggerFactory>();
-
         if (Configuration.LoggerCategoryFactory?.Invoke(ctx.Message) is { } loggerName)
         {
-            return loggerFactory.CreateLogger(loggerName);
+            return ctx.ServiceProvider
+                      .GetRequiredService<ILoggerFactory>()
+                      .CreateLogger(loggerName);
         }
 
-        if (Configuration.HandlerType is not null)
+        var loggerCategoryType = Configuration.HandlerType ?? ctx.Message.GetType();
+
+        if (RuntimeFeature.IsDynamicCodeSupported)
         {
-            return loggerFactory.CreateLogger(Configuration.HandlerType);
+            if (!Cache.LoggerTypeCache.TryGetValue(loggerCategoryType, out var loggerType))
+            {
+                loggerType = typeof(ILogger<>).MakeGenericType(loggerCategoryType);
+                Cache.LoggerTypeCache[loggerCategoryType] = loggerType;
+            }
+
+            return (ILogger)ctx.ServiceProvider.GetRequiredService(loggerType);
         }
 
-        return loggerFactory.CreateLogger(ctx.Message.GetType());
+        return ctx.ServiceProvider
+                  .GetRequiredService<ILoggerFactory>()
+                  .CreateLogger(loggerCategoryType);
     }
 
     [UnconditionalSuppressMessage(
@@ -630,4 +647,9 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
         ILogger logger,
         LogLevel logLevel,
         Exception exception);
+}
+
+file static class Cache
+{
+    public static readonly ConcurrentDictionary<Type, Type> LoggerTypeCache = new();
 }
