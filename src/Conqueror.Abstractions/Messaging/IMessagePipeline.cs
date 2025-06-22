@@ -21,6 +21,11 @@ public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMe
     /// </summary>
     Type? HandlerType { get; }
 
+    /// <summary>
+    ///     The message for which this pipeline is being built.
+    /// </summary>
+    TMessage Message { get; }
+
     IServiceProvider ServiceProvider { get; }
 
     ConquerorContext ConquerorContext { get; }
@@ -52,6 +57,8 @@ public class MessagePipelineProxy<TMessage, TResponse> : IMessagePipeline<TMessa
     public int Count => Wrapped.Count;
 
     public Type? HandlerType => Wrapped.HandlerType;
+
+    public TMessage Message => Wrapped.Message;
 
     public IServiceProvider ServiceProvider => Wrapped.ServiceProvider;
 

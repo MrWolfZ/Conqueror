@@ -8,6 +8,7 @@ namespace Conqueror.Messaging;
 
 internal sealed class MessagePipeline<TMessage, TResponse>(
     Type? handlerType,
+    TMessage message,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
     MessageTransportType transportType,
@@ -18,6 +19,8 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares = new(initialCapacity);
 
     public Type? HandlerType { get; } = handlerType;
+
+    public TMessage Message { get; } = message;
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
