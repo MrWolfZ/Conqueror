@@ -19,11 +19,6 @@ public interface ISignalPipeline<TSignal> : IReadOnlyCollection<ISignalMiddlewar
     /// </summary>
     Type? HandlerType { get; }
 
-    /// <summary>
-    ///     The signal for which this pipeline is being built.
-    /// </summary>
-    TSignal Signal { get; }
-
     IServiceProvider ServiceProvider { get; }
 
     ConquerorContext ConquerorContext { get; }

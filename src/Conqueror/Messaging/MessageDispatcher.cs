@@ -65,7 +65,6 @@ internal sealed class MessageDispatcher(
 
         var pipeline = new MessagePipeline<TMessage, TResponse>(
             handlerType,
-            message,
             serviceProvider,
             conquerorContext,
             transportType,

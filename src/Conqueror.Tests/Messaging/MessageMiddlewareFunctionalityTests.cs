@@ -22,7 +22,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                         var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                         obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
                         obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
-                        obs.MessagesFromPipelineBuilders.Add(pipeline.Message);
 
                         testCase.ConfigureHandlerPipeline?.Invoke(pipeline);
                     });
@@ -42,10 +41,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                                                .Select(r => r == MessageTransportRole.Sender ? null : typeof(TestMessageHandler))
                                                                .ToList();
 
-        var expectedMessagesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
-                                                           .Select(_ => message)
-                                                           .ToList();
-
         using var tokenSource = new CancellationTokenSource();
 
         _ = await handler.WithPipeline(pipeline =>
@@ -58,7 +53,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
             obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
             obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
-            obs.MessagesFromPipelineBuilders.Add(pipeline.Message);
 
             testCase.ConfigureClientPipeline?.Invoke(pipeline);
         }).Handle(message, tokenSource.Token);
@@ -71,7 +65,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                        .Select(t => new MessageTransportType(ConquerorConstants.InProcessTransportName, t.TransportRole))));
         Assert.That(observations.TransportTypesFromPipelineBuilders, Is.EqualTo(expectedTransportTypesFromPipelineBuilders));
         Assert.That(observations.HandlerTypesFromPipelineBuilders, Is.EqualTo(expectedHandlerTypesFromPipelineBuilders));
-        Assert.That(observations.MessagesFromPipelineBuilders, Is.EqualTo(expectedMessagesFromPipelineBuilders));
     }
 
     [Test]
@@ -736,7 +729,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                         {
                             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                             obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
-                            obs.MessagesFromPipelineBuilders.Add(pipeline.Message);
                             _ = pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(obs));
                         })
                     .AddSingleton(observations);
@@ -773,7 +765,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                         {
                             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                             obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
-                            obs.MessagesFromPipelineBuilders.Add(pipeline.Message);
                             _ = pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(obs));
                         })
                     .AddSingleton(observations);
@@ -811,7 +802,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                         {
                             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                             obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
-                            obs.MessagesFromPipelineBuilders.Add(pipeline.Message);
                             _ = pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(obs));
                         })
                     .AddSingleton(observations);
@@ -847,7 +837,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                         {
                             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                             obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
-                            obs.MessagesFromPipelineBuilders.Add(pipeline.Message);
                             _ = pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(obs));
                         })
                     .AddSingleton(observations);
@@ -1270,8 +1259,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
 
         public List<Type?> HandlerTypesFromPipelineBuilders { get; } = [];
-
-        public List<object> MessagesFromPipelineBuilders { get; } = [];
 
         public List<MessageTransportType> TransportTypesFromPipelineBuilders { get; } = [];
 
