@@ -36,6 +36,8 @@ public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMe
 
     IMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn);
 
+    IConditionalMessagePipeline<TMessage, TResponse> UseWhen(Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate);
+
     IMessagePipeline<TMessage, TResponse> Without<TMiddleware>()
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>;
 
@@ -68,9 +70,21 @@ public class MessagePipelineProxy<TMessage, TResponse> : IMessagePipeline<TMessa
     public IMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn)
         => Wrapped.Use(middlewareFn);
 
+    public IConditionalMessagePipeline<TMessage, TResponse> UseWhen(Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate)
+        => Wrapped.UseWhen(predicate);
+
     public IMessagePipeline<TMessage, TResponse> Without<TMiddleware>()
         where TMiddleware : IMessageMiddleware<TMessage, TResponse> => Wrapped.Without<TMiddleware>();
 
     public IMessagePipeline<TMessage, TResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
         where TMiddleware : IMessageMiddleware<TMessage, TResponse> => Wrapped.Configure(configure);
+}
+
+public interface IConditionalMessagePipeline<TMessage, TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
+{
+    IConditionalMessagePipeline<TMessage, TResponse> Use<TMiddleware>(TMiddleware middleware)
+        where TMiddleware : IMessageMiddleware<TMessage, TResponse>;
+
+    IConditionalMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn);
 }

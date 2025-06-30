@@ -101,6 +101,33 @@ public sealed partial class MessageMiddlewareConfigurationTests
         _ = await handler.Handle(new(), CancellationToken.None);
     }
 
+    [Test]
+    public async Task GivenConditionalMiddlewareWithParameter_WhenPipelineConfigurationUpdatesParameter_TheMiddlewareExecutesWithUpdatedParameter()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddMessageHandler<TestMessageHandler>()
+                    .AddSingleton(observations);
+
+        _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
+        {
+            _ = pipeline.UseWhen(_ => true)
+                        .Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+
+            _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10);
+        });
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageSenders>()
+                              .For(TestMessage.T);
+
+        _ = await handler.Handle(new());
+
+        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
+    }
+
     [Message<TestMessageResponse>]
     private sealed partial record TestMessage;
 

@@ -153,23 +153,25 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         }));
     }
 
-    private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase<TestMessage, TestMessageResponse>> GenerateTestCases()
-        => GenerateTestCasesGeneric<TestMessage, TestMessageResponse>();
+    private static IEnumerable<TestCaseData> GenerateTestCases()
+        => GenerateTestCasesGeneric<TestMessage, TestMessageResponse>().Select(tc => new TestCaseData(tc).SetName(tc.Name));
 
-    private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase<TestMessageWithoutResponse, UnitMessageResponse>> GenerateTestCasesWithoutResponse()
-        => GenerateTestCasesGeneric<TestMessageWithoutResponse, UnitMessageResponse>();
+    private static IEnumerable<TestCaseData> GenerateTestCasesWithoutResponse()
+        => GenerateTestCasesGeneric<TestMessageWithoutResponse, UnitMessageResponse>().Select(tc => new TestCaseData(tc).SetName(tc.Name));
 
     private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase<TMessage, TResponse>> GenerateTestCasesGeneric<TMessage, TResponse>()
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         // no middleware
-        yield return new(null,
+        yield return new("No middleware",
+                         null,
                          null,
                          [],
                          []);
 
         // single middleware
-        yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new("Single middleware on handler",
+                         p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
                              (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
@@ -178,7 +180,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
-        yield return new(null,
+        yield return new("Single middleware on client",
+                         null,
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
                              (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
@@ -187,7 +190,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Sender,
                          ]);
 
-        yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new("Single middleware on both client and handler",
+                         p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          p => p.Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
                              (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
@@ -198,8 +202,31 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
+        // single conditional middleware
+        yield return new("Single conditional middleware (true) on both client and handler",
+                         p => p.UseWhen(_ => true).Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.UseWhen(_ => true).Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         [
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                         ],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
+        yield return new("Single conditional middleware (false) on both client and handler",
+                         p => p.UseWhen(_ => false).Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.UseWhen(_ => false).Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         [],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
         // delegate middleware
-        yield return new(p => p.Use(async ctx =>
+        yield return new("Delegate middleware on handler",
+                         p => p.Use(async ctx =>
                          {
                              await Task.Yield();
                              var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
@@ -218,7 +245,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
-        yield return new(null,
+        yield return new("Delegate middleware on client",
+                         null,
                          p => p.Use(async ctx =>
                          {
                              await Task.Yield();
@@ -237,7 +265,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Sender,
                          ]);
 
-        yield return new(p => p.Use(async ctx =>
+        yield return new("Delegate middleware on both client and handler",
+                         p => p.Use(async ctx =>
                          {
                              await Task.Yield();
                              var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
@@ -268,8 +297,71 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
+        // conditional delegate middleware
+        yield return new("Conditional delegate middleware (true) on both client and handler",
+                         p => p.UseWhen(_ => true).Use(async ctx =>
+                         {
+                             await Task.Yield();
+                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                             observations.MiddlewareTypes.Add(typeof(DelegateMessageMiddleware<TMessage, TResponse>));
+                             observations.MessagesFromMiddlewares.Add(ctx.Message);
+                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+
+                             return await ctx.Next(ctx.Message, ctx.CancellationToken);
+                         }),
+                         p => p.UseWhen(_ => true).Use(async ctx =>
+                         {
+                             await Task.Yield();
+                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                             observations.MiddlewareTypes.Add(typeof(DelegateMessageMiddleware<TMessage, TResponse>));
+                             observations.MessagesFromMiddlewares.Add(ctx.Message);
+                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+
+                             return await ctx.Next(ctx.Message, ctx.CancellationToken);
+                         }),
+                         [
+                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                         ],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
+        yield return new("Conditional delegate middleware (false) on both client and handler",
+                         p => p.UseWhen(_ => false).Use(async ctx =>
+                         {
+                             await Task.Yield();
+                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                             observations.MiddlewareTypes.Add(typeof(DelegateMessageMiddleware<TMessage, TResponse>));
+                             observations.MessagesFromMiddlewares.Add(ctx.Message);
+                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+
+                             return await ctx.Next(ctx.Message, ctx.CancellationToken);
+                         }),
+                         p => p.UseWhen(_ => false).Use(async ctx =>
+                         {
+                             await Task.Yield();
+                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                             observations.MiddlewareTypes.Add(typeof(DelegateMessageMiddleware<TMessage, TResponse>));
+                             observations.MessagesFromMiddlewares.Add(ctx.Message);
+                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+
+                             return await ctx.Next(ctx.Message, ctx.CancellationToken);
+                         }),
+                         [],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
         // multiple different middlewares
-        yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+        yield return new("Multiple different middlewares on handler",
+                         p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
@@ -280,7 +372,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
-        yield return new(null,
+        yield return new("Multiple different middlewares on client",
+                         null,
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
@@ -291,7 +384,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Sender,
                          ]);
 
-        yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+        yield return new("Multiple different middlewares on both client and handler",
+                         p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          p => p.Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
@@ -306,8 +400,92 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
+        // multiple conditional middlewares
+        yield return new("Multiple conditional middlewares (true) on both client and handler",
+                         p => p.UseWhen(_ => true)
+                               .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.UseWhen(_ => true)
+                               .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         [
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Receiver),
+                         ],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
+        yield return new("Multiple conditional middlewares (false) on both client and handler",
+                         p => p.UseWhen(_ => false)
+                               .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.UseWhen(_ => false)
+                               .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         [],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
+        // mix unconditional and conditional middlewares
+        yield return new("Mix of unconditional and conditional (true) middlewares on both client and handler",
+                         p =>
+                         {
+                             _ = p.UseWhen(_ => true)
+                                  .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+                         },
+                         p =>
+                         {
+                             _ = p.UseWhen(_ => true)
+                                  .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+                         },
+                         [
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Receiver),
+                         ],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
+        yield return new("Mix of unconditional and conditional (false) middlewares on both client and handler",
+                         p =>
+                         {
+                             _ = p.UseWhen(_ => false)
+                                  .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+                         },
+                         p =>
+                         {
+                             _ = p.UseWhen(_ => false)
+                                  .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+                         },
+                         [
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Receiver),
+                         ],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
         // mix delegate and normal middleware
-        yield return new(p => p.Use(async ctx =>
+        yield return new("Mix of delegate and normal middleware on handler",
+                         p => p.Use(async ctx =>
                          {
                              await Task.Yield();
                              var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
@@ -328,7 +506,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          ]);
 
         // same middleware multiple times
-        yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+        yield return new("Same middleware multiple times on handler",
+                         p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
@@ -339,7 +518,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
-        yield return new(null,
+        yield return new("Same middleware multiple times on client",
+                         null,
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
@@ -351,7 +531,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          ]);
 
         // added, then removed
-        yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+        yield return new("Middleware added then removed on handler",
+                         p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Without<TestMessageMiddleware2<TMessage, TResponse>>(),
@@ -364,7 +545,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
-        yield return new(null,
+        yield return new("Middleware added then removed on client",
+                         null,
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
@@ -377,8 +559,74 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Sender,
                          ]);
 
+        // added conditional, then removed
+        yield return new("Conditional middleware added then removed with true condition on both client and handler",
+                         p =>
+                         {
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.UseWhen(_ => true)
+                                  .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                                  .Without<TestMessageMiddleware2<TMessage, TResponse>>();
+                         },
+                         p =>
+                         {
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.UseWhen(_ => true)
+                                  .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                                  .Without<TestMessageMiddleware2<TMessage, TResponse>>();
+                         },
+                         [
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                         ],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
+        yield return new("Conditional middleware added then removed with false condition on both client and handler",
+                         p =>
+                         {
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.UseWhen(_ => false)
+                                  .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                                  .Without<TestMessageMiddleware2<TMessage, TResponse>>();
+                         },
+                         p =>
+                         {
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.UseWhen(_ => false)
+                                  .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+
+                             _ = p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                                  .Without<TestMessageMiddleware2<TMessage, TResponse>>();
+                         },
+                         [
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                         ],
+                         [
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                         ]);
+
         // multiple times added, then removed
-        yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+        yield return new("Multiple middlewares added then one removed on handler",
+                         p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
@@ -392,7 +640,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
-        yield return new(null,
+        yield return new("Multiple middlewares added then one removed on client",
+                         null,
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
@@ -407,7 +656,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          ]);
 
         // added on client, added and removed in handler
-        yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+        yield return new("Middleware added on client and added then removed on handler",
+                         p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Without<TestMessageMiddleware<TMessage, TResponse>>(),
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
@@ -419,7 +669,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          ]);
 
         // added, then removed, then added again
-        yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+        yield return new("Middleware added then removed then added again on handler",
+                         p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Without<TestMessageMiddleware<TMessage, TResponse>>()
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
@@ -430,7 +681,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
-        yield return new(null,
+        yield return new("Middleware added then removed then added again on client",
+                         null,
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Without<TestMessageMiddleware<TMessage, TResponse>>()
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
@@ -442,7 +694,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          ]);
 
         // retry middlewares
-        yield return new(p => p.Use(new TestMessageRetryMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+        yield return new("Retry middleware with middlewares after it on handler",
+                         p => p.Use(new TestMessageRetryMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
@@ -457,7 +710,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Receiver,
                          ]);
 
-        yield return new(null,
+        yield return new("Retry middleware with middlewares after it on client",
+                         null,
                          p => p.Use(new TestMessageRetryMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
@@ -472,7 +726,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              MessageTransportRole.Sender,
                          ]);
 
-        yield return new(p => p.Use(new TestMessageRetryMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+        yield return new("Retry middleware with middlewares after it on client and handler",
+                         p => p.Use(new TestMessageRetryMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          p => p.Use(new TestMessageRetryMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
@@ -987,7 +1242,59 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          .Handle(message);
     }
 
+    [Test]
+    public async Task GivenHandlerAndClientPipelineWithConditionalMiddlewares_WhenPipelineIsBeingExecuted_PredicateGetsPassedSameContextAsMiddleware()
+    {
+        var services = new ServiceCollection();
+
+        MessageMiddlewareContext<TestMessage, TestMessageResponse>? seenContextInPredicateOnHandler = null;
+        MessageMiddlewareContext<TestMessage, TestMessageResponse>? seenContextInPredicateOnSender = null;
+
+        MessageMiddlewareContext<TestMessage, TestMessageResponse>? seenContextInMiddlewareOnHandler = null;
+        MessageMiddlewareContext<TestMessage, TestMessageResponse>? seenContextInMiddlewareOnSender = null;
+
+        _ = services.AddMessageHandlerDelegate(TestMessage.T,
+                                               (message, _, _) => Task.FromResult<TestMessageResponse>(new(message.Payload + 1)),
+                                               pipeline =>
+                                               {
+                                                   _ = pipeline.UseWhen(ctx =>
+                                                   {
+                                                       seenContextInPredicateOnHandler = ctx;
+                                                       return true;
+                                                   }).Use(ctx =>
+                                                   {
+                                                       seenContextInMiddlewareOnHandler = ctx;
+                                                       return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                                   });
+                                               });
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageSenders>()
+                              .For(TestMessage.T);
+
+        var message = new TestMessage(10);
+
+        _ = await handler.WithPipeline(pipeline =>
+                         {
+                             _ = pipeline.UseWhen(ctx =>
+                             {
+                                 seenContextInPredicateOnSender = ctx;
+                                 return true;
+                             }).Use(ctx =>
+                             {
+                                 seenContextInMiddlewareOnSender = ctx;
+                                 return ctx.Next(ctx.Message, ctx.CancellationToken);
+                             });
+                         })
+                         .Handle(message);
+
+        Assert.That(seenContextInPredicateOnSender, Is.EqualTo(seenContextInMiddlewareOnSender));
+        Assert.That(seenContextInPredicateOnHandler, Is.EqualTo(seenContextInMiddlewareOnHandler));
+    }
+
     public sealed record ConquerorMiddlewareFunctionalityTestCase<TMessage, TResponse>(
+        string Name,
         Action<IMessagePipeline<TMessage, TResponse>>? ConfigureHandlerPipeline,
         Action<IMessagePipeline<TMessage, TResponse>>? ConfigureClientPipeline,
         IReadOnlyCollection<(Type MiddlewareType, MessageTransportRole TransportRole)> ExpectedMiddlewareTypes,
