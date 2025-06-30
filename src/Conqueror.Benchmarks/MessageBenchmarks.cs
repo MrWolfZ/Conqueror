@@ -61,14 +61,14 @@ public partial class MessageBenchmarks
                                                     if (numOfMiddlewares > 0)
                                                     {
                                                         pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m => m.Configuration
-                                                                .Parameter = 1);
+                                                            .Parameter = 1);
                                                     }
                                                 })
                                                 .Handle(new(idx));
 
-            if (response.Value != numOfMiddlewares + idx)
+            if (response.Value != numOfMiddlewares * 2 + idx)
             {
-                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {numOfMiddlewares + idx}");
+                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {numOfMiddlewares * 2 + idx}");
             }
         }
     }
@@ -90,14 +90,13 @@ public partial class MessageBenchmarks
                                         for (var i = 0; i < numOfMiddlewares; i += 1)
                                         {
                                             pipeline.Use(
-                                                new TestMessageMiddleware<TestMessage, TestMessageResponse>
-                                                    { Configuration = new() { Parameter = i } });
+                                                new TestMessageMiddleware<TestMessage, TestMessageResponse> { Configuration = new() { Parameter = i } });
                                         }
 
                                         if (numOfMiddlewares > 0)
                                         {
                                             pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m => m.Configuration
-                                                    .Parameter = 1);
+                                                .Parameter = 1);
                                         }
                                     });
 
@@ -107,9 +106,9 @@ public partial class MessageBenchmarks
         {
             var response = await sender.Handle(new(idx));
 
-            if (response.Value != numOfMiddlewares + idx)
+            if (response.Value != numOfMiddlewares * 2 + idx)
             {
-                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {numOfMiddlewares + idx}");
+                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {numOfMiddlewares * 2 + idx}");
             }
         }
     }
@@ -185,7 +184,17 @@ public partial class MessageBenchmarks
 
         public static void ConfigurePipeline(TestMessage.IPipeline pipeline)
         {
-            _ = pipeline;
+            var numOfMiddlewares = pipeline.ServiceProvider.GetRequiredService<TestRunConfig>().NumOfMiddlewares;
+
+            for (var i = 0; i < numOfMiddlewares; i += 1)
+            {
+                pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse> { Configuration = new() { Parameter = i } });
+            }
+
+            if (numOfMiddlewares > 0)
+            {
+                pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m => m.Configuration.Parameter = 1);
+            }
         }
     }
 
