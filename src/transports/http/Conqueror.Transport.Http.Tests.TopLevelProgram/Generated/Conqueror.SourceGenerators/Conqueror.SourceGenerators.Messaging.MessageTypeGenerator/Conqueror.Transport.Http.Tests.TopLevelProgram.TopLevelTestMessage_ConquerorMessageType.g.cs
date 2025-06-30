@@ -34,7 +34,7 @@ namespace Conqueror.Transport.Http.Tests.TopLevelProgram
 
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
-            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse, IHandler, Proxy>, IHandler;
+            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse, IHandler>, IHandler;
         }
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]

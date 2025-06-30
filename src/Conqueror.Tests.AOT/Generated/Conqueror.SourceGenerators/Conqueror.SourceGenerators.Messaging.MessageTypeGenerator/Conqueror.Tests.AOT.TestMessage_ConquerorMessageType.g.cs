@@ -34,7 +34,7 @@ namespace Conqueror.Tests.AOT
 
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
-            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse, IHandler, Proxy>, IHandler;
+            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse, IHandler>, IHandler;
         }
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]

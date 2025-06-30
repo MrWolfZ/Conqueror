@@ -225,8 +225,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         services.TryAddSingleton<IMessageDispatcher>(static p => new MessageDispatcher(
                                                          p.GetRequiredService<IConquerorContextAccessor>(),
                                                          p.GetRequiredService<IMessageIdFactory>(),
-                                                         MessageTransportRole.Sender,
-                                                         handlerType: null));
+                                                         MessageTransportRole.Sender));
 
         services.TryAddTransient<IMessageSenders, MessageSenders>();
         services.TryAddSingleton<IInProcessMessageSenderFactory, InProcessMessageSenderFactory>();
@@ -280,6 +279,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
             HandlerType: null,
             fn,
             p => new MessageHandlerInvoker<TMessage, TResponse>(
+                p,
                 p.GetRequiredService<IConquerorContextAccessor>(),
                 p.GetRequiredService<IMessageIdFactory>(),
                 configurePipeline,
@@ -340,6 +340,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
                 arg.HandlerType,
                 HandlerFn: null,
                 p => new MessageHandlerInvoker<TMessage, TResponse>(
+                    p,
                     p.GetRequiredService<IConquerorContextAccessor>(),
                     p.GetRequiredService<IMessageIdFactory>(),
                     pipeline => configurePipeline(new TPipelineProxy { Wrapped = pipeline }),

@@ -738,7 +738,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          [
                              MessageTransportRole.Sender,
                              MessageTransportRole.Receiver,
-                             MessageTransportRole.Receiver,
                          ]);
     }
 
@@ -867,7 +866,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     [Test]
-    public async Task GivenHandlerWithMiddlewares_WhenMiddlewareIsExecuted_ServiceProviderInContextAndPipelineConfigurationIsFromResolutionScope()
+    public async Task GivenHandlerWithMiddlewares_WhenMiddlewareIsExecuted_ServiceProviderInContextIsFromResolutionScope()
     {
         var services = new ServiceCollection();
 
@@ -911,7 +910,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
             });
         }).Handle(new(10));
 
-        Assert.That(providerFromHandlerPipelineBuild, Is.SameAs(scope1.ServiceProvider));
+        Assert.That(providerFromHandlerPipelineBuild, Is.Not.SameAs(scope1.ServiceProvider));
         Assert.That(providerFromHandlerMiddleware, Is.SameAs(scope1.ServiceProvider));
         Assert.That(providerFromClientPipelineBuild, Is.SameAs(scope1.ServiceProvider));
         Assert.That(providerFromClientMiddleware, Is.SameAs(scope1.ServiceProvider));
@@ -927,7 +926,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         }).Handle(new(10));
 
         Assert.That(providerFromHandlerPipelineBuild, Is.Not.SameAs(scope1.ServiceProvider));
-        Assert.That(providerFromHandlerPipelineBuild, Is.SameAs(scope2.ServiceProvider));
+        Assert.That(providerFromHandlerPipelineBuild, Is.Not.SameAs(scope2.ServiceProvider));
         Assert.That(providerFromHandlerMiddleware, Is.SameAs(scope2.ServiceProvider));
         Assert.That(providerFromClientPipelineBuild, Is.SameAs(scope2.ServiceProvider));
         Assert.That(providerFromClientMiddleware, Is.SameAs(scope2.ServiceProvider));

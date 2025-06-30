@@ -36,6 +36,7 @@ internal sealed class MessageSenders(
             {
                 ServiceProvider = arg.ServiceProvider,
                 Dispatcher = arg.Dispatcher,
+                Pipeline = new MessagePipeline<TMessage, TResponse>(handlerType: null, arg.ServiceProvider),
             };
         }
     }

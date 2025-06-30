@@ -37,7 +37,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.InSameNestedTypeP
 
                 [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
                 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-                public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, IHandler, Proxy>, IHandler;
+                public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, IHandler>, IHandler;
             }
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]

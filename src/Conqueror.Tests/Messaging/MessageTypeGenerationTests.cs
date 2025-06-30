@@ -60,7 +60,7 @@ public sealed partial class MessageTypeGenerationTests
             Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default);
 
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public sealed class Proxy : MessageHandlerProxy<TestMessage, TestMessageResponse, IHandler, Proxy>, IHandler;
+            public sealed class Proxy : MessageHandlerProxy<TestMessage, TestMessageResponse, IHandler>, IHandler;
         }
 
         public interface IPipeline : IMessagePipeline<TestMessage, TestMessageResponse>
@@ -114,7 +114,7 @@ public sealed partial class MessageTypeGenerationTests
             Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default);
 
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public sealed class Proxy : MessageHandlerProxy<TestMessageWithoutResponse, IHandler, Proxy>, IHandler;
+            public sealed class Proxy : MessageHandlerProxy<TestMessageWithoutResponse, IHandler>, IHandler;
         }
 
         public interface IPipeline : IMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse>

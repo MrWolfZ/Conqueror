@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,14 +7,13 @@ namespace Conqueror.Messaging;
 internal sealed class MessageDispatcher(
     IConquerorContextAccessor conquerorContextAccessor,
     IMessageIdFactory messageIdFactory,
-    MessageTransportRole transportRole,
-    Type? handlerType)
+    MessageTransportRole transportRole)
     : IMessageDispatcher
 {
     public async Task<TResponse> Dispatch<TMessage, TResponse>(
         TMessage message,
         IServiceProvider serviceProvider,
-        Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline,
+        IMessagePipeline<TMessage, TResponse> pipeline,
         IMessageSender<TMessage, TResponse>? sender,
         ConfigureMessageSender<TMessage, TResponse>? configureSender,
         ConfigureMessageSenderAsync<TMessage, TResponse>? configureSenderAsync,
@@ -59,50 +57,13 @@ internal sealed class MessageDispatcher(
 
         var transportType = new MessageTransportType(sender.TransportTypeName, transportRole);
 
-        var initialCapacity = transportRole is MessageTransportRole.Sender
-            ? PipelineCapacityCache<TMessage>.MaxObservedSenderPipelineCapacity
-            : PipelineCapacityCache<TMessage>.MaxObservedHandlerPipelineCapacity;
-
-        var pipeline = new MessagePipeline<TMessage, TResponse>(
-            handlerType,
-            serviceProvider,
-            initialCapacity);
-
-        configurePipeline?.Invoke(pipeline);
-
-        if (pipeline.Capacity > initialCapacity)
-        {
-            if (transportRole is MessageTransportRole.Sender)
-            {
-                PipelineCapacityCache<TMessage>.MaxObservedSenderPipelineCapacity = pipeline.Capacity;
-            }
-            else
-            {
-                PipelineCapacityCache<TMessage>.MaxObservedHandlerPipelineCapacity = pipeline.Capacity;
-            }
-        }
-
-        return await pipeline.Execute(
-                                 message,
-                                 sender,
-                                 transportType,
-                                 conquerorContext,
-                                 cancellationToken)
-                             .ConfigureAwait(false);
+        return await ((MessagePipeline<TMessage, TResponse>)pipeline).Execute(
+                                                                         serviceProvider,
+                                                                         message,
+                                                                         sender,
+                                                                         transportType,
+                                                                         conquerorContext,
+                                                                         cancellationToken)
+                                                                     .ConfigureAwait(false);
     }
-}
-
-// performance optimization: we assume that most of the time the pipeline configuration will be very stable for a given
-// message and transport role (e.g. the same middlewares will be used for sending or handling a message), so we cache the
-// maximum observed pipeline size so that we can use it as the initial capacity for the pipeline; this way we avoid
-// unnecessary resizes of the backing list; this performance optimization has been successfully validated through
-// benchmarking, and it significantly reduces allocations for pipelines with more than 8 middlewares (which we assume
-// is going to be fairly common)
-[SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "intentional design to leverage static classes as cache")]
-[SuppressMessage("ReSharper", "UnusedTypeParameter", Justification = "used as static lookup key")]
-file static class PipelineCapacityCache<TMessage>
-{
-    public static int MaxObservedSenderPipelineCapacity { get; set; }
-
-    public static int MaxObservedHandlerPipelineCapacity { get; set; }
 }

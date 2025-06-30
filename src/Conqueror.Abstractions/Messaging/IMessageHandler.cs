@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ public interface IMessageHandler<TMessage, TResponse, TIHandler, TProxy, in TIPi
     : IMessageHandler<TMessage, TResponse, TIHandler>
     where TMessage : class, IMessage<TMessage, TResponse>
     where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>
-    where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
+    where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler>, TIHandler, new()
     where TIPipeline : class, IMessagePipeline<TMessage, TResponse>
     where TPipelineProxy : MessagePipelineProxy<TMessage, TResponse>, TIPipeline, new()
 {
@@ -73,72 +74,72 @@ public interface IMessageHandler<TMessage, TResponse, TIHandler, TProxy, in TIPi
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy> : IMessageHandlerProxy<TMessage, TResponse, TIHandler>
+public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler> : IMessageHandlerProxy<TMessage, TResponse, TIHandler>
     where TMessage : class, IMessage<TMessage, TResponse>
     where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
-    where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
 {
+    protected MessageHandlerProxy()
+    {
+        Debug.Assert(this is TIHandler, $"the proxy should implement {typeof(TIHandler).Name}, but it is {GetType()} instead");
+
+        This = (this as TIHandler)!;
+    }
+
     // cannot be 'required' since that would block the `new()` constraint
     internal IServiceProvider ServiceProvider { get; init; } = null!;
 
     internal IMessageDispatcher Dispatcher { get; init; } = null!;
 
-    private Action<IMessagePipeline<TMessage, TResponse>>? ConfigurePipeline { get; init; }
+    internal IMessagePipeline<TMessage, TResponse> Pipeline { get; init; } = null!;
 
-    private ConfigureMessageSender<TMessage, TResponse>? ConfigureSender { get; init; }
+    private ConfigureMessageSender<TMessage, TResponse>? ConfigureSender { get; set; }
 
-    private ConfigureMessageSenderAsync<TMessage, TResponse>? ConfigureSenderAsync { get; init; }
+    private ConfigureMessageSenderAsync<TMessage, TResponse>? ConfigureSenderAsync { get; set; }
+
+    private TIHandler This { get; }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
         => Dispatcher.Dispatch(
             message,
             ServiceProvider,
-            ConfigurePipeline,
+            Pipeline,
             sender: null,
             ConfigureSender,
             ConfigureSenderAsync,
             cancellationToken);
 
     public TIHandler WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        => new TProxy
-        {
-            ServiceProvider = ServiceProvider,
-            Dispatcher = Dispatcher,
-            ConfigurePipeline = (Action<IMessagePipeline<TMessage, TResponse>>)Delegate.Combine(ConfigurePipeline, configurePipeline),
-            ConfigureSender = ConfigureSender,
-            ConfigureSenderAsync = ConfigureSenderAsync,
-        };
+    {
+        configurePipeline(Pipeline);
+
+        return This;
+    }
 
     public TIHandler WithTransport(ConfigureMessageSender<TMessage, TResponse> configureSender)
-        => new TProxy
-        {
-            ServiceProvider = ServiceProvider,
-            Dispatcher = Dispatcher,
-            ConfigurePipeline = ConfigurePipeline,
-            ConfigureSender = configureSender,
-            ConfigureSenderAsync = null,
-        };
+    {
+        ConfigureSender = configureSender;
+        ConfigureSenderAsync = null;
+
+        return This;
+    }
 
     public TIHandler WithTransport(ConfigureMessageSenderAsync<TMessage, TResponse> configureSenderAsync)
-        => new TProxy
-        {
-            ServiceProvider = ServiceProvider,
-            Dispatcher = Dispatcher,
-            ConfigurePipeline = ConfigurePipeline,
-            ConfigureSender = null,
-            ConfigureSenderAsync = configureSenderAsync,
-        };
+    {
+        ConfigureSender = null;
+        ConfigureSenderAsync = configureSenderAsync;
+
+        return This;
+    }
 
     static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors()
         => throw new NotSupportedException("this method should never be called on the proxy");
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class MessageHandlerProxy<TMessage, TIHandler, TProxy> : MessageHandlerProxy<TMessage, UnitMessageResponse, TIHandler, TProxy>
+public abstract class MessageHandlerProxy<TMessage, TIHandler> : MessageHandlerProxy<TMessage, UnitMessageResponse, TIHandler>
     where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     where TIHandler : class, IMessageHandler<TMessage, UnitMessageResponse, TIHandler>
-    where TProxy : MessageHandlerProxy<TMessage, UnitMessageResponse, TIHandler, TProxy>, TIHandler, new()
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     public new Task Handle(TMessage message, CancellationToken cancellationToken = default)

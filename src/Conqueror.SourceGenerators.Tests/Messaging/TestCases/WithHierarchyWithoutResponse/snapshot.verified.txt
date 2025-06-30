@@ -35,7 +35,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithHierarchyWith
 
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, IHandler, Proxy>, IHandler;
+            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, IHandler>, IHandler;
         }
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
@@ -103,7 +103,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithHierarchyWith
 
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessageSub, IHandler, Proxy>, IHandler;
+            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessageSub, IHandler>, IHandler;
         }
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]

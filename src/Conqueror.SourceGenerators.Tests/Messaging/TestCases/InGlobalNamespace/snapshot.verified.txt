@@ -33,7 +33,7 @@ partial record GlobalTestMessage : global::Conqueror.IMessage<GlobalTestMessage,
 
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-        public sealed class Proxy : global::Conqueror.MessageHandlerProxy<GlobalTestMessage, global::GlobalTestMessageResponse, IHandler, Proxy>, IHandler;
+        public sealed class Proxy : global::Conqueror.MessageHandlerProxy<GlobalTestMessage, global::GlobalTestMessageResponse, IHandler>, IHandler;
     }
 
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]

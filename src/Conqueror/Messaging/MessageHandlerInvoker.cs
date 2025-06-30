@@ -5,20 +5,27 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Messaging;
 
-internal sealed class MessageHandlerInvoker<TMessage, TResponse>(
-    IConquerorContextAccessor conquerorContextAccessor,
-    IMessageIdFactory messageIdFactory,
-    Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline,
-    MessageHandlerFn<TMessage, TResponse> handlerFn,
-    Type? handlerType)
-    : IMessageHandlerInvoker
+internal sealed class MessageHandlerInvoker<TMessage, TResponse> : IMessageHandlerInvoker
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    private readonly MessageDispatcher dispatcher = new(
-        conquerorContextAccessor,
-        messageIdFactory,
-        MessageTransportRole.Receiver,
-        handlerType);
+    private readonly MessageDispatcher dispatcher;
+    private readonly MessageHandlerFn<TMessage, TResponse> handlerFn;
+    private readonly MessagePipeline<TMessage, TResponse> pipeline;
+
+    public MessageHandlerInvoker(
+        IServiceProvider serviceProvider,
+        IConquerorContextAccessor conquerorContextAccessor,
+        IMessageIdFactory messageIdFactory,
+        Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline,
+        MessageHandlerFn<TMessage, TResponse> handlerFn,
+        Type? handlerType)
+    {
+        this.handlerFn = handlerFn;
+        dispatcher = new(conquerorContextAccessor, messageIdFactory, MessageTransportRole.Receiver);
+        pipeline = new(handlerType, serviceProvider);
+
+        configurePipeline?.Invoke(pipeline);
+    }
 
     public Task<TR> Invoke<TM, TR>(
         TM message,
@@ -33,7 +40,7 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse>(
         return (Task<TR>)(object)dispatcher.Dispatch(
             (message as TMessage)!,
             serviceProvider,
-            configurePipeline,
+            pipeline,
             new Sender(handlerFn, transportTypeName),
             configureSender: null,
             configureSenderAsync: null,

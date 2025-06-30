@@ -35,7 +35,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTy
 
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse, IHandler, Proxy>, IHandler;
+            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse, IHandler>, IHandler;
         }
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
@@ -100,7 +100,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTy
 
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage2, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse2, IHandler, Proxy>, IHandler;
+            public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage2, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse2, IHandler>, IHandler;
         }
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]

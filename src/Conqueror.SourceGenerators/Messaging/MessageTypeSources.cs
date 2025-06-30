@@ -143,7 +143,7 @@ public static class MessageTypeSources
                  .AppendIndentation(indentation)
                  .Append($"public sealed class Proxy : global::Conqueror.MessageHandlerProxy<{messageTypeDescriptor.Name}")
                  .AppendResponseTypeParameterToListIfNotUnitResponse(in responseTypeDescriptor)
-                 .Append(", IHandler, Proxy>, IHandler;").AppendLine();
+                 .Append(", IHandler>, IHandler;").AppendLine();
     }
 
     private static StringBuilder AppendTransportMessageHandlerInterface(this StringBuilder sb,

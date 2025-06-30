@@ -38,7 +38,7 @@ internal sealed class CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHan
     : ICoreMessageHandlerTypesInjector
     where TMessage : class, IMessage<TMessage, TResponse>
     where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>
-    where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
+    where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler>, TIHandler, new()
     where TIPipeline : class, IMessagePipeline<TMessage, TResponse>
     where TPipelineProxy : MessagePipelineProxy<TMessage, TResponse>, TIPipeline, new()
 {
@@ -68,7 +68,7 @@ internal interface ICoreMessageHandlerTypesInjectable<in TArg, out TResult>
     TResult WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(TArg arg)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>
-        where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
+        where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler>, TIHandler, new()
         where TIPipeline : class, IMessagePipeline<TMessage, TResponse>
         where TPipelineProxy : MessagePipelineProxy<TMessage, TResponse>, TIPipeline, new();
 }

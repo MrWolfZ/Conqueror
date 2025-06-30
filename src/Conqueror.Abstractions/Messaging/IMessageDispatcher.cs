@@ -10,7 +10,7 @@ internal interface IMessageDispatcher
     Task<TResponse> Dispatch<TMessage, TResponse>(
         TMessage message,
         IServiceProvider serviceProvider,
-        Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline,
+        IMessagePipeline<TMessage, TResponse> pipeline,
         IMessageSender<TMessage, TResponse>? sender,
         ConfigureMessageSender<TMessage, TResponse>? configureSender,
         ConfigureMessageSenderAsync<TMessage, TResponse>? configureSenderAsync,
