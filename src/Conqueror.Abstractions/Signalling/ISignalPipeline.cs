@@ -34,9 +34,20 @@ public interface ISignalPipeline<TSignal> : IReadOnlyCollection<ISignalMiddlewar
 
     ISignalPipeline<TSignal> Use(SignalMiddlewareFn<TSignal> middlewareFn);
 
+    IConditionalSignalPipeline<TSignal> UseWhen(Predicate<SignalMiddlewareContext<TSignal>> predicate);
+
     ISignalPipeline<TSignal> Without<TMiddleware>()
         where TMiddleware : ISignalMiddleware<TSignal>;
 
     ISignalPipeline<TSignal> Configure<TMiddleware>(Action<TMiddleware> configure)
         where TMiddleware : ISignalMiddleware<TSignal>;
+}
+
+public interface IConditionalSignalPipeline<TSignal>
+    where TSignal : class, ISignal<TSignal>
+{
+    IConditionalSignalPipeline<TSignal> Use<TMiddleware>(TMiddleware middleware)
+        where TMiddleware : ISignalMiddleware<TSignal>;
+
+    IConditionalSignalPipeline<TSignal> Use(SignalMiddlewareFn<TSignal> middlewareFn);
 }

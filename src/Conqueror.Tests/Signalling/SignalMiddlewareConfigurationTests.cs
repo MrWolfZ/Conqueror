@@ -101,6 +101,33 @@ public sealed partial class SignalMiddlewareConfigurationTests
         await handler.Handle(new(), CancellationToken.None);
     }
 
+    [Test]
+    public async Task GivenConditionalMiddlewareWithParameter_WhenPipelineConfigurationUpdatesParameter_TheMiddlewareExecutesWithUpdatedParameter()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddSignalHandler<TestSignalHandler>()
+                    .AddSingleton(observations);
+
+        _ = services.AddSingleton<Action<ISignalPipeline<TestSignal>>>(pipeline =>
+        {
+            _ = pipeline.UseWhen(_ => true)
+                        .Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+
+            _ = pipeline.Configure<TestSignalMiddleware<TestSignal>>(c => c.Parameter += 10);
+        });
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ISignalPublishers>()
+                              .For(TestSignal.T);
+
+        await handler.Handle(new());
+
+        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
+    }
+
     [Signal]
     private sealed partial record TestSignal;
 

@@ -39,10 +39,15 @@ internal sealed class SignalPipeline<TSignal>(
         return Use(new DelegateSignalMiddleware(middlewareFn));
     }
 
+    public IConditionalSignalPipeline<TSignal> UseWhen(Predicate<SignalMiddlewareContext<TSignal>> predicate)
+    {
+        return new ConditionalPipeline(predicate, this);
+    }
+
     public ISignalPipeline<TSignal> Without<TMiddleware>()
         where TMiddleware : ISignalMiddleware<TSignal>
     {
-        _ = middlewares.RemoveAll(static m => m is TMiddleware);
+        _ = middlewares.RemoveAll(static m => m is TMiddleware or ConditionalSignalMiddleware<TMiddleware>);
 
         return this;
     }
@@ -56,6 +61,12 @@ internal sealed class SignalPipeline<TSignal>(
             if (middleware is TMiddleware m)
             {
                 configure(m);
+                found = true;
+            }
+
+            if (middleware is ConditionalSignalMiddleware<TMiddleware> conditionalMiddleware)
+            {
+                configure(conditionalMiddleware.Middleware);
                 found = true;
             }
         }
@@ -102,5 +113,47 @@ internal sealed class SignalPipeline<TSignal>(
     private sealed class DelegateSignalMiddleware(SignalMiddlewareFn<TSignal> middlewareFn) : ISignalMiddleware<TSignal>
     {
         public Task Execute(SignalMiddlewareContext<TSignal> ctx) => middlewareFn(ctx);
+    }
+
+    private sealed class ConditionalSignalMiddleware<TMiddleware>(
+        Predicate<SignalMiddlewareContext<TSignal>> predicate,
+        TMiddleware middleware)
+        : ISignalMiddleware<TSignal>
+        where TMiddleware : ISignalMiddleware<TSignal>
+    {
+        public TMiddleware Middleware => middleware;
+
+        public Task Execute(SignalMiddlewareContext<TSignal> ctx)
+            => predicate(ctx) ? middleware.Execute(ctx) : ctx.Next(ctx.Signal, ctx.CancellationToken);
+    }
+
+    private sealed class ConditionalDelegateSignalMiddleware(
+        Predicate<SignalMiddlewareContext<TSignal>> predicate,
+        SignalMiddlewareFn<TSignal> middlewareFn)
+        : ISignalMiddleware<TSignal>
+    {
+        public Task Execute(SignalMiddlewareContext<TSignal> ctx)
+            => predicate(ctx) ? middlewareFn(ctx) : ctx.Next(ctx.Signal, ctx.CancellationToken);
+    }
+
+    private sealed class ConditionalPipeline(
+        Predicate<SignalMiddlewareContext<TSignal>> predicate,
+        SignalPipeline<TSignal> pipeline)
+        : IConditionalSignalPipeline<TSignal>
+    {
+        public IConditionalSignalPipeline<TSignal> Use<TMiddleware>(TMiddleware middleware)
+            where TMiddleware : ISignalMiddleware<TSignal>
+        {
+            _ = pipeline.Use(new ConditionalSignalMiddleware<TMiddleware>(predicate, middleware));
+
+            return this;
+        }
+
+        public IConditionalSignalPipeline<TSignal> Use(SignalMiddlewareFn<TSignal> middlewareFn)
+        {
+            _ = pipeline.Use(new ConditionalDelegateSignalMiddleware(predicate, middlewareFn));
+
+            return this;
+        }
     }
 }
