@@ -29,7 +29,7 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
             connectionTaskCompletionSource.Task,
             Run(receiver.HandlerType, connectionTaskCompletionSource, linkedSource.Token),
             linkedSource,
-            () =>
+            onDispose: () =>
             {
                 if (defaultHttpClientLazy.IsValueCreated)
                 {

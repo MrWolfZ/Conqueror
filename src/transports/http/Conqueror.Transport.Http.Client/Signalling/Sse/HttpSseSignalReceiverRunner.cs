@@ -28,7 +28,7 @@ internal sealed class HttpSseSignalReceiverRunner(
             connectionTaskCompletionSource.Task,
             Run(receiver.HandlerType, connectionTaskCompletionSource, linkedSource.Token),
             linkedSource,
-            () =>
+            onDispose: () =>
             {
                 if (defaultHttpClientLazy.IsValueCreated)
                 {
