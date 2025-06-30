@@ -36,8 +36,6 @@ public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMe
 
     IMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn);
 
-    IConditionalMessagePipeline<TMessage, TResponse> UseWhen(Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate);
-
     IMessagePipeline<TMessage, TResponse> Without<TMiddleware>()
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>;
 
@@ -70,9 +68,6 @@ public class MessagePipelineProxy<TMessage, TResponse> : IMessagePipeline<TMessa
     public IMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn)
         => Wrapped.Use(middlewareFn);
 
-    public IConditionalMessagePipeline<TMessage, TResponse> UseWhen(Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate)
-        => Wrapped.UseWhen(predicate);
-
     public IMessagePipeline<TMessage, TResponse> Without<TMiddleware>()
         where TMiddleware : IMessageMiddleware<TMessage, TResponse> => Wrapped.Without<TMiddleware>();
 
@@ -80,11 +75,77 @@ public class MessagePipelineProxy<TMessage, TResponse> : IMessagePipeline<TMessa
         where TMiddleware : IMessageMiddleware<TMessage, TResponse> => Wrapped.Configure(configure);
 }
 
-public interface IConditionalMessagePipeline<TMessage, TResponse>
-    where TMessage : class, IMessage<TMessage, TResponse>
+public static class MessagePipelineConditionalExtensions
 {
-    IConditionalMessagePipeline<TMessage, TResponse> Use<TMiddleware>(TMiddleware middleware)
-        where TMiddleware : IMessageMiddleware<TMessage, TResponse>;
+    public static IMessagePipeline<TMessage, TResponse> UseWhen<TMessage, TResponse>(
+        this IMessagePipeline<TMessage, TResponse> pipeline,
+        Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate)
+        where TMessage : class, IMessage<TMessage, TResponse>
+    {
+        return new ConditionalPipeline<TMessage, TResponse>(predicate, pipeline);
+    }
 
-    IConditionalMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn);
+    internal sealed class ConditionalMessageMiddleware<TMessage, TResponse, TMiddleware>(
+        Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate,
+        TMiddleware middleware)
+        : IMessageMiddleware<TMessage, TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
+        where TMiddleware : IMessageMiddleware<TMessage, TResponse>
+    {
+        public TMiddleware Middleware => middleware;
+
+        public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
+            => predicate(ctx) ? middleware.Execute(ctx) : ctx.Next(ctx.Message, ctx.CancellationToken);
+    }
+
+    private sealed class ConditionalDelegateMessageMiddleware<TMessage, TResponse>(
+        Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate,
+        MessageMiddlewareFn<TMessage, TResponse> middlewareFn)
+        : IMessageMiddleware<TMessage, TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
+    {
+        public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
+            => predicate(ctx) ? middlewareFn(ctx) : ctx.Next(ctx.Message, ctx.CancellationToken);
+    }
+
+    private sealed class ConditionalPipeline<TMessage, TResponse>(
+        Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate,
+        IMessagePipeline<TMessage, TResponse> pipeline)
+        : IMessagePipeline<TMessage, TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
+    {
+        public Type? HandlerType => pipeline.HandlerType;
+
+        public IServiceProvider ServiceProvider => pipeline.ServiceProvider;
+
+        public MessageTransportType TransportType => pipeline.TransportType;
+
+        public int Count => pipeline.Count;
+
+        public IMessagePipeline<TMessage, TResponse> Use<TMiddleware>(TMiddleware middleware)
+            where TMiddleware : IMessageMiddleware<TMessage, TResponse>
+        {
+            _ = pipeline.Use(new ConditionalMessageMiddleware<TMessage, TResponse, TMiddleware>(predicate, middleware));
+
+            return this;
+        }
+
+        public IMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn)
+        {
+            _ = pipeline.Use(new ConditionalDelegateMessageMiddleware<TMessage, TResponse>(predicate, middlewareFn));
+
+            return this;
+        }
+
+        IMessagePipeline<TMessage, TResponse> IMessagePipeline<TMessage, TResponse>.Without<TMiddleware>()
+            => pipeline.Without<TMiddleware>();
+
+        IMessagePipeline<TMessage, TResponse> IMessagePipeline<TMessage, TResponse>.Configure<TMiddleware>(Action<TMiddleware> configure)
+            => pipeline.Configure(configure);
+
+        IEnumerator<IMessageMiddleware<TMessage, TResponse>> IEnumerable<IMessageMiddleware<TMessage, TResponse>>.GetEnumerator()
+            => pipeline.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)pipeline).GetEnumerator();
+    }
 }
