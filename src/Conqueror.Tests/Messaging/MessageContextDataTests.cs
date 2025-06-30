@@ -70,12 +70,6 @@ public sealed partial class MessageContextDataTests
                         },
                         pipeline =>
                         {
-                            SetAndObserveContextData(
-                                pipeline.ConquerorContext,
-                                testDataInstructions,
-                                testObservations,
-                                Location.HandlerPipelineBuilder);
-
                             _ = pipeline.Use(
                                 new TestHandlerMessageMiddleware<TestMessage, TestMessageResponse>(
                                     pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
@@ -119,11 +113,6 @@ public sealed partial class MessageContextDataTests
 
         _ = await handlerClient.WithPipeline(pipeline =>
                                {
-                                   SetAndObserveContextData(
-                                       pipeline.ConquerorContext,
-                                       testDataInstructions,
-                                       testObservations,
-                                       Location.SenderPipelineBuilder);
                                    _ = pipeline.Use(
                                        new TestSenderMessageMiddleware<TestMessage, TestMessageResponse>(
                                            pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
@@ -182,11 +171,9 @@ public sealed partial class MessageContextDataTests
     {
         public const string PreExecution = nameof(PreExecution);
         public const string PostExecution = nameof(PostExecution);
-        public const string SenderPipelineBuilder = nameof(SenderPipelineBuilder);
         public const string TransportBuilder = nameof(TransportBuilder);
         public const string SenderMiddlewarePreExecution = nameof(SenderMiddlewarePreExecution);
         public const string SenderMiddlewarePostExecution = nameof(SenderMiddlewarePostExecution);
-        public const string HandlerPipelineBuilder = nameof(HandlerPipelineBuilder);
         public const string HandlerMiddlewarePreExecution = nameof(HandlerMiddlewarePreExecution);
         public const string HandlerMiddlewarePostExecution = nameof(HandlerMiddlewarePostExecution);
         public const string HandlerPreNestedExecution = nameof(HandlerPreNestedExecution);
@@ -202,9 +189,7 @@ public sealed partial class MessageContextDataTests
         [
             new(1, 1, Location.PreExecution),
             new(2, 1, Location.TransportBuilder),
-            new(2, 1, Location.SenderPipelineBuilder),
             new(2, 1, Location.SenderMiddlewarePreExecution),
-            new(3, 1, Location.HandlerPipelineBuilder),
             new(3, 1, Location.HandlerMiddlewarePreExecution),
             new(3, 1, Location.HandlerPreNestedExecution),
             new(3, 1, Location.NestedClassPreExecution),

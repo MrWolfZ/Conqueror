@@ -9,7 +9,6 @@ namespace Conqueror.Signalling;
 internal sealed class SignalPipeline<TSignal>(
     Type? handlerType,
     IServiceProvider serviceProvider,
-    ConquerorContext conquerorContext,
     SignalTransportType transportType,
     int initialCapacity)
     : ISignalPipeline<TSignal>
@@ -20,8 +19,6 @@ internal sealed class SignalPipeline<TSignal>(
     public Type? HandlerType { get; } = handlerType;
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
-
-    public ConquerorContext ConquerorContext { get; } = conquerorContext;
 
     public SignalTransportType TransportType { get; } = transportType;
 
@@ -72,28 +69,27 @@ internal sealed class SignalPipeline<TSignal>(
     }
 
     public Task Execute(
-        IServiceProvider serviceProvider,
         TSignal signal,
         ISignalPublisher<TSignal> publisher,
-        SignalTransportType transportType,
+        ConquerorContext conquerorContext,
         CancellationToken cancellationToken)
     {
         if (middlewares.Count == 0)
         {
             return publisher.Publish(
                 signal,
-                serviceProvider,
-                ConquerorContext,
+                ServiceProvider,
+                conquerorContext,
                 cancellationToken);
         }
 
         var ctx = new SignalMiddlewareContext<TSignal>(middlewares, publisher)
         {
             Signal = signal,
-            TransportType = transportType,
+            TransportType = TransportType,
             CancellationToken = cancellationToken,
-            ConquerorContext = ConquerorContext,
-            ServiceProvider = serviceProvider,
+            ConquerorContext = conquerorContext,
+            ServiceProvider = ServiceProvider,
         };
 
         return middlewares[0].Execute(ctx);

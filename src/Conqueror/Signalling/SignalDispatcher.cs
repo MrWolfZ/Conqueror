@@ -66,7 +66,6 @@ internal sealed class SignalDispatcher(
         var pipeline = new SignalPipeline<TSignal>(
             handlerType,
             serviceProvider,
-            conquerorContext,
             transportType,
             initialCapacity);
 
@@ -85,10 +84,9 @@ internal sealed class SignalDispatcher(
         }
 
         await pipeline.Execute(
-                          serviceProvider,
                           signal,
                           publisher,
-                          transportType,
+                          conquerorContext,
                           cancellationToken)
                       .ConfigureAwait(false);
     }

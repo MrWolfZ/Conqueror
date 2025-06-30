@@ -9,7 +9,6 @@ namespace Conqueror.Messaging;
 internal sealed class MessagePipeline<TMessage, TResponse>(
     Type? handlerType,
     IServiceProvider serviceProvider,
-    ConquerorContext conquerorContext,
     MessageTransportType transportType,
     int initialCapacity)
     : IMessagePipeline<TMessage, TResponse>
@@ -20,8 +19,6 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     public Type? HandlerType { get; } = handlerType;
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
-
-    public ConquerorContext ConquerorContext { get; } = conquerorContext;
 
     public MessageTransportType TransportType { get; } = transportType;
 
@@ -72,28 +69,27 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     }
 
     public Task<TResponse> Execute(
-        IServiceProvider serviceProvider,
         TMessage message,
         IMessageSender<TMessage, TResponse> sender,
-        MessageTransportType transportType,
+        ConquerorContext conquerorContext,
         CancellationToken cancellationToken)
     {
         if (middlewares.Count == 0)
         {
             return sender.Send(
                 message,
-                serviceProvider,
-                ConquerorContext,
+                ServiceProvider,
+                conquerorContext,
                 cancellationToken);
         }
 
         var ctx = new MessageMiddlewareContext<TMessage, TResponse>(middlewares, sender)
         {
             Message = message,
-            TransportType = transportType,
+            TransportType = TransportType,
             CancellationToken = cancellationToken,
-            ConquerorContext = ConquerorContext,
-            ServiceProvider = serviceProvider,
+            ConquerorContext = conquerorContext,
+            ServiceProvider = ServiceProvider,
         };
 
         return middlewares[0].Execute(ctx);

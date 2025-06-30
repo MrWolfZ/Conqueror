@@ -70,12 +70,6 @@ public sealed partial class SignalContextDataTests
                         },
                         pipeline =>
                         {
-                            SetAndObserveContextData(
-                                pipeline.ConquerorContext,
-                                testDataInstructions,
-                                testObservations,
-                                Location.Handler1PipelineBuilder);
-
                             _ = pipeline.Use(
                                 new TestSignalMiddleware<TestSignal>(
                                     pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
@@ -95,12 +89,6 @@ public sealed partial class SignalContextDataTests
                         },
                         pipeline =>
                         {
-                            SetAndObserveContextData(
-                                pipeline.ConquerorContext,
-                                testDataInstructions,
-                                testObservations,
-                                Location.Handler2PipelineBuilder);
-
                             _ = pipeline.Use(
                                 new TestSignalMiddleware2<TestSignal>(
                                     pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
@@ -142,11 +130,6 @@ public sealed partial class SignalContextDataTests
 
         await handlerClient.WithPipeline(pipeline =>
                            {
-                               SetAndObserveContextData(
-                                   pipeline.ConquerorContext,
-                                   testDataInstructions,
-                                   testObservations,
-                                   Location.PublisherPipelineBuilder);
                                _ = pipeline.Use(
                                    new TestPublisherSignalMiddleware<TestSignal>(
                                        pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
@@ -205,16 +188,13 @@ public sealed partial class SignalContextDataTests
     {
         public const string PreExecution = nameof(PreExecution);
         public const string PostExecution = nameof(PostExecution);
-        public const string PublisherPipelineBuilder = nameof(PublisherPipelineBuilder);
         public const string TransportBuilder = nameof(TransportBuilder);
         public const string PublisherMiddlewarePreExecution = nameof(PublisherMiddlewarePreExecution);
         public const string PublisherMiddlewarePostExecution = nameof(PublisherMiddlewarePostExecution);
-        public const string Handler1PipelineBuilder = nameof(Handler1PipelineBuilder);
         public const string Handler1MiddlewarePreExecution = nameof(Handler1MiddlewarePreExecution);
         public const string Handler1MiddlewarePostExecution = nameof(Handler1MiddlewarePostExecution);
         public const string Handler1PreNestedExecution = nameof(Handler1PreNestedExecution);
         public const string Handler1PostNestedExecution = nameof(Handler1PostNestedExecution);
-        public const string Handler2PipelineBuilder = nameof(Handler2PipelineBuilder);
         public const string Handler2MiddlewarePreExecution = nameof(Handler2MiddlewarePreExecution);
         public const string Handler2MiddlewarePostExecution = nameof(Handler2MiddlewarePostExecution);
         public const string Handler2Execution = nameof(Handler2Execution);
@@ -229,9 +209,7 @@ public sealed partial class SignalContextDataTests
         [
             new(1, 1, Location.PreExecution),
             new(2, 1, Location.TransportBuilder),
-            new(2, 1, Location.PublisherPipelineBuilder),
             new(2, 1, Location.PublisherMiddlewarePreExecution),
-            new(3, 1, Location.Handler1PipelineBuilder),
             new(3, 1, Location.Handler1MiddlewarePreExecution),
             new(3, 1, Location.Handler1PreNestedExecution),
             new(3, 1, Location.NestedClassPreExecution),
@@ -239,7 +217,6 @@ public sealed partial class SignalContextDataTests
             new(3, 1, Location.NestedClassPostExecution),
             new(3, 1, Location.Handler1PostNestedExecution),
             new(3, 1, Location.Handler1MiddlewarePostExecution),
-            new(3, 2, Location.Handler2PipelineBuilder),
             new(3, 2, Location.Handler2MiddlewarePreExecution),
             new(3, 2, Location.Handler2Execution),
             new(3, 2, Location.Handler2MiddlewarePostExecution),

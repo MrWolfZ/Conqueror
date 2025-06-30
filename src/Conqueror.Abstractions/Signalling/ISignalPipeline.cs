@@ -21,8 +21,6 @@ public interface ISignalPipeline<TSignal> : IReadOnlyCollection<ISignalMiddlewar
 
     IServiceProvider ServiceProvider { get; }
 
-    ConquerorContext ConquerorContext { get; }
-
     /// <summary>
     ///     The transport type this pipeline is being built for. This property can be useful
     ///     to build pipeline extension methods that should include certain middlewares only

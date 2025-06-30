@@ -23,8 +23,6 @@ public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMe
 
     IServiceProvider ServiceProvider { get; }
 
-    ConquerorContext ConquerorContext { get; }
-
     /// <summary>
     ///     The transport type this pipeline is being built for. This property can be useful
     ///     to build pipeline extension methods that should include certain middlewares only
@@ -54,8 +52,6 @@ public class MessagePipelineProxy<TMessage, TResponse> : IMessagePipeline<TMessa
     public Type? HandlerType => Wrapped.HandlerType;
 
     public IServiceProvider ServiceProvider => Wrapped.ServiceProvider;
-
-    public ConquerorContext ConquerorContext => Wrapped.ConquerorContext;
 
     public MessageTransportType TransportType => Wrapped.TransportType;
 
