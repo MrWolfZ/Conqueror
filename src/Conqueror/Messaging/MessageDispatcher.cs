@@ -66,7 +66,6 @@ internal sealed class MessageDispatcher(
         var pipeline = new MessagePipeline<TMessage, TResponse>(
             handlerType,
             serviceProvider,
-            transportType,
             initialCapacity);
 
         configurePipeline?.Invoke(pipeline);
@@ -86,6 +85,7 @@ internal sealed class MessageDispatcher(
         return await pipeline.Execute(
                                  message,
                                  sender,
+                                 transportType,
                                  conquerorContext,
                                  cancellationToken)
                              .ConfigureAwait(false);

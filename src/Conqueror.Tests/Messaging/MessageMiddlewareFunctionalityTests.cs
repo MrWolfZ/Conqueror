@@ -20,7 +20,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                         }
 
                         var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
-                        obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
                         obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
 
                         testCase.ConfigureHandlerPipeline?.Invoke(pipeline);
@@ -32,10 +31,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                               .For(TestMessage.T);
 
         var message = new TestMessage(10);
-
-        var expectedTransportTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
-                                                                 .Select(r => new MessageTransportType(ConquerorConstants.InProcessTransportName, r))
-                                                                 .ToList();
 
         var expectedHandlerTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
                                                                .Select(r => r == MessageTransportRole.Sender ? null : typeof(TestMessageHandler))
@@ -51,7 +46,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
             }
 
             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
-            obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
             obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
 
             testCase.ConfigureClientPipeline?.Invoke(pipeline);
@@ -63,7 +57,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         Assert.That(observations.TransportTypesFromMiddlewares,
                     Is.EqualTo(testCase.ExpectedMiddlewareTypes
                                        .Select(t => new MessageTransportType(ConquerorConstants.InProcessTransportName, t.TransportRole))));
-        Assert.That(observations.TransportTypesFromPipelineBuilders, Is.EqualTo(expectedTransportTypesFromPipelineBuilders));
         Assert.That(observations.HandlerTypesFromPipelineBuilders, Is.EqualTo(expectedHandlerTypesFromPipelineBuilders));
     }
 
@@ -1181,32 +1174,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     [Test]
-    public async Task GivenHandlerAndClientPipeline_WhenHandlerIsCalled_TransportTypesInPipelinesAreCorrect()
-    {
-        var services = new ServiceCollection();
-        MessageTransportType? transportTypeFromClient = null;
-        MessageTransportType? transportTypeFromHandler = null;
-
-        _ = services.AddMessageHandlerDelegate(TestMessage.T, async (message, _, _) =>
-        {
-            await Task.Yield();
-            return new(message.Payload + 1);
-        }, pipeline => transportTypeFromHandler = pipeline.TransportType);
-
-        var provider = services.BuildServiceProvider();
-
-        var handler = provider.GetRequiredService<IMessageSenders>()
-                              .For(TestMessage.T);
-
-        var message = new TestMessage(10);
-
-        _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).Handle(message);
-
-        Assert.That(transportTypeFromClient, Is.EqualTo(new MessageTransportType(ConquerorConstants.InProcessTransportName, MessageTransportRole.Sender)));
-        Assert.That(transportTypeFromHandler, Is.EqualTo(new MessageTransportType(ConquerorConstants.InProcessTransportName, MessageTransportRole.Receiver)));
-    }
-
-    [Test]
     public async Task GivenHandlerAndClientPipeline_WhenPipelineIsBeingBuilt_MiddlewaresCanBeEnumerated()
     {
         var services = new ServiceCollection();
@@ -1566,8 +1533,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
 
         public List<Type?> HandlerTypesFromPipelineBuilders { get; } = [];
-
-        public List<MessageTransportType> TransportTypesFromPipelineBuilders { get; } = [];
 
         public List<MessageTransportType> TransportTypesFromMiddlewares { get; } = [];
     }

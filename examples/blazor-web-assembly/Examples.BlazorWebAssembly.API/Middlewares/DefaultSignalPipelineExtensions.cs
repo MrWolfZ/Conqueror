@@ -14,12 +14,6 @@ public static class DefaultSignalPipelineExtensions
         Type? loggerCategoryType = null)
         where TSignal : class, ISignal<TSignal>
     {
-        // when calling the handler from the same process, we don't want to log the payload
-        if (pipeline.TransportType.IsInProcess())
-        {
-            return pipeline;
-        }
-
         return pipeline.UseLogging(c =>
                        {
                            if (loggerCategoryType is not null)

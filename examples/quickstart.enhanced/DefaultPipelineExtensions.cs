@@ -27,25 +27,26 @@ public static class DefaultPipelineExtensions
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         // when calling the handler from the same process, the handler already logs the message,
-        // so we don't need to log it again
-        if (pipeline.TransportType.IsInProcess())
-        {
-            return pipeline;
-        }
+        // so we don't need to log it again; Conqueror provides a handy `UseWhen` method for this,
+        // which only executes the middlewares chained to the `UseWhen` call when the predicate
+        // returns true
+        _ = pipeline.UseWhen(ctx => !ctx.TransportType.IsInProcess())
+                    .UseLogging(c =>
+                    {
+                        if (loggerCategoryType is not null)
+                        {
+                            c.LoggerCategoryFactory = _ => loggerCategoryType.FullName
+                                                           ?? loggerCategoryType.Name;
+                        }
+                    });
 
-        return pipeline.UseLogging(c =>
-                       {
-                           if (loggerCategoryType is not null)
-                           {
-                               c.LoggerCategoryFactory = _ => loggerCategoryType.FullName ??
-                                                              loggerCategoryType.Name;
-                           }
-                       })
+        // we can already validate the message payload before sending it to the
+        // remote handler to fail fast without incurring the cost of the remote
+        // call
+        return pipeline.UseDataAnnotationValidation()
 
-                       // we can already validate the message payload before sending it to the
-                       // remote handler to fail fast without incurring the cost of the remote
-                       // call
-                       .UseDataAnnotationValidation()
+                       // we can safely configure middlewares, even when they were added
+                       // conditionally like the logging middleware above
                        .WithIndentedJsonPayloadLogFormatting();
     }
 
@@ -54,18 +55,12 @@ public static class DefaultPipelineExtensions
         Type? loggerCategoryType = null)
         where TSignal : class, ISignal<TSignal>
     {
-        // when calling the handler from the same process, we don't want to log the payload
-        if (pipeline.TransportType.IsInProcess())
-        {
-            return pipeline;
-        }
-
         return pipeline.UseLogging(c =>
                        {
                            if (loggerCategoryType is not null)
                            {
-                               c.LoggerCategoryFactory = _ => loggerCategoryType.FullName ??
-                                                              loggerCategoryType.Name;
+                               c.LoggerCategoryFactory = _ => loggerCategoryType.FullName
+                                                              ?? loggerCategoryType.Name;
                            }
                        })
                        .WithIndentedJsonPayloadLogFormatting();

@@ -23,14 +23,6 @@ public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMe
 
     IServiceProvider ServiceProvider { get; }
 
-    /// <summary>
-    ///     The transport type this pipeline is being built for. This property can be useful
-    ///     to build pipeline extension methods that should include certain middlewares only
-    ///     for specific transports (e.g. including a logging middleware only if the transport
-    ///     is not the default in-process transport to prevent duplicate log entries).
-    /// </summary>
-    MessageTransportType TransportType { get; }
-
     IMessagePipeline<TMessage, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>;
 
@@ -52,8 +44,6 @@ public class MessagePipelineProxy<TMessage, TResponse> : IMessagePipeline<TMessa
     public Type? HandlerType => Wrapped.HandlerType;
 
     public IServiceProvider ServiceProvider => Wrapped.ServiceProvider;
-
-    public MessageTransportType TransportType => Wrapped.TransportType;
 
     internal IMessagePipeline<TMessage, TResponse> Wrapped { get; init; } = null!; // guaranteed to be set in init code
 
@@ -117,8 +107,6 @@ public static class MessagePipelineConditionalExtensions
         public Type? HandlerType => pipeline.HandlerType;
 
         public IServiceProvider ServiceProvider => pipeline.ServiceProvider;
-
-        public MessageTransportType TransportType => pipeline.TransportType;
 
         public int Count => pipeline.Count;
 

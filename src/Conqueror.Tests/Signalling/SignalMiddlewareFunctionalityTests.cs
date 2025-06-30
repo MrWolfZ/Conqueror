@@ -20,7 +20,6 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                         }
 
                         var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
-                        obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
                         obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
 
                         testCase.ConfigureHandlerPipeline?.Invoke(pipeline);
@@ -32,10 +31,6 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                               .For(TestSignal.T);
 
         var signal = new TestSignal(10);
-
-        var expectedTransportTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
-                                                                 .Select(r => new SignalTransportType(ConquerorConstants.InProcessTransportName, r))
-                                                                 .ToList();
 
         var expectedHandlerTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
                                                                .Select(r => r == SignalTransportRole.Publisher ? null : typeof(TestSignalHandler))
@@ -51,7 +46,6 @@ public sealed partial class SignalMiddlewareFunctionalityTests
             }
 
             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
-            obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
             obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
 
             testCase.ConfigurePublisherPipeline?.Invoke(pipeline);
@@ -63,7 +57,6 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         Assert.That(observations.TransportTypesFromMiddlewares,
                     Is.EqualTo(testCase.ExpectedMiddlewareTypes
                                        .Select(t => new SignalTransportType(ConquerorConstants.InProcessTransportName, t.TransportRole))));
-        Assert.That(observations.TransportTypesFromPipelineBuilders, Is.EqualTo(expectedTransportTypesFromPipelineBuilders));
         Assert.That(observations.HandlerTypesFromPipelineBuilders, Is.EqualTo(expectedHandlerTypesFromPipelineBuilders));
     }
 
@@ -979,31 +972,6 @@ public sealed partial class SignalMiddlewareFunctionalityTests
     }
 
     [Test]
-    public async Task GivenHandlerAndPublisherPipeline_WhenHandlerIsCalled_TransportTypesInPipelinesAreCorrect()
-    {
-        var services = new ServiceCollection();
-        SignalTransportType? transportTypeFromPublisher = null;
-        SignalTransportType? transportTypeFromHandler = null;
-
-        _ = services.AddSignalHandlerDelegate(
-            TestSignal.T,
-            async (_, _, _) => { await Task.Yield(); },
-            pipeline => transportTypeFromHandler = pipeline.TransportType);
-
-        var provider = services.BuildServiceProvider();
-
-        var handler = provider.GetRequiredService<ISignalPublishers>()
-                              .For(TestSignal.T);
-
-        var signal = new TestSignal(10);
-
-        await handler.WithPipeline(pipeline => transportTypeFromPublisher = pipeline.TransportType).Handle(signal);
-
-        Assert.That(transportTypeFromPublisher, Is.EqualTo(new SignalTransportType(ConquerorConstants.InProcessTransportName, SignalTransportRole.Publisher)));
-        Assert.That(transportTypeFromHandler, Is.EqualTo(new SignalTransportType(ConquerorConstants.InProcessTransportName, SignalTransportRole.Receiver)));
-    }
-
-    [Test]
     public async Task GivenHandlerAndPublisherPipeline_WhenPipelineIsBeingBuilt_MiddlewaresCanBeEnumerated()
     {
         var services = new ServiceCollection();
@@ -1345,8 +1313,6 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
 
         public List<Type?> HandlerTypesFromPipelineBuilders { get; } = [];
-
-        public List<SignalTransportType> TransportTypesFromPipelineBuilders { get; } = [];
 
         public List<SignalTransportType> TransportTypesFromMiddlewares { get; } = [];
     }

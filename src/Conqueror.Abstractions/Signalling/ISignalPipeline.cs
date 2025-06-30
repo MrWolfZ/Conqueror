@@ -22,14 +22,6 @@ public interface ISignalPipeline<TSignal> : IReadOnlyCollection<ISignalMiddlewar
 
     IServiceProvider ServiceProvider { get; }
 
-    /// <summary>
-    ///     The transport type this pipeline is being built for. This property can be useful
-    ///     to build pipeline extension methods that should include certain middlewares only
-    ///     for specific transports (e.g. including a logging middleware only if the transport
-    ///     is not the default in-process transport to prevent duplicate log entries).
-    /// </summary>
-    SignalTransportType TransportType { get; }
-
     ISignalPipeline<TSignal> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : ISignalMiddleware<TSignal>;
 
@@ -84,8 +76,6 @@ public static class SignalPipelineConditionalExtensions
         public Type? HandlerType => pipeline.HandlerType;
 
         public IServiceProvider ServiceProvider => pipeline.ServiceProvider;
-
-        public SignalTransportType TransportType => pipeline.TransportType;
 
         public int Count => pipeline.Count;
 
