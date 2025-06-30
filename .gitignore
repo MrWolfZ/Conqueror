@@ -7,3 +7,4 @@ riderModule.iml
 .publish/
 *.user
 *.Designer.cs
+**/Generated/.timestamp

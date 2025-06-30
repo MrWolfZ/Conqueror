@@ -25,8 +25,13 @@
         <Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
     </ItemGroup>
 
-    <Target Name="CleanSourceGeneratedFiles" BeforeTargets="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
+    <Target Name="CleanSourceGeneratedFiles"
+            BeforeTargets="BeforeCompile"
+            Inputs="@(Compile);@(AdditionalFiles)"
+            Outputs="Generated/.timestamp">
         <RemoveDir Directories="Generated" />
+        <MakeDir Directories="Generated" />
+        <Touch Files="Generated/.timestamp" AlwaysCreate="true" />
     </Target>
 
 </Project>
