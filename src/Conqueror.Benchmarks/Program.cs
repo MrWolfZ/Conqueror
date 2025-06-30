@@ -17,7 +17,7 @@ switch (toRun)
     case 2:
     {
         var sw = Stopwatch.StartNew();
-        new MessageBenchmarks().RunWithConqueror(100_000, 16, 20);
+        new MessageBenchmarks().RunWithConquerorWithAdHocSender(100_000, 16, 20);
         Console.WriteLine(sw.Elapsed);
 
         break;
