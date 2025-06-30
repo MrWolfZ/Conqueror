@@ -5,10 +5,13 @@ using System.Linq;
 
 namespace Conqueror.Messaging;
 
-internal sealed class MessageHandlerRegistry(IEnumerable<MessageHandlerRegistration> registrations) : IMessageHandlerRegistry
+internal sealed class MessageHandlerRegistry(
+    IServiceProvider serviceProvider,
+    IEnumerable<MessageHandlerRegistration> registrations)
+    : IMessageHandlerRegistry
 {
-    private readonly ConcurrentDictionary<Type, List<IMessageReceiverHandlerInvoker>> invokersByInjectorType = new();
     private readonly ConcurrentDictionary<(Type MessageType, Type InjectorType), IMessageReceiverHandlerInvoker?> invokerByMessageAndInjectorType = new();
+    private readonly ConcurrentDictionary<Type, List<IMessageReceiverHandlerInvoker>> invokersByInjectorType = new();
     private readonly Dictionary<Type, MessageHandlerRegistration> registrationByMessageType = registrations.ToDictionary(r => r.MessageType);
 
     public IMessageReceiverHandlerInvoker<TTypesInjector>? GetReceiverHandlerInvoker<TMessage, TResponse, TTypesInjector>()
@@ -20,19 +23,21 @@ internal sealed class MessageHandlerRegistry(IEnumerable<MessageHandlerRegistrat
         // performance optimization: we do not use `GetOrAdd` here to save on the allocation of the delegate
         if (invokerByMessageAndInjectorType.TryGetValue(key, out var invoker))
         {
-            return invoker as IMessageReceiverHandlerInvoker<TTypesInjector>;
+            return (IMessageReceiverHandlerInvoker<TTypesInjector>?)invoker;
         }
 
         invokerByMessageAndInjectorType[key] = GetInvokerForMessageAndInjectorType<TMessage, TTypesInjector>();
+
         return invokerByMessageAndInjectorType[key] as IMessageReceiverHandlerInvoker<TTypesInjector>;
     }
 
     public IReadOnlyCollection<IMessageReceiverHandlerInvoker<TTypesInjector>> GetReceiverHandlerInvokers<TTypesInjector>()
         where TTypesInjector : class, IMessageHandlerTypesInjector
     {
-        return invokersByInjectorType.GetOrAdd(typeof(TTypesInjector),
-                                               _ => [..PopulateMessageInvokersForReceiver<TTypesInjector>()])
-                                     .OfType<IMessageReceiverHandlerInvoker<TTypesInjector>>()
+        return invokersByInjectorType.GetOrAdd(
+                                         typeof(TTypesInjector),
+                                         _ => [..PopulateMessageInvokersForReceiver<TTypesInjector>()])
+                                     .Cast<IMessageReceiverHandlerInvoker<TTypesInjector>>()
                                      .ToList();
     }
 
@@ -42,7 +47,8 @@ internal sealed class MessageHandlerRegistry(IEnumerable<MessageHandlerRegistrat
         var invokers = from r in registrationByMessageType.Values
                        let typesInjector = r.TypeInjectors.OfType<TTypesInjector>().FirstOrDefault(i => i.MessageType == r.MessageType)
                        where typesInjector is not null
-                       select (IMessageReceiverHandlerInvoker)new MessageReceiverHandlerInvoker<TTypesInjector>(r, typesInjector);
+                       let handlerInvoker = r.HandlerInvokerFactory(serviceProvider)
+                       select (IMessageReceiverHandlerInvoker)new MessageReceiverHandlerInvoker<TTypesInjector>(r, handlerInvoker, typesInjector);
 
         return invokers.ToList();
     }
@@ -58,7 +64,9 @@ internal sealed class MessageHandlerRegistry(IEnumerable<MessageHandlerRegistrat
         }
 
         var typesInjector = registration.TypeInjectors.OfType<TTypesInjector>().FirstOrDefault(i => i.MessageType == registration.MessageType);
-        return typesInjector is null ? null : new MessageReceiverHandlerInvoker<TTypesInjector>(registration, typesInjector);
+        var handlerInvoker = registration.HandlerInvokerFactory(serviceProvider);
+
+        return typesInjector is null ? null : new MessageReceiverHandlerInvoker<TTypesInjector>(registration, handlerInvoker, typesInjector);
     }
 }
 
@@ -67,5 +75,5 @@ internal sealed record MessageHandlerRegistration(
     Type ResponseType,
     Type? HandlerType,
     Delegate? HandlerFn,
-    IMessageHandlerInvoker HandlerInvoker,
+    Func<IServiceProvider, IMessageHandlerInvoker> HandlerInvokerFactory,
     IReadOnlyCollection<IMessageHandlerTypesInjector> TypeInjectors);

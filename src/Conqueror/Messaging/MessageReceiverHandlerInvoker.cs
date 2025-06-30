@@ -6,6 +6,7 @@ namespace Conqueror.Messaging;
 
 internal sealed class MessageReceiverHandlerInvoker<TTypesInjector>(
     MessageHandlerRegistration registration,
+    IMessageHandlerInvoker handlerInvoker,
     TTypesInjector typesInjector)
     : IMessageReceiverHandlerInvoker<TTypesInjector>
     where TTypesInjector : class, IMessageHandlerTypesInjector
@@ -24,7 +25,6 @@ internal sealed class MessageReceiverHandlerInvoker<TTypesInjector>(
                                                        CancellationToken cancellationToken)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        return registration.HandlerInvoker
-                           .Invoke<TMessage, TResponse>(message, serviceProvider, transportTypeName, cancellationToken);
+        return handlerInvoker.Invoke<TMessage, TResponse>(message, serviceProvider, transportTypeName, cancellationToken);
     }
 }

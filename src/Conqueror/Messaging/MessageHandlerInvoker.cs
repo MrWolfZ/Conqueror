@@ -2,19 +2,23 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Messaging;
 
 internal sealed class MessageHandlerInvoker<TMessage, TResponse>(
+    IConquerorContextAccessor conquerorContextAccessor,
+    IMessageIdFactory messageIdFactory,
     Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline,
     MessageHandlerFn<TMessage, TResponse> handlerFn,
     Type? handlerType)
     : IMessageHandlerInvoker
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    // since the dispatcher only relies on singleton services, we can cache it here to avoid unnecessary allocations
-    private MessageDispatcher? dispatcher;
+    private readonly MessageDispatcher dispatcher = new(
+        conquerorContextAccessor,
+        messageIdFactory,
+        MessageTransportRole.Receiver,
+        handlerType);
 
     public Task<TR> Invoke<TM, TR>(
         TM message,
@@ -23,16 +27,8 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse>(
         CancellationToken cancellationToken)
         where TM : class, IMessage<TM, TR>
     {
-        Debug.Assert(typeof(TM) == typeof(TMessage), $"the signal type was expected to be {typeof(TMessage)}, but was {typeof(TM)} instead.");
-        Debug.Assert(typeof(TR) == typeof(TResponse), $"the signal type was expected to be {typeof(TResponse)}, but was {typeof(TR)} instead.");
-
-        // we don't need thread safety for this lazy initialization, since it
-        // does not matter if we initialize the dispatcher multiple times
-        dispatcher ??= new(
-            serviceProvider.GetRequiredService<IConquerorContextAccessor>(),
-            serviceProvider.GetRequiredService<IMessageIdFactory>(),
-            MessageTransportRole.Receiver,
-            handlerType);
+        Debug.Assert(typeof(TM) == typeof(TMessage), $"the message type was expected to be {typeof(TMessage)}, but was {typeof(TM)} instead.");
+        Debug.Assert(typeof(TR) == typeof(TResponse), $"the response type was expected to be {typeof(TResponse)}, but was {typeof(TR)} instead.");
 
         return (Task<TR>)(object)dispatcher.Dispatch(
             (message as TMessage)!,

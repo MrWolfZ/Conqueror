@@ -5,7 +5,9 @@ using System.Linq;
 
 namespace Conqueror.Signalling;
 
-internal sealed class SignalHandlerRegistry(IEnumerable<SignalHandlerRegistration> registrations)
+internal sealed class SignalHandlerRegistry(
+    IServiceProvider serviceProvider,
+    IEnumerable<SignalHandlerRegistration> registrations)
     : ISignalHandlerRegistry
 {
     private readonly List<SignalHandlerRegistration> allRegistrations = registrations.ToList();
@@ -14,8 +16,9 @@ internal sealed class SignalHandlerRegistry(IEnumerable<SignalHandlerRegistratio
     public IReadOnlyCollection<ISignalReceiverHandlerInvoker<TTypesInjector>> GetReceiverHandlerInvokers<TTypesInjector>()
         where TTypesInjector : class, ISignalHandlerTypesInjector
     {
-        return invokersByInjectorType.GetOrAdd(typeof(TTypesInjector),
-                                               _ => [..PopulateSignalInvokersForReceiver<TTypesInjector>()])
+        return invokersByInjectorType.GetOrAdd(
+                                         typeof(TTypesInjector),
+                                         _ => [..PopulateSignalInvokersForReceiver<TTypesInjector>()])
                                      .OfType<ISignalReceiverHandlerInvoker<TTypesInjector>>()
                                      .ToList();
     }
@@ -26,7 +29,8 @@ internal sealed class SignalHandlerRegistry(IEnumerable<SignalHandlerRegistratio
         var invokers = from r in allRegistrations
                        let typesInjector = r.TypeInjectors.OfType<TTypesInjector>().FirstOrDefault(i => i.SignalType == r.SignalType)
                        where typesInjector is not null
-                       select (ISignalReceiverHandlerInvoker)new SignalReceiverHandlerInvoker<TTypesInjector>(r, typesInjector);
+                       let handlerInvoker = r.HandlerInvokerFactory(serviceProvider)
+                       select (ISignalReceiverHandlerInvoker)new SignalReceiverHandlerInvoker<TTypesInjector>(r, handlerInvoker, typesInjector);
 
         return invokers.ToList();
     }
@@ -36,5 +40,5 @@ internal sealed record SignalHandlerRegistration(
     Type SignalType,
     Type? HandlerType,
     Delegate? HandlerFn,
-    ISignalHandlerInvoker Invoker,
+    Func<IServiceProvider, ISignalHandlerInvoker> HandlerInvokerFactory,
     IReadOnlyCollection<ISignalHandlerTypesInjector> TypeInjectors);

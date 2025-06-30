@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,6 +7,7 @@ namespace Conqueror.Signalling;
 
 internal sealed class SignalReceiverHandlerInvoker<TTypesInjector>(
     SignalHandlerRegistration registration,
+    ISignalHandlerInvoker handlerInvoker,
     TTypesInjector typesInjector)
     : ISignalReceiverHandlerInvoker<TTypesInjector>
     where TTypesInjector : class, ISignalHandlerTypesInjector
@@ -22,12 +24,11 @@ internal sealed class SignalReceiverHandlerInvoker<TTypesInjector>(
         string transportTypeName,
         CancellationToken cancellationToken)
     {
-        if (!signal.GetType().IsAssignableTo(SignalType))
-        {
-            throw new InvalidOperationException($"the signal type was expected to be assignable to '{SignalType}', but was '{signal.GetType()}' instead");
-        }
+        Debug.Assert(
+            signal.GetType().IsAssignableTo(SignalType),
+            $"the signal type was expected to be assignable to '{SignalType}', but was '{signal.GetType()}' instead");
 
-        return registration.Invoker.Invoke(
+        return handlerInvoker.Invoke(
             signal,
             serviceProvider,
             transportTypeName,

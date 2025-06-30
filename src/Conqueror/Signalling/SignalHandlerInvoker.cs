@@ -2,19 +2,23 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Signalling;
 
 internal sealed class SignalHandlerInvoker<TSignal>(
+    IConquerorContextAccessor conquerorContextAccessor,
+    ISignalIdFactory signalIdFactory,
     Action<ISignalPipeline<TSignal>>? configurePipeline,
     SignalHandlerFn<TSignal> handlerFn,
     Type? handlerType)
     : ISignalHandlerInvoker
     where TSignal : class, ISignal<TSignal>
 {
-    // since the dispatcher only relies on singleton services, we can cache it here to avoid unnecessary allocations
-    private SignalDispatcher? dispatcher;
+    private readonly SignalDispatcher dispatcher = new(
+        conquerorContextAccessor,
+        signalIdFactory,
+        SignalTransportRole.Receiver,
+        handlerType);
 
     public Task Invoke(
         object signal,
@@ -25,12 +29,6 @@ internal sealed class SignalHandlerInvoker<TSignal>(
         Debug.Assert(
             signal.GetType().IsAssignableTo(typeof(TSignal)),
             $"the signal type was expected to be assignable to '{typeof(TSignal)}', but was '{signal.GetType()}' instead.");
-
-        dispatcher ??= new(
-            serviceProvider.GetRequiredService<IConquerorContextAccessor>(),
-            serviceProvider.GetRequiredService<ISignalIdFactory>(),
-            SignalTransportRole.Receiver,
-            handlerType);
 
         return dispatcher.Dispatch(
             (TSignal)signal,
