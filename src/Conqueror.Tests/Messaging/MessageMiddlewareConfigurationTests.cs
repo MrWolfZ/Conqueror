@@ -13,7 +13,9 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
         {
-            _ = pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(
+                new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
+                    { Parameter = 10 });
 
             _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10);
         });
@@ -39,9 +41,15 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
         {
-            _ = pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
-            _ = pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 30 });
-            _ = pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 50 });
+            _ = pipeline.Use(
+                new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
+                    { Parameter = 10 });
+            _ = pipeline.Use(
+                new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
+                    { Parameter = 30 });
+            _ = pipeline.Use(
+                new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
+                    { Parameter = 50 });
 
             _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10);
         });
@@ -67,7 +75,9 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
         {
-            _ = pipeline.Use(new TestMessageMiddlewareSub<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(
+                new TestMessageMiddlewareSub<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
+                    { Parameter = 10 });
 
             _ = pipeline.Configure<TestMessageMiddlewareBase<TestMessage, TestMessageResponse>>(c => c.Parameter += 10);
         });
@@ -91,7 +101,11 @@ public sealed partial class MessageMiddlewareConfigurationTests
         _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline => { _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10)); });
+        _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
+        {
+            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter +=
+                                                                 10));
+        });
 
         var provider = services.BuildServiceProvider();
 
@@ -112,8 +126,11 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
         {
-            _ = pipeline.UseWhen(_ => true)
-                        .Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.UseWhen(
+                _ => true,
+                p => p.Use(
+                    new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
+                        { Parameter = 10 }));
 
             _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10);
         });
@@ -138,6 +155,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
+
             return new();
         }
 
@@ -161,7 +179,8 @@ public sealed partial class MessageMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestMessageMiddlewareSub<TMessage, TResponse>(TestObservations observations) : TestMessageMiddlewareBase<TMessage, TResponse>(observations)
+    private sealed class TestMessageMiddlewareSub<TMessage, TResponse>(TestObservations observations)
+        : TestMessageMiddlewareBase<TMessage, TResponse>(observations)
         where TMessage : class, IMessage<TMessage, TResponse>;
 
     private abstract class TestMessageMiddlewareBase<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>

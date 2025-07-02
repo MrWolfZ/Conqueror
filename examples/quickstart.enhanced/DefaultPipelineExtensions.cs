@@ -30,15 +30,16 @@ public static class DefaultPipelineExtensions
         // so we don't need to log it again; Conqueror provides a handy `UseWhen` method for this,
         // which only executes the middlewares chained to the `UseWhen` call when the predicate
         // returns true
-        _ = pipeline.UseWhen(ctx => !ctx.TransportType.IsInProcess())
-                    .UseLogging(c =>
-                    {
-                        if (loggerCategoryType is not null)
-                        {
-                            c.LoggerCategoryFactory = _ => loggerCategoryType.FullName
-                                                           ?? loggerCategoryType.Name;
-                        }
-                    });
+        _ = pipeline.UseWhen(
+            ctx => !ctx.TransportType.IsInProcess(),
+            p => p.UseLogging(c =>
+            {
+                if (loggerCategoryType is not null)
+                {
+                    c.LoggerCategoryFactory = _ => loggerCategoryType.FullName
+                                                   ?? loggerCategoryType.Name;
+                }
+            }));
 
         // we can already validate the message payload before sending it to the
         // remote handler to fail fast without incurring the cost of the remote

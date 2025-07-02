@@ -112,8 +112,9 @@ public sealed partial class SignalMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<ISignalPipeline<TestSignal>>>(pipeline =>
         {
-            _ = pipeline.UseWhen(_ => true)
-                        .Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.UseWhen(
+                _ => true,
+                p => p.Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 }));
 
             _ = pipeline.Configure<TestSignalMiddleware<TestSignal>>(c => c.Parameter += 10);
         });

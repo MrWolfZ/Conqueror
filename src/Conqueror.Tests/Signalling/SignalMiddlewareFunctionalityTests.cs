@@ -39,24 +39,27 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         using var tokenSource = new CancellationTokenSource();
 
         await handler.WithPipeline(pipeline =>
-        {
-            if (testCase.ConfigurePublisherPipeline is null)
-            {
-                return;
-            }
+                     {
+                         if (testCase.ConfigurePublisherPipeline is null)
+                         {
+                             return;
+                         }
 
-            var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
-            obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
+                         var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                         obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
 
-            testCase.ConfigurePublisherPipeline?.Invoke(pipeline);
-        }).Handle(signal, tokenSource.Token);
+                         testCase.ConfigurePublisherPipeline?.Invoke(pipeline);
+                     })
+                     .Handle(signal, tokenSource.Token);
 
         Assert.That(observations.SignalsFromMiddlewares, Is.EqualTo(Enumerable.Repeat(signal, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.MiddlewareTypes, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
-        Assert.That(observations.TransportTypesFromMiddlewares,
-                    Is.EqualTo(testCase.ExpectedMiddlewareTypes
-                                       .Select(t => new SignalTransportType(ConquerorConstants.InProcessTransportName, t.TransportRole))));
+        Assert.That(
+            observations.TransportTypesFromMiddlewares,
+            Is.EqualTo(
+                testCase.ExpectedMiddlewareTypes
+                        .Select(t => new SignalTransportType(ConquerorConstants.InProcessTransportName, t.TransportRole))));
         Assert.That(observations.HandlerTypesFromPipelineBuilders, Is.EqualTo(expectedHandlerTypesFromPipelineBuilders));
     }
 
@@ -67,590 +70,677 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         where TSignal : class, ISignal<TSignal>
     {
         // no middleware
-        yield return new("No middleware",
-                         null,
-                         null,
-                         [],
-                         []);
+        yield return new(
+            "No middleware",
+            null,
+            null,
+            [],
+            []);
 
         // single middleware
-        yield return new("Single middleware on handler",
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         null,
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Single middleware on handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            null,
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Single middleware on publisher",
-                         null,
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                         ]);
+        yield return new(
+            "Single middleware on publisher",
+            null,
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+            ],
+            [
+                SignalTransportRole.Publisher,
+            ]);
 
-        yield return new("Single middleware on both publisher and handler",
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Single middleware on both publisher and handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            p => p.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
         // single conditional middleware
-        yield return new("Single conditional middleware (true) on both publisher and handler",
-                         p => p.UseWhen(_ => true).Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.UseWhen(_ => true).Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Single conditional middleware (true) on both publisher and handler",
+            p => p.UseWhen(_ => true, inner => inner.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))),
+            p => p.UseWhen(_ => true, inner => inner.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))),
+            [
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Single conditional middleware (false) on both publisher and handler",
-                         p => p.UseWhen(_ => false).Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.UseWhen(_ => false).Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Single conditional middleware (false) on both publisher and handler",
+            p => p.UseWhen(_ => false, inner => inner.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))),
+            p => p.UseWhen(_ => false, inner => inner.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))),
+            [],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
+
+        yield return new(
+            "Single nested conditional middleware (true, true) on both client and handler",
+            p => p.UseWhen(
+                _ => true,
+                inner => inner.UseWhen(
+                    _ => true,
+                    inner2 => inner2.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))),
+            p => p.UseWhen(
+                _ => true,
+                inner => inner.UseWhen(
+                    _ => true,
+                    inner2 => inner2.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))),
+            [
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
+
+        yield return new(
+            "Single nested conditional middleware (true, false) on both client and handler",
+            p => p.UseWhen(
+                _ => true,
+                inner => inner.UseWhen(
+                    _ => false,
+                    inner2 => inner2.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))),
+            p => p.UseWhen(
+                _ => true,
+                inner => inner.UseWhen(
+                    _ => false,
+                    inner2 => inner2.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))),
+            [],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
+
+        yield return new(
+            "Single nested conditional middleware (false, true) on both client and handler",
+            p => p.UseWhen(
+                _ => false,
+                inner => inner.UseWhen(
+                    _ => true,
+                    inner2 => inner2.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))),
+            p => p.UseWhen(
+                _ => false,
+                inner => inner.UseWhen(
+                    _ => true,
+                    inner2 => inner2.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))),
+            [],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
         // delegate middleware
-        yield return new("Delegate middleware on handler",
-                         p => p.Use(async ctx =>
-                         {
-                             await Task.Yield();
-                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
-                             observations.SignalsFromMiddlewares.Add(ctx.Signal);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+        yield return new(
+            "Delegate middleware on handler",
+            p => p.Use(async ctx =>
+            {
+                await Task.Yield();
+                var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
+                observations.SignalsFromMiddlewares.Add(ctx.Signal);
+                observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
-                             await ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         }),
-                         null,
-                         [
-                             (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Receiver,
-                         ]);
+                await ctx.Next(ctx.Signal, ctx.CancellationToken);
+            }),
+            null,
+            [
+                (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Delegate middleware on publisher",
-                         null,
-                         p => p.Use(async ctx =>
-                         {
-                             await Task.Yield();
-                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
-                             observations.SignalsFromMiddlewares.Add(ctx.Signal);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+        yield return new(
+            "Delegate middleware on publisher",
+            null,
+            p => p.Use(async ctx =>
+            {
+                await Task.Yield();
+                var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
+                observations.SignalsFromMiddlewares.Add(ctx.Signal);
+                observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
-                             await ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         }),
-                         [
-                             (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                         ]);
+                await ctx.Next(ctx.Signal, ctx.CancellationToken);
+            }),
+            [
+                (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+            ],
+            [
+                SignalTransportRole.Publisher,
+            ]);
 
-        yield return new("Delegate middleware on both publisher and handler",
-                         p => p.Use(async ctx =>
-                         {
-                             await Task.Yield();
-                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
-                             observations.SignalsFromMiddlewares.Add(ctx.Signal);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+        yield return new(
+            "Delegate middleware on both publisher and handler",
+            p => p.Use(async ctx =>
+            {
+                await Task.Yield();
+                var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
+                observations.SignalsFromMiddlewares.Add(ctx.Signal);
+                observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
-                             await ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         }),
-                         p => p.Use(async ctx =>
-                         {
-                             await Task.Yield();
-                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
-                             observations.SignalsFromMiddlewares.Add(ctx.Signal);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+                await ctx.Next(ctx.Signal, ctx.CancellationToken);
+            }),
+            p => p.Use(async ctx =>
+            {
+                await Task.Yield();
+                var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
+                observations.SignalsFromMiddlewares.Add(ctx.Signal);
+                observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
-                             await ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         }),
-                         [
-                             (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+                await ctx.Next(ctx.Signal, ctx.CancellationToken);
+            }),
+            [
+                (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
         // conditional delegate middleware
-        yield return new("Conditional delegate middleware (true) on both publisher and handler",
-                         p => p.UseWhen(_ => true).Use(async ctx =>
-                         {
-                             await Task.Yield();
-                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
-                             observations.SignalsFromMiddlewares.Add(ctx.Signal);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+        yield return new(
+            "Conditional delegate middleware (true) on both publisher and handler",
+            p => p.UseWhen(
+                _ => true,
+                inner => inner.Use(async ctx =>
+                {
+                    await Task.Yield();
+                    var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                    observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
+                    observations.SignalsFromMiddlewares.Add(ctx.Signal);
+                    observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                    observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
-                             await ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         }),
-                         p => p.UseWhen(_ => true).Use(async ctx =>
-                         {
-                             await Task.Yield();
-                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
-                             observations.SignalsFromMiddlewares.Add(ctx.Signal);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+                    await ctx.Next(ctx.Signal, ctx.CancellationToken);
+                })),
+            p => p.UseWhen(
+                _ => true,
+                inner => inner.Use(async ctx =>
+                {
+                    await Task.Yield();
+                    var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                    observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
+                    observations.SignalsFromMiddlewares.Add(ctx.Signal);
+                    observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                    observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
-                             await ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         }),
-                         [
-                             (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+                    await ctx.Next(ctx.Signal, ctx.CancellationToken);
+                })),
+            [
+                (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Conditional delegate middleware (false) on both publisher and handler",
-                         p => p.UseWhen(_ => false).Use(async ctx =>
-                         {
-                             await Task.Yield();
-                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
-                             observations.SignalsFromMiddlewares.Add(ctx.Signal);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+        yield return new(
+            "Conditional delegate middleware (false) on both publisher and handler",
+            p => p.UseWhen(
+                _ => false,
+                inner => inner.Use(async ctx =>
+                {
+                    await Task.Yield();
+                    var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                    observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
+                    observations.SignalsFromMiddlewares.Add(ctx.Signal);
+                    observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                    observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
-                             await ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         }),
-                         p => p.UseWhen(_ => false).Use(async ctx =>
-                         {
-                             await Task.Yield();
-                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
-                             observations.SignalsFromMiddlewares.Add(ctx.Signal);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+                    await ctx.Next(ctx.Signal, ctx.CancellationToken);
+                })),
+            p => p.UseWhen(
+                _ => false,
+                inner => inner.Use(async ctx =>
+                {
+                    await Task.Yield();
+                    var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                    observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
+                    observations.SignalsFromMiddlewares.Add(ctx.Signal);
+                    observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                    observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
-                             await ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         }),
-                         [],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+                    await ctx.Next(ctx.Signal, ctx.CancellationToken);
+                })),
+            [],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
         // multiple different middlewares
-        yield return new("Multiple different middlewares on handler",
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         null,
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Multiple different middlewares on handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            null,
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Multiple different middlewares on publisher",
-                         null,
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                         ]);
+        yield return new(
+            "Multiple different middlewares on publisher",
+            null,
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+            ],
+            [
+                SignalTransportRole.Publisher,
+            ]);
 
-        yield return new("Multiple different middlewares on both publisher and handler",
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Multiple different middlewares on both publisher and handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            p => p.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
         // multiple conditional middlewares
-        yield return new("Multiple conditional middlewares (true) on both publisher and handler",
-                         p => p.UseWhen(_ => true)
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.UseWhen(_ => true)
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Multiple conditional middlewares (true) on both publisher and handler",
+            p => p.UseWhen(
+                _ => true,
+                inner => inner
+                         .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                         .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))),
+            p => p.UseWhen(
+                _ => true,
+                inner => inner
+                         .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                         .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))),
+            [
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Multiple conditional middlewares (false) on both publisher and handler",
-                         p => p.UseWhen(_ => false)
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.UseWhen(_ => false)
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Multiple conditional middlewares (false) on both publisher and handler",
+            p => p.UseWhen(
+                _ => false,
+                inner => inner
+                         .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                         .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))),
+            p => p.UseWhen(
+                _ => false,
+                inner => inner
+                         .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                         .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))),
+            [],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
         // mix unconditional and conditional middlewares
-        yield return new("Mix of unconditional and conditional (true) middlewares on both publisher and handler",
-                         p =>
-                         {
-                             _ = p.UseWhen(_ => true)
-                                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+        yield return new(
+            "Mix of unconditional and conditional (true) middlewares on both publisher and handler",
+            p => p.UseWhen(
+                      _ => true,
+                      inner => inner
+                          .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            p => p.UseWhen(
+                      _ => true,
+                      inner => inner
+                          .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
-                             _ = p.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-                         },
-                         p =>
-                         {
-                             _ = p.UseWhen(_ => true)
-                                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-                         },
-                         [
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
-
-        yield return new("Mix of unconditional and conditional (false) middlewares on both publisher and handler",
-                         p =>
-                         {
-                             _ = p.UseWhen(_ => false)
-                                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-                         },
-                         p =>
-                         {
-                             _ = p.UseWhen(_ => false)
-                                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-                         },
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Mix of unconditional and conditional (false) middlewares on both publisher and handler",
+            p => p.UseWhen(
+                      _ => false,
+                      inner => inner
+                          .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            p => p.UseWhen(
+                      _ => false,
+                      inner => inner
+                          .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
         // mix delegate and normal middleware
-        yield return new("Mix of delegate and normal middleware on handler",
-                         p => p.Use(async ctx =>
-                         {
-                             await Task.Yield();
-                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
-                             observations.SignalsFromMiddlewares.Add(ctx.Signal);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+        yield return new(
+            "Mix of delegate and normal middleware on handler",
+            p => p.Use(async ctx =>
+                  {
+                      await Task.Yield();
+                      var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                      observations.MiddlewareTypes.Add(typeof(DelegateSignalMiddleware<TSignal>));
+                      observations.SignalsFromMiddlewares.Add(ctx.Signal);
+                      observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                      observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
-                             await ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         }).Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         null,
-                         [
-                             (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Receiver,
-                         ]);
+                      await ctx.Next(ctx.Signal, ctx.CancellationToken);
+                  })
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            null,
+            [
+                (typeof(DelegateSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Receiver,
+            ]);
 
         // same middleware multiple times
-        yield return new("Same middleware multiple times on handler",
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         null,
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Same middleware multiple times on handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            null,
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Same middleware multiple times on publisher",
-                         null,
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                         ]);
+        yield return new(
+            "Same middleware multiple times on publisher",
+            null,
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+            ],
+            [
+                SignalTransportRole.Publisher,
+            ]);
 
         // added, then removed
-        yield return new("Middleware added then removed on handler",
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestSignalMiddleware2<TSignal>>(),
-                         null,
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Middleware added then removed on handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware2<TSignal>>(),
+            null,
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Middleware added then removed on publisher",
-                         null,
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestSignalMiddleware2<TSignal>>(),
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                         ]);
+        yield return new(
+            "Middleware added then removed on publisher",
+            null,
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware2<TSignal>>(),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+            ],
+            [
+                SignalTransportRole.Publisher,
+            ]);
 
         // added conditional, then removed
-        yield return new("Conditional middleware added then removed with true condition on both publisher and handler",
-                         p =>
-                         {
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
+        yield return new(
+            "Conditional middleware added then removed with true condition on both publisher and handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .UseWhen(
+                      _ => true,
+                      inner => inner
+                          .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware2<TSignal>>(),
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .UseWhen(
+                      _ => true,
+                      inner => inner
+                          .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware2<TSignal>>(),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
-                             _ = p.UseWhen(_ => true)
-                                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                                  .Without<TestSignalMiddleware2<TSignal>>();
-                         },
-                         p =>
-                         {
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.UseWhen(_ => true)
-                                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                                  .Without<TestSignalMiddleware2<TSignal>>();
-                         },
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
-
-        yield return new("Conditional middleware added then removed with false condition on both publisher and handler",
-                         p =>
-                         {
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.UseWhen(_ => false)
-                                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                                  .Without<TestSignalMiddleware2<TSignal>>();
-                         },
-                         p =>
-                         {
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.UseWhen(_ => false)
-                                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()));
-
-                             _ = p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                                  .Without<TestSignalMiddleware2<TSignal>>();
-                         },
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Conditional middleware added then removed with false condition on both publisher and handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .UseWhen(
+                      _ => false,
+                      inner => inner
+                          .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware2<TSignal>>(),
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .UseWhen(
+                      _ => false,
+                      inner => inner
+                          .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware2<TSignal>>(),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
         // multiple times added, then removed
-        yield return new("Multiple middlewares added then one removed on handler",
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestSignalMiddleware2<TSignal>>(),
-                         null,
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Multiple middlewares added then one removed on handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware2<TSignal>>(),
+            null,
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Multiple middlewares added then one removed on publisher",
-                         null,
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestSignalMiddleware2<TSignal>>(),
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                         ]);
+        yield return new(
+            "Multiple middlewares added then one removed on publisher",
+            null,
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware2<TSignal>>(),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+            ],
+            [
+                SignalTransportRole.Publisher,
+            ]);
 
         // added on client, added and removed in handler
-        yield return new("Added on client, added and removed in handler",
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestSignalMiddleware<TSignal>>(),
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Added on client, added and removed in handler",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware<TSignal>>(),
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+            ]);
 
         // added, then removed, then added again
-        yield return new("Added then removed then added again receiver middleware",
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestSignalMiddleware<TSignal>>()
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         null,
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Added then removed then added again receiver middleware",
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware<TSignal>>()
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            null,
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Added then removed then added again publisher middleware",
-                         null,
-                         p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestSignalMiddleware<TSignal>>()
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                         ]);
+        yield return new(
+            "Added then removed then added again publisher middleware",
+            null,
+            p => p.Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Without<TestSignalMiddleware<TSignal>>()
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+            ],
+            [
+                SignalTransportRole.Publisher,
+            ]);
 
         // retry middlewares
-        yield return new("Retry receiver middleware",
-                         p => p.Use(new TestSignalRetryMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         null,
-                         [
-                             (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Retry receiver middleware",
+            p => p.Use(new TestSignalRetryMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            null,
+            [
+                (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Receiver,
+            ]);
 
-        yield return new("Retry publisher middleware",
-                         null,
-                         p => p.Use(new TestSignalRetryMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                         ]);
+        yield return new(
+            "Retry publisher middleware",
+            null,
+            p => p.Use(new TestSignalRetryMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+            ],
+            [
+                SignalTransportRole.Publisher,
+            ]);
 
-        yield return new("Retry receiver and publisher middleware",
-                         p => p.Use(new TestSignalRetryMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.Use(new TestSignalRetryMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         [
-                             (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
-                             (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                             (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
-                         ],
-                         [
-                             SignalTransportRole.Publisher,
-                             SignalTransportRole.Receiver,
-                             SignalTransportRole.Receiver,
-                         ]);
+        yield return new(
+            "Retry receiver and publisher middleware",
+            p => p.Use(new TestSignalRetryMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            p => p.Use(new TestSignalRetryMiddleware<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                  .Use(new TestSignalMiddleware2<TSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+            [
+                (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware2<TSignal>), SignalTransportRole.Publisher),
+                (typeof(TestSignalRetryMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+                (typeof(TestSignalMiddleware<TSignal>), SignalTransportRole.Receiver),
+            ],
+            [
+                SignalTransportRole.Publisher,
+                SignalTransportRole.Receiver,
+                SignalTransportRole.Receiver,
+            ]);
     }
 
     [Test]
@@ -706,12 +796,13 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                               .For(TestSignal.T);
 
         await handler.WithPipeline(pipeline =>
-        {
-            var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
-            var cancellationTokensToUse = pipeline.ServiceProvider.GetRequiredService<CancellationTokensToUse>();
-            _ = pipeline.Use(new MutatingTestSignalMiddleware<TestSignal>(obs, cancellationTokensToUse))
-                        .Use(new MutatingTestSignalMiddleware2<TestSignal>(obs, cancellationTokensToUse));
-        }).Handle(new(0), tokens.CancellationTokens[0]);
+                     {
+                         var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                         var cancellationTokensToUse = pipeline.ServiceProvider.GetRequiredService<CancellationTokensToUse>();
+                         _ = pipeline.Use(new MutatingTestSignalMiddleware<TestSignal>(obs, cancellationTokensToUse))
+                                     .Use(new MutatingTestSignalMiddleware2<TestSignal>(obs, cancellationTokensToUse));
+                     })
+                     .Handle(new(0), tokens.CancellationTokens[0]);
 
         var signal1 = new TestSignal(0);
         var signal2 = new TestSignal(1);
@@ -758,7 +849,8 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T);
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestSignalMiddleware<TestSignal>(exception))).Handle(new(10)));
+        var thrownException =
+            Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestSignalMiddleware<TestSignal>(exception))).Handle(new(10)));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -781,6 +873,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                         _ = pipeline.Use(ctx =>
                         {
                             providerFromHandlerMiddleware = ctx.ServiceProvider;
+
                             return ctx.Next(ctx.Signal, ctx.CancellationToken);
                         });
                     });
@@ -799,14 +892,16 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                              .For(TestSignal.T);
 
         await handler1.WithPipeline(pipeline =>
-        {
-            providerFromPublisherPipelineBuild = pipeline.ServiceProvider;
-            _ = pipeline.Use(ctx =>
-            {
-                providerFromPublisherMiddleware = ctx.ServiceProvider;
-                return ctx.Next(ctx.Signal, ctx.CancellationToken);
-            });
-        }).Handle(new(10));
+                      {
+                          providerFromPublisherPipelineBuild = pipeline.ServiceProvider;
+                          _ = pipeline.Use(ctx =>
+                          {
+                              providerFromPublisherMiddleware = ctx.ServiceProvider;
+
+                              return ctx.Next(ctx.Signal, ctx.CancellationToken);
+                          });
+                      })
+                      .Handle(new(10));
 
         Assert.That(providerFromHandlerPipelineBuild, Is.SameAs(scope1.ServiceProvider));
         Assert.That(providerFromHandlerMiddleware, Is.SameAs(scope1.ServiceProvider));
@@ -814,14 +909,16 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         Assert.That(providerFromPublisherMiddleware, Is.SameAs(scope1.ServiceProvider));
 
         await handler2.WithPipeline(pipeline =>
-        {
-            providerFromPublisherPipelineBuild = pipeline.ServiceProvider;
-            _ = pipeline.Use(ctx =>
-            {
-                providerFromPublisherMiddleware = ctx.ServiceProvider;
-                return ctx.Next(ctx.Signal, ctx.CancellationToken);
-            });
-        }).Handle(new(10));
+                      {
+                          providerFromPublisherPipelineBuild = pipeline.ServiceProvider;
+                          _ = pipeline.Use(ctx =>
+                          {
+                              providerFromPublisherMiddleware = ctx.ServiceProvider;
+
+                              return ctx.Next(ctx.Signal, ctx.CancellationToken);
+                          });
+                      })
+                      .Handle(new(10));
 
         Assert.That(providerFromHandlerPipelineBuild, Is.Not.SameAs(scope1.ServiceProvider));
         Assert.That(providerFromHandlerPipelineBuild, Is.SameAs(scope2.ServiceProvider));
@@ -848,11 +945,14 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                      .WithPipeline(p => p.Use(new TestSignalMiddleware2<TestSignal>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                      .Handle(new(10));
 
-        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[]
-        {
-            typeof(TestSignalMiddleware<TestSignal>),
-            typeof(TestSignalMiddleware2<TestSignal>),
-        }));
+        Assert.That(
+            observations.MiddlewareTypes,
+            Is.EqualTo(
+                new[]
+                {
+                    typeof(TestSignalMiddleware<TestSignal>),
+                    typeof(TestSignalMiddleware2<TestSignal>),
+                }));
     }
 
     [Test]
@@ -869,7 +969,8 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                             var obs = p.GetRequiredService<TestObservations>();
                             obs.SignalsFromHandlers.Add(signal);
                             obs.CancellationTokensFromHandlers.Add(cancellationToken);
-                        }, pipeline =>
+                        },
+                        pipeline =>
                         {
                             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                             obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
@@ -903,7 +1004,8 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                         {
                             var obs = p.GetRequiredService<TestObservations>();
                             obs.SignalsFromHandlers.Add(signal);
-                        }, pipeline =>
+                        },
+                        pipeline =>
                         {
                             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                             obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
@@ -1025,13 +1127,15 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         await provider.GetRequiredService<ISignalPublishers>()
-                      .For(TestSignal.T).Handle(new(10));
+                      .For(TestSignal.T)
+                      .Handle(new(10));
 
         Assert.That(builder1WasCalled, Is.True);
         Assert.That(builder2WasCalled, Is.False);
 
         await provider.GetRequiredService<ISignalPublishers>()
-                      .For(TestSignal2.T).Handle(new());
+                      .For(TestSignal2.T)
+                      .Handle(new());
 
         Assert.That(builder2WasCalled, Is.True);
     }
@@ -1047,20 +1151,22 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         SignalMiddlewareContext<TestSignal>? seenContextInMiddlewareOnHandler = null;
         SignalMiddlewareContext<TestSignal>? seenContextInMiddlewareOnPublisher = null;
 
-        _ = services.AddSignalHandlerDelegate(TestSignal.T,
-                                               (_, _, _) => Task.CompletedTask,
-                                               pipeline =>
-                                               {
-                                                   _ = pipeline.UseWhen(ctx =>
-                                                   {
-                                                       seenContextInPredicateOnHandler = ctx;
-                                                       return true;
-                                                   }).Use(ctx =>
-                                                   {
-                                                       seenContextInMiddlewareOnHandler = ctx;
-                                                       return ctx.Next(ctx.Signal, ctx.CancellationToken);
-                                                   });
-                                               });
+        _ = services.AddSignalHandlerDelegate(
+            TestSignal.T,
+            (_, _, _) => Task.CompletedTask,
+            pipeline => pipeline.UseWhen(
+                ctx =>
+                {
+                    seenContextInPredicateOnHandler = ctx;
+
+                    return true;
+                },
+                p => p.Use(ctx =>
+                {
+                    seenContextInMiddlewareOnHandler = ctx;
+
+                    return ctx.Next(ctx.Signal, ctx.CancellationToken);
+                })));
 
         var provider = services.BuildServiceProvider();
 
@@ -1069,18 +1175,20 @@ public sealed partial class SignalMiddlewareFunctionalityTests
 
         var signal = new TestSignal(10);
 
-        await handler.WithPipeline(pipeline =>
-                     {
-                         _ = pipeline.UseWhen(ctx =>
-                         {
-                             seenContextInPredicateOnPublisher = ctx;
-                             return true;
-                         }).Use(ctx =>
-                         {
-                             seenContextInMiddlewareOnPublisher = ctx;
-                             return ctx.Next(ctx.Signal, ctx.CancellationToken);
-                         });
-                     })
+        await handler.WithPipeline(pipeline => pipeline.UseWhen(
+                                       ctx =>
+                                       {
+                                           seenContextInPredicateOnPublisher = ctx;
+
+                                           return true;
+                                       },
+                                       p => p
+                                           .Use(ctx =>
+                                           {
+                                               seenContextInMiddlewareOnPublisher = ctx;
+
+                                               return ctx.Next(ctx.Signal, ctx.CancellationToken);
+                                           })))
                      .Handle(signal);
 
         Assert.That(seenContextInPredicateOnPublisher, Is.EqualTo(seenContextInMiddlewareOnPublisher));
@@ -1144,7 +1252,8 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         }
     }
 
-    private sealed partial class MultiTestSignalHandler : TestSignal.IHandler, TestSignal2.IHandler
+    private sealed partial class MultiTestSignalHandler : TestSignal.IHandler,
+                                                          TestSignal2.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -1261,7 +1370,8 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestSignalMiddleware2<TSignal>(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : ISignalMiddleware<TSignal>
+    private sealed class MutatingTestSignalMiddleware2<TSignal>(TestObservations observations, CancellationTokensToUse cancellationTokensToUse)
+        : ISignalMiddleware<TSignal>
         where TSignal : class, ISignal<TSignal>
     {
         public async Task Execute(SignalMiddlewareContext<TSignal> ctx)
@@ -1289,6 +1399,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         public async Task Execute(SignalMiddlewareContext<TSignal> ctx)
         {
             await Task.Yield();
+
             throw exception;
         }
     }
