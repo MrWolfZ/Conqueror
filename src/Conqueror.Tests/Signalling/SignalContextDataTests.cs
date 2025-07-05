@@ -117,16 +117,7 @@ public sealed partial class SignalContextDataTests
 
         var handlerClient = serviceProvider.GetRequiredService<ISignalPublishers>()
                                            .For(TestSignal.T)
-                                           .WithTransport(b =>
-                                           {
-                                               SetAndObserveContextData(
-                                                   b.ConquerorContext,
-                                                   testDataInstructions,
-                                                   testObservations,
-                                                   Location.TransportBuilder);
-
-                                               return b.UseInProcess();
-                                           });
+                                           .WithTransport(b => b.UseInProcess());
 
         await handlerClient.WithPipeline(pipeline =>
                            {
@@ -188,7 +179,6 @@ public sealed partial class SignalContextDataTests
     {
         public const string PreExecution = nameof(PreExecution);
         public const string PostExecution = nameof(PostExecution);
-        public const string TransportBuilder = nameof(TransportBuilder);
         public const string PublisherMiddlewarePreExecution = nameof(PublisherMiddlewarePreExecution);
         public const string PublisherMiddlewarePostExecution = nameof(PublisherMiddlewarePostExecution);
         public const string Handler1MiddlewarePreExecution = nameof(Handler1MiddlewarePreExecution);
@@ -208,7 +198,6 @@ public sealed partial class SignalContextDataTests
         public static ExecutionOrderItem[] Order =>
         [
             new(1, 1, Location.PreExecution),
-            new(2, 1, Location.TransportBuilder),
             new(2, 1, Location.PublisherMiddlewarePreExecution),
             new(3, 1, Location.Handler1MiddlewarePreExecution),
             new(3, 1, Location.Handler1PreNestedExecution),

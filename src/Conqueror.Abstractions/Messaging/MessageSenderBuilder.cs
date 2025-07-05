@@ -3,7 +3,5 @@
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public readonly record struct MessageSenderBuilder<TMessage, TResponse>(
-    IServiceProvider ServiceProvider,
-    ConquerorContext ConquerorContext)
+public readonly record struct MessageSenderBuilder<TMessage, TResponse>(IServiceProvider ServiceProvider)
     where TMessage : class, IMessage<TMessage, TResponse>;

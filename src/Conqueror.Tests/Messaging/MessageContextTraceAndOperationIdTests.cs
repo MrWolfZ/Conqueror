@@ -15,8 +15,7 @@ public sealed partial class MessageContextTraceAndOperationIdTests
     {
         var customTraceId = Guid.NewGuid().ToString();
 
-        string? traceIdFromTransportBuilder = null;
-        string? messageIdFromTransportBuilder = null;
+        string? traceIdFromExecution = null;
         string? traceIdFromHandler = null;
         string? messageIdFromHandler = null;
         string? traceIdFromNestedMessageHandler = null;
@@ -73,13 +72,12 @@ public sealed partial class MessageContextTraceAndOperationIdTests
 
         var handlerSender = serviceProvider.GetRequiredService<IMessageSenders>()
                                            .For(TestMessage.T)
-                                           .WithTransport(b =>
+                                           .WithPipeline(p => p.Use(ctx =>
                                            {
-                                               traceIdFromTransportBuilder = b.ConquerorContext.TraceId;
-                                               messageIdFromTransportBuilder = b.ConquerorContext.MessageId;
-
-                                               return b.UseInProcess();
-                                           });
+                                               traceIdFromExecution = ctx.ConquerorContext.TraceId;
+                                               return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                           }))
+                                           .WithTransport(b => b.UseInProcess());
 
         _ = await handlerSender.Handle(new());
 
@@ -87,16 +85,14 @@ public sealed partial class MessageContextTraceAndOperationIdTests
         {
             (true, _) => customTraceId,
             (false, true) => activity!.TraceId,
-            (false, false) => traceIdFromTransportBuilder,
+            (false, false) => traceIdFromExecution,
         };
 
         Assert.Multiple(() =>
         {
-            Assert.That(traceIdFromTransportBuilder, Is.EqualTo(expectedTraceId));
             Assert.That(traceIdFromHandler, Is.EqualTo(expectedTraceId));
             Assert.That(traceIdFromNestedMessageHandler, Is.EqualTo(expectedTraceId));
 
-            Assert.That(messageIdFromTransportBuilder, Is.EqualTo(messageIdFromHandler));
             Assert.That(messageIdFromHandler, Is.Not.Null);
             Assert.That(messageIdFromNestedMessageHandler, Is.Not.EqualTo(messageIdFromHandler));
         });

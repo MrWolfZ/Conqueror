@@ -33,7 +33,7 @@ internal sealed class MessageDispatcher(
 
         if (sender is null)
         {
-            var transportBuilder = new MessageSenderBuilder<TMessage, TResponse>(serviceProvider, conquerorContext);
+            var transportBuilder = new MessageSenderBuilder<TMessage, TResponse>(serviceProvider);
 
             if (configureSender is not null)
             {

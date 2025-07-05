@@ -35,7 +35,7 @@ internal sealed class SignalDispatcher(
 
         if (publisher is null)
         {
-            var transportBuilder = new SignalPublisherBuilder<TSignal>(serviceProvider, conquerorContext);
+            var transportBuilder = new SignalPublisherBuilder<TSignal>(serviceProvider);
 
             if (configurePublisher is not null)
             {
