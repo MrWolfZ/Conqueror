@@ -35,7 +35,6 @@ internal sealed class SignalHandlerInvoker<TSignal>(
             serviceProvider,
             configurePipeline,
             new Publisher(handlerFn, transportTypeName),
-            configurePublisher: null,
             configurePublisherAsync: null,
             cancellationToken);
     }

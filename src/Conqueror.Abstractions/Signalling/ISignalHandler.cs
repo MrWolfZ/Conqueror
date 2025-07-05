@@ -83,7 +83,7 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
 
     private Action<ISignalPipeline<TSignal>>? ConfigurePipeline { get; init; }
 
-    private ConfigureSignalPublisher<TSignal>? ConfigurePublisher { get; init; }
+    private ISignalPublisher<TSignal>? Publisher { get; init; }
 
     private ConfigureSignalPublisherAsync<TSignal>? ConfigurePublisherAsync { get; init; }
 
@@ -93,8 +93,7 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
             signal,
             ServiceProvider,
             ConfigurePipeline,
-            publisher: null,
-            ConfigurePublisher,
+            Publisher,
             ConfigurePublisherAsync,
             cancellationToken);
 
@@ -104,7 +103,7 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
             ServiceProvider = ServiceProvider,
             Dispatcher = Dispatcher,
             ConfigurePipeline = (Action<ISignalPipeline<TSignal>>)Delegate.Combine(ConfigurePipeline, configurePipeline),
-            ConfigurePublisher = ConfigurePublisher,
+            Publisher = Publisher,
             ConfigurePublisherAsync = ConfigurePublisherAsync,
         };
 
@@ -114,7 +113,7 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
             ServiceProvider = ServiceProvider,
             Dispatcher = Dispatcher,
             ConfigurePipeline = ConfigurePipeline,
-            ConfigurePublisher = configurePublisher,
+            Publisher = configurePublisher(new(ServiceProvider)),
             ConfigurePublisherAsync = null,
         };
 
@@ -124,7 +123,7 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
             ServiceProvider = ServiceProvider,
             Dispatcher = Dispatcher,
             ConfigurePipeline = ConfigurePipeline,
-            ConfigurePublisher = null,
+            Publisher = null,
             ConfigurePublisherAsync = configurePublisherAsync,
         };
 

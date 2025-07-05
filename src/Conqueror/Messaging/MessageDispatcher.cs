@@ -15,7 +15,6 @@ internal sealed class MessageDispatcher(
         IServiceProvider serviceProvider,
         IMessagePipeline<TMessage, TResponse> pipeline,
         IMessageSender<TMessage, TResponse>? sender,
-        ConfigureMessageSender<TMessage, TResponse>? configureSender,
         ConfigureMessageSenderAsync<TMessage, TResponse>? configureSenderAsync,
         CancellationToken cancellationToken)
         where TMessage : class, IMessage<TMessage, TResponse>
@@ -35,11 +34,7 @@ internal sealed class MessageDispatcher(
         {
             var transportBuilder = new MessageSenderBuilder<TMessage, TResponse>(serviceProvider);
 
-            if (configureSender is not null)
-            {
-                sender = configureSender(transportBuilder);
-            }
-            else if (configureSenderAsync is not null)
+            if (configureSenderAsync is not null)
             {
                 sender = await configureSenderAsync(transportBuilder).ConfigureAwait(false);
             }

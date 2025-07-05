@@ -64,11 +64,14 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         await handler2.Handle(signal);
 
-        Assert.That(observations.ServiceProvidersFromPublish, Is.EqualTo(new[]
-        {
-            scope1.ServiceProvider,
-            scope2.ServiceProvider,
-        }));
+        Assert.That(
+            observations.ServiceProvidersFromPublish,
+            Is.EqualTo(
+                new[]
+                {
+                    scope1.ServiceProvider,
+                    scope2.ServiceProvider,
+                }));
     }
 
     [Test]
@@ -120,29 +123,44 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var executionTask1 = handler.Handle(signal);
 
-        Assert.That(() => observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-        }).After(100).MilliSeconds.PollEvery(10).MilliSeconds);
+        Assert.That(
+            () => observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                  new[]
+                  {
+                      (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                  })
+              .After(100)
+              .MilliSeconds.PollEvery(10)
+              .MilliSeconds);
 
         tcs2.SetResult();
 
-        Assert.That(() => observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-        }).After(100).MilliSeconds.PollEvery(10).MilliSeconds);
+        Assert.That(
+            () => observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                  new[]
+                  {
+                      (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                  })
+              .After(100)
+              .MilliSeconds.PollEvery(10)
+              .MilliSeconds);
 
         tcs1.SetResult();
 
         await executionTask1;
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                }));
     }
 
     [Test]
@@ -160,6 +178,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception;
         });
 
@@ -173,10 +192,13 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         Assert.That(() => handler.Handle(signal), Throws.Exception.SameAs(exception));
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                }));
     }
 
     [Test]
@@ -194,6 +216,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception;
         });
 
@@ -207,10 +230,13 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         Assert.That(() => handler.Handle(signal), Throws.Exception.SameAs(exception));
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                }));
     }
 
     [Test]
@@ -228,6 +254,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception;
         });
 
@@ -241,12 +268,15 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         Assert.That(() => handler.Handle(signal), Throws.Exception.SameAs(exception));
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                }));
     }
 
     [Test]
@@ -265,12 +295,14 @@ public sealed partial class SignalBroadcastingStrategyTests
         _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception1;
         });
 
         _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception2;
         });
 
@@ -282,14 +314,20 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var signal = new TestSignal { Payload = 10 };
 
-        Assert.That(() => handler.Handle(signal), Throws.InstanceOf<AggregateException>()
-                                                        .With.Property("InnerExceptions").EquivalentTo(new[] { exception1, exception2 }));
+        Assert.That(
+            () => handler.Handle(signal),
+            Throws.InstanceOf<AggregateException>()
+                  .With.Property("InnerExceptions")
+                  .EquivalentTo(new[] { exception1, exception2 }));
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                }));
     }
 
     [Test]
@@ -317,17 +355,21 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         Assert.DoesNotThrowAsync(() => handler.Handle(signal, cts.Token));
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                }));
     }
 
     [Test]
-    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndOneHandlerThrowsCancellationException_ThrowsCancellationExceptionAfterAllHandlersHaveExecuted()
+    public async Task
+        GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndOneHandlerThrowsCancellationException_ThrowsCancellationExceptionAfterAllHandlersHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -357,16 +399,20 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         await Assert.ThatAsync(() => handler.Handle(signal, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                }));
     }
 
     [Test]
-    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndMultipleHandlersThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllHandlersHaveExecuted()
+    public async Task
+        GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndMultipleHandlersThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllHandlersHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -402,15 +448,19 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         await Assert.ThatAsync(() => handler.Handle(signal, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                }));
     }
 
     [Test]
-    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndSingleHandlersThrowCancellationExceptionWhileOtherHandlerThrowsOtherException_ThrowsAggregateException()
+    public async Task
+        GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndSingleHandlersThrowCancellationExceptionWhileOtherHandlerThrowsOtherException_ThrowsAggregateException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -430,6 +480,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception;
         });
 
@@ -446,15 +497,23 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var signal = new TestSignal { Payload = 10 };
 
-        await Assert.ThatAsync(() => handler.Handle(signal, cts.Token), Throws.InstanceOf<AggregateException>()
-                                                                              .With.Property("InnerExceptions").Contains(exception)
-                                                                              .And.Property("InnerExceptions").Exactly(1).InstanceOf<OperationCanceledException>());
+        await Assert.ThatAsync(
+            () => handler.Handle(signal, cts.Token),
+            Throws.InstanceOf<AggregateException>()
+                  .With.Property("InnerExceptions")
+                  .Contains(exception)
+                  .And.Property("InnerExceptions")
+                  .Exactly(1)
+                  .InstanceOf<OperationCanceledException>());
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EqualTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                }));
     }
 
     [Test]
@@ -485,32 +544,47 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var executionTask1 = handler.Handle(signal);
 
-        Assert.That(() => observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-        }).After(100).MilliSeconds.PollEvery(10).MilliSeconds);
+        Assert.That(
+            () => observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                  new[]
+                  {
+                      (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                      (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                  })
+              .After(100)
+              .MilliSeconds.PollEvery(10)
+              .MilliSeconds);
 
         tcs2.SetResult();
 
-        Assert.That(() => observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-        }).After(100).MilliSeconds.PollEvery(10).MilliSeconds);
+        Assert.That(
+            () => observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                  new[]
+                  {
+                      (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                      (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                      (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                  })
+              .After(100)
+              .MilliSeconds.PollEvery(10)
+              .MilliSeconds);
 
         tcs1.SetResult();
 
         await executionTask1;
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                }));
     }
 
     [Test]
@@ -528,6 +602,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception;
         });
 
@@ -539,15 +614,21 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var signal = new TestSignal { Payload = 10 };
 
-        Assert.That(() => handler.Handle(signal), Throws.InstanceOf<AggregateException>()
-                                                        .With.Property("InnerExceptions").EquivalentTo(new[] { exception }));
+        Assert.That(
+            () => handler.Handle(signal),
+            Throws.InstanceOf<AggregateException>()
+                  .With.Property("InnerExceptions")
+                  .EquivalentTo(new[] { exception }));
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                }));
     }
 
     [Test]
@@ -566,12 +647,14 @@ public sealed partial class SignalBroadcastingStrategyTests
         _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception1;
         });
 
         _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception2;
         });
 
@@ -583,14 +666,20 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var signal = new TestSignal { Payload = 10 };
 
-        Assert.That(() => handler.Handle(signal), Throws.InstanceOf<AggregateException>()
-                                                        .With.Property("InnerExceptions").EquivalentTo(new[] { exception1, exception2 }));
+        Assert.That(
+            () => handler.Handle(signal),
+            Throws.InstanceOf<AggregateException>()
+                  .With.Property("InnerExceptions")
+                  .EquivalentTo(new[] { exception1, exception2 }));
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                }));
     }
 
     [Test]
@@ -618,17 +707,21 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         Assert.DoesNotThrowAsync(() => handler.Handle(signal, cts.Token));
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                }));
     }
 
     [Test]
-    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndOneHandlerThrowsCancellationException_ThrowsCancellationExceptionAfterAllHandlersHaveExecuted()
+    public async Task
+        GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndOneHandlerThrowsCancellationException_ThrowsCancellationExceptionAfterAllHandlersHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -658,16 +751,20 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         await Assert.ThatAsync(() => handler.Handle(signal, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                }));
     }
 
     [Test]
-    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndMultipleHandlersThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllHandlersHaveExecuted()
+    public async Task
+        GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndMultipleHandlersThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllHandlersHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -703,15 +800,19 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         await Assert.ThatAsync(() => handler.Handle(signal, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                }));
     }
 
     [Test]
-    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndSingleHandlersThrowCancellationExceptionWhileOtherHandlerThrowsOtherException_ThrowsAggregateException()
+    public async Task
+        GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndSingleHandlersThrowCancellationExceptionWhileOtherHandlerThrowsOtherException_ThrowsAggregateException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -731,6 +832,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, _) =>
         {
             await Task.Yield();
+
             throw exception;
         });
 
@@ -747,15 +849,23 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var signal = new TestSignal { Payload = 10 };
 
-        await Assert.ThatAsync(() => handler.Handle(signal, cts.Token), Throws.InstanceOf<AggregateException>()
-                                                                              .With.Property("InnerExceptions").Contains(exception)
-                                                                              .And.Property("InnerExceptions").Exactly(1).InstanceOf<OperationCanceledException>());
+        await Assert.ThatAsync(
+            () => handler.Handle(signal, cts.Token),
+            Throws.InstanceOf<AggregateException>()
+                  .With.Property("InnerExceptions")
+                  .Contains(exception)
+                  .And.Property("InnerExceptions")
+                  .Exactly(1)
+                  .InstanceOf<OperationCanceledException>());
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                }));
     }
 
     [Test]
@@ -789,52 +899,73 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var executionTask1 = handler.Handle(signal);
 
-        Assert.That(() => observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-        }).After(100).MilliSeconds.PollEvery(10).MilliSeconds);
+        Assert.That(
+            () => observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                  new[]
+                  {
+                      (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                      (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                  })
+              .After(100)
+              .MilliSeconds.PollEvery(10)
+              .MilliSeconds);
 
         tcs2.SetResult();
 
-        Assert.That(() => observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-            (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
-        }).After(100).MilliSeconds.PollEvery(10).MilliSeconds);
+        Assert.That(
+            () => observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                  new[]
+                  {
+                      (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                      (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                      (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                      (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
+                  })
+              .After(100)
+              .MilliSeconds.PollEvery(10)
+              .MilliSeconds);
 
         tcs1.SetResult();
 
-        Assert.That(() => observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-            (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
-        }).After(100).MilliSeconds.PollEvery(10).MilliSeconds);
+        Assert.That(
+            () => observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                  new[]
+                  {
+                      (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                      (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                      (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                      (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
+                      (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                  })
+              .After(100)
+              .MilliSeconds.PollEvery(10)
+              .MilliSeconds);
 
         tcs3.SetResult();
 
         await executionTask1;
 
-        Assert.That(observations.ObservedHandlerExecutions, Is.EquivalentTo(new[]
-        {
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-            (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
-            (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
-            (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.End),
-        }));
+        Assert.That(
+            observations.ObservedHandlerExecutions,
+            Is.EquivalentTo(
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.End),
+                }));
     }
 
     [Test]
     [TestCase(0)]
     [TestCase(-1)]
-    public async Task GivenParallelBroadcastingStrategyWithInvalidDegreeOfParallelism_WhenCallingHandler_ThrowsArgumentException(int maxDegreeOfParallelism)
+    public void GivenParallelBroadcastingStrategyWithInvalidDegreeOfParallelism_WhenCallingHandler_ThrowsArgumentException(int maxDegreeOfParallelism)
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -844,22 +975,22 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<ISignalPublishers>()
-                              .For(TestSignal.T)
-                              .WithTransport(p => p.UseInProcess().WithParallelBroadcastingStrategy(c => c.WithMaxDegreeOfParallelism(-1)));
-
-        var signal = new TestSignal { Payload = 10 };
-
-        await Assert.ThatAsync(() => handler.Handle(signal), Throws.ArgumentException);
+        Assert.That(
+            () => provider.GetRequiredService<ISignalPublishers>()
+                          .For(TestSignal.T)
+                          .WithTransport(p => p.UseInProcess().WithParallelBroadcastingStrategy(c => c.WithMaxDegreeOfParallelism(-1))),
+            Throws.ArgumentException);
     }
 
     private static async Task WarmUpInProcessReceiver(ServiceProvider provider)
     {
         // "warm up" the receiver so that it doesn't get canceled before the Signal is published with a canceled token
-        await provider.GetRequiredService<InProcessSignalReceiver>().Broadcast(new TestSignal { Payload = 10 },
-                                                                               provider,
-                                                                               new NullBroadcastingStrategy(),
-                                                                               CancellationToken.None);
+        await provider.GetRequiredService<InProcessSignalReceiver>()
+                      .Broadcast(
+                          new TestSignal { Payload = 10 },
+                          provider,
+                          new NullBroadcastingStrategy(),
+                          CancellationToken.None);
     }
 
     [Signal]
@@ -984,10 +1115,11 @@ public sealed partial class SignalBroadcastingStrategyTests
         Exception? exceptionToThrow = null)
         : ISignalBroadcastingStrategy
     {
-        public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
-                                                   IServiceProvider serviceProvider,
-                                                   TSignal signal,
-                                                   CancellationToken cancellationToken)
+        public async Task BroadcastSignal<TSignal>(
+            IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
+            IServiceProvider serviceProvider,
+            TSignal signal,
+            CancellationToken cancellationToken)
             where TSignal : class, ISignal<TSignal>
         {
             observations.ObservedStrategyExecutions.Enqueue((GetType(), signal));
@@ -1008,10 +1140,11 @@ public sealed partial class SignalBroadcastingStrategyTests
 
     private sealed class NullBroadcastingStrategy : ISignalBroadcastingStrategy
     {
-        public Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
-                                             IServiceProvider serviceProvider,
-                                             TSignal signal,
-                                             CancellationToken cancellationToken)
+        public Task BroadcastSignal<TSignal>(
+            IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
+            IServiceProvider serviceProvider,
+            TSignal signal,
+            CancellationToken cancellationToken)
             where TSignal : class, ISignal<TSignal>
         {
             return Task.CompletedTask;

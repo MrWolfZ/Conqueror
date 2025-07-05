@@ -356,19 +356,12 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
 
         handler = firstConfigurationKind switch
         {
-            "sync" => handler.WithTransport(b =>
-            {
-                throw new NotSupportedException();
-
-                // this is to make the compiler recognize the correct overload of `WithTransport`
-#pragma warning disable CS0162 // Unreachable code detected
-                return b.UseInProcess();
-#pragma warning restore CS0162 // Unreachable code detected
-            }),
+            "sync" => handler.WithTransport(_ => new ThrowingSignalPublisher<TestSignal>(new NotSupportedException())),
             "async" => handler.WithTransport(async _ =>
             {
                 await Task.CompletedTask;
-                throw new NotSupportedException();
+
+                return new ThrowingSignalPublisher<TestSignal>(new NotSupportedException());
             }),
             _ => throw new ArgumentOutOfRangeException(nameof(firstConfigurationKind), firstConfigurationKind, null),
         };
@@ -541,6 +534,24 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
         public void Dispose() => observation.WasDisposed = true;
     }
 
+    private sealed class ThrowingSignalPublisher<TSignal>(Exception exception)
+        : ISignalPublisher<TSignal>
+        where TSignal : class, ISignal<TSignal>
+    {
+        public string TransportTypeName => "throwing";
+
+        public async Task Publish(
+            TSignal signal,
+            IServiceProvider serviceProvider,
+            ConquerorContext conquerorContext,
+            CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+
+            throw exception;
+        }
+    }
+
     private sealed class DisposalObservation
     {
         public bool WasDisposed { get; set; }
@@ -651,6 +662,8 @@ public sealed partial class SignalHandlerFunctionalityAssemblyScanningTests : Si
 
 public abstract class SignalHandlerFunctionalityPublisherTests : SignalHandlerFunctionalityTests
 {
+    protected abstract bool BuildsSenderPerExecution { get; }
+
     [Test]
     public async Task GivenHandlerClient_WhenCallingClient_ServiceProviderInTransportBuilderIsFromResolutionScope()
     {
@@ -670,9 +683,17 @@ public abstract class SignalHandlerFunctionalityPublisherTests : SignalHandlerFu
         await handler1.Handle(CreateSignal());
         await handler2.Handle(CreateSignal());
 
-        Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(3));
-        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
-        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
+        if (BuildsSenderPerExecution)
+        {
+            Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(3));
+            Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
+            Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
+        }
+        else
+        {
+            Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(2));
+            Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
+        }
     }
 
     protected abstract TestSignal.IHandler ConfigureWithPublisher(
@@ -732,6 +753,8 @@ public abstract class SignalHandlerFunctionalityPublisherTests : SignalHandlerFu
 [TestFixture]
 public sealed class SignalHandlerFunctionalityPublisherWithSyncTransportFactoryTests : SignalHandlerFunctionalityPublisherTests
 {
+    protected override bool BuildsSenderPerExecution => false;
+
     protected override TestSignal.IHandler ConfigureWithPublisher(
         TestSignal.IHandler builder,
         Func<SignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null)
@@ -748,6 +771,8 @@ public sealed class SignalHandlerFunctionalityPublisherWithSyncTransportFactoryT
 [TestFixture]
 public sealed class SignalHandlerFunctionalityPublisherWithAsyncTransportFactoryTests : SignalHandlerFunctionalityPublisherTests
 {
+    protected override bool BuildsSenderPerExecution => true;
+
     protected override TestSignal.IHandler ConfigureWithPublisher(
         TestSignal.IHandler builder,
         Func<SignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null)

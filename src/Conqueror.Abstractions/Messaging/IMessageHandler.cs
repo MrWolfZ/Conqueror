@@ -92,7 +92,7 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler> : IMes
 
     internal IMessagePipeline<TMessage, TResponse> Pipeline { get; init; } = null!;
 
-    private ConfigureMessageSender<TMessage, TResponse>? ConfigureSender { get; set; }
+    private IMessageSender<TMessage, TResponse>? Sender { get; set; }
 
     private ConfigureMessageSenderAsync<TMessage, TResponse>? ConfigureSenderAsync { get; set; }
 
@@ -104,8 +104,7 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler> : IMes
             message,
             ServiceProvider,
             Pipeline,
-            sender: null,
-            ConfigureSender,
+            Sender,
             ConfigureSenderAsync,
             cancellationToken);
 
@@ -118,7 +117,7 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler> : IMes
 
     public TIHandler WithTransport(ConfigureMessageSender<TMessage, TResponse> configureSender)
     {
-        ConfigureSender = configureSender;
+        Sender = configureSender(new(ServiceProvider));
         ConfigureSenderAsync = null;
 
         return This;
@@ -126,7 +125,7 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler> : IMes
 
     public TIHandler WithTransport(ConfigureMessageSenderAsync<TMessage, TResponse> configureSenderAsync)
     {
-        ConfigureSender = null;
+        Sender = null;
         ConfigureSenderAsync = configureSenderAsync;
 
         return This;

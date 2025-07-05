@@ -475,20 +475,12 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
 
         handler = firstConfigurationKind switch
         {
-            "sync" => handler.WithTransport(b =>
-            {
-                throw new NotSupportedException();
-
-                // this is to make the compiler recognize the correct overload of `WithTransport`
-#pragma warning disable CS0162 // Unreachable code detected
-                return b.UseInProcess();
-#pragma warning restore CS0162 // Unreachable code detected
-            }),
+            "sync" => handler.WithTransport(_ => new ThrowingMessageTransport<TestMessage, TestMessageResponse>(new NotSupportedException())),
             "async" => handler.WithTransport(async _ =>
             {
                 await Task.CompletedTask;
 
-                throw new NotSupportedException();
+                return new ThrowingMessageTransport<TestMessage, TestMessageResponse>(new NotSupportedException());
             }),
             _ => throw new ArgumentOutOfRangeException(nameof(firstConfigurationKind), firstConfigurationKind, null),
         };
@@ -666,6 +658,23 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
         }
     }
 
+    private sealed class ThrowingMessageTransport<TMessage, TResponse>(Exception exception) : IMessageSender<TMessage, TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
+    {
+        public string TransportTypeName => "throwing";
+
+        public async Task<TResponse> Send(
+            TMessage message,
+            IServiceProvider serviceProvider,
+            ConquerorContext conquerorContext,
+            CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+
+            throw exception;
+        }
+    }
+
     private sealed class DisposalObservation
     {
         public bool WasDisposed { get; set; }
@@ -780,6 +789,8 @@ public sealed partial class MessageHandlerFunctionalityAssemblyScanningTests : M
 
 public abstract partial class MessageHandlerFunctionalityClientTests : MessageHandlerFunctionalityTests
 {
+    protected abstract bool BuildsSenderPerExecution { get; }
+
     [Test]
     public async Task GivenHandlerClient_WhenCallingClient_ServiceProviderInTransportBuilderIsFromResolutionScope()
     {
@@ -799,9 +810,17 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
         _ = await handler1.Handle(CreateMessage());
         _ = await handler2.Handle(CreateMessage());
 
-        Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(3));
-        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
-        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
+        if (BuildsSenderPerExecution)
+        {
+            Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(3));
+            Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
+            Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
+        }
+        else
+        {
+            Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(2));
+            Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
+        }
     }
 
     [Test]
@@ -823,9 +842,17 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
         await handler1.Handle(CreateMessageWithoutResponse());
         await handler2.Handle(CreateMessageWithoutResponse());
 
-        Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(3));
-        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
-        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
+        if (BuildsSenderPerExecution)
+        {
+            Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(3));
+            Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
+            Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
+        }
+        else
+        {
+            Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(2));
+            Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
+        }
     }
 
     [Test]
@@ -1037,6 +1064,8 @@ public abstract partial class MessageHandlerFunctionalityClientTests : MessageHa
 [TestFixture]
 public sealed class MessageHandlerFunctionalityClientWithSyncTransportFactoryTests : MessageHandlerFunctionalityClientTests
 {
+    protected override bool BuildsSenderPerExecution => false;
+
     protected override TestMessage.IHandler ConfigureWithTransport(
         TestMessage.IHandler handler,
         Func<MessageSenderBuilder<TestMessage, TestMessageResponse>, IMessageSender<TestMessage, TestMessageResponse>?>? baseConfigure = null)
@@ -1066,6 +1095,8 @@ public sealed class MessageHandlerFunctionalityClientWithSyncTransportFactoryTes
 [TestFixture]
 public sealed class MessageHandlerFunctionalityClientWithAsyncTransportFactoryTests : MessageHandlerFunctionalityClientTests
 {
+    protected override bool BuildsSenderPerExecution => true;
+
     protected override TestMessage.IHandler ConfigureWithTransport(
         TestMessage.IHandler handler,
         Func<MessageSenderBuilder<TestMessage, TestMessageResponse>, IMessageSender<TestMessage, TestMessageResponse>?>? baseConfigure = null)

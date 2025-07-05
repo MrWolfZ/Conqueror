@@ -42,7 +42,6 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse> : IMessageHandl
             serviceProvider,
             pipeline,
             new Sender(handlerFn, transportTypeName),
-            configureSender: null,
             configureSenderAsync: null,
             cancellationToken);
     }

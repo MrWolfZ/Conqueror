@@ -17,7 +17,6 @@ internal sealed class SignalDispatcher(
         IServiceProvider serviceProvider,
         Action<ISignalPipeline<TSignal>>? configurePipeline,
         ISignalPublisher<TSignal>? publisher,
-        ConfigureSignalPublisher<TSignal>? configurePublisher,
         ConfigureSignalPublisherAsync<TSignal>? configurePublisherAsync,
         CancellationToken cancellationToken)
         where TSignal : class, ISignal<TSignal>
@@ -37,11 +36,7 @@ internal sealed class SignalDispatcher(
         {
             var transportBuilder = new SignalPublisherBuilder<TSignal>(serviceProvider);
 
-            if (configurePublisher is not null)
-            {
-                publisher = configurePublisher(transportBuilder);
-            }
-            else if (configurePublisherAsync is not null)
+            if (configurePublisherAsync is not null)
             {
                 publisher = await configurePublisherAsync(transportBuilder).ConfigureAwait(false);
             }

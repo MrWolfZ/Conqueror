@@ -12,7 +12,6 @@ internal interface IMessageDispatcher
         IServiceProvider serviceProvider,
         IMessagePipeline<TMessage, TResponse> pipeline,
         IMessageSender<TMessage, TResponse>? sender,
-        ConfigureMessageSender<TMessage, TResponse>? configureSender,
         ConfigureMessageSenderAsync<TMessage, TResponse>? configureSenderAsync,
         CancellationToken cancellationToken)
         where TMessage : class, IMessage<TMessage, TResponse>;
