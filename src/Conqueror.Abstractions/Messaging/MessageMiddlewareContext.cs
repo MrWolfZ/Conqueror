@@ -10,17 +10,25 @@ namespace Conqueror;
 public readonly record struct MessageMiddlewareContext<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares;
-    private readonly IMessageSender<TMessage, TResponse> sender;
+    private readonly State state;
 
     public MessageMiddlewareContext(
         List<IMessageMiddleware<TMessage, TResponse>> middlewares,
-        IMessageSender<TMessage, TResponse> sender)
+        IMessageSender<TMessage, TResponse> sender,
+        IServiceProvider serviceProvider,
+        ConquerorContext conquerorContext,
+        MessageTransportType transportType)
     {
         Debug.Assert(middlewares.Count > 0, "this should only be called if there are middlewares to execute");
 
-        this.middlewares = middlewares;
-        this.sender = sender;
+        state = new()
+        {
+            Middlewares = middlewares,
+            Sender = sender,
+            ServiceProvider = serviceProvider,
+            ConquerorContext = conquerorContext,
+            TransportType = transportType,
+        };
     }
 
     public required TMessage Message { get; init; }
@@ -29,18 +37,18 @@ public readonly record struct MessageMiddlewareContext<TMessage, TResponse>
 
     public required CancellationToken CancellationToken { get; init; }
 
-    public required IServiceProvider ServiceProvider { get; init; }
+    public IServiceProvider ServiceProvider => state.ServiceProvider;
 
-    public required ConquerorContext ConquerorContext { get; init; }
+    public ConquerorContext ConquerorContext => state.ConquerorContext;
 
-    public required MessageTransportType TransportType { get; init; }
+    public MessageTransportType TransportType => state.TransportType;
 
     private int CurrentIndex { get; init; }
 
     public Task<TResponse> Next(TMessage message, CancellationToken cancellationToken)
     {
         var nextIndex = CurrentIndex + 1;
-        if (nextIndex < middlewares.Count)
+        if (nextIndex < state.Middlewares.Count)
         {
             var updatedContext = this with
             {
@@ -49,9 +57,31 @@ public readonly record struct MessageMiddlewareContext<TMessage, TResponse>
                 CurrentIndex = nextIndex,
             };
 
-            return middlewares[nextIndex].Execute(updatedContext);
+            return state.Middlewares[nextIndex].Execute(updatedContext);
         }
 
-        return sender.Send(message, ServiceProvider, ConquerorContext, cancellationToken);
+        return state.Sender.Send(
+            message,
+            ServiceProvider,
+            ConquerorContext,
+            cancellationToken);
+    }
+
+    // performance optimization: we capture the immutable parts of the context in a separate
+    // record so that it only needs to be allocated once per pipeline execution instead of
+    // being embedded in the context, which would require a lot of copying of fields, especially
+    // when the context might be captured in the async state machine of a middleware's Execute
+    // method
+    private sealed record State
+    {
+        public required List<IMessageMiddleware<TMessage, TResponse>> Middlewares { get; init; }
+
+        public required IMessageSender<TMessage, TResponse> Sender { get; init; }
+
+        public required IServiceProvider ServiceProvider { get; init; }
+
+        public required ConquerorContext ConquerorContext { get; init; }
+
+        public required MessageTransportType TransportType { get; init; }
     }
 }

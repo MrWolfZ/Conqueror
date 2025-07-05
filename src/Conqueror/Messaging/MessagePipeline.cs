@@ -96,13 +96,15 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
                 cancellationToken);
         }
 
-        var ctx = new MessageMiddlewareContext<TMessage, TResponse>(middlewares, sender)
+        var ctx = new MessageMiddlewareContext<TMessage, TResponse>(
+            middlewares,
+            sender,
+            serviceProvider,
+            conquerorContext,
+            transportType)
         {
             Message = message,
-            TransportType = transportType,
             CancellationToken = cancellationToken,
-            ConquerorContext = conquerorContext,
-            ServiceProvider = serviceProvider,
         };
 
         return middlewares[0].Execute(ctx);

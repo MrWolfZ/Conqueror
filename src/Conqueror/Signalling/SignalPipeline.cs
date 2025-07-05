@@ -45,6 +45,7 @@ internal sealed class SignalPipeline<TSignal>(
     {
         var conditionalPipeline = new ConditionalPipeline(predicate, this);
         configureConditionalPipeline(conditionalPipeline);
+
         return this;
     }
 
@@ -98,13 +99,15 @@ internal sealed class SignalPipeline<TSignal>(
                 cancellationToken);
         }
 
-        var ctx = new SignalMiddlewareContext<TSignal>(middlewares, publisher)
+        var ctx = new SignalMiddlewareContext<TSignal>(
+            middlewares,
+            publisher,
+            ServiceProvider,
+            conquerorContext,
+            TransportType)
         {
             Signal = signal,
-            TransportType = TransportType,
             CancellationToken = cancellationToken,
-            ConquerorContext = conquerorContext,
-            ServiceProvider = ServiceProvider,
         };
 
         return middlewares[0].Execute(ctx);
@@ -172,6 +175,7 @@ internal sealed class SignalPipeline<TSignal>(
         {
             var conditionalPipeline = new ConditionalPipeline(predicate, this);
             configureConditionalPipeline(conditionalPipeline);
+
             return this;
         }
 
