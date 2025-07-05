@@ -329,7 +329,7 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
 
     [Test]
     [TestCaseSource(nameof(CreateSimpleSuccessTestCasesPrivate))]
-    public async Task GivenTestCase_WhenCancellingPublish_CallerReceivesOperationCanceledExceptionAndReceiversReceiveNoMessages(TSuccessTestCase testCase)
+    public async Task GivenTestCase_WhenCancellingSending_CallerReceivesOperationCanceledExceptionAndReceiversReceiveNoMessages(TSuccessTestCase testCase)
     {
         await using var host = testCase.CreateTestHost();
 

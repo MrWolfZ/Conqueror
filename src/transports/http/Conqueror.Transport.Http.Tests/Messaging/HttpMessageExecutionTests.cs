@@ -18,6 +18,8 @@ public sealed class HttpMessageExecutionTests
                 _ = services.AddMessageHandler<TestMessageHandler>()
                             .AddSingleton<Action<IHttpMessageReceiver>>(r => r.Disable());
 
+                _ = services.AddSingleton<ILogger>(p => p.GetRequiredService<ILogger<HttpMessageExecutionTests>>());
+
                 _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
             app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
@@ -45,6 +47,8 @@ public sealed class HttpMessageExecutionTests
             {
                 _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>()
                             .AddSingleton<Action<IHttpMessageReceiver>>(r => r.Disable());
+
+                _ = services.AddSingleton<ILogger>(p => p.GetRequiredService<ILogger<HttpMessageExecutionTests>>());
 
                 _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },

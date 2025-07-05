@@ -2394,7 +2394,7 @@ file static class PipelineExtensions
     public static IMessagePipeline<TMessage, TResponse> UseLogging<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        var logger = pipeline.ServiceProvider.GetRequiredService<ILogger<TMessage>>();
+        var logger = pipeline.ServiceProvider.GetRequiredService<ILogger>();
 
         return pipeline.Use(ctx =>
         {
@@ -2407,7 +2407,7 @@ file static class PipelineExtensions
     public static IMessagePipeline<TMessage, TResponse> UseReceiverLogging<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        var logger = pipeline.ServiceProvider.GetRequiredService<ILogger<TMessage>>();
+        var logger = pipeline.ServiceProvider.GetRequiredService<ILogger>();
 
         return pipeline.Use(ctx =>
         {

@@ -65,5 +65,5 @@ public interface IMessageTransportConformityContextTestCase<TTestHost> : IMessag
 
     bool HasUpstreamData { get; }
 
-    Task BeforePublish(TTestHost host) => Task.CompletedTask;
+    Task BeforeSend(TTestHost host) => Task.CompletedTask;
 }
