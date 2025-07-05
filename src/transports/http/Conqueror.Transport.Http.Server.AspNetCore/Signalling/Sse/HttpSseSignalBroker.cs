@@ -54,16 +54,14 @@ internal sealed partial class HttpSseSignalBroker(
 
         var content = TSignal.HttpSseSignalSerializer.Serialize(serviceProvider, signal);
 
-        var signalId = conquerorContext.RemoveSignalId();
-
-        if (conquerorContext.EncodeDownstreamContextData() is { } s)
+        if (conquerorContext.EncodeDownstreamContextData(traceId: conquerorContext.TraceId) is { } s)
         {
             content += "\n" + s;
         }
 
         var item = new SseItem<string>(content, TSignal.EventType)
         {
-            EventId = signalId,
+            EventId = conquerorContext.SignalId,
         };
 
         cancellationToken.ThrowIfCancellationRequested();

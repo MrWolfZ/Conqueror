@@ -1,44 +1,64 @@
 using System;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading;
 
 namespace Conqueror.Context;
 
-internal sealed class DefaultConquerorContext : ConquerorContext
+internal sealed class DefaultConquerorContext : ConquerorContext,
+                                                ITransportableConquerorContextData,
+                                                IInProcessConquerorContextData
 {
     private readonly Action<DefaultConquerorContext> onDispose;
     private readonly DefaultConquerorContext? parent;
 
-    private DefaultConquerorContextData? downstreamContextData;
-    private DefaultConquerorContextData? upstreamContextData;
     private DefaultConquerorContextData? contextData;
 
-    private DefaultConquerorContext(Action<ConquerorContext> onDispose)
+    private DefaultConquerorContext(string traceId, Action<ConquerorContext> onDispose)
     {
+        TraceId = traceId;
+
         this.onDispose = onDispose;
         parent = null;
     }
 
     private DefaultConquerorContext(DefaultConquerorContext parent, Action<DefaultConquerorContext> onDispose)
     {
+        TraceId = parent.TraceId;
+        MessageId = parent.MessageId;
+        SignalId = parent.SignalId;
+        CurrentPrincipal = parent.CurrentPrincipal;
+
         this.onDispose = onDispose;
         this.parent = parent;
 
-        downstreamContextData = parent.downstreamContextData is not null ? new(parent.downstreamContextData) : null;
-        contextData = parent.contextData is not null ? new(parent.contextData) : null;
+        if (parent.contextData is not null)
+        {
+            contextData = new(parent.contextData);
+        }
     }
 
-    public override DefaultConquerorContextData DownstreamContextData
-        => LazyInitializer.EnsureInitialized(ref downstreamContextData, static () => new());
+    public override string TraceId { get; set; }
 
-    public override DefaultConquerorContextData UpstreamContextData
-        => LazyInitializer.EnsureInitialized(ref upstreamContextData, static () => new());
+    public override string? MessageId { get; set; }
 
-    public override DefaultConquerorContextData ContextData
-        => LazyInitializer.EnsureInitialized(ref contextData, static () => new());
+    public override string? SignalId { get; set; }
 
-    public static DefaultConquerorContext CreateRootContext(Action<ConquerorContext> onRootDispose)
+    public override ClaimsPrincipal? CurrentPrincipal { get; set; }
+
+    public override ITransportableConquerorContextData TransportableData => this;
+
+    public override IInProcessConquerorContextData InProcessData => this;
+
+    private DefaultConquerorContextData ContextData => LazyInitializer.EnsureInitialized(ref contextData, static () => new());
+
+    private ITransportableConquerorContextData TransportableContextData => ContextData;
+
+    private IInProcessConquerorContextData InProcessContextData => ContextData;
+
+    public static DefaultConquerorContext CreateRootContext(string traceId, Action<ConquerorContext> onRootDispose)
     {
-        return new(onRootDispose);
+        return new(traceId, onRootDispose);
     }
 
     public DefaultConquerorContext CreateChildContext(Action onChildDispose)
@@ -64,49 +84,66 @@ internal sealed class DefaultConquerorContext : ConquerorContext
 
     private void PropagateUpstreamData(DefaultConquerorContext childContext)
     {
-        // performance optimization to prevent unnecessary allocation of enumerator
-        if (childContext.upstreamContextData is not null && !childContext.upstreamContextData.IsEmpty)
+        if (childContext.contextData is not null)
         {
-            foreach (var (key, value, scope) in childContext.upstreamContextData)
-            {
-                if (value is string s)
-                {
-                    UpstreamContextData.Set(key, s, scope);
-                }
-                else
-                {
-                    UpstreamContextData.Set(key, value);
-                }
-            }
-        }
-
-        // performance optimization to prevent unnecessary allocation of enumerator
-        if (contextData is not null && !contextData.IsEmpty)
-        {
-            // bidirectional keys also propagate deletion upstream
-            foreach (var (key, _, _) in contextData)
-            {
-                if (childContext.contextData?.IsRemoved(key) ?? false)
-                {
-                    _ = contextData.Remove(key);
-                }
-            }
-        }
-
-        // performance optimization to prevent unnecessary allocation of enumerator
-        if (childContext.contextData is not null && !childContext.contextData.IsEmpty)
-        {
-            foreach (var (key, value, scope) in childContext.contextData)
-            {
-                if (value is string s)
-                {
-                    ContextData.Set(key, s, scope);
-                }
-                else
-                {
-                    ContextData.Set(key, value);
-                }
-            }
+            ContextData.PropagateUpstreamData(childContext.contextData);
         }
     }
+
+    #region data interface members
+
+#pragma warning disable SA1202 // Elements must be ordered by access
+
+    bool ITransportableConquerorContextData.Add(string key, string value, ConquerorContextDataFlowDirection flowDirection)
+        => TransportableContextData.Add(key, value, flowDirection);
+
+    void ITransportableConquerorContextData.Set(string key, string value, ConquerorContextDataFlowDirection flowDirection)
+        => TransportableContextData.Set(key, value, flowDirection);
+
+    bool ITransportableConquerorContextData.Remove(string key, ConquerorContextDataFlowDirection flowDirection)
+        => contextData is not null && TransportableContextData.Remove(key, flowDirection);
+
+    void ITransportableConquerorContextData.Clear(ConquerorContextDataFlowDirection flowDirection)
+    {
+        if (contextData is null)
+        {
+            return;
+        }
+
+        TransportableContextData.Clear(flowDirection);
+    }
+
+    IEnumerable<(string Key, string Value)> ITransportableConquerorContextData.GetAll(ConquerorContextDataFlowDirection flowDirection)
+        => contextData is null ? [] : TransportableContextData.GetAll(flowDirection);
+
+    string? ITransportableConquerorContextData.Get(string key, ConquerorContextDataFlowDirection flowDirection)
+        => contextData is null ? null : TransportableContextData.Get(key, flowDirection);
+
+    bool IInProcessConquerorContextData.Add(string key, object value, ConquerorContextDataFlowDirection flowDirection)
+        => InProcessContextData.Add(key, value, flowDirection);
+
+    void IInProcessConquerorContextData.Set(string key, object value, ConquerorContextDataFlowDirection flowDirection)
+        => InProcessContextData.Set(key, value, flowDirection);
+
+    bool IInProcessConquerorContextData.Remove(string key, ConquerorContextDataFlowDirection flowDirection)
+        => contextData is not null && InProcessContextData.Remove(key, flowDirection);
+
+    void IInProcessConquerorContextData.Clear(ConquerorContextDataFlowDirection flowDirection)
+    {
+        if (contextData is null)
+        {
+            return;
+        }
+
+        InProcessContextData.Clear(flowDirection);
+    }
+
+    IEnumerable<(string Key, object Value)> IInProcessConquerorContextData.GetAll(ConquerorContextDataFlowDirection flowDirection)
+        => contextData is null ? [] : InProcessContextData.GetAll(flowDirection);
+
+    T? IInProcessConquerorContextData.Get<T>(string key, ConquerorContextDataFlowDirection flowDirection)
+        where T : default
+        => contextData is null ? default : InProcessContextData.Get<T>(key, flowDirection);
+
+    #endregion
 }

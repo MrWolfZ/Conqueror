@@ -22,29 +22,29 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
         var receivedMessageIds = new ConcurrentQueue<string?>();
         var receivedTraceIds = new ConcurrentQueue<string>();
 
-        var receivedDownstreamContextDatas = new ConcurrentQueue<IReadOnlyCollection<KeyValuePair<string, string>>>();
-        var receivedBidirectionalContextDatas = new ConcurrentQueue<IReadOnlyCollection<KeyValuePair<string, string>>>();
+        var receivedDownstreamContextDatas = new ConcurrentQueue<IReadOnlyCollection<(string, string)>>();
+        var receivedBidirectionalContextDatas = new ConcurrentQueue<IReadOnlyCollection<(string, string)>>();
 
         await using var receiverHost = await host.CreateReceiverTestHost(
             host.TestTimeoutToken,
             (_, ctx, _) =>
             {
-                receivedMessageIds.Enqueue(ctx.GetMessageId());
-                receivedTraceIds.Enqueue(ctx.GetTraceId());
+                receivedMessageIds.Enqueue(ctx.MessageId);
+                receivedTraceIds.Enqueue(ctx.TraceId);
 
-                receivedDownstreamContextDatas.Enqueue(ctx.DownstreamContextData.AsKeyValuePairs());
-                receivedBidirectionalContextDatas.Enqueue(ctx.ContextData.AsKeyValuePairs());
+                receivedDownstreamContextDatas.Enqueue(ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Downstream).ToList());
+                receivedBidirectionalContextDatas.Enqueue(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional).ToList());
 
                 if (testCase.HasUpstreamData)
                 {
                     foreach (var item in ContextDataUpstreamAcrossTransports)
                     {
-                        ctx?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                        ctx?.TransportableData.Set(item.Key, item.Value, ConquerorContextDataFlowDirection.Upstream);
                     }
 
                     foreach (var item in InProcessContextData)
                     {
-                        ctx?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                        ctx?.InProcessData.Set(item.Key, item.Value, ConquerorContextDataFlowDirection.Upstream);
                     }
                 }
 
@@ -52,7 +52,7 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
                 {
                     foreach (var item in ContextDataUpstreamBidirectionalAcrossTransports)
                     {
-                        ctx?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                        ctx?.TransportableData.Set(item.Key, item.Value, ConquerorContextDataFlowDirection.Bidirectional);
                     }
                 }
 
@@ -80,8 +80,8 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
             cts.Token,
             (_, ctx, _) =>
             {
-                seenMessageIdsOnSender.Enqueue(ctx.GetMessageId());
-                seenTraceIdsOnSender.Enqueue(ctx.GetTraceId());
+                seenMessageIdsOnSender.Enqueue(ctx.MessageId);
+                seenTraceIdsOnSender.Enqueue(ctx.TraceId);
 
                 return Task.CompletedTask;
             });
@@ -106,12 +106,12 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
         {
             foreach (var (key, value) in ContextDataDownstreamAcrossTransports)
             {
-                conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+                conquerorContext.TransportableData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
             }
 
             foreach (var (key, value) in InProcessContextData)
             {
-                conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.InProcess);
+                conquerorContext.InProcessData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
             }
         }
 
@@ -119,12 +119,12 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
         {
             foreach (var (key, value) in ContextDataDownstreamBidirectionalAcrossTransports)
             {
-                conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+                conquerorContext.TransportableData.Set(key, value, ConquerorContextDataFlowDirection.Bidirectional);
             }
 
             foreach (var (key, value) in InProcessContextData)
             {
-                conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.InProcess);
+                conquerorContext.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Bidirectional);
             }
         }
 
@@ -150,11 +150,11 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
         {
             if (testCase.HasDownstreamData)
             {
-                Assert.That(receivedDownstreamContextData, Is.SupersetOf(ContextDataDownstreamAcrossTransports));
+                Assert.That(receivedDownstreamContextData, Is.SupersetOf(ContextDataDownstreamAcrossTransports.Select(p => (p.Key, p.Value))));
             }
             else
             {
-                Assert.That(receivedDownstreamContextData.Intersect(ContextDataDownstreamAcrossTransports), Is.Empty);
+                Assert.That(receivedDownstreamContextData.Intersect(ContextDataDownstreamAcrossTransports.Select(p => (p.Key, p.Value))), Is.Empty);
             }
         }
 
@@ -163,7 +163,9 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
         {
             if (testCase.HasBidirectionalData)
             {
-                Assert.That(receivedBidirectionalContextData, Is.EquivalentTo(ContextDataDownstreamBidirectionalAcrossTransports));
+                Assert.That(
+                    receivedBidirectionalContextData,
+                    Is.EquivalentTo(ContextDataDownstreamBidirectionalAcrossTransports.Select(p => (p.Key, p.Value))));
             }
             else
             {
@@ -173,24 +175,30 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
 
         if (testCase.HasUpstreamData)
         {
-            Assert.That(conquerorContext.UpstreamContextData.AsKeyValuePairs(), Is.EquivalentTo(ContextDataUpstreamAcrossTransports));
+            Assert.That(
+                conquerorContext.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream),
+                Is.EquivalentTo(ContextDataUpstreamAcrossTransports.Select(p => (p.Key, p.Value))));
         }
         else
         {
-            Assert.That(conquerorContext.UpstreamContextData, Is.Empty);
+            Assert.That(
+                conquerorContext.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream),
+                Is.Empty);
         }
 
         if (testCase.HasBidirectionalData)
         {
             Assert.That(
-                conquerorContext.ContextData.AsKeyValuePairs(),
-                Is.EquivalentTo(ContextDataUpstreamBidirectionalAcrossTransports
-                                    .Concat(ContextDataDownstreamBidirectionalAcrossTransports)
-                                    .Concat(InProcessContextData)));
+                conquerorContext.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional),
+                Is.EquivalentTo(
+                    ContextDataUpstreamBidirectionalAcrossTransports.Concat(ContextDataDownstreamBidirectionalAcrossTransports)
+                                                                    .Select(p => (p.Key, p.Value))));
         }
         else
         {
-            Assert.That(conquerorContext.ContextData, Is.Empty);
+            Assert.That(
+                conquerorContext.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional),
+                Is.Empty);
         }
     }
 

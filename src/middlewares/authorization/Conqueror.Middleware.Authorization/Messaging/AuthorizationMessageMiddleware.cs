@@ -13,7 +13,7 @@ internal sealed class AuthorizationMessageMiddleware<TMessage, TResponse> : IMes
         var authContext = new MessageAuthorizationContext<TMessage, TResponse>(ctx.Message,
                                                                                ctx.ServiceProvider,
                                                                                ctx.ConquerorContext,
-                                                                               ctx.ConquerorContext.GetCurrentPrincipal(),
+                                                                               ctx.ConquerorContext.CurrentPrincipal,
                                                                                ctx.CancellationToken);
 
         foreach (var (_, authorizationCheck) in Configuration.AuthorizationChecks)

@@ -22,19 +22,13 @@ internal sealed class MessageDispatcher(
     {
         using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 
-        var originalMessageId = conquerorContext.GetMessageId();
+        var originalMessageId = conquerorContext.MessageId;
 
-        // ensure that a message ID is available for the transport client factory
-        if (originalMessageId is null)
+        // ensure that a message ID is available; if we are in a send operation, make
+        // sure to create a new message ID for this execution in any case
+        if (originalMessageId is null || transportRole is MessageTransportRole.Sender)
         {
-            conquerorContext.SetMessageId(messageIdFactory.GenerateId());
-        }
-
-        // if we are in a send operation, make sure to create a new message ID for this execution if
-        // we were called from within the call context of another handler
-        if (originalMessageId is not null && transportRole is MessageTransportRole.Sender)
-        {
-            conquerorContext.SetMessageId(messageIdFactory.GenerateId());
+            conquerorContext.MessageId = messageIdFactory.GenerateId();
         }
 
         if (sender is null)

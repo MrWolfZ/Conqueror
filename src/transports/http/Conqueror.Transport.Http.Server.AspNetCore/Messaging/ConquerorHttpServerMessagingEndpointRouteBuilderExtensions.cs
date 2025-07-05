@@ -195,7 +195,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             if (GetTraceId(httpContext) is { } traceId)
             {
-                conquerorContext.SetTraceId(traceId);
+                conquerorContext.TraceId = traceId;
             }
 
             using var principal = conquerorContext.SetCurrentPrincipalInternal(httpContext.User);

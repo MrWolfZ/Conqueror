@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -25,8 +26,9 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
 
     private static DefaultConquerorContext CreateContext()
     {
-        var context = DefaultConquerorContext.CreateRootContext(static _ => ClearContextFromAsyncLocal());
-        context.InitializeTraceId();
+        var traceId = Activity.Current?.TraceId.ToString() ?? ActivityTraceId.CreateRandom().ToString();
+
+        var context = DefaultConquerorContext.CreateRootContext(traceId, static _ => ClearContextFromAsyncLocal());
         SetContextInAsyncLocal(context);
         return context;
     }

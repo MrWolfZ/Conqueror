@@ -13,7 +13,7 @@ public static class ConquerorContextStreamingExtensions
     /// <returns>the ID of the executing streaming request if there is one, otherwise <c>null</c></returns>
     public static string? GetStreamingRequestId(this ConquerorContext conquerorContext)
     {
-        return conquerorContext.DownstreamContextData.Get<string>(StreamingRequestIdKey);
+        return conquerorContext.TransportableData.Get(StreamingRequestIdKey);
     }
 
     /// <summary>
@@ -23,6 +23,6 @@ public static class ConquerorContextStreamingExtensions
     /// <param name="streamingRequestId">the streaming request ID to set</param>
     public static void SetStreamingRequestId(this ConquerorContext conquerorContext, string streamingRequestId)
     {
-        conquerorContext.DownstreamContextData.Set(StreamingRequestIdKey, streamingRequestId, ConquerorContextDataScope.AcrossTransports);
+        conquerorContext.TransportableData.Set(StreamingRequestIdKey, streamingRequestId);
     }
 }

@@ -29,8 +29,8 @@ public sealed partial class SignalContextTraceAndOperationIdTests
                         async (_, p, ct) =>
                         {
                             await Task.Yield();
-                            traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
-                            messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetSignalId();
+                            traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
+                            messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.SignalId;
 
                             var handler = p.GetRequiredService<ISignalPublishers>()
                                            .For(NestedTestSignal.T);
@@ -47,8 +47,8 @@ public sealed partial class SignalContextTraceAndOperationIdTests
                         async (_, p, _) =>
                         {
                             await Task.Yield();
-                            traceIdFromNestedSignalHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
-                            messageIdFromNestedSignalHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetSignalId();
+                            traceIdFromNestedSignalHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
+                            messageIdFromNestedSignalHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.SignalId;
                         });
 
         await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
@@ -58,7 +58,7 @@ public sealed partial class SignalContextTraceAndOperationIdTests
         if (hasCustomTraceId)
         {
             conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-            conquerorContext.SetTraceId(customTraceId);
+            conquerorContext.TraceId = customTraceId;
         }
 
         using var d = conquerorContext;
@@ -70,8 +70,8 @@ public sealed partial class SignalContextTraceAndOperationIdTests
                                            .For(TestSignal.T)
                                            .WithTransport(b =>
                                            {
-                                               traceIdFromTransportBuilder = b.ConquerorContext.GetTraceId();
-                                               messageIdFromTransportBuilder = b.ConquerorContext.GetSignalId();
+                                               traceIdFromTransportBuilder = b.ConquerorContext.TraceId;
+                                               messageIdFromTransportBuilder = b.ConquerorContext.SignalId;
 
                                                return b.UseInProcess();
                                            });

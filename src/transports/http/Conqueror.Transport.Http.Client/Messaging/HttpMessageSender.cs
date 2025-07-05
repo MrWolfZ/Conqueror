@@ -161,15 +161,12 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
     private void SetHeaders(ConquerorContext conquerorContext, HttpRequestHeaders headers)
     {
-        // since we send the trace ID already separately, we don't need to include it in the context data
-        var traceId = conquerorContext.RemoveTraceId();
-
         if (Activity.Current is null)
         {
-            headers.Add(HeaderNames.TraceParent, TracingHelper.CreateTraceParent(traceId: traceId));
+            headers.Add(HeaderNames.TraceParent, TracingHelper.CreateTraceParent(traceId: conquerorContext.TraceId));
         }
 
-        if (conquerorContext.EncodeDownstreamContextData() is { } data)
+        if (conquerorContext.EncodeDownstreamContextData(messageId: conquerorContext.MessageId) is { } data)
         {
             headers.Add(HeaderNames.ConquerorContext, data);
         }

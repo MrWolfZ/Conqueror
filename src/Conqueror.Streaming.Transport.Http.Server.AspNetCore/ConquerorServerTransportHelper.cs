@@ -10,7 +10,7 @@ public static class ConquerorServerTransportHelper
         {
             using var a = new Activity(string.Empty);
             var traceId = a.SetParentId(traceParent).TraceId.ToString();
-            conquerorContext.SetTraceId(traceId);
+            conquerorContext.TraceId = traceId;
         }
     }
 

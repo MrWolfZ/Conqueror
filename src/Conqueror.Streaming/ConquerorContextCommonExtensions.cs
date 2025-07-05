@@ -13,11 +13,11 @@ public static class ConquerorContextCommonExtensions
     /// <param name="transportTypeName">The name of the transport type that was executed</param>
     public static void SignalExecutionFromTransport(this ConquerorContext conquerorContext, string transportTypeName)
     {
-        conquerorContext.DownstreamContextData.Set(TransportTypeNameKey, transportTypeName, ConquerorContextDataScope.InProcess);
+        conquerorContext.InProcessData.Set(TransportTypeNameKey, transportTypeName);
     }
 
     public static string? GetExecutionTransportTypeName(this ConquerorContext conquerorContext)
     {
-        return conquerorContext.DownstreamContextData.Get<string>(TransportTypeNameKey);
+        return conquerorContext.InProcessData.Get<string>(TransportTypeNameKey);
     }
 }

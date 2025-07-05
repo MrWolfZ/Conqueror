@@ -1,102 +1,288 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 
 namespace Conqueror.Context;
 
 internal sealed class DefaultConquerorContextData(DefaultConquerorContextData? parent = null)
-    : IConquerorContextData
+    : ITransportableConquerorContextData,
+      IInProcessConquerorContextData
 {
-    private ConcurrentDictionary<string, (object Value, ConquerorContextDataScope Scope)>? items;
+    private DefaultInProcessConquerorContextData? inProcessBidirectionalContextData =
+        parent?.inProcessBidirectionalContextData is not null ? new(parent.inProcessBidirectionalContextData) : null;
 
-    // track keys that were removed in this context (to override parent values)
-    private ConcurrentDictionary<string, object?>? removedKeys;
+    private DefaultInProcessConquerorContextData? inProcessDownstreamContextData =
+        parent?.inProcessDownstreamContextData is not null ? new(parent.inProcessDownstreamContextData) : null;
 
-    public bool IsEmpty => (items is null || items.IsEmpty) && (parent is null || parent.IsEmpty);
+    private DefaultInProcessConquerorContextData? inProcessUpstreamContextData;
 
-    public IEnumerator<(string Key, object Value, ConquerorContextDataScope Scope)> GetEnumerator()
+    private DefaultTransportableConquerorContextData? transportableBidirectionalContextData =
+        parent?.transportableBidirectionalContextData is not null ? new(parent.transportableBidirectionalContextData) : null;
+
+    private DefaultTransportableConquerorContextData? transportableDownstreamContextData =
+        parent?.transportableDownstreamContextData is not null ? new(parent.transportableDownstreamContextData) : null;
+
+    private DefaultTransportableConquerorContextData? transportableUpstreamContextData;
+
+    private DefaultTransportableConquerorContextData TransportableDownstreamContextData
+        => LazyInitializer.EnsureInitialized(ref transportableDownstreamContextData, static () => []);
+
+    private DefaultTransportableConquerorContextData TransportableUpstreamContextData
+        => LazyInitializer.EnsureInitialized(ref transportableUpstreamContextData, static () => []);
+
+    private DefaultTransportableConquerorContextData TransportableBidirectionalContextData
+        => LazyInitializer.EnsureInitialized(ref transportableBidirectionalContextData, static () => []);
+
+    private DefaultInProcessConquerorContextData InProcessDownstreamContextData
+        => LazyInitializer.EnsureInitialized(ref inProcessDownstreamContextData, static () => []);
+
+    private DefaultInProcessConquerorContextData InProcessUpstreamContextData
+        => LazyInitializer.EnsureInitialized(ref inProcessUpstreamContextData, static () => []);
+
+    private DefaultInProcessConquerorContextData InProcessBidirectionalContextData
+        => LazyInitializer.EnsureInitialized(ref inProcessBidirectionalContextData, static () => []);
+
+    public void PropagateUpstreamData(DefaultConquerorContextData childData)
     {
-        if (items is not null)
+        if (childData.transportableUpstreamContextData is not null)
         {
-            foreach (var (key, (value, scope)) in items)
+            foreach (var (key, value) in childData.transportableUpstreamContextData)
             {
-                yield return (key, value, scope);
+                TransportableUpstreamContextData.Set(key, value);
             }
         }
 
-        // yield entries from parent that haven't been overridden or removed
-        if (parent != null)
+        if (childData.inProcessUpstreamContextData is not null)
         {
-            foreach (var (key, value, scope) in parent)
+            foreach (var (key, value) in childData.inProcessUpstreamContextData)
             {
-                if ((items is null || !items.ContainsKey(key))
-                    && (removedKeys is null || !removedKeys.ContainsKey(key)))
+                InProcessUpstreamContextData.Set(key, value);
+            }
+        }
+
+        if (transportableBidirectionalContextData is not null)
+        {
+            // bidirectional keys also propagate deletion upstream
+            foreach (var (key, _) in transportableBidirectionalContextData)
+            {
+                if (childData.transportableBidirectionalContextData?.IsRemoved(key) ?? false)
                 {
-                    yield return (key, value, scope);
+                    _ = transportableBidirectionalContextData.Remove(key);
                 }
             }
         }
-    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public void Set(string key, string value, ConquerorContextDataScope scope)
-    {
-        EnsureItems()[key] = (value, scope);
-        _ = removedKeys is not null && removedKeys.TryRemove(key, out _);
-    }
-
-    public void Set(string key, object value)
-    {
-        EnsureItems()[key] = (value, ConquerorContextDataScope.InProcess);
-        _ = removedKeys is not null && removedKeys.TryRemove(key, out _);
-    }
-
-    public bool Remove(string key)
-    {
-        var removed = items is not null && items.TryRemove(key, out _);
-
-        _ = EnsureRemovedKeys().TryAdd(key, null);
-
-        return removed || parent?.Get<object>(key) != null;
-    }
-
-    public void Clear()
-    {
-        if (items is null)
+        if (inProcessBidirectionalContextData is not null)
         {
-            return;
+            // bidirectional keys also propagate deletion upstream
+            foreach (var (key, _) in inProcessBidirectionalContextData)
+            {
+                if (childData.inProcessBidirectionalContextData?.IsRemoved(key) ?? false)
+                {
+                    _ = inProcessBidirectionalContextData.Remove(key);
+                }
+            }
         }
 
-        foreach (var key in items.Keys)
+        if (childData.transportableBidirectionalContextData is not null)
         {
-            _ = EnsureRemovedKeys().TryAdd(key, null);
+            foreach (var (key, value) in childData.transportableBidirectionalContextData)
+            {
+                TransportableBidirectionalContextData.Set(key, value);
+            }
         }
 
-        items.Clear();
+        if (childData.inProcessBidirectionalContextData is not null)
+        {
+            foreach (var (key, value) in childData.inProcessBidirectionalContextData)
+            {
+                InProcessBidirectionalContextData.Set(key, value);
+            }
+        }
     }
 
-    public T? Get<T>(string key)
+    bool ITransportableConquerorContextData.Add(string key, string value, ConquerorContextDataFlowDirection flowDirection)
     {
-        if (IsRemoved(key))
+        return flowDirection switch
         {
-            return default;
-        }
-
-        if (items is not null && items.TryGetValue(key, out var value))
-        {
-            return (T)value.Value;
-        }
-
-        return parent is not null ? parent.Get<T>(key) : default;
+            ConquerorContextDataFlowDirection.Downstream => TransportableDownstreamContextData.Add(key, value),
+            ConquerorContextDataFlowDirection.Upstream => TransportableUpstreamContextData.Add(key, value),
+            ConquerorContextDataFlowDirection.Bidirectional => TransportableBidirectionalContextData.Add(key, value),
+            _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null),
+        };
     }
 
-    public bool IsRemoved(string key) => removedKeys is not null && removedKeys.ContainsKey(key);
+    void ITransportableConquerorContextData.Set(string key, string value, ConquerorContextDataFlowDirection flowDirection)
+    {
+        switch (flowDirection)
+        {
+            case ConquerorContextDataFlowDirection.Downstream:
+                TransportableDownstreamContextData.Set(key, value);
 
-    private ConcurrentDictionary<string, (object Value, ConquerorContextDataScope Scope)> EnsureItems()
-        => LazyInitializer.EnsureInitialized(ref items, static () => new(1, 4));
+                break;
 
-    private ConcurrentDictionary<string, object?> EnsureRemovedKeys()
-        => LazyInitializer.EnsureInitialized(ref removedKeys, static () => new(1, 4));
+            case ConquerorContextDataFlowDirection.Upstream:
+                TransportableUpstreamContextData.Set(key, value);
+
+                break;
+
+            case ConquerorContextDataFlowDirection.Bidirectional:
+                TransportableBidirectionalContextData.Set(key, value);
+
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null);
+        }
+    }
+
+    bool ITransportableConquerorContextData.Remove(string key, ConquerorContextDataFlowDirection flowDirection)
+    {
+        return flowDirection switch
+        {
+            ConquerorContextDataFlowDirection.Downstream => TransportableDownstreamContextData.Remove(key),
+            ConquerorContextDataFlowDirection.Upstream => TransportableUpstreamContextData.Remove(key),
+            ConquerorContextDataFlowDirection.Bidirectional => TransportableBidirectionalContextData.Remove(key),
+            _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null),
+        };
+    }
+
+    void ITransportableConquerorContextData.Clear(ConquerorContextDataFlowDirection flowDirection)
+    {
+        switch (flowDirection)
+        {
+            case ConquerorContextDataFlowDirection.Downstream:
+                TransportableDownstreamContextData.Clear();
+
+                break;
+
+            case ConquerorContextDataFlowDirection.Upstream:
+                TransportableUpstreamContextData.Clear();
+
+                break;
+
+            case ConquerorContextDataFlowDirection.Bidirectional:
+                TransportableBidirectionalContextData.Clear();
+
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null);
+        }
+    }
+
+    IEnumerable<(string Key, string Value)> ITransportableConquerorContextData.GetAll(ConquerorContextDataFlowDirection flowDirection)
+    {
+        return flowDirection switch
+        {
+            ConquerorContextDataFlowDirection.Downstream => transportableDownstreamContextData ?? [],
+            ConquerorContextDataFlowDirection.Upstream => transportableUpstreamContextData ?? [],
+            ConquerorContextDataFlowDirection.Bidirectional => transportableBidirectionalContextData ?? [],
+            _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null),
+        };
+    }
+
+    string? ITransportableConquerorContextData.Get(string key, ConquerorContextDataFlowDirection flowDirection)
+    {
+        return flowDirection switch
+        {
+            ConquerorContextDataFlowDirection.Downstream => TransportableDownstreamContextData.Get(key),
+            ConquerorContextDataFlowDirection.Upstream => TransportableUpstreamContextData.Get(key),
+            ConquerorContextDataFlowDirection.Bidirectional => TransportableBidirectionalContextData.Get(key),
+            _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null),
+        };
+    }
+
+    bool IInProcessConquerorContextData.Add(string key, object value, ConquerorContextDataFlowDirection flowDirection)
+    {
+        return flowDirection switch
+        {
+            ConquerorContextDataFlowDirection.Downstream => InProcessDownstreamContextData.Add(key, value),
+            ConquerorContextDataFlowDirection.Upstream => InProcessUpstreamContextData.Add(key, value),
+            ConquerorContextDataFlowDirection.Bidirectional => InProcessBidirectionalContextData.Add(key, value),
+            _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null),
+        };
+    }
+
+    void IInProcessConquerorContextData.Set(string key, object value, ConquerorContextDataFlowDirection flowDirection)
+    {
+        switch (flowDirection)
+        {
+            case ConquerorContextDataFlowDirection.Downstream:
+                InProcessDownstreamContextData.Set(key, value);
+
+                break;
+
+            case ConquerorContextDataFlowDirection.Upstream:
+                InProcessUpstreamContextData.Set(key, value);
+
+                break;
+
+            case ConquerorContextDataFlowDirection.Bidirectional:
+                InProcessBidirectionalContextData.Set(key, value);
+
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null);
+        }
+    }
+
+    bool IInProcessConquerorContextData.Remove(string key, ConquerorContextDataFlowDirection flowDirection)
+    {
+        return flowDirection switch
+        {
+            ConquerorContextDataFlowDirection.Downstream => InProcessDownstreamContextData.Remove(key),
+            ConquerorContextDataFlowDirection.Upstream => InProcessUpstreamContextData.Remove(key),
+            ConquerorContextDataFlowDirection.Bidirectional => InProcessBidirectionalContextData.Remove(key),
+            _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null),
+        };
+    }
+
+    void IInProcessConquerorContextData.Clear(ConquerorContextDataFlowDirection flowDirection)
+    {
+        switch (flowDirection)
+        {
+            case ConquerorContextDataFlowDirection.Downstream:
+                InProcessDownstreamContextData.Clear();
+
+                break;
+
+            case ConquerorContextDataFlowDirection.Upstream:
+                InProcessUpstreamContextData.Clear();
+
+                break;
+
+            case ConquerorContextDataFlowDirection.Bidirectional:
+                InProcessBidirectionalContextData.Clear();
+
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null);
+        }
+    }
+
+    IEnumerable<(string Key, object Value)> IInProcessConquerorContextData.GetAll(ConquerorContextDataFlowDirection flowDirection)
+    {
+        return flowDirection switch
+        {
+            ConquerorContextDataFlowDirection.Downstream => inProcessDownstreamContextData ?? [],
+            ConquerorContextDataFlowDirection.Upstream => inProcessUpstreamContextData ?? [],
+            ConquerorContextDataFlowDirection.Bidirectional => inProcessBidirectionalContextData ?? [],
+            _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null),
+        };
+    }
+
+    T? IInProcessConquerorContextData.Get<T>(string key, ConquerorContextDataFlowDirection flowDirection)
+        where T : default
+    {
+        return flowDirection switch
+        {
+            ConquerorContextDataFlowDirection.Downstream => InProcessDownstreamContextData.Get<T>(key),
+            ConquerorContextDataFlowDirection.Upstream => InProcessUpstreamContextData.Get<T>(key),
+            ConquerorContextDataFlowDirection.Bidirectional => InProcessBidirectionalContextData.Get<T>(key),
+            _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, null),
+        };
+    }
 }

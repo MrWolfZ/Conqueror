@@ -338,60 +338,60 @@ public sealed class ContextDataTestHelper
     {
         foreach (var (key, value, _) in testDataInstructions.DownstreamDataToSet.Where(t => t.Location == location))
         {
-            ctx.DownstreamContextData.Set(key, value);
+            ctx.InProcessData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
         }
 
         foreach (var (key, _) in testDataInstructions.DownstreamDataToRemove.Where(t => t.Location == location))
         {
-            _ = ctx.DownstreamContextData.Remove(key);
+            _ = ctx.InProcessData.Remove(key, flowDirection: ConquerorContextDataFlowDirection.Downstream);
         }
 
         foreach (var (key, value, _) in testDataInstructions.UpstreamDataToSet.Where(t => t.Location == location))
         {
-            ctx.UpstreamContextData.Set(key, value);
+            ctx.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Upstream);
         }
 
         foreach (var (key, _) in testDataInstructions.UpstreamDataToRemove.Where(t => t.Location == location))
         {
-            _ = ctx.UpstreamContextData.Remove(key);
+            _ = ctx.InProcessData.Remove(key, ConquerorContextDataFlowDirection.Upstream);
         }
 
         foreach (var (key, value, _) in testDataInstructions.BidirectionalDataToSet.Where(t => t.Location == location))
         {
-            ctx.ContextData.Set(key, value);
+            ctx.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Bidirectional);
         }
 
         foreach (var (key, _) in testDataInstructions.BidirectionalDataToRemove.Where(t => t.Location == location))
         {
-            _ = ctx.ContextData.Remove(key);
+            _ = ctx.InProcessData.Remove(key, ConquerorContextDataFlowDirection.Bidirectional);
         }
 
-        foreach (var (key, value, _) in ctx.DownstreamContextData)
+        foreach (var (key, value) in ctx.InProcessData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Downstream))
         {
             testObservations.ObservedDownstreamData.Add((key, value, location));
         }
 
-        if (ctx.DownstreamContextData.Get<object>(TestKey) is { } downstreamValue)
+        if (ctx.InProcessData.Get<object>(TestKey, flowDirection: ConquerorContextDataFlowDirection.Downstream) is { } downstreamValue)
         {
             testObservations.ObservedDownstreamData.Add((TestKey, downstreamValue, location));
         }
 
-        foreach (var (key, value, _) in ctx.UpstreamContextData)
+        foreach (var (key, value) in ctx.InProcessData.GetAll(ConquerorContextDataFlowDirection.Upstream))
         {
             testObservations.ObservedUpstreamData.Add((key, value, location));
         }
 
-        if (ctx.UpstreamContextData.Get<object>(TestKey) is { } upstreamValue)
+        if (ctx.InProcessData.Get<object>(TestKey, ConquerorContextDataFlowDirection.Upstream) is { } upstreamValue)
         {
             testObservations.ObservedUpstreamData.Add((TestKey, upstreamValue, location));
         }
 
-        foreach (var (key, value, _) in ctx.ContextData)
+        foreach (var (key, value) in ctx.InProcessData.GetAll(ConquerorContextDataFlowDirection.Bidirectional))
         {
             testObservations.ObservedBidirectionalData.Add((key, value, location));
         }
 
-        if (ctx.ContextData.Get<object>(TestKey) is { } bidirectionalValue)
+        if (ctx.InProcessData.Get<object>(TestKey, ConquerorContextDataFlowDirection.Bidirectional) is { } bidirectionalValue)
         {
             testObservations.ObservedBidirectionalData.Add((TestKey, bidirectionalValue, location));
         }

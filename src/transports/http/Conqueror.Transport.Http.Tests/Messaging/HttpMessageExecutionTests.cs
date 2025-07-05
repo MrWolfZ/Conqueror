@@ -120,7 +120,7 @@ public sealed class HttpMessageExecutionTests
             {
                 _ = services.AddMessageHandler(p => new TestMessageHandler((_, _) =>
                 {
-                    seenPrincipal = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetCurrentPrincipalInternal();
+                    seenPrincipal = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.CurrentPrincipal;
 
                     return Task.CompletedTask;
                 }));

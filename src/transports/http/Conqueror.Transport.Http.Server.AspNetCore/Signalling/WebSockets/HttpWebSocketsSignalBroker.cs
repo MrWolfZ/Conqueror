@@ -64,21 +64,23 @@ internal sealed partial class HttpWebSocketsSignalBroker(
         LogWriteStream(logger, streams.Count);
 
         await HttpWebSocketsSignalProtocolV1.Write(
-                                               stream,
-                                               TSignal.Tag,
-                                               conquerorContext.EncodeDownstreamContextData(),
-                                               (s, ct) =>
-                                               {
-                                                   ct.ThrowIfCancellationRequested();
+                                                stream,
+                                                TSignal.Tag,
+                                                conquerorContext.EncodeDownstreamContextData(
+                                                    traceId: conquerorContext.TraceId,
+                                                    signalId: conquerorContext.SignalId),
+                                                (s, ct) =>
+                                                {
+                                                    ct.ThrowIfCancellationRequested();
 
-                                                   return TSignal.HttpWebSocketsSignalSerializer.Serialize(
-                                                       serviceProvider,
-                                                       signal,
-                                                       s,
-                                                       ct);
-                                               },
-                                               cancellationToken)
-                                           .ConfigureAwait(false);
+                                                    return TSignal.HttpWebSocketsSignalSerializer.Serialize(
+                                                        serviceProvider,
+                                                        signal,
+                                                        s,
+                                                        ct);
+                                                },
+                                                cancellationToken)
+                                            .ConfigureAwait(false);
     }
 
     [LoggerMessage(LogLevel.Trace, "starting publish")]

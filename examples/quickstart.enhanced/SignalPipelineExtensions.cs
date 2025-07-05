@@ -28,12 +28,17 @@ public static class SignalPipelineExtensions
     {
         return pipeline.Use(ctx =>
         {
-            if (ctx.ConquerorContext.ContextData.Get<bool>(marker))
+            if (ctx.ConquerorContext.InProcessData.Get<bool>(
+                    marker,
+                    ConquerorContextDataFlowDirection.Bidirectional))
             {
                 return Task.CompletedTask;
             }
 
-            ctx.ConquerorContext.ContextData.Set(marker, true);
+            ctx.ConquerorContext.InProcessData.Set(
+                marker,
+                true,
+                ConquerorContextDataFlowDirection.Bidirectional);
 
             return ctx.Next(ctx.Signal, ctx.CancellationToken);
         });

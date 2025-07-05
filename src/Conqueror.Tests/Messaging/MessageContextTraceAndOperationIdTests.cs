@@ -29,8 +29,8 @@ public sealed partial class MessageContextTraceAndOperationIdTests
                         async (msg, p, ct) =>
                         {
                             await Task.Yield();
-                            traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
-                            messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetMessageId();
+                            traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
+                            messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.MessageId;
 
                             var handler = p.GetRequiredService<IMessageSenders>()
                                            .For(NestedTestMessage.T);
@@ -50,8 +50,8 @@ public sealed partial class MessageContextTraceAndOperationIdTests
                         async (_, p, _) =>
                         {
                             await Task.Yield();
-                            traceIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
-                            messageIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetMessageId();
+                            traceIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
+                            messageIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.MessageId;
 
                             return new();
                         });
@@ -63,7 +63,7 @@ public sealed partial class MessageContextTraceAndOperationIdTests
         if (hasCustomTraceId)
         {
             conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-            conquerorContext.SetTraceId(customTraceId);
+            conquerorContext.TraceId = customTraceId;
         }
 
         using var d = conquerorContext;
@@ -75,8 +75,8 @@ public sealed partial class MessageContextTraceAndOperationIdTests
                                            .For(TestMessage.T)
                                            .WithTransport(b =>
                                            {
-                                               traceIdFromTransportBuilder = b.ConquerorContext.GetTraceId();
-                                               messageIdFromTransportBuilder = b.ConquerorContext.GetMessageId();
+                                               traceIdFromTransportBuilder = b.ConquerorContext.TraceId;
+                                               messageIdFromTransportBuilder = b.ConquerorContext.MessageId;
 
                                                return b.UseInProcess();
                                            });

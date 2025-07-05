@@ -56,8 +56,8 @@ public sealed class HttpContextDataTests : TestBase
         using var ctx = CreateConquerorContext();
         ctx.DecodeContextData(values!);
 
-        Assert.That(ctx.UpstreamContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
-        Assert.That(ctx.ContextData.WhereScopeIsAcrossTransports(), Is.Empty);
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream), Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional), Is.Empty);
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -80,8 +80,8 @@ public sealed class HttpContextDataTests : TestBase
         using var ctx = CreateConquerorContext();
         ctx.DecodeContextData(values!);
 
-        Assert.That(ctx.UpstreamContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
-        Assert.That(ctx.ContextData.WhereScopeIsAcrossTransports(), Is.Empty);
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream), Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional), Is.Empty);
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -103,8 +103,8 @@ public sealed class HttpContextDataTests : TestBase
         using var ctx = CreateConquerorContext();
         ctx.DecodeContextData(values!);
 
-        Assert.That(ctx.UpstreamContextData.WhereScopeIsAcrossTransports(), Is.Empty);
-        Assert.That(ctx.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream), Is.Empty);
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional), Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -127,8 +127,8 @@ public sealed class HttpContextDataTests : TestBase
         using var ctx = CreateConquerorContext();
         ctx.DecodeContextData(values!);
 
-        Assert.That(ctx.UpstreamContextData.WhereScopeIsAcrossTransports(), Is.Empty);
-        Assert.That(ctx.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream), Is.Empty);
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional), Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -151,8 +151,8 @@ public sealed class HttpContextDataTests : TestBase
         using var ctx = CreateConquerorContext();
         ctx.DecodeContextData(values!);
 
-        Assert.That(ctx.UpstreamContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
-        Assert.That(ctx.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream), Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional), Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -176,8 +176,8 @@ public sealed class HttpContextDataTests : TestBase
         using var ctx = CreateConquerorContext();
         ctx.DecodeContextData(values!);
 
-        Assert.That(ctx.UpstreamContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
-        Assert.That(ctx.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream), Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
+        Assert.That(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional), Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -191,11 +191,8 @@ public sealed class HttpContextDataTests : TestBase
 
         foreach (var (key, value) in ContextData)
         {
-            conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+            conquerorContext.TransportableData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
         }
-
-        // simulate client behavior
-        _ = conquerorContext.RemoveTraceId();
 
         var response = await ExecuteRequest(method, path, data, [(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData())]);
 
@@ -203,8 +200,8 @@ public sealed class HttpContextDataTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
-        Assert.That(receivedContextData?.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
+        Assert.That(receivedContextData, Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -218,11 +215,8 @@ public sealed class HttpContextDataTests : TestBase
 
         foreach (var (key, value) in ContextData)
         {
-            conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+            conquerorContext.TransportableData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Bidirectional);
         }
-
-        // simulate client behavior
-        _ = conquerorContext.RemoveTraceId();
 
         var response = await ExecuteRequest(method, path, data, [(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData())]);
 
@@ -230,8 +224,8 @@ public sealed class HttpContextDataTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
-        Assert.That(receivedContextData?.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
+        Assert.That(receivedContextData, Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData, Is.Empty);
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -245,12 +239,9 @@ public sealed class HttpContextDataTests : TestBase
 
         foreach (var (key, value) in ContextData)
         {
-            conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
-            conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+            conquerorContext.TransportableData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
+            conquerorContext.TransportableData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Bidirectional);
         }
-
-        // simulate client behavior
-        _ = conquerorContext.RemoveTraceId();
 
         var response = await ExecuteRequest(method, path, data, [(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData())]);
 
@@ -259,8 +250,8 @@ public sealed class HttpContextDataTests : TestBase
         var receivedDownstreamContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
         var receivedBidirectionalContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
-        Assert.That(receivedDownstreamContextData?.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
-        Assert.That(receivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+        Assert.That(receivedDownstreamContextData, Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
+        Assert.That(receivedBidirectionalContextData, Is.EquivalentTo(ContextData.Select(p => (p.Key, p.Value))));
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -274,20 +265,17 @@ public sealed class HttpContextDataTests : TestBase
 
         foreach (var (key, value) in ContextData)
         {
-            conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
-            conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+            conquerorContext.TransportableData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
+            conquerorContext.TransportableData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Bidirectional);
         }
-
-        // simulate client behavior
-        _ = conquerorContext.RemoveTraceId();
 
         var encodedData1 = conquerorContext.EncodeDownstreamContextData();
 
-        conquerorContext.DownstreamContextData.Clear();
-        conquerorContext.ContextData.Clear();
+        conquerorContext.TransportableData.Clear(flowDirection: ConquerorContextDataFlowDirection.Downstream);
+        conquerorContext.TransportableData.Clear(flowDirection: ConquerorContextDataFlowDirection.Bidirectional);
 
-        conquerorContext.DownstreamContextData.Set("extraKey", "extraValue", ConquerorContextDataScope.AcrossTransports);
-        conquerorContext.ContextData.Set("extraKey", "extraValue", ConquerorContextDataScope.AcrossTransports);
+        conquerorContext.TransportableData.Set("extraKey", "extraValue", flowDirection: ConquerorContextDataFlowDirection.Downstream);
+        conquerorContext.TransportableData.Set("extraKey", "extraValue", flowDirection: ConquerorContextDataFlowDirection.Bidirectional);
 
         var encodedData2 = conquerorContext.EncodeDownstreamContextData();
 
@@ -301,8 +289,8 @@ public sealed class HttpContextDataTests : TestBase
         var receivedDownstreamContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
         var receivedBidirectionalContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
-        Assert.That(receivedDownstreamContextData?.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData.Concat([new("extraKey", "extraValue")])));
-        Assert.That(receivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData.Concat([new("extraKey", "extraValue")])));
+        Assert.That(receivedDownstreamContextData, Is.EquivalentTo(ContextData.Concat([new("extraKey", "extraValue")]).Select(p => (p.Key, p.Value))));
+        Assert.That(receivedBidirectionalContextData, Is.EquivalentTo(ContextData.Concat([new("extraKey", "extraValue")]).Select(p => (p.Key, p.Value))));
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -481,9 +469,9 @@ public sealed class HttpContextDataTests : TestBase
 
         public bool ShouldAddBidirectionalData { get; set; }
 
-        public IConquerorContextData? ReceivedDownstreamContextData { get; set; }
+        public IEnumerable<(string, string)>? ReceivedDownstreamContextData { get; set; }
 
-        public IConquerorContextData? ReceivedBidirectionalContextData { get; set; }
+        public IEnumerable<(string, string)>? ReceivedBidirectionalContextData { get; set; }
 
         public Exception? ExceptionToThrow { get; set; }
     }
@@ -548,23 +536,21 @@ public sealed class HttpContextDataTests : TestBase
         {
             var conquerorContext = conquerorContextAccessor.ConquerorContext;
 
-            testObservations.ReceivedTraceIds.Add(conquerorContext?.GetTraceId());
+            testObservations.ReceivedTraceIds.Add(conquerorContext?.TraceId);
 
-            _ = conquerorContext?.RemoveTraceId();
-
-            testObservations.ReceivedDownstreamContextData = conquerorContext?.DownstreamContextData;
-            testObservations.ReceivedBidirectionalContextData = conquerorContext?.ContextData;
+            testObservations.ReceivedDownstreamContextData = conquerorContext?.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Downstream);
+            testObservations.ReceivedBidirectionalContextData = conquerorContext?.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional);
 
             if (testObservations.ShouldAddUpstreamData)
             {
                 foreach (var item in ContextData)
                 {
-                    conquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                    conquerorContext?.TransportableData.Set(item.Key, item.Value, flowDirection: ConquerorContextDataFlowDirection.Upstream);
                 }
 
                 foreach (var item in InProcessContextData)
                 {
-                    conquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                    conquerorContext?.InProcessData.Set(item.Key, item.Value, flowDirection: ConquerorContextDataFlowDirection.Upstream);
                 }
             }
 
@@ -572,12 +558,12 @@ public sealed class HttpContextDataTests : TestBase
             {
                 foreach (var item in ContextData)
                 {
-                    conquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                    conquerorContext?.TransportableData.Set(item.Key, item.Value, flowDirection: ConquerorContextDataFlowDirection.Bidirectional);
                 }
 
                 foreach (var item in InProcessContextData)
                 {
-                    conquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                    conquerorContext?.InProcessData.Set(item.Key, item.Value, flowDirection: ConquerorContextDataFlowDirection.Bidirectional);
                 }
             }
 

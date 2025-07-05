@@ -35,8 +35,8 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
         // execution like during misguided attempt at unit testing); but since this is logging logic it
         // should be as robust as possible to not cause failures that are not due to the actual business
         // logic, and therefore we just fall back to a safe value
-        var messageId = ctx.ConquerorContext.GetMessageId() ?? "unknown";
-        var traceId = ctx.ConquerorContext.GetTraceId();
+        var messageId = ctx.ConquerorContext.MessageId ?? "unknown";
+        var traceId = ctx.ConquerorContext.TraceId;
 
         var sw = LoggingStopwatch.StartNew();
         StackTrace? executionStackTrace = null;

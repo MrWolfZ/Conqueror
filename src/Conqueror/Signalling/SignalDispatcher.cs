@@ -24,19 +24,13 @@ internal sealed class SignalDispatcher(
     {
         using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 
-        var originalSignalId = conquerorContext.GetSignalId();
+        var originalSignalId = conquerorContext.SignalId;
 
-        // ensure that a signal ID is available for the transport client factory
-        if (originalSignalId is null)
+        // ensure that a signal ID is available; if we are in a publish operation, make
+        // sure to create a new signal ID for this execution in any case
+        if (originalSignalId is null || transportRole is SignalTransportRole.Publisher)
         {
-            conquerorContext.SetSignalId(signalIdFactory.GenerateId());
-        }
-
-        // if we are in a publish operation, make sure to create a new signal ID for this execution if
-        // we were called from within the call context of another handler
-        if (originalSignalId is not null && transportRole is SignalTransportRole.Publisher)
-        {
-            conquerorContext.SetSignalId(signalIdFactory.GenerateId());
+            conquerorContext.SignalId = signalIdFactory.GenerateId();
         }
 
         if (publisher is null)

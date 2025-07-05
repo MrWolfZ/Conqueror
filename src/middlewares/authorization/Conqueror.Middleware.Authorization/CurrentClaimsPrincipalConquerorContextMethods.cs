@@ -9,22 +9,15 @@ namespace Conqueror;
 /// </summary>
 internal static class CurrentClaimsPrincipalConquerorContextMethods
 {
-    private const string CurrentPrincipalKey = "conqueror-middleware-authorization-current-principal";
-
     public static IDisposable SetCurrentPrincipalInternal(this ConquerorContext conquerorContext, ClaimsPrincipal principal)
     {
-        conquerorContext.DownstreamContextData.Set(CurrentPrincipalKey, principal);
+        conquerorContext.CurrentPrincipal = principal;
         return new AnonymousDisposable(conquerorContext.ClearCurrentPrincipalInternal);
     }
 
     public static void ClearCurrentPrincipalInternal(this ConquerorContext conquerorContext)
     {
-        _ = conquerorContext.DownstreamContextData.Remove(CurrentPrincipalKey);
-    }
-
-    public static ClaimsPrincipal? GetCurrentPrincipalInternal(this ConquerorContext conquerorContext)
-    {
-        return conquerorContext.DownstreamContextData.Get<ClaimsPrincipal>(CurrentPrincipalKey);
+        conquerorContext.CurrentPrincipal = null;
     }
 
     private sealed class AnonymousDisposable(Action onDispose) : IDisposable

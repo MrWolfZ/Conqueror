@@ -124,7 +124,7 @@ public sealed class LoggingSignalMiddlewareTests
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
-        conquerorContext.SetTraceId(TestTraceId);
+        conquerorContext.TraceId = TestTraceId;
 
         try
         {
@@ -183,7 +183,7 @@ public sealed class LoggingSignalMiddlewareTests
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
-        conquerorContext.SetTraceId(TestTraceId);
+        conquerorContext.TraceId = TestTraceId;
 
         try
         {
@@ -250,7 +250,7 @@ public sealed class LoggingSignalMiddlewareTests
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
-        conquerorContext.SetTraceId(TestTraceId);
+        conquerorContext.TraceId = TestTraceId;
 
         try
         {
@@ -318,7 +318,7 @@ public sealed class LoggingSignalMiddlewareTests
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
-        conquerorContext.SetTraceId(TestTraceId);
+        conquerorContext.TraceId = TestTraceId;
 
         try
         {

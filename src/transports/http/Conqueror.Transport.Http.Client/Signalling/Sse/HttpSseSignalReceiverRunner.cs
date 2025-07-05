@@ -87,7 +87,7 @@ internal sealed class HttpSseSignalReceiverRunner(
 
                         if (item.EventId is not null)
                         {
-                            conquerorContext.SetSignalId(item.EventId);
+                            conquerorContext.SignalId = item.EventId;
                         }
 
                         if (item.Data.ContextData is { } s)

@@ -27,12 +27,12 @@ internal sealed partial class DoublingCounterIncrementedHandler(
                     // which could lead to an infinite loop. Conqueror "flows" context data
                     // across different executions, which is useful here to handle a signal
                     // only once per HTTP request
-                    if (ctx.ConquerorContext.ContextData.Get<bool>("doubled"))
+                    if (ctx.ConquerorContext.InProcessData.Get<bool>("doubled"))
                     {
                         return Task.CompletedTask;
                     }
 
-                    ctx.ConquerorContext.ContextData.Set("doubled", true);
+                    ctx.ConquerorContext.InProcessData.Set("doubled", true);
 
                     return ctx.Next(ctx.Signal, ctx.CancellationToken);
                 })

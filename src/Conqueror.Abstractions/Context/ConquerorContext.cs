@@ -1,4 +1,5 @@
 using System;
+using System.Security.Claims;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -9,46 +10,37 @@ namespace Conqueror;
 public abstract class ConquerorContext : IDisposable
 {
     /// <summary>
-    ///     The context data which flows only to downstream Conqueror operations.<br />
-    ///     <br />
-    ///     For example, if command handler A executes query handler B, and query handler B calls query handler C,
-    ///     then data set in command handler A will be available in query handler B and in query handler C, but data
-    ///     set in query handler B is only available in query handler C, and not in command handler A. Note that the
-    ///     validity of the data is also affected by its scope in addition to its direction (see
-    ///     <see cref="ConquerorContextDataScope" />).<br />
-    ///     <br />
-    ///     The data is also available to any code running as part of the current Conqueror operation, even if that
-    ///     code is logically upstream. For example, downstream data set in a command handler is available to a
-    ///     command middleware that is part of the handler's pipeline.
+    ///     The trace ID for the current Conqueror operation. If there is an active
+    ///     <see cref="System.Diagnostics.Activity" />, the trace ID is taken from the
+    ///     <see cref="System.Diagnostics.Activity.TraceId" /> property. Otherwise, this
+    ///     is a randomly generated value.
     /// </summary>
-    public abstract IConquerorContextData DownstreamContextData { get; }
+    public abstract string TraceId { get; set; }
 
     /// <summary>
-    ///     The context data which flows only to upstream Conqueror operations.<br />
-    ///     <br />
-    ///     For example, if command handler A executes query handler B, and query handler B calls query handler C,
-    ///     then data set in query handler C will be available in query handler B and in command handler A, but data
-    ///     set in query handler B is only available in command handler A, and not in query handler C. Note that the
-    ///     validity of the data is also affected by its scope in addition to its direction (see
-    ///     <see cref="ConquerorContextDataScope" />).<br />
-    ///     <br />
-    ///     The data is also available to any code running as part of the current Conqueror operation, even if that
-    ///     code is logically downstream. For example, upstream data set in a command middleware is available to the
-    ///     command handler.
+    ///     The ID of the currently executing message (if any).
     /// </summary>
-    public abstract IConquerorContextData UpstreamContextData { get; }
+    public abstract string? MessageId { get; set; }
 
     /// <summary>
-    ///     The context data which flows to up- and downstream Conqueror operations.<br />
-    ///     <br />
-    ///     For example, if command handler A executes query handler B, and query handler B calls query handler C,
-    ///     then data set in query handler B will be available in query handler C and in command handler A. Data also
-    ///     flows to siblings. For example, if command handler D first calls query handler E and then calls query
-    ///     handler F, then data set in query handler E will be available in query handler F and command handler D.
-    ///     Note that the validity of the data is also affected by its scope (see
-    ///     <see cref="ConquerorContextDataScope" />).
+    ///     The ID of the currently executing signal (if any).
     /// </summary>
-    public abstract IConquerorContextData ContextData { get; }
+    public abstract string? SignalId { get; set; }
+
+    /// <summary>
+    ///     The principal (if any) for the current Conqueror operation.
+    /// </summary>
+    public abstract ClaimsPrincipal? CurrentPrincipal { get; set; }
+
+    /// <summary>
+    ///     The data available in a Conqueror context which is transported across non-in-process transports.
+    /// </summary>
+    public abstract ITransportableConquerorContextData TransportableData { get; }
+
+    /// <summary>
+    ///     The in-process data available in a Conqueror context.
+    /// </summary>
+    public abstract IInProcessConquerorContextData InProcessData { get; }
 
     /// <summary>
     ///     Dispose the context. This will copy all upstream and bi-directional data to the context this context

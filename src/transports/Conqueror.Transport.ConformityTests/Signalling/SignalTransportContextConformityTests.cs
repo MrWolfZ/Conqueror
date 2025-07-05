@@ -26,8 +26,8 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
             host.TestTimeoutToken,
             (_, ctx, _) =>
             {
-                seenSignalIdsOnPublisher.Enqueue(ctx.GetSignalId());
-                seenTraceIdsOnPublisher.Enqueue(ctx.GetTraceId());
+                seenSignalIdsOnPublisher.Enqueue(ctx.SignalId);
+                seenTraceIdsOnPublisher.Enqueue(ctx.TraceId);
 
                 return Task.CompletedTask;
             });
@@ -35,8 +35,8 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
         var receivedSignalIds = new ConcurrentQueue<string?>();
         var receivedTraceIds = new ConcurrentQueue<string>();
 
-        var receivedDownstreamContextDatas = new ConcurrentQueue<IReadOnlyCollection<KeyValuePair<string, string>>>();
-        var receivedBidirectionalContextDatas = new ConcurrentQueue<IReadOnlyCollection<KeyValuePair<string, string>>>();
+        var receivedDownstreamContextDatas = new ConcurrentQueue<IReadOnlyCollection<(string, string)>>();
+        var receivedBidirectionalContextDatas = new ConcurrentQueue<IReadOnlyCollection<(string, string)>>();
 
         DisposableActivity? activity = null;
 
@@ -46,11 +46,11 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
             cts.Token,
             (_, ctx, _) =>
             {
-                receivedSignalIds.Enqueue(ctx.GetSignalId());
-                receivedTraceIds.Enqueue(ctx.GetTraceId());
+                receivedSignalIds.Enqueue(ctx.SignalId);
+                receivedTraceIds.Enqueue(ctx.TraceId);
 
-                receivedDownstreamContextDatas.Enqueue(ctx.DownstreamContextData.AsKeyValuePairs());
-                receivedBidirectionalContextDatas.Enqueue(ctx.ContextData.AsKeyValuePairs());
+                receivedDownstreamContextDatas.Enqueue(ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Downstream).ToList());
+                receivedBidirectionalContextDatas.Enqueue(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional).ToList());
 
                 return Task.CompletedTask;
             });
@@ -85,12 +85,12 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
         {
             foreach (var (key, value) in ContextDataDownstreamAcrossTransports)
             {
-                conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+                conquerorContext.TransportableData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
             }
 
             foreach (var (key, value) in InProcessContextData)
             {
-                conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.InProcess);
+                conquerorContext.InProcessData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
             }
         }
 
@@ -98,12 +98,12 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
         {
             foreach (var (key, value) in ContextDataDownstreamBidirectionalAcrossTransports)
             {
-                conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+                conquerorContext.TransportableData.Set(key, value, ConquerorContextDataFlowDirection.Bidirectional);
             }
 
             foreach (var (key, value) in InProcessContextData)
             {
-                conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.InProcess);
+                conquerorContext.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Bidirectional);
             }
         }
 
@@ -129,11 +129,11 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
         {
             if (testCase.HasDownstreamData)
             {
-                Assert.That(receivedDownstreamContextData, Is.SupersetOf(ContextDataDownstreamAcrossTransports));
+                Assert.That(receivedDownstreamContextData, Is.SupersetOf(ContextDataDownstreamAcrossTransports.Select(p => (p.Key, p.Value))));
             }
             else
             {
-                Assert.That(receivedDownstreamContextData.Intersect(ContextDataDownstreamAcrossTransports), Is.Empty);
+                Assert.That(receivedDownstreamContextData.Intersect(ContextDataDownstreamAcrossTransports.Select(p => (p.Key, p.Value))), Is.Empty);
             }
         }
 
@@ -142,7 +142,7 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
         {
             if (testCase.HasBidirectionalData)
             {
-                Assert.That(receivedBidirectionalContextData, Is.EquivalentTo(ContextDataDownstreamBidirectionalAcrossTransports));
+                Assert.That(receivedBidirectionalContextData, Is.EquivalentTo(ContextDataDownstreamBidirectionalAcrossTransports.Select(p => (p.Key, p.Value))));
             }
             else
             {

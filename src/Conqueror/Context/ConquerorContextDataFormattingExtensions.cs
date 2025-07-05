@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 // ReSharper disable once CheckNamespace
@@ -15,12 +15,27 @@ public static class ConquerorContextDataFormattingExtensions
     ///     Encode all downstream and bi-directional context data with scope <see cref="ConquerorContextDataScope.AcrossTransports" /> as a string.
     /// </summary>
     /// <param name="ctx">The context to encode data from</param>
+    /// <param name="traceId">The trace ID to encode</param>
+    /// <param name="messageId">The message ID to encode</param>
+    /// <param name="signalId">The signal ID to encode</param>
     /// <returns>The encoded data if any, otherwise <c>null</c></returns>
-    public static string? EncodeDownstreamContextData(this ConquerorContext ctx)
+    public static string? EncodeDownstreamContextData(
+        this ConquerorContext ctx,
+        string? traceId = null,
+        string? messageId = null,
+        string? signalId = null)
     {
         var sb = new StringBuilder();
-        ctx.DownstreamContextData.Encode("d", sb);
-        ctx.ContextData.Encode("b", sb);
+
+        EncodeIds(
+            sb,
+            traceId,
+            messageId,
+            signalId);
+
+        ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Downstream).Encode("d", sb);
+        ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Bidirectional).Encode("b", sb);
+
         return sb.Length > 0 ? sb.ToString() : null;
     }
 
@@ -32,8 +47,10 @@ public static class ConquerorContextDataFormattingExtensions
     public static string? EncodeUpstreamContextData(this ConquerorContext ctx)
     {
         var sb = new StringBuilder();
-        ctx.UpstreamContextData.Encode("u", sb);
-        ctx.ContextData.Encode("b", sb);
+
+        ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Upstream).Encode("u", sb);
+        ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Bidirectional).Encode("b", sb);
+
         return sb.Length > 0 ? sb.ToString() : null;
     }
 
@@ -64,7 +81,36 @@ public static class ConquerorContextDataFormattingExtensions
         }
     }
 
-    private static void Encode(this IConquerorContextData? data, string type, StringBuilder sb)
+    private static void EncodeIds(
+        StringBuilder sb,
+        string? traceId,
+        string? messageId,
+        string? signalId)
+    {
+        if (traceId is null && messageId is null && signalId is null)
+        {
+            return;
+        }
+
+        _ = sb.Append('c');
+
+        if (traceId is not null)
+        {
+            _ = sb.Append("|trace-id:").Append(traceId);
+        }
+
+        if (messageId is not null)
+        {
+            _ = sb.Append("|message-id:").Append(messageId);
+        }
+
+        if (signalId is not null)
+        {
+            _ = sb.Append("|signal-id:").Append(signalId);
+        }
+    }
+
+    private static void Encode(this IEnumerable<(string, string)>? data, string type, StringBuilder sb)
     {
         if (data is null)
         {
@@ -72,10 +118,8 @@ public static class ConquerorContextDataFormattingExtensions
         }
 
         var addedTypeTag = false;
-        foreach (var (key, valueObj, _) in data.Where(t => t.Scope == ConquerorContextDataScope.AcrossTransports))
+        foreach (var (key, value) in data)
         {
-            var value = (string)valueObj;
-
             if (!addedTypeTag)
             {
                 if (sb.Length > 0)
@@ -115,67 +159,157 @@ public static class ConquerorContextDataFormattingExtensions
         static int DecodeFromTypeTag(ConquerorContext ctx, string encodedData, int index)
         {
             var typeTag = encodedData[index];
-            var ctxData = typeTag switch
+
+            if (typeTag == 'c')
             {
-                'b' => ctx.ContextData,
-                'd' => ctx.DownstreamContextData,
-                'u' => ctx.UpstreamContextData,
+                return DecodeWellKnownValues(ctx, encodedData, index + 2);
+            }
+
+            var flowDirection = typeTag switch
+            {
+                'b' => ConquerorContextDataFlowDirection.Bidirectional,
+                'd' => ConquerorContextDataFlowDirection.Downstream,
+                'u' => ConquerorContextDataFlowDirection.Upstream,
                 _ => throw new InvalidOperationException($"unknown context data type tag '{typeTag}'"),
             };
 
-            return DecodeType(ctxData, encodedData, index + 2);
+            return DecodeType(
+                ctx.TransportableData,
+                encodedData,
+                index + 2,
+                flowDirection);
         }
 
-        static int DecodeType(IConquerorContextData ctxData, string encodedData, int index)
+        static int DecodeWellKnownValues(
+            ConquerorContext ctx,
+            string encodedData,
+            int index)
         {
             while (index < encodedData.Length)
             {
-                if (encodedData[index] == '|')
+                if (!DecodeKeyValue(
+                        encodedData,
+                        index,
+                        out index,
+                        out var key,
+                        out var value))
                 {
-                    return index + 1;
+                    return index;
                 }
 
-                var needsBase64Decoding = false;
-                if (encodedData[index] == ':')
+                if (key is not null && value is not null)
                 {
-                    index += 1;
-                    needsBase64Decoding = true;
+                    switch (key)
+                    {
+                        case "trace-id":
+                            ctx.TraceId = value;
+
+                            break;
+
+                        case "message-id":
+                            ctx.MessageId = value;
+
+                            break;
+
+                        case "signal-id":
+                            ctx.SignalId = value;
+
+                            break;
+
+                        default:
+                            throw new InvalidOperationException($"unknown well-known context data key '{key}'");
+                    }
                 }
-
-                var endIndex = encodedData.IndexOf('|', index);
-                endIndex = endIndex > 0 ? endIndex - 1 : encodedData.Length - 1;
-                var separatorIndex = encodedData.IndexOf(':', index);
-
-                var keyLength = separatorIndex - index;
-                var key = encodedData.Substring(index, keyLength);
-
-                var valueLength = endIndex - separatorIndex;
-                var value = encodedData.Substring(separatorIndex + 1, valueLength);
-
-                if (needsBase64Decoding)
-                {
-                    key = Base64Decode(key);
-                    value = Base64Decode(value);
-                }
-
-                ctxData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
-
-                index = endIndex + 2;
             }
 
             return index;
+        }
+
+        static int DecodeType(
+            ITransportableConquerorContextData ctxData,
+            string encodedData,
+            int index,
+            ConquerorContextDataFlowDirection flowDirection)
+        {
+            while (index < encodedData.Length)
+            {
+                if (!DecodeKeyValue(
+                        encodedData,
+                        index,
+                        out index,
+                        out var key,
+                        out var value))
+                {
+                    return index;
+                }
+
+                if (key is not null && value is not null)
+                {
+                    ctxData.Set(key, value, flowDirection);
+                }
+            }
+
+            return index;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static bool DecodeKeyValue(
+            string encodedData,
+            int index,
+            out int nextIndex,
+            out string? key,
+            out string? value)
+        {
+            key = null;
+            value = null;
+
+            if (encodedData[index] == '|')
+            {
+                nextIndex = index + 1;
+
+                return false;
+            }
+
+            var needsBase64Decoding = false;
+            if (encodedData[index] == ':')
+            {
+                index += 1;
+                needsBase64Decoding = true;
+            }
+
+            var endIndex = encodedData.IndexOf('|', index);
+            endIndex = endIndex > 0 ? endIndex - 1 : encodedData.Length - 1;
+            var separatorIndex = encodedData.IndexOf(':', index);
+
+            var keyLength = separatorIndex - index;
+            key = encodedData.Substring(index, keyLength);
+
+            var valueLength = endIndex - separatorIndex;
+            value = encodedData.Substring(separatorIndex + 1, valueLength);
+
+            if (needsBase64Decoding)
+            {
+                key = Base64Decode(key);
+                value = Base64Decode(value);
+            }
+
+            nextIndex = endIndex + 2;
+
+            return true;
         }
     }
 
     private static string Base64Encode(string plainText)
     {
         var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+
         return Convert.ToBase64String(plainTextBytes);
     }
 
     private static string Base64Decode(string base64EncodedData)
     {
         var base64EncodedBytes = Convert.FromBase64String(base64EncodedData);
+
         return Encoding.UTF8.GetString(base64EncodedBytes);
     }
 }

@@ -155,9 +155,10 @@ public sealed partial class AuthorizationMessageMiddlewareTests
 
         using var conquerorContext = scope.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        conquerorContext.DownstreamContextData.Set("test-key", "test-value");
+        conquerorContext.InProcessData.Set("test-key", "test-value");
+        conquerorContext.TransportableData.Set("test-key", "test-value");
 
-        using var d = conquerorContext.SetCurrentPrincipal(claimsPrincipal);
+        conquerorContext.CurrentPrincipal = claimsPrincipal;
 
         var handler = scope.ServiceProvider
                            .GetRequiredService<IMessageSenders>()
@@ -177,7 +178,8 @@ public sealed partial class AuthorizationMessageMiddlewareTests
         Assert.That(seenContext, Is.Not.Null);
         Assert.That(seenContext.Message, Is.SameAs(msg));
         Assert.That(seenContext.ServiceProvider, Is.SameAs(scope.ServiceProvider));
-        Assert.That(seenContext.ConquerorContext.DownstreamContextData.Get<string>("test-key"), Is.EqualTo("test-value"));
+        Assert.That(seenContext.ConquerorContext.InProcessData.Get<string>("test-key"), Is.EqualTo("test-value"));
+        Assert.That(seenContext.ConquerorContext.TransportableData.Get("test-key"), Is.EqualTo("test-value"));
         Assert.That(seenContext.CurrentPrincipal, Is.SameAs(claimsPrincipal));
         Assert.That(seenContext.CancellationToken, Is.EqualTo(host.TestTimeoutToken));
     }
