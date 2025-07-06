@@ -109,9 +109,17 @@ public sealed class HttpMessageConformityExecutionSuccessTestCase : HttpMessageC
     Task IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>.BeforeSend(HttpMessageTransportConformityTestHost host)
         => BeforeSend?.Invoke(host) ?? Task.CompletedTask;
 
-    Task IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>.AfterMessagesAreReceived(
+    async Task IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>.AfterMessagesAreReceived(
         HttpMessageTransportConformityTestHost testHost)
-        => AfterMessagesAreReceived?.Invoke(testHost) ?? Task.CompletedTask;
+    {
+        if (AfterMessagesAreReceived is not null)
+        {
+            await AfterMessagesAreReceived.Invoke(testHost);
+        }
+
+        Assert.That(testHost.ReceiverHost.ReceivedQueryStringsOnServer.Select(s => string.IsNullOrWhiteSpace(s) ? null : s),
+                    Is.EquivalentTo(QueryStrings.Select(s => string.IsNullOrWhiteSpace(s) ? null : s)));
+    }
 
     public override void ConfigureReceiver(HttpMessageTransportConformityTestHost host, IHttpMessageReceiver receiver)
     {

@@ -17,6 +17,8 @@ public sealed class HttpMessageTransportConformityReceiverTestHost : IMessageTra
 
     public ConcurrentQueue<IHeaderDictionary> ReceivedHeadersOnServer { get; } = [];
 
+    public ConcurrentQueue<string?> ReceivedQueryStringsOnServer { get; } = [];
+
     public HttpClient HttpClient => HttpTransportTestHost.HttpClient;
 
     public ReceiverExecutionHandle? ReceiverExecutionHandle => null;
@@ -62,6 +64,7 @@ public sealed class HttpMessageTransportConformityReceiverTestHost : IMessageTra
                 _ = app.Use(async (ctx, next) =>
                        {
                            receiverHost.ReceivedHeadersOnServer.Enqueue(ctx.Request.Headers);
+                           receiverHost.ReceivedQueryStringsOnServer.Enqueue(ctx.Request.QueryString.Value);
                            await next();
                        })
                        .Use(async (ctx, next) =>

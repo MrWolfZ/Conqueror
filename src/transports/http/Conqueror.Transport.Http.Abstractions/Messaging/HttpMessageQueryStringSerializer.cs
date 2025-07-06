@@ -35,6 +35,11 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
             var propName = Uncapitalize(prop.Name);
             var propValue = prop.GetValue(message);
 
+            if (propValue is null)
+            {
+                continue;
+            }
+
             if (propValue is IEnumerable enumerable and not string)
             {
                 foreach (var v in enumerable)
@@ -53,7 +58,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
             _ = uriBuilder.Append(isFirst ? '?' : '&')
                           .Append(propName)
                           .Append('=')
-                          .Append(Uri.EscapeDataString(propValue?.ToString() ?? string.Empty));
+                          .Append(Uri.EscapeDataString(propValue.ToString() ?? string.Empty));
 
             isFirst = false;
         }
