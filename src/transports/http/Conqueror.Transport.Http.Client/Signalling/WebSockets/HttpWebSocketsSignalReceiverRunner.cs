@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Net.Http;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,37 +10,31 @@ using Conqueror.Transport.Http.Client.WebSockets;
 namespace Conqueror.Transport.Http.Client.Signalling.WebSockets;
 
 internal sealed class HttpWebSocketsSignalReceiverRunner(
-    HttpWebSocketsSignalReceiver receiver,
     IConquerorContextAccessor conquerorContextAccessor)
+    : ISignalReceiverRunner<HttpWebSocketsSignalReceiver>
 {
-    private readonly Lazy<HttpClient> defaultHttpClientLazy = new(() => new());
-
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
         Justification = "false positive, the source is returned to the caller")]
-    public ReceiverExecutionHandle Run(CancellationToken cancellationToken)
+    public ReceiverExecutionHandle RunReceiver(HttpWebSocketsSignalReceiver receiver, CancellationToken cancellationToken)
     {
         var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var connectionTaskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         return new(
             connectionTaskCompletionSource.Task,
-            Run(receiver.HandlerType, connectionTaskCompletionSource, linkedSource.Token),
+            Run(receiver, connectionTaskCompletionSource, linkedSource.Token),
             linkedSource,
-            onDispose: () =>
-            {
-                if (defaultHttpClientLazy.IsValueCreated)
-                {
-                    defaultHttpClientLazy.Value.Dispose();
-                }
-            });
+            onDispose: null);
     }
 
-    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive, object is disposed")]
-    private async Task Run(Type? handlerType, TaskCompletionSource connectionTaskCompletionSource, CancellationToken cancellationToken)
+    private async Task Run(
+        HttpWebSocketsSignalReceiver receiver,
+        TaskCompletionSource connectionTaskCompletionSource,
+        CancellationToken cancellationToken)
     {
-        var config = receiver.Configuration ?? throw new InvalidOperationException($"the receiver for handler type '{handlerType}' is not enabled");
+        var config = receiver.Configuration ?? throw new InvalidOperationException($"the receiver for handler type '{receiver.HandlerType}' is not enabled");
 
         try
         {
@@ -52,14 +45,14 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
 
                 try
                 {
-                    (socket, statusCode) = await Connect(config, cancellationToken).ConfigureAwait(false);
+                    (socket, statusCode) = await Connect(receiver, config, cancellationToken).ConfigureAwait(false);
 
                     if (statusCode is >= 400 and < 500)
                     {
                         throw new SignalReceiverExecutionFailedException(
-                            $"failed to connect signal receiver for handler type '{handlerType}' to address '{config.Address}'; got status code {statusCode}")
+                            $"failed to connect signal receiver for handler type '{receiver.HandlerType}' to address '{config.Address}'; got status code {statusCode}")
                         {
-                            HandlerType = handlerType,
+                            HandlerType = receiver.HandlerType,
                             SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
                         };
                     }
@@ -111,7 +104,11 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                 {
                     if (config.ReconnectDelayFn is not null)
                     {
-                        await config.ReconnectDelayFn(socket?.CloseStatus ?? WebSocketCloseStatus.Empty, statusCode ?? 200, wex, cancellationToken)
+                        await config.ReconnectDelayFn(
+                                        socket?.CloseStatus ?? WebSocketCloseStatus.Empty,
+                                        statusCode ?? 200,
+                                        wex,
+                                        cancellationToken)
                                     .ConfigureAwait(false);
                     }
                 }
@@ -122,10 +119,10 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                 catch (Exception ex)
                 {
                     throw new SignalReceiverExecutionFailedException(
-                        $"an exception occured while running receiver for signal handler type '{handlerType}'",
+                        $"an exception occured while running receiver for signal handler type '{receiver.HandlerType}'",
                         ex)
                     {
-                        HandlerType = handlerType,
+                        HandlerType = receiver.HandlerType,
                         SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
                     };
                 }
@@ -157,6 +154,7 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
         "CA2000:Dispose objects before losing scope",
         Justification = "false positive, objects are returned to the caller to be disposed there")]
     private async Task<(ConquerorWebSocket? Socket, int? StatusCode)> Connect(
+        HttpWebSocketsSignalReceiver receiver,
         HttpWebSocketsSignalReceiverConfiguration config,
         CancellationToken cancellationToken)
     {
