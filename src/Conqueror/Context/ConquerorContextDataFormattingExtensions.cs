@@ -12,7 +12,7 @@ namespace Conqueror;
 public static class ConquerorContextDataFormattingExtensions
 {
     /// <summary>
-    ///     Encode all downstream and bi-directional context data with scope <see cref="ConquerorContextDataScope.AcrossTransports" /> as a string.
+    ///     Encode all downstream and bidirectional context data as a string.
     /// </summary>
     /// <param name="ctx">The context to encode data from</param>
     /// <param name="traceId">The trace ID to encode</param>
@@ -40,7 +40,7 @@ public static class ConquerorContextDataFormattingExtensions
     }
 
     /// <summary>
-    ///     Encode all upstream and bi-directional context data with scope <see cref="ConquerorContextDataScope.AcrossTransports" /> as a string.
+    ///     Encode all upstream and bidirectional context data as a string.
     /// </summary>
     /// <param name="ctx">The context to encode data from</param>
     /// <returns>The encoded data if any, otherwise <c>null</c></returns>
@@ -110,13 +110,8 @@ public static class ConquerorContextDataFormattingExtensions
         }
     }
 
-    private static void Encode(this IEnumerable<(string, string)>? data, string type, StringBuilder sb)
+    private static void Encode(this IEnumerable<(string Key, string Value)> data, string type, StringBuilder sb)
     {
-        if (data is null)
-        {
-            return;
-        }
-
         var addedTypeTag = false;
         foreach (var (key, value) in data)
         {
