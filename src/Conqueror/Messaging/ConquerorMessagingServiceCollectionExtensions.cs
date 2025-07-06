@@ -306,7 +306,6 @@ public static class ConquerorMessagingServiceCollectionExtensions
             where THandler : class, IMessageHandler
         {
             if (typeof(THandler) is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false, IsNestedFamily: false }
-                && (typeof(THandler).DeclaringType?.IsPublic ?? true)
                 && typeof(THandler).Assembly == assembly)
             {
                 _ = services.AddMessageHandlerInternalGeneric<THandler>(ServiceDescriptor.Transient<THandler, THandler>(), shouldOverwriteRegistration: false);

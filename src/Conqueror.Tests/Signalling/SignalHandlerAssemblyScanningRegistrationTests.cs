@@ -1,4 +1,5 @@
 using Conqueror.Signalling;
+using static Conqueror.Tests.Signalling.InternalHandlerContainer;
 
 namespace Conqueror.Tests.Signalling;
 
@@ -9,6 +10,7 @@ public partial class SignalHandlerAssemblyScanningRegistrationTests
     [TestCase(typeof(TestSignalHandler), typeof(TestSignal))]
     [TestCase(typeof(InternalTestSignalHandler), typeof(InternalTestSignal))]
     [TestCase(typeof(InternalTopLevelTestSignalHandler), typeof(InternalTopLevelTestSignal))]
+    [TestCase(typeof(InternalNestedTestSignalHandler), typeof(InternalNestedTestSignal))]
     public void GivenServiceCollection_WhenAddingAllHandlersFromAssembly_AddsSignalHandlerAsTransient(Type handlerType, Type signalType)
     {
         var services = new ServiceCollection().AddSignalHandlersFromAssembly(typeof(SignalHandlerAssemblyScanningRegistrationTests).Assembly);
@@ -169,4 +171,16 @@ internal sealed partial class InternalTopLevelTestSignalHandler : InternalTopLev
 {
     public Task Handle(InternalTopLevelTestSignal signal, CancellationToken cancellationToken = default)
         => Task.CompletedTask;
+}
+
+internal sealed partial class InternalHandlerContainer
+{
+    [Signal]
+    internal sealed partial record InternalNestedTestSignal;
+
+    internal sealed partial class InternalNestedTestSignalHandler : InternalNestedTestSignal.IHandler
+    {
+        public Task Handle(InternalNestedTestSignal signal, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+    }
 }

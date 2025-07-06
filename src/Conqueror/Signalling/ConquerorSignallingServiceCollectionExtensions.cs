@@ -229,7 +229,6 @@ public static class ConquerorSignallingServiceCollectionExtensions
             where THandler : class, ISignalHandler
         {
             if (typeof(THandler) is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false, IsNestedFamily: false }
-                && (typeof(THandler).DeclaringType?.IsPublic ?? true)
                 && typeof(THandler).Assembly == assembly)
             {
                 _ = services.AddSignalHandlerInternalGeneric<THandler>(ServiceDescriptor.Transient<THandler, THandler>(), shouldOverwriteRegistration: false);
