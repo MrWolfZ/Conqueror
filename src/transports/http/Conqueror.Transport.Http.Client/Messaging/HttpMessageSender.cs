@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -14,6 +15,9 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
     : IHttpMessageSender<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
+    [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "intentional design")]
+    private static readonly HttpMethod HttpMethod = new(TMessage.HttpMethod);
+
     private readonly Lazy<HttpClient> defaultHttpClientSingletonLazy = new();
 
     private HttpClient? configuredHttpClient;
@@ -39,7 +43,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
         requestMessage.Version = httpVersionField;
         requestMessage.VersionPolicy = httpVersionPolicyField;
-        requestMessage.Method = new(TMessage.HttpMethod);
+        requestMessage.Method = HttpMethod;
 
         SetHeaders(conquerorContext, requestMessage.Headers);
 

@@ -241,9 +241,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
                 if (httpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues) && traceParentValues is [{ } traceParent])
                 {
-                    using var a = new Activity(string.Empty);
-
-                    return a.SetParentId(traceParent).TraceId.ToString();
+                    return ActivityTraceId.CreateFromString(traceParent.AsSpan(3, 32)).ToHexString();
                 }
 
                 return null;
