@@ -184,6 +184,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Conform
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Benchmarks", "src\transports\http\Conqueror.Transport.Http.Benchmarks\Conqueror.Transport.Http.Benchmarks.csproj", "{BD977AFC-AC25-401F-9B44-01922783DF32}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "file-system", "file-system", "{DDDBEAD8-A82C-47F9-9F00-FC000823EADC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.FileSystem.Abstractions", "src\transports\file-system\Conqueror.Transport.FileSystem.Abstractions\Conqueror.Transport.FileSystem.Abstractions.csproj", "{A2CCEFE1-8597-46A2-9130-CB36A46DD955}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.FileSystem", "src\transports\file-system\Conqueror.Transport.FileSystem\Conqueror.Transport.FileSystem.csproj", "{9B1284D0-AFF4-420C-AA89-5A1461576D46}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.FileSystem.Tests", "src\transports\file-system\Conqueror.Transport.FileSystem.Tests\Conqueror.Transport.FileSystem.Tests.csproj", "{AEED836A-9212-4607-85A6-FC7EEC516EAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -341,6 +349,18 @@ Global
 		{BD977AFC-AC25-401F-9B44-01922783DF32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD977AFC-AC25-401F-9B44-01922783DF32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD977AFC-AC25-401F-9B44-01922783DF32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2CCEFE1-8597-46A2-9130-CB36A46DD955}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2CCEFE1-8597-46A2-9130-CB36A46DD955}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2CCEFE1-8597-46A2-9130-CB36A46DD955}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2CCEFE1-8597-46A2-9130-CB36A46DD955}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B1284D0-AFF4-420C-AA89-5A1461576D46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B1284D0-AFF4-420C-AA89-5A1461576D46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B1284D0-AFF4-420C-AA89-5A1461576D46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B1284D0-AFF4-420C-AA89-5A1461576D46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEED836A-9212-4607-85A6-FC7EEC516EAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEED836A-9212-4607-85A6-FC7EEC516EAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEED836A-9212-4607-85A6-FC7EEC516EAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEED836A-9212-4607-85A6-FC7EEC516EAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -407,5 +427,9 @@ Global
 		{F5F1C095-6970-45DE-AE43-EFF17A75B148} = {84A9E825-D5FD-449D-96E7-40D758E85133}
 		{FA43B439-733A-4E2C-B518-5E237D7D352C} = {060F13CA-55B0-4D28-9010-008B87BEA087}
 		{BD977AFC-AC25-401F-9B44-01922783DF32} = {5FC6292B-996F-4970-8B96-45C65882DA49}
+		{DDDBEAD8-A82C-47F9-9F00-FC000823EADC} = {060F13CA-55B0-4D28-9010-008B87BEA087}
+		{A2CCEFE1-8597-46A2-9130-CB36A46DD955} = {DDDBEAD8-A82C-47F9-9F00-FC000823EADC}
+		{9B1284D0-AFF4-420C-AA89-5A1461576D46} = {DDDBEAD8-A82C-47F9-9F00-FC000823EADC}
+		{AEED836A-9212-4607-85A6-FC7EEC516EAD} = {DDDBEAD8-A82C-47F9-9F00-FC000823EADC}
 	EndGlobalSection
 EndGlobal

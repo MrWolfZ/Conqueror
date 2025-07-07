@@ -15,7 +15,7 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
 {
     [Test]
     [TestCaseSource(nameof(CreateTestCasesPrivate))]
-    public async Task GivenContextData_WhenPublishingHttpWebSocketsSignal_DataIsCorrectlySent(TTestCase testCase)
+    public async Task GivenContextData_WhenPublishingSignal_DataIsCorrectlySent(TTestCase testCase)
     {
         await using var host = testCase.CreateTestHost();
 
@@ -73,7 +73,7 @@ public abstract class SignalTransportContextConformityTests<TTestClass, TTestHos
 
         if (testCase.HasActivity)
         {
-            activity = DisposableActivity.Create(nameof(GivenContextData_WhenPublishingHttpWebSocketsSignal_DataIsCorrectlySent));
+            activity = DisposableActivity.Create(nameof(GivenContextData_WhenPublishingSignal_DataIsCorrectlySent));
             _ = activity.Activity.Start();
         }
 

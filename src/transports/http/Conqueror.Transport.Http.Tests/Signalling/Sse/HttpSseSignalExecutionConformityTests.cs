@@ -18,6 +18,8 @@ public sealed class HttpSseSignalExecutionConformityTests
 
     public static bool TransportSupportsReconnectingReceivers => true;
 
+    public static bool TransportUsesCompetingConsumers => false;
+
     public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
         => HttpSignalTestCases.CreateSuccessTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.Sse);
 

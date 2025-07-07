@@ -15,7 +15,7 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
 {
     [Test]
     [TestCaseSource(nameof(CreateTestCasesPrivate))]
-    public async Task GivenContextData_WhenSendingHttpMessage_DataIsCorrectlySent(TTestCase testCase)
+    public async Task GivenContextData_WhenSendingMessage_DataIsCorrectlySent(TTestCase testCase)
     {
         await using var host = testCase.CreateTestHost();
 
@@ -94,7 +94,7 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
 
         if (testCase.HasActivity)
         {
-            activity = DisposableActivity.Create(nameof(GivenContextData_WhenSendingHttpMessage_DataIsCorrectlySent));
+            activity = DisposableActivity.Create(nameof(GivenContextData_WhenSendingMessage_DataIsCorrectlySent));
             _ = activity.Activity.Start();
         }
 

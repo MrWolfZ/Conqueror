@@ -16,6 +16,8 @@ public sealed class HttpWebSocketsSignalExecutionConformityTests
 
     public static bool TransportSupportsReconnectingReceivers => true;
 
+    public static bool TransportUsesCompetingConsumers => false;
+
     public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
         => HttpSignalTestCases.CreateSuccessTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
 

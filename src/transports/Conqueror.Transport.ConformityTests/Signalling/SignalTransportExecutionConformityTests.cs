@@ -82,7 +82,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
 
     [Test]
     [TestCaseSource(nameof(CreateSimpleSuccessTestCasesPrivate))]
-    public async Task GivenTestCase_WhenRunningReceiversMultipleTimesConcurrently_SignalsAreReceivedByEachReceiver(TSuccessTestCase testCase)
+    public async Task GivenTestCase_WhenRunningReceiversMultipleTimesConcurrently_SignalsAreReceivedCorrectly(TSuccessTestCase testCase)
     {
         await using var host = testCase.CreateTestHost();
 
@@ -90,6 +90,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
 
+        var combinedReceivedSignals = new ConcurrentQueue<object>();
         var receivedSignals1 = new ConcurrentQueue<object>();
         var receivedSignals2 = new ConcurrentQueue<object>();
 
@@ -97,6 +98,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             cts.Token,
             (signal, _, _) =>
             {
+                combinedReceivedSignals.Enqueue(signal);
                 receivedSignals1.Enqueue(signal);
 
                 return Task.CompletedTask;
@@ -106,6 +108,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             cts.Token,
             (signal, _, _) =>
             {
+                combinedReceivedSignals.Enqueue(signal);
                 receivedSignals2.Enqueue(signal);
 
                 return Task.CompletedTask;
@@ -124,8 +127,15 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             () => testCase.PublishSignals(publisherHost.SignalPublishers, host.TestTimeoutToken),
             Throws.Nothing);
 
-        AssertReceivedSignals(receivedSignals1, testCase, host);
-        AssertReceivedSignals(receivedSignals2, testCase, host);
+        if (TTestClass.TransportUsesCompetingConsumers)
+        {
+            AssertReceivedSignals(combinedReceivedSignals, testCase, host, allowOutOfOrder: true);
+        }
+        else
+        {
+            AssertReceivedSignals(receivedSignals1, testCase, host);
+            AssertReceivedSignals(receivedSignals2, testCase, host);
+        }
 
         await testCase.AfterSignalsAreReceived(host);
 
@@ -413,7 +423,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             // we expect the test case to internally handle that the publish exception is thrown
             await Assert.ThatAsync(
                 () => testCase.PublishSignals(publisherHost.SignalPublishers, host.TestTimeoutToken),
-                Throws.Exception.SameAs(publishException));
+                Throws.Exception.SameAs(publishException).Or.InstanceOf<SignalFailedException>().With.InnerException.SameAs(publishException));
 
             await testCase.OnPublishException(host);
 
@@ -572,7 +582,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             testCase => !testCase.HandlerExceptions.OfType<Exception>().Any(),
             testCase => testCase.HandlerExceptions.OfType<Exception>().Count() == 1,
             testCase => testCase.HandlerExceptions.OfType<Exception>().Count() > 1,
-            testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors == 0,
+            testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors == 0 || testCase.NumOfExpectedUnrecoverableConnectionErrors == null,
             testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors == 1,
             testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors > 1,
         ];
@@ -593,9 +603,10 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
         ConcurrentQueue<object> receivedSignals,
         ISignalTransportConformityExecutionTestCase<TTestHost> testCase,
         ISignalTransportConformityTestHost host,
-        int numOfRepeats = 1)
+        int numOfRepeats = 1,
+        bool allowOutOfOrder = false)
     {
-        if (testCase.NumOfReceivers > 1 || testCase.SignalsArePublishedInParallel)
+        if (testCase.NumOfReceivers > 1 || testCase.SignalsArePublishedInParallel || allowOutOfOrder)
         {
             // with multiple receivers or when publishing in parallel, the order of signals is not
             // guaranteed, so we use EquivalentTo instead of EqualTo
