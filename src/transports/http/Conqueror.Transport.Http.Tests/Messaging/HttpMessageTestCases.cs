@@ -976,7 +976,8 @@ public static partial class HttpMessageTestCases
                             configureReceiver: r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
-                                _ = r.IsEnabled;
+
+                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
                             }),
                         (true, false, false, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
@@ -989,7 +990,8 @@ public static partial class HttpMessageTestCases
                             configureReceiver: r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
-                                _ = r.IsEnabled;
+
+                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
                             }),
                         (false, true, false, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
@@ -997,7 +999,8 @@ public static partial class HttpMessageTestCases
                             configureReceiver: r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
-                                _ = r.IsEnabled;
+
+                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
                             }),
                         (true, true, false, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
@@ -1010,7 +1013,8 @@ public static partial class HttpMessageTestCases
                             configureReceiver: r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
-                                _ = r.IsEnabled;
+
+                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
                             }),
                         (false, false, true, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
@@ -1024,7 +1028,8 @@ public static partial class HttpMessageTestCases
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
-                                _ = r.IsEnabled;
+
+                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
                             }),
                         (true, false, true, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
@@ -1043,7 +1048,8 @@ public static partial class HttpMessageTestCases
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
-                                _ = r.IsEnabled;
+
+                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
                             }),
                         (false, true, true, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
@@ -1057,13 +1063,14 @@ public static partial class HttpMessageTestCases
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
-                                _ = r.IsEnabled;
+
+                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
                             }),
                         (true, true, true, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
-                            async (m, p, ct) =>
+                            (m, p) =>
                             {
-                                await p.GetRequiredService<FnToCallFromHandler>()(m, ct);
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult();
 
                                 return new() { Payload = m.Payload + 1 };
                             },
@@ -1076,7 +1083,8 @@ public static partial class HttpMessageTestCases
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
-                                _ = r.IsEnabled;
+
+                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
                             }),
                     };
                 },
