@@ -29,7 +29,7 @@ dotnet pack %srcDir%\middlewares\logging\Conqueror.Middleware.Logging -c Release
 dotnet pack %srcDir%\middlewares\polly\Conqueror.Middleware.Polly -c Release -o %publishDir% --include-symbols
 
 REM transports
-dotnet pack %srcDir%\transports\Conqueror.Transport.ConformityTests -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\transports\Conqueror.Transport.ConformityTests -c Debug -o %publishDir% --include-symbols
 
 dotnet pack %srcDir%\transports\http\Conqueror.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\transports\http\Conqueror.Transport.Http.Client -c Release -o %publishDir% --include-symbols
