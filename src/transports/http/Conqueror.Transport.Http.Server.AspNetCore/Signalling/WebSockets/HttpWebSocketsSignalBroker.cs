@@ -50,37 +50,48 @@ internal sealed partial class HttpWebSocketsSignalBroker(
         CancellationToken cancellationToken)
         where TSignal : class, IHttpWebSocketsSignal<TSignal>
     {
-        LogPublishStart(logger);
-
-        if (!streamsBySignalTag.TryGetValue(TSignal.Tag, out var streams) || streams.Count == 0)
+        try
         {
-            return;
+            LogPublishStart(logger);
+
+            if (!streamsBySignalTag.TryGetValue(TSignal.Tag, out var streams) || streams.Count == 0)
+            {
+                return;
+            }
+
+            Stream stream = streams.Count == 1 ? streams[0] : new MultiplexWriteStream(streams);
+
+            await using var d = stream is MultiplexWriteStream ? stream : null;
+
+            LogWriteStream(logger, streams.Count);
+
+            await HttpWebSocketsSignalProtocolV1.Write(
+                                                    stream,
+                                                    TSignal.Tag,
+                                                    conquerorContext.EncodeDownstreamContextData(
+                                                        traceId: conquerorContext.TraceId,
+                                                        signalId: conquerorContext.SignalId),
+                                                    (s, ct) =>
+                                                    {
+                                                        ct.ThrowIfCancellationRequested();
+
+                                                        return new(TSignal.HttpWebSocketsSignalSerializer.SerializeSignal(
+                                                                       serviceProvider,
+                                                                       signal,
+                                                                       s,
+                                                                       ct));
+                                                    },
+                                                    cancellationToken)
+                                                .ConfigureAwait(false);
         }
-
-        Stream stream = streams.Count == 1 ? streams[0] : new MultiplexWriteStream(streams);
-
-        await using var d = stream is MultiplexWriteStream ? stream : null;
-
-        LogWriteStream(logger, streams.Count);
-
-        await HttpWebSocketsSignalProtocolV1.Write(
-                                                stream,
-                                                TSignal.Tag,
-                                                conquerorContext.EncodeDownstreamContextData(
-                                                    traceId: conquerorContext.TraceId,
-                                                    signalId: conquerorContext.SignalId),
-                                                (s, ct) =>
-                                                {
-                                                    ct.ThrowIfCancellationRequested();
-
-                                                    return new(TSignal.HttpWebSocketsSignalSerializer.SerializeSignal(
-                                                        serviceProvider,
-                                                        signal,
-                                                        s,
-                                                        ct));
-                                                },
-                                                cancellationToken)
-                                            .ConfigureAwait(false);
+        catch (Exception ex) when (ex is not HttpSseSignalFailedOnPublisherException)
+        {
+            throw new HttpSseSignalFailedOnPublisherException($"web sockets signal of type '{typeof(TSignal)}' failed", ex)
+            {
+                SignalPayload = signal,
+                TransportType = new(WebSocketsTransportName, SignalTransportRole.Publisher),
+            };
+        }
     }
 
     [LoggerMessage(LogLevel.Trace, "starting publish")]

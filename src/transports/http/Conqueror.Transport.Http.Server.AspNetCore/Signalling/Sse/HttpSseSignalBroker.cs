@@ -45,57 +45,68 @@ internal sealed partial class HttpSseSignalBroker(
         CancellationToken cancellationToken)
         where TSignal : class, IHttpSseSignal<TSignal>
     {
-        LogPublishStart(logger);
-
-        if (!channelWritersByEventType.TryGetValue(TSignal.EventType, out var writers) || writers.Count == 0)
+        try
         {
-            return;
+            LogPublishStart(logger);
+
+            if (!channelWritersByEventType.TryGetValue(TSignal.EventType, out var writers) || writers.Count == 0)
+            {
+                return;
+            }
+
+            var content = await TSignal.HttpSseSignalSerializer.SerializeSignal(serviceProvider, signal).ConfigureAwait(false);
+
+            if (conquerorContext.EncodeDownstreamContextData(traceId: conquerorContext.TraceId) is { } s)
+            {
+                content += "\n" + s;
+            }
+
+            var item = new SseItem<string>(content, TSignal.EventType)
+            {
+                EventId = conquerorContext.SignalId,
+            };
+
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.WhenAll(writers.Select(WriteToChannel)).ConfigureAwait(false);
+
+            async Task WriteToChannel(ChannelWriter<ChannelMessage> writer)
+            {
+                try
+                {
+                    // run continuation async to ensure we are not blocking the reader when it notifies us of the completion
+                    var taskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    var channelMessage = new ChannelMessage(item, taskCompletionSource);
+
+                    LogWriteToChannel(logger, TSignal.EventType);
+
+                    await writer.WriteAsync(channelMessage, cancellationToken).ConfigureAwait(false);
+
+                    await using var d = cancellationToken.Register(static tcs => ((TaskCompletionSource)tcs!).TrySetCanceled(), taskCompletionSource)
+                                                         .ConfigureAwait(false);
+
+                    LogWroteToChannel(logger, TSignal.EventType);
+
+                    await taskCompletionSource.Task.ConfigureAwait(false);
+
+                    LogGotChannelWriteCompletion(logger, TSignal.EventType);
+                }
+                catch (ChannelClosedException)
+                {
+                    // if a client disconnects right when we want to publish, we simply skip that client
+                }
+                catch (Exception ex) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException($"publish of signal of type '{signal.GetType()}' was cancelled", ex, cancellationToken);
+                }
+            }
         }
-
-        var content = await TSignal.HttpSseSignalSerializer.SerializeSignal(serviceProvider, signal).ConfigureAwait(false);
-
-        if (conquerorContext.EncodeDownstreamContextData(traceId: conquerorContext.TraceId) is { } s)
+        catch (Exception ex) when (ex is not HttpSseSignalFailedOnPublisherException)
         {
-            content += "\n" + s;
-        }
-
-        var item = new SseItem<string>(content, TSignal.EventType)
-        {
-            EventId = conquerorContext.SignalId,
-        };
-
-        cancellationToken.ThrowIfCancellationRequested();
-        await Task.WhenAll(writers.Select(WriteToChannel)).ConfigureAwait(false);
-
-        async Task WriteToChannel(ChannelWriter<ChannelMessage> writer)
-        {
-            try
+            throw new HttpSseSignalFailedOnPublisherException($"server-sent events signal of type '{typeof(TSignal)}' failed", ex)
             {
-                // run continuation async to ensure we are not blocking the reader when it notifies us of the completion
-                var taskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                var channelMessage = new ChannelMessage(item, taskCompletionSource);
-
-                LogWriteToChannel(logger, TSignal.EventType);
-
-                await writer.WriteAsync(channelMessage, cancellationToken).ConfigureAwait(false);
-
-                await using var d = cancellationToken.Register(static tcs => ((TaskCompletionSource)tcs!).TrySetCanceled(), taskCompletionSource)
-                                                     .ConfigureAwait(false);
-
-                LogWroteToChannel(logger, TSignal.EventType);
-
-                await taskCompletionSource.Task.ConfigureAwait(false);
-
-                LogGotChannelWriteCompletion(logger, TSignal.EventType);
-            }
-            catch (ChannelClosedException)
-            {
-                // if a client disconnects right when we want to publish, we simply skip that client
-            }
-            catch (Exception ex) when (cancellationToken.IsCancellationRequested)
-            {
-                throw new OperationCanceledException($"publish of signal of type '{signal.GetType()}' was cancelled", ex, cancellationToken);
-            }
+                SignalPayload = signal,
+                TransportType = new(ServersSentEventsTransportName, SignalTransportRole.Publisher),
+            };
         }
     }
 
@@ -149,10 +160,6 @@ internal sealed partial class HttpSseSignalBroker(
         }
     }
 
-    private sealed record ChannelMessage(
-        SseItem<string> Item,
-        TaskCompletionSource TaskCompletionSource);
-
     [LoggerMessage(LogLevel.Trace, "starting publish")]
     private static partial void LogPublishStart(ILogger logger);
 
@@ -179,4 +186,8 @@ internal sealed partial class HttpSseSignalBroker(
 
     [LoggerMessage(LogLevel.Trace, "yielded item with event type '{EventType}'")]
     private static partial void LogYieldedItem(ILogger logger, string eventType);
+
+    private sealed record ChannelMessage(
+        SseItem<string> Item,
+        TaskCompletionSource TaskCompletionSource);
 }

@@ -437,7 +437,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             // we expect the test case to internally handle that the publish exception is thrown
             await Assert.ThatAsync(
                 () => testCase.PublishSignals(publisherHost.SignalPublishers, host.TestTimeoutToken),
-                Throws.Exception.SameAs(publishException).Or.InstanceOf<SignalFailedException>().With.InnerException.SameAs(publishException));
+                Throws.InstanceOf<SignalFailedException>().With.InnerException.SameAs(publishException));
 
             await testCase.OnPublishException(host);
 
