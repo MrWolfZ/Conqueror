@@ -67,7 +67,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         IEndpointConventionBuilder? IHttpMessageTypesInjectable<EndpointTypeInjectableArg, IEndpointConventionBuilder?>
             .WithInjectedTypes<TMessage, TResponse, TIHandler>(EndpointTypeInjectableArg arg)
         {
-            var receiver = new HttpMessageReceiver<TMessage, TResponse>(arg.Builder.ServiceProvider);
+            var receiver = new HttpMessageReceiver<TMessage, TResponse>(arg.Invoker.HandlerType, arg.Builder.ServiceProvider);
 
             try
             {
@@ -79,7 +79,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                     $"failed to configure HTTP endpoint for message type '{typeof(TMessage)}' and handler type '{arg.Invoker.HandlerType}'",
                     ex)
                 {
-                    HandlerType = arg.Invoker.HandlerType,
+                    HandlerType = receiver.HandlerType,
                     MessageTransportType = new(TransportName, MessageTransportRole.Receiver),
                 };
             }

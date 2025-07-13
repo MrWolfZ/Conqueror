@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Conqueror.Transport.Http.Client.Signalling.WebSockets;
 
@@ -15,7 +16,7 @@ internal sealed class HttpWebSocketsSignalReceiverFactory(IServiceProvider servi
         IReadOnlyCollection<ISignalReceiverHandlerInvoker<IHttpWebSocketsSignalHandlerTypesInjector>> invokers,
         IHttpWebSocketsSignalHandlerTypesInjector typesInjector)
     {
-        var receiver = new HttpWebSocketsSignalReceiver(serviceProvider, handlerType);
+        var receiver = new HttpWebSocketsSignalReceiver(serviceProvider, invokers.Select(i => i.SignalType).ToArray(), handlerType);
         typesInjector.ConfigureHttpWebSocketsReceiver(receiver);
 
         if (!receiver.IsEnabled)

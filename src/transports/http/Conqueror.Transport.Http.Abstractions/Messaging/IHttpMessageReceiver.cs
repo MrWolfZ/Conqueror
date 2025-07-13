@@ -7,6 +7,8 @@ public interface IHttpMessageReceiver
 {
     Type MessageType { get; }
 
+    Type? HandlerType { get; }
+
     /// <summary>
     ///     Note that this is the service provider from the global scope.
     /// </summary>

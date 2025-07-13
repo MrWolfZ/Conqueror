@@ -8,7 +8,10 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Transport.Http.Client.Signalling.WebSockets;
 
-internal sealed class HttpWebSocketsSignalReceiver(IServiceProvider serviceProvider, Type? handlerType) : IHttpWebSocketsSignalReceiver
+internal sealed class HttpWebSocketsSignalReceiver(
+    IServiceProvider serviceProvider,
+    IReadOnlyCollection<Type> signalTypes,
+    Type? handlerType) : IHttpWebSocketsSignalReceiver
 {
     private readonly List<ISignalReceiverHandlerInvoker> invokers = [];
     private readonly ConcurrentDictionary<Type, List<ISignalReceiverHandlerInvoker>> invokersBySignalType = [];
@@ -16,6 +19,8 @@ internal sealed class HttpWebSocketsSignalReceiver(IServiceProvider serviceProvi
     private readonly Dictionary<string, Type> signalTypeByEventType = [];
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
+
+    public IReadOnlyCollection<Type> SignalTypes { get; } = signalTypes;
 
     public Type? HandlerType { get; } = handlerType;
 

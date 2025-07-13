@@ -9,7 +9,10 @@ using Conqueror.Signalling.Sse;
 
 namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 
-internal sealed class HttpSseSignalReceiver(IServiceProvider serviceProvider, Type? handlerType) : IHttpSseSignalReceiver
+internal sealed class HttpSseSignalReceiver(
+    IServiceProvider serviceProvider,
+    IReadOnlyCollection<Type> signalTypes,
+    Type? handlerType) : IHttpSseSignalReceiver
 {
     private readonly List<ISignalReceiverHandlerInvoker> invokers = [];
     private readonly ConcurrentDictionary<Type, List<ISignalReceiverHandlerInvoker>> invokersBySignalType = [];
@@ -17,6 +20,8 @@ internal sealed class HttpSseSignalReceiver(IServiceProvider serviceProvider, Ty
     private readonly Dictionary<string, Type> signalTypeByEventType = [];
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
+
+    public IReadOnlyCollection<Type> SignalTypes { get; } = signalTypes;
 
     public Type? HandlerType { get; } = handlerType;
 

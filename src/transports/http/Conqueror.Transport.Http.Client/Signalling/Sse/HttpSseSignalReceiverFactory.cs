@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 
@@ -15,7 +16,7 @@ internal sealed class HttpSseSignalReceiverFactory(IServiceProvider serviceProvi
         IReadOnlyCollection<ISignalReceiverHandlerInvoker<IHttpSseSignalHandlerTypesInjector>> invokers,
         IHttpSseSignalHandlerTypesInjector typesInjector)
     {
-        var receiver = new HttpSseSignalReceiver(serviceProvider, handlerType);
+        var receiver = new HttpSseSignalReceiver(serviceProvider, invokers.Select(i => i.SignalType).ToArray(), handlerType);
         typesInjector.ConfigureHttpSseReceiver(receiver);
 
         if (!receiver.IsEnabled)

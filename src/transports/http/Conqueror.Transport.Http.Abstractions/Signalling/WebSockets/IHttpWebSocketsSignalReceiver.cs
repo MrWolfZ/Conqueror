@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -9,6 +10,10 @@ namespace Conqueror;
 
 public interface IHttpWebSocketsSignalReceiver
 {
+    IReadOnlyCollection<Type> SignalTypes { get; }
+
+    Type? HandlerType { get; }
+
     /// <summary>
     ///     Note that this is (usually) the service provider from the global scope,
     ///     and <i>not</i> the service provider from the scope of the send operation.
