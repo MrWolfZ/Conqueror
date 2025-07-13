@@ -18,6 +18,8 @@ public sealed class HttpWebSocketsSignalExecutionConformityTests
 
     public static bool TransportUsesCompetingConsumers => false;
 
+    public static string TransportTypeName => WebSocketsTransportName;
+
     public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
         => HttpSignalTestCases.CreateSuccessTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
 

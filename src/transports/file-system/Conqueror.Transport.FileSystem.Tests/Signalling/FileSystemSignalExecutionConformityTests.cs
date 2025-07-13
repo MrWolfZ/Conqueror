@@ -18,6 +18,8 @@ public sealed class FileSystemSignalExecutionConformityTests
 
     public static bool TransportUsesCompetingConsumers => true;
 
+    public static string TransportTypeName => TransportName;
+
     public static IEnumerable<FileSystemSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
         => FileSystemSignalTestCases.CreateSuccessTestCases();
 

@@ -20,6 +20,8 @@ public sealed class FileSystemMessageExecutionConformityTests
 
     public static bool TransportRequiresReceiverConnection => false;
 
+    public static string TransportTypeName => TransportName;
+
     public static IEnumerable<FileSystemMessageConformityExecutionSuccessTestCase> CreateSuccessTestCases()
         => FileSystemMessageTestCases.CreateSuccessTestCases();
 

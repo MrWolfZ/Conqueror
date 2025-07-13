@@ -129,7 +129,11 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
 
         if (TTestClass.TransportUsesCompetingConsumers)
         {
-            AssertReceivedSignals(combinedReceivedSignals, testCase, host, allowOutOfOrder: true);
+            AssertReceivedSignals(
+                combinedReceivedSignals,
+                testCase,
+                host,
+                allowOutOfOrder: true);
         }
         else
         {
@@ -368,12 +372,16 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
 
+        var signalTransportType = new SignalTransportType(TTestClass.TransportTypeName, SignalTransportRole.Receiver);
+
         if (testCase.ReceiverConfigurationException is { } configurationException)
         {
             await Assert.ThatAsync(
                 () => host.CreateReceiverTestHost(cts.Token),
                 Throws.InstanceOf<SignalReceiverExecutionFailedException>()
-                      .With.InnerException.SameAs(configurationException));
+                      .With.InnerException.SameAs(configurationException)
+                      .And.Property(nameof(SignalReceiverExecutionFailedException.SignalTransportType))
+                      .EqualTo(signalTransportType));
 
             await testCase.OnReceiverConfigurationException(host);
 
@@ -400,20 +408,26 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             await Assert.ThatAsync(
                 () => receiverHost.ReceiverExecutionHandle!.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<SignalReceiverExecutionFailedException>()
+                      .With.Property(nameof(SignalReceiverExecutionFailedException.SignalTransportType))
+                      .EqualTo(signalTransportType)
                       .Or.InstanceOf<AggregateException>()
                       .With.Property("InnerExceptions")
                       .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
                       .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is SignalReceiverExecutionFailedException)));
+                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is SignalReceiverExecutionFailedException e
+                                                                                   && e.SignalTransportType == signalTransportType)));
 
             await Assert.ThatAsync(
                 () => receiverHost.ReceiverExecutionHandle!.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<SignalReceiverExecutionFailedException>()
+                      .With.Property(nameof(SignalReceiverExecutionFailedException.SignalTransportType))
+                      .EqualTo(signalTransportType)
                       .Or.InstanceOf<AggregateException>()
                       .With.Property("InnerExceptions")
                       .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
                       .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is SignalReceiverExecutionFailedException)));
+                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is SignalReceiverExecutionFailedException e
+                                                                                   && e.SignalTransportType == signalTransportType)));
         }
 
         host.Logger.LogInformation("Publishing initial signals...");
@@ -460,6 +474,8 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
                 () => receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token) ?? Task.CompletedTask,
                 Throws.InstanceOf<SignalReceiverExecutionFailedException>()
                       .With.InnerException.SameAs(handlerExceptions[0])
+                      .And.Property(nameof(SignalReceiverExecutionFailedException.SignalTransportType))
+                      .EqualTo(signalTransportType)
                       .Or.InstanceOf<AggregateException>()
                       .With.Property("InnerExceptions")
                       .Count.EqualTo(handlerExceptions.Count)
@@ -480,6 +496,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
         if (!TTestClass.TransportSupportsReconnectingReceivers)
         {
             host.Logger.LogInformation("Transport does not support reconnecting; skipping reconnect tests...");
+
             return;
         }
 

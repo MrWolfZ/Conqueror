@@ -419,12 +419,16 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
 
+        var messageTransportType = new MessageTransportType(TTestClass.TransportTypeName, MessageTransportRole.Receiver);
+
         if (testCase.ReceiverConfigurationException is { } configurationException)
         {
             await Assert.ThatAsync(
                 () => host.CreateReceiverTestHost(cts.Token),
                 Throws.InstanceOf<MessageReceiverExecutionFailedException>()
-                      .With.InnerException.SameAs(configurationException));
+                      .With.InnerException.SameAs(configurationException)
+                      .And.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
+                      .EqualTo(messageTransportType));
 
             await testCase.OnReceiverConfigurationException(host);
 
@@ -451,20 +455,24 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
             await Assert.ThatAsync(
                 () => receiverHost.ReceiverExecutionHandle!.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<MessageReceiverExecutionFailedException>()
+                      .With.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
+                      .EqualTo(messageTransportType)
                       .Or.InstanceOf<AggregateException>()
                       .With.Property("InnerExceptions")
                       .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
                       .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is MessageReceiverExecutionFailedException)));
+                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is MessageReceiverExecutionFailedException e && e.MessageTransportType == messageTransportType)));
 
             await Assert.ThatAsync(
                 () => receiverHost.ReceiverExecutionHandle!.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<MessageReceiverExecutionFailedException>()
+                      .With.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
+                      .EqualTo(messageTransportType)
                       .Or.InstanceOf<AggregateException>()
                       .With.Property("InnerExceptions")
                       .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
                       .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is MessageReceiverExecutionFailedException)));
+                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is MessageReceiverExecutionFailedException e && e.MessageTransportType == messageTransportType)));
         }
 
         await using var senderHost = await host.CreateSenderTestHost(host.TestTimeoutToken);
@@ -534,6 +542,8 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                 () => receiverHost.ReceiverExecutionHandle.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<MessageReceiverExecutionFailedException>()
                       .With.InnerException.SameAs(handlerExceptions[0])
+                      .And.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
+                      .EqualTo(messageTransportType)
                       .Or.InstanceOf<AggregateException>()
                       .With.Property("InnerExceptions")
                       .Count.EqualTo(handlerExceptions.Count)

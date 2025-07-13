@@ -8,7 +8,7 @@ internal sealed class HttpWebSocketsSignalReceiverFactory(IServiceProvider servi
 {
     private static readonly ConfigurationInjectable ConfigInjectable = new();
 
-    public string TransportTypeName => ServersSentEventsTransportName;
+    public string TransportTypeName => WebSocketsTransportName;
 
     public HttpWebSocketsSignalReceiver? CreateReceiverForHandlerType(
         Type? handlerType,

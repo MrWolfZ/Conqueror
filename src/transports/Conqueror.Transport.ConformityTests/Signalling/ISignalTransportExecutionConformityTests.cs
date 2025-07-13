@@ -11,6 +11,8 @@ public interface ISignalTransportExecutionConformityTests<TTestHost, out TSucces
 
     static abstract bool TransportUsesCompetingConsumers { get; }
 
+    static abstract string TransportTypeName { get; }
+
     static abstract IEnumerable<TSuccessTestCase> CreateSuccessTestCases();
 
     static abstract IEnumerable<TSuccessTestCase> CreateSimpleSuccessTestCases();

@@ -12,6 +12,8 @@ public interface IMessageTransportExecutionConformityTests<TTestHost, out TSucce
 
     static abstract bool TransportRequiresReceiverConnection { get; }
 
+    static abstract string TransportTypeName { get; }
+
     static abstract IEnumerable<TSuccessTestCase> CreateSuccessTestCases();
 
     static abstract IEnumerable<TSuccessTestCase> CreateSimpleSuccessTestCases();

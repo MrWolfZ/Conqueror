@@ -22,6 +22,8 @@ public sealed class HttpMessageExecutionConformityTests
 
     public static bool TransportSupportsReconnectingReceivers => false;
 
+    public static string TransportTypeName => TransportName;
+
     public static IEnumerable<HttpMessageConformityExecutionSuccessTestCase> CreateSuccessTestCases()
         => HttpMessageTestCases.CreateSuccessTestCases();
 

@@ -20,6 +20,8 @@ public sealed class HttpSseSignalExecutionConformityTests
 
     public static bool TransportUsesCompetingConsumers => false;
 
+    public static string TransportTypeName => ServersSentEventsTransportName;
+
     public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
         => HttpSignalTestCases.CreateSuccessTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.Sse);
 
