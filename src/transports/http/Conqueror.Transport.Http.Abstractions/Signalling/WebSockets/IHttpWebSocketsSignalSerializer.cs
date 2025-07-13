@@ -10,7 +10,7 @@ namespace Conqueror;
 internal interface IHttpWebSocketsSignalSerializer<TSignal>
     where TSignal : class, IHttpWebSocketsSignal<TSignal>
 {
-    ValueTask Serialize(IServiceProvider serviceProvider, TSignal signal, Stream stream, CancellationToken cancellationToken);
+    Task SerializeSignal(IServiceProvider serviceProvider, TSignal signal, Stream stream, CancellationToken cancellationToken);
 
-    ValueTask<TSignal> Deserialize(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken);
+    Task<TSignal> DeserializeSignal(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken);
 }

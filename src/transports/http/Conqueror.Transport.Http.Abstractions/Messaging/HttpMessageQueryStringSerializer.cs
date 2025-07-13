@@ -19,7 +19,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
 
     public string ContentType => string.Empty;
 
-    public string? SerializeToQuery(IServiceProvider serviceProvider, TMessage message)
+    public string? SerializeMessageToQuery(IServiceProvider serviceProvider, TMessage message)
     {
         var props = TMessage.PublicProperties.ToList();
         if (props.Count == 0)
@@ -66,7 +66,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         return uriBuilder.ToString();
     }
 
-    public Task SerializeToBody(
+    public Task SerializeMessageToBody(
         IServiceProvider serviceProvider,
         TMessage message,
         Stream bodyStream,
@@ -75,7 +75,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         return Task.CompletedTask;
     }
 
-    public Task<TMessage> Deserialize(
+    public Task<TMessage> DeserializeMessage(
         IServiceProvider serviceProvider,
         Stream bodyStream,
         Encoding? encoding,

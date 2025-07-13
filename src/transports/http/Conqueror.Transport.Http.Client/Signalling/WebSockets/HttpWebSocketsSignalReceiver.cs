@@ -45,7 +45,7 @@ internal sealed class HttpWebSocketsSignalReceiver(IServiceProvider serviceProvi
 
         invokers.Add(invoker);
         parserByTag[TSignal.Tag] = async (content, ct)
-            => await TSignal.HttpWebSocketsSignalSerializer.Deserialize(ServiceProvider, content, ct).ConfigureAwait(false);
+            => await TSignal.HttpWebSocketsSignalSerializer.DeserializeSignal(ServiceProvider, content, ct).ConfigureAwait(false);
     }
 
     public ValueTask<object> ReadSignal(string tag, Stream stream, CancellationToken cancellationToken)

@@ -39,7 +39,7 @@ internal sealed partial class HttpSseSignalBroker(
         return SubscribeInternal(eventTypesList, channel);
     }
 
-    public Task Publish<TSignal>(
+    public async Task Publish<TSignal>(
         TSignal signal,
         ConquerorContext conquerorContext,
         CancellationToken cancellationToken)
@@ -49,10 +49,10 @@ internal sealed partial class HttpSseSignalBroker(
 
         if (!channelWritersByEventType.TryGetValue(TSignal.EventType, out var writers) || writers.Count == 0)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        var content = TSignal.HttpSseSignalSerializer.Serialize(serviceProvider, signal);
+        var content = await TSignal.HttpSseSignalSerializer.SerializeSignal(serviceProvider, signal).ConfigureAwait(false);
 
         if (conquerorContext.EncodeDownstreamContextData(traceId: conquerorContext.TraceId) is { } s)
         {
@@ -65,7 +65,7 @@ internal sealed partial class HttpSseSignalBroker(
         };
 
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.WhenAll(writers.Select(WriteToChannel));
+        await Task.WhenAll(writers.Select(WriteToChannel)).ConfigureAwait(false);
 
         async Task WriteToChannel(ChannelWriter<ChannelMessage> writer)
         {

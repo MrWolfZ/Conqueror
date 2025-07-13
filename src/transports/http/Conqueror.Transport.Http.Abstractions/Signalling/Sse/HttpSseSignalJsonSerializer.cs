@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -8,7 +9,7 @@ namespace Conqueror;
 internal sealed class HttpSseSignalJsonSerializer<TSignal> : IHttpSseSignalSerializer<TSignal>
     where TSignal : class, IHttpSseSignal<TSignal>
 {
-    public string Serialize(IServiceProvider serviceProvider, TSignal signal)
+    public Task<string> SerializeSignal(IServiceProvider serviceProvider, TSignal signal)
     {
         var jsonTypeInfo = (JsonTypeInfo<TSignal>?)TSignal.HttpSseJsonSerializerContext?.GetTypeInfo(typeof(TSignal));
 
@@ -19,10 +20,10 @@ internal sealed class HttpSseSignalJsonSerializer<TSignal> : IHttpSseSignalSeria
             jsonTypeInfo = (JsonTypeInfo<TSignal>)jsonSerializerSettings.GetTypeInfo(typeof(TSignal));
         }
 
-        return JsonSerializer.Serialize(signal, jsonTypeInfo);
+        return Task.FromResult(JsonSerializer.Serialize(signal, jsonTypeInfo));
     }
 
-    public TSignal Deserialize(IServiceProvider serviceProvider, string serializedSignal)
+    public Task<TSignal> DeserializeSignal(IServiceProvider serviceProvider, string serializedSignal)
     {
         var jsonTypeInfo = (JsonTypeInfo<TSignal>?)TSignal.HttpSseJsonSerializerContext?.GetTypeInfo(typeof(TSignal));
 
@@ -33,6 +34,7 @@ internal sealed class HttpSseSignalJsonSerializer<TSignal> : IHttpSseSignalSeria
             jsonTypeInfo = (JsonTypeInfo<TSignal>)jsonSerializerSettings.GetTypeInfo(typeof(TSignal));
         }
 
-        return JsonSerializer.Deserialize(serializedSignal, jsonTypeInfo) ?? throw new InvalidOperationException("failed to deserialize HTTP SSE signal");
+        return Task.FromResult(
+            JsonSerializer.Deserialize(serializedSignal, jsonTypeInfo) ?? throw new InvalidOperationException("failed to deserialize HTTP SSE signal"));
     }
 }

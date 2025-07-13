@@ -1321,31 +1321,31 @@ public static partial class HttpSignalTestCases
 
     private sealed class TestSignalCustomSseSerializer : IHttpSseSignalSerializer<TestSignalWithCustomSerializer>
     {
-        public string Serialize(IServiceProvider serviceProvider, TestSignalWithCustomSerializer signal)
+        public Task<string> SerializeSignal(IServiceProvider serviceProvider, TestSignalWithCustomSerializer signal)
         {
-            return $"payload:{signal.Payload}";
+            return Task.FromResult($"payload:{signal.Payload}");
         }
 
-        public TestSignalWithCustomSerializer Deserialize(IServiceProvider serviceProvider, string serializedSignal)
+        public Task<TestSignalWithCustomSerializer> DeserializeSignal(IServiceProvider serviceProvider, string serializedSignal)
         {
             var result = int.Parse(serializedSignal.Split(':')[1]);
 
-            return new() { Payload = result };
+            return Task.FromResult(new TestSignalWithCustomSerializer { Payload = result });
         }
     }
 
     private sealed class TestSignalCustomWebSocketsSerializer : IHttpWebSocketsSignalSerializer<TestSignalWithCustomSerializer>
     {
-        public ValueTask Serialize(
+        public Task SerializeSignal(
             IServiceProvider serviceProvider,
             TestSignalWithCustomSerializer signal,
             Stream stream,
             CancellationToken cancellationToken)
         {
-            return stream.WriteAsync(Encoding.UTF8.GetBytes($"payload:{signal.Payload}"), cancellationToken);
+            return stream.WriteAsync(Encoding.UTF8.GetBytes($"payload:{signal.Payload}"), cancellationToken).AsTask();
         }
 
-        public async ValueTask<TestSignalWithCustomSerializer> Deserialize(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
+        public async Task<TestSignalWithCustomSerializer> DeserializeSignal(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
         {
             using var streamReader = new StreamReader(stream, Encoding.UTF8);
             var serializedSignal = await streamReader.ReadToEndAsync(cancellationToken);
@@ -1649,17 +1649,17 @@ public static partial class HttpSignalTestCases
     private sealed class ThrowingTestSignalSerializer : IHttpSseSignalSerializer<ThrowingTestSignal>,
                                                         IHttpWebSocketsSignalSerializer<ThrowingTestSignal>
     {
-        public string Serialize(IServiceProvider serviceProvider, ThrowingTestSignal signal)
+        public Task<string> SerializeSignal(IServiceProvider serviceProvider, ThrowingTestSignal signal)
         {
             throw serviceProvider.GetRequiredService<Exception>();
         }
 
-        public ThrowingTestSignal Deserialize(IServiceProvider serviceProvider, string serializedSignal)
+        public Task<ThrowingTestSignal> DeserializeSignal(IServiceProvider serviceProvider, string serializedSignal)
         {
             throw new NotSupportedException();
         }
 
-        public ValueTask Serialize(
+        public Task SerializeSignal(
             IServiceProvider serviceProvider,
             ThrowingTestSignal signal,
             Stream stream,
@@ -1668,7 +1668,7 @@ public static partial class HttpSignalTestCases
             throw serviceProvider.GetRequiredService<Exception>();
         }
 
-        public ValueTask<ThrowingTestSignal> Deserialize(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
+        public Task<ThrowingTestSignal> DeserializeSignal(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }

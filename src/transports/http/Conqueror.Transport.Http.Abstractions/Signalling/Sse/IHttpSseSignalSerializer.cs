@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -7,7 +8,7 @@ namespace Conqueror;
 internal interface IHttpSseSignalSerializer<TSignal>
     where TSignal : class, IHttpSseSignal<TSignal>
 {
-    string Serialize(IServiceProvider serviceProvider, TSignal signal);
+    Task<string> SerializeSignal(IServiceProvider serviceProvider, TSignal signal);
 
-    TSignal Deserialize(IServiceProvider serviceProvider, string serializedSignal);
+    Task<TSignal> DeserializeSignal(IServiceProvider serviceProvider, string serializedSignal);
 }

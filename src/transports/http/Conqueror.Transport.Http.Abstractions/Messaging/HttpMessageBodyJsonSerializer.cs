@@ -19,7 +19,7 @@ internal sealed class HttpMessageBodyJsonSerializer<TMessage, TResponse>
 
     public string ContentType => MediaTypeNames.Application.Json;
 
-    public Task SerializeToBody(
+    public Task SerializeMessageToBody(
         IServiceProvider serviceProvider,
         TMessage message,
         Stream bodyStream,
@@ -32,7 +32,7 @@ internal sealed class HttpMessageBodyJsonSerializer<TMessage, TResponse>
             cancellationToken);
     }
 
-    public async Task<TMessage> Deserialize(
+    public async Task<TMessage> DeserializeMessage(
         IServiceProvider serviceProvider,
         Stream bodyStream,
         Encoding? encoding,

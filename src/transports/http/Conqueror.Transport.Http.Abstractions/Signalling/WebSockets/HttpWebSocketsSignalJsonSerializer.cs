@@ -10,21 +10,20 @@ namespace Conqueror.Signalling.WebSockets;
 internal sealed class HttpWebSocketsSignalJsonSerializer<TSignal> : IHttpWebSocketsSignalSerializer<TSignal>
     where TSignal : class, IHttpWebSocketsSignal<TSignal>
 {
-    public ValueTask Serialize(
+    public Task SerializeSignal(
         IServiceProvider serviceProvider,
         TSignal signal,
         Stream stream,
         CancellationToken cancellationToken)
     {
-        return new(
-            JsonSerializer.SerializeAsync(
-                stream,
-                signal,
-                GetJsonTypeInfo(serviceProvider),
-                cancellationToken));
+        return JsonSerializer.SerializeAsync(
+            stream,
+            signal,
+            GetJsonTypeInfo(serviceProvider),
+            cancellationToken);
     }
 
-    public async ValueTask<TSignal> Deserialize(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
+    public async Task<TSignal> DeserializeSignal(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
     {
         return await JsonSerializer.DeserializeAsync(stream, GetJsonTypeInfo(serviceProvider), cancellationToken).ConfigureAwait(false)
                ?? throw new InvalidOperationException("failed to deserialize HTTP WebSockets signal");

@@ -145,7 +145,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             var query = context.Request.Query.Select(p => new KeyValuePair<string, IReadOnlyList<string?>>(p.Key, p.Value));
 
-            message = await TMessage.HttpMessageSerializer.Deserialize(
+            message = await TMessage.HttpMessageSerializer.DeserializeMessage(
                                         context.RequestServices,
                                         context.Request.Body,
                                         encoding,
@@ -221,7 +221,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             httpContext.Response.Headers.ContentType = TMessage.HttpMessageResponseSerializer.ContentType;
 
-            await TMessage.HttpMessageResponseSerializer.Serialize(
+            await TMessage.HttpMessageResponseSerializer.SerializeResponse(
                               httpContext.RequestServices,
                               httpContext.Response.Body,
                               response,

@@ -1922,13 +1922,13 @@ public static partial class HttpMessageTestCases
     {
         string IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType => "application/custom-message";
 
-        public string SerializeToPath(IServiceProvider serviceProvider, TestMessageWithCustomSerializer message)
+        public string SerializeMessageToPath(IServiceProvider serviceProvider, TestMessageWithCustomSerializer message)
             => $"/api/custom/path/for/serializer/{message.PathPayload}";
 
-        public string SerializeToQuery(IServiceProvider serviceProvider, TestMessageWithCustomSerializer message)
+        public string SerializeMessageToQuery(IServiceProvider serviceProvider, TestMessageWithCustomSerializer message)
             => $"?query-payload={message.QueryPayload}";
 
-        public async Task SerializeToBody(
+        public async Task SerializeMessageToBody(
             IServiceProvider serviceProvider,
             TestMessageWithCustomSerializer message,
             Stream bodyStream,
@@ -1940,7 +1940,7 @@ public static partial class HttpMessageTestCases
             await writer.WriteAsync($"payload:{message.BodyPayload}");
         }
 
-        public async Task<TestMessageWithCustomSerializer> Deserialize(
+        public async Task<TestMessageWithCustomSerializer> DeserializeMessage(
             IServiceProvider serviceProvider,
             Stream bodyStream,
             Encoding? encoding,
@@ -1961,7 +1961,7 @@ public static partial class HttpMessageTestCases
         string IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType
             => "application/custom-response";
 
-        public async Task Serialize(
+        public async Task SerializeResponse(
             IServiceProvider serviceProvider,
             Stream bodyStream,
             TestMessageWithCustomSerializerResponse response,
@@ -1971,7 +1971,7 @@ public static partial class HttpMessageTestCases
             await writer.WriteAsync($"total-payload:{response.Payload}");
         }
 
-        public async Task<TestMessageWithCustomSerializerResponse> Deserialize(
+        public async Task<TestMessageWithCustomSerializerResponse> DeserializeResponse(
             IServiceProvider serviceProvider,
             Stream bodyStream,
             Encoding? encoding,
@@ -2347,7 +2347,7 @@ public static partial class HttpMessageTestCases
     {
         public string ContentType => "application/throwing";
 
-        public Task SerializeToBody(
+        public Task SerializeMessageToBody(
             IServiceProvider serviceProvider,
             ThrowingTestMessage message,
             Stream bodyStream,
@@ -2356,7 +2356,7 @@ public static partial class HttpMessageTestCases
             throw serviceProvider.GetRequiredService<Exception>();
         }
 
-        public Task<ThrowingTestMessage> Deserialize(
+        public Task<ThrowingTestMessage> DeserializeMessage(
             IServiceProvider serviceProvider,
             Stream bodyStream,
             Encoding? encoding,

@@ -13,7 +13,7 @@ internal sealed class HttpSseSignalReceiver(IServiceProvider serviceProvider, Ty
 {
     private readonly List<ISignalReceiverHandlerInvoker> invokers = [];
     private readonly ConcurrentDictionary<Type, List<ISignalReceiverHandlerInvoker>> invokersBySignalType = [];
-    private readonly Dictionary<string, Func<string, object>> parserByEventType = [];
+    private readonly Dictionary<string, Func<string, Task<object>>> parserByEventType = [];
     private readonly Dictionary<string, Type> signalTypeByEventType = [];
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
@@ -45,25 +45,32 @@ internal sealed class HttpSseSignalReceiver(IServiceProvider serviceProvider, Ty
         }
 
         invokers.Add(invoker);
-        parserByEventType[TSignal.EventType] = content => TSignal.HttpSseSignalSerializer.Deserialize(ServiceProvider, content);
+        parserByEventType[TSignal.EventType] = async content
+            => await TSignal.HttpSseSignalSerializer.DeserializeSignal(ServiceProvider, content).ConfigureAwait(false);
     }
 
-    public HttpSseSignalEnvelope ParseItem(string eventType, ReadOnlySpan<byte> bytes)
+    public Task<HttpSseSignalEnvelope> ParseItem(string eventType, ReadOnlySpan<byte> bytes)
     {
         var content = Encoding.UTF8.GetString(bytes);
-        var newLineIndex = content.IndexOf('\n');
 
-        var serializedSignal = content;
-        string? contextData = null;
-        if (newLineIndex >= 0)
+        return Parse();
+
+        async Task<HttpSseSignalEnvelope> Parse()
         {
-            serializedSignal = content[..newLineIndex];
-            contextData = content[(newLineIndex + 1)..];
+            var newLineIndex = content.IndexOf('\n');
+
+            var serializedSignal = content;
+            string? contextData = null;
+            if (newLineIndex >= 0)
+            {
+                serializedSignal = content[..newLineIndex];
+                contextData = content[(newLineIndex + 1)..];
+            }
+
+            var signal = await parserByEventType[eventType].Invoke(serializedSignal).ConfigureAwait(false);
+
+            return new(signal, contextData);
         }
-
-        var signal = parserByEventType[eventType].Invoke(serializedSignal);
-
-        return new(signal, contextData);
     }
 
     public async Task InvokeHandler(object signal, CancellationToken cancellationToken)

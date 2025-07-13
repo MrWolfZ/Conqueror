@@ -85,7 +85,9 @@ internal sealed class HttpSseSignalReceiverRunner(
 
                     await foreach (var item in parser.EnumerateAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        config.SignalCallback?.Invoke(item.Data.Signal);
+                        var result = await item.Data.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                        config.SignalCallback?.Invoke(result.Signal);
 
                         using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 
@@ -94,12 +96,12 @@ internal sealed class HttpSseSignalReceiverRunner(
                             conquerorContext.SignalId = item.EventId;
                         }
 
-                        if (item.Data.ContextData is { } s)
+                        if (result.ContextData is { } s)
                         {
                             conquerorContext.DecodeContextData(s);
                         }
 
-                        await receiver.InvokeHandler(item.Data.Signal, cancellationToken).ConfigureAwait(false);
+                        await receiver.InvokeHandler(result.Signal, cancellationToken).ConfigureAwait(false);
                     }
 
                     cancellationToken.ThrowIfCancellationRequested();

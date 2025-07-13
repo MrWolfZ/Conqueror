@@ -73,11 +73,11 @@ internal sealed partial class HttpWebSocketsSignalBroker(
                                                 {
                                                     ct.ThrowIfCancellationRequested();
 
-                                                    return TSignal.HttpWebSocketsSignalSerializer.Serialize(
+                                                    return new(TSignal.HttpWebSocketsSignalSerializer.SerializeSignal(
                                                         serviceProvider,
                                                         signal,
                                                         s,
-                                                        ct);
+                                                        ct));
                                                 },
                                                 cancellationToken)
                                             .ConfigureAwait(false);

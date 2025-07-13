@@ -51,8 +51,8 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
         var messageSerializer = TMessage.HttpMessageSerializer;
 
-        var path = messageSerializer.SerializeToPath(serviceProvider, message) ?? TMessage.FullPath;
-        var queryString = messageSerializer.SerializeToQuery(serviceProvider, message) ?? string.Empty;
+        var path = messageSerializer.SerializeMessageToPath(serviceProvider, message) ?? TMessage.FullPath;
+        var queryString = messageSerializer.SerializeMessageToQuery(serviceProvider, message) ?? string.Empty;
 
         requestMessage.RequestUri = new(configuredHttpClient?.BaseAddress ?? baseAddress, path + queryString);
 
@@ -123,7 +123,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
             var responseSerializer = TMessage.HttpMessageResponseSerializer;
 
             var encoding = string.IsNullOrWhiteSpace(mediaType.CharSet) ? null : Encoding.GetEncoding(mediaType.CharSet);
-            return await responseSerializer.Deserialize(serviceProvider, responseStream, encoding, cancellationToken).ConfigureAwait(false);
+            return await responseSerializer.DeserializeResponse(serviceProvider, responseStream, encoding, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not HttpMessageFailedOnClientException)
         {
@@ -193,7 +193,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
         CancellationToken cancellationToken) : HttpContent
     {
         protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
-            => serializer.SerializeToBody(
+            => serializer.SerializeMessageToBody(
                 serviceProvider,
                 message,
                 stream,

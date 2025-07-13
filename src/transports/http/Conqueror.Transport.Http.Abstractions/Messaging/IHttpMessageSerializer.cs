@@ -14,11 +14,11 @@ internal interface IHttpMessageSerializer<TMessage, TResponse>
 {
     string ContentType { get; }
 
-    string? SerializeToPath(IServiceProvider serviceProvider, TMessage message) => null;
+    string? SerializeMessageToPath(IServiceProvider serviceProvider, TMessage message) => null;
 
-    string? SerializeToQuery(IServiceProvider serviceProvider, TMessage message) => null;
+    string? SerializeMessageToQuery(IServiceProvider serviceProvider, TMessage message) => null;
 
-    Task SerializeToBody(
+    Task SerializeMessageToBody(
         IServiceProvider serviceProvider,
         TMessage message,
         Stream bodyStream,
@@ -30,7 +30,7 @@ internal interface IHttpMessageSerializer<TMessage, TResponse>
         return false;
     }
 
-    Task<TMessage> Deserialize(
+    Task<TMessage> DeserializeMessage(
         IServiceProvider serviceProvider,
         Stream bodyStream,
         Encoding? encoding,
@@ -44,13 +44,13 @@ internal interface IHttpMessageResponseSerializer<TMessage, TResponse>
 {
     string ContentType { get; }
 
-    Task Serialize(
+    Task SerializeResponse(
         IServiceProvider serviceProvider,
         Stream bodyStream,
         TResponse response,
         CancellationToken cancellationToken);
 
-    Task<TResponse> Deserialize(
+    Task<TResponse> DeserializeResponse(
         IServiceProvider serviceProvider,
         Stream bodyStream,
         Encoding? encoding,
