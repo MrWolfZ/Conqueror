@@ -12,7 +12,7 @@ public sealed class HttpMessageExecutionTests
     {
         using var testTimeouts = HttpTransportTestTimeouts.Create();
 
-        await using var host = await HttpTransportTestWebHost.Create(
+        await using var host = await HttpTransportTestHost.Create(
             services =>
             {
                 _ = services.AddMessageHandler<TestMessageHandler>()
@@ -42,7 +42,7 @@ public sealed class HttpMessageExecutionTests
     {
         using var testTimeouts = HttpTransportTestTimeouts.Create();
 
-        await using var host = await HttpTransportTestWebHost.Create(
+        await using var host = await HttpTransportTestHost.Create(
             services =>
             {
                 _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>()
@@ -77,7 +77,7 @@ public sealed class HttpMessageExecutionTests
     {
         using var testTimeouts = HttpTransportTestTimeouts.Create();
 
-        await using var host = await HttpTransportTestWebHost.Create(
+        await using var host = await HttpTransportTestHost.Create(
             services =>
             {
                 _ = services.AddMessageHandler<TestMessageHandler>()
@@ -115,7 +115,7 @@ public sealed class HttpMessageExecutionTests
 
         using var testTimeouts = HttpTransportTestTimeouts.Create();
 
-        await using var host = await HttpTransportTestWebHost.Create(
+        await using var host = await HttpTransportTestHost.Create(
             services =>
             {
                 _ = services.AddMessageHandler(p => new TestMessageHandler((_, _) =>
