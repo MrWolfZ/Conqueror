@@ -47,6 +47,8 @@ public sealed class HttpTransportTestTimeouts : IDisposable
 
     public void Dispose()
     {
+        TimeoutCancellationTokenSource.Cancel();
+
         TimeoutCancellationTokenSource.Dispose();
     }
 }
