@@ -1118,10 +1118,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     public sealed partial class DisabledTestSignalHandler : TestSignal.IHandler
@@ -1135,13 +1135,13 @@ public static partial class HttpSignalTestCases
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
         {
-            receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
             receiver.Disable();
         }
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
         {
-            receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
             receiver.Disable();
         }
     }
@@ -1172,10 +1172,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [Signal]
@@ -1203,10 +1203,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal(EventType = "custom")]
@@ -1227,10 +1227,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
@@ -1248,10 +1248,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
@@ -1276,10 +1276,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
 
         internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
         {
@@ -1367,10 +1367,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
@@ -1393,10 +1393,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseUpper)]
@@ -1426,10 +1426,10 @@ public static partial class HttpSignalTestCases
                 pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestSignalMiddleware<T>>());
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     public sealed class TestSignalMiddleware<TSignal>(TestObservations observations) : ISignalMiddleware<TSignal>
@@ -1461,10 +1461,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
@@ -1509,10 +1509,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
@@ -1544,10 +1544,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     private sealed partial class ThrowingTestSignalHandler(
@@ -1575,10 +1575,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     private sealed partial class ThrowingTestSignalHandler2(
@@ -1620,10 +1620,10 @@ public static partial class HttpSignalTestCases
         }
 
         static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpWebSocketsSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
 
         static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpSseSignalReceiver>>()?.Invoke(receiver);
+            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
     }
 
     public sealed class TestObservations
