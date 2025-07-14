@@ -112,8 +112,10 @@ internal static class FileOperations
         var attempt = 0;
         var delayMs = initialDelayMs;
 
-        while (!cancellationToken.IsCancellationRequested && attempt < maxAttempts)
+        while (true)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 return new(
@@ -149,9 +151,6 @@ internal static class FileOperations
                 }
             }
         }
-
-        // Should not reach here
-        throw new IOException("Failed to open file after retries.");
     }
 }
 
