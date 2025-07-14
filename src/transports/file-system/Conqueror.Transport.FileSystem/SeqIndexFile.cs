@@ -57,54 +57,57 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath) : IDisposabl
         {
             var handle = await seqFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
 
-            EntryId[]? entries = null;
-
-            await using (handle.ConfigureAwait(false))
+            if (handle is not null)
             {
-                if (handle.Stream.Length >= SeqNrLength + 1)
+                EntryId[]? entries = null;
+
+                await using (handle.ConfigureAwait(false))
                 {
-                    var compactedSeqNr = await GetCompactedSeqNr(handle.Reader, cancellationToken).ConfigureAwait(false);
-                    var seqNrOffset = currentSeqNr - compactedSeqNr;
-
-                    // ReSharper disable once ArrangeRedundantParentheses
-                    var startAt = (seqNrOffset * EntryLength) + SeqNrLength + 1;
-
-                    var nrOfCharsToRead = (int)((ulong)handle.Stream.Length - startAt);
-                    var nrOfEntries = nrOfCharsToRead / EntryLength;
-
-                    if (nrOfCharsToRead > 0)
+                    if (handle.Stream.Length >= SeqNrLength + 1)
                     {
-                        using var buffer = new CharBuffer(nrOfCharsToRead);
+                        var compactedSeqNr = await GetCompactedSeqNr(handle.Reader, cancellationToken).ConfigureAwait(false);
+                        var seqNrOffset = currentSeqNr - compactedSeqNr;
 
-                        var nowAt = handle.Stream.Seek((long)startAt, SeekOrigin.Begin);
-                        handle.Reader.DiscardBufferedData();
+                        // ReSharper disable once ArrangeRedundantParentheses
+                        var startAt = (seqNrOffset * EntryLength) + SeqNrLength + 1;
 
-                        Debug.Assert(nowAt == (long)startAt, $"expected to seek to {startAt}, but seeked to {nowAt}");
+                        var nrOfCharsToRead = (int)((ulong)handle.Stream.Length - startAt);
+                        var nrOfEntries = nrOfCharsToRead / EntryLength;
 
-                        var readCount = await handle.Reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
-
-                        Debug.Assert(readCount == nrOfCharsToRead, $"expected to read {nrOfCharsToRead} bytes, but read {readCount}");
-
-                        entries = new EntryId[nrOfEntries];
-
-                        for (int entryIndex = 0, bufferIndex = 0; bufferIndex < nrOfEntries * EntryLength; bufferIndex += EntryLength, entryIndex += 1)
+                        if (nrOfCharsToRead > 0)
                         {
-                            entries[entryIndex] = new(new(buffer.Span.Slice(bufferIndex, EntryId.IdLength)));
+                            using var buffer = new CharBuffer(nrOfCharsToRead);
+
+                            var nowAt = handle.Stream.Seek((long)startAt, SeekOrigin.Begin);
+                            handle.Reader.DiscardBufferedData();
+
+                            Debug.Assert(nowAt == (long)startAt, $"expected to seek to {startAt}, but seeked to {nowAt}");
+
+                            var readCount = await handle.Reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
+
+                            Debug.Assert(readCount == nrOfCharsToRead, $"expected to read {nrOfCharsToRead} bytes, but read {readCount}");
+
+                            entries = new EntryId[nrOfEntries];
+
+                            for (int entryIndex = 0, bufferIndex = 0; bufferIndex < nrOfEntries * EntryLength; bufferIndex += EntryLength, entryIndex += 1)
+                            {
+                                entries[entryIndex] = new(new(buffer.Span.Slice(bufferIndex, EntryId.IdLength)));
+                            }
                         }
                     }
                 }
-            }
 
-            if (entries is not null)
-            {
-                foreach (var entry in entries)
+                if (entries is not null)
                 {
-                    currentSeqNr += 1;
+                    foreach (var entry in entries)
+                    {
+                        currentSeqNr += 1;
 
-                    yield return (entry, new(currentSeqNr));
+                        yield return (entry, new(currentSeqNr));
+                    }
+
+                    continue; // try eagerly reading the next batch of entries instead of waiting
                 }
-
-                continue; // try eagerly reading the next batch of entries instead of waiting
             }
 
             await Task.Delay(pollingInterval, cancellationToken).ConfigureAwait(false);

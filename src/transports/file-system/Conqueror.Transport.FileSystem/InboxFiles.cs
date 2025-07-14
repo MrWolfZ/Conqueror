@@ -98,12 +98,12 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath) : IDisposable
     {
         var inboxFilePath = GetInboxFilePath(tag);
 
-        if (!inboxFilePath.FileExists())
+        var handle = await inboxFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+
+        if (handle is null)
         {
             return new(0);
         }
-
-        var handle = await inboxFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
 
         await using var handleDisposable = handle.ConfigureAwait(false);
 
@@ -153,7 +153,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath) : IDisposable
                         cancellationToken.ThrowIfCancellationRequested();
 
                         // we only acquire the file lock when the file exists and has at least one entry (ignoring the marker entry)
-                        if (inboxFilePath.FileExists() && inboxFilePath.GetLength() > EntryLength)
+                        if (inboxFilePath.GetFileInfo() is { Exists: true, Length: > EntryLength })
                         {
                             var handle = await inboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
                             inboxHandleDisposable.Add(handle);

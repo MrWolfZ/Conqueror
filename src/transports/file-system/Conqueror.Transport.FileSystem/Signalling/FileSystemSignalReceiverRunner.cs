@@ -128,6 +128,8 @@ internal sealed class FileSystemSignalReceiverRunner(
                                                             cancellationToken)
                                                         .ConfigureAwait(false);
 
+                                Debug.Assert(signal is not null, $"the signal payload file for tag '{tag}' and ID '{entryId}' should exist");
+
                                 var metadata = await store.ContentFiles.ReadMetadata(
                                                               tag,
                                                               entryId,

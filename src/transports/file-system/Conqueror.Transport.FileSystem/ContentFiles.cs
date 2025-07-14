@@ -42,7 +42,7 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         await handle.WriteJson(metadata, jsonTypeInfo, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<object> ReadPayload<TState>(
+    public async Task<object?> ReadPayload<TState>(
         Tag tag,
         EntryId entryId,
         string fileExtension,
@@ -55,6 +55,11 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         payloadFilePath.DirectoryPath.AssertExists();
 
         var handle = await payloadFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+
+        if (handle is null)
+        {
+            return null;
+        }
 
         await using var handleDisposable = handle.ConfigureAwait(false);
 
@@ -97,20 +102,20 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         TimeSpan pollingInterval,
         CancellationToken cancellationToken)
     {
-        var payloadFilePath = GetPayloadFilePath(tag, entryId, fileExtension);
-
         while (!cancellationToken.IsCancellationRequested)
         {
-            if (payloadFilePath.FileExists())
+            var result = await ReadPayload(
+                    tag,
+                    entryId,
+                    fileExtension,
+                    readFn,
+                    state,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            if (result is not null)
             {
-                return await ReadPayload(
-                        tag,
-                        entryId,
-                        fileExtension,
-                        readFn,
-                        state,
-                        cancellationToken)
-                    .ConfigureAwait(false);
+                return result;
             }
 
             await Task.Delay(pollingInterval, cancellationToken).ConfigureAwait(false);

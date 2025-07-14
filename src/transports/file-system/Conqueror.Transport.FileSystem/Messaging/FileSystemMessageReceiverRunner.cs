@@ -63,6 +63,8 @@ internal sealed class FileSystemMessageReceiverRunner(
                                                      cancellationToken)
                                                  .ConfigureAwait(false);
 
+                        Debug.Assert(message is not null, $"the message payload file for tag '{tag}' and ID '{id}' should exist");
+
                         var messageMetadata = await store.ContentFiles.ReadMetadata(
                                                              tag,
                                                              id,
@@ -175,7 +177,7 @@ internal sealed class FileSystemMessageReceiverRunner(
                 catch (Exception ex)
                 {
                     throw new MessageReceiverExecutionFailedException(
-                        $"an exception occured while running receiver for signal handler type '{receiver.HandlerType}'",
+                        $"an exception occured while running receiver for message handler type '{receiver.HandlerType}'",
                         ex)
                     {
                         HandlerType = receiver.HandlerType,

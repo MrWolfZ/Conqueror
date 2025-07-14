@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
 namespace Conqueror.Transport.FileSystem;
@@ -7,15 +8,26 @@ internal static class FileOperations
 {
     public static bool FileExists(this FilePath filePath) => File.Exists(filePath);
 
-    public static long GetLength(this FilePath filePath) => new FileInfo(filePath).Length;
+    public static FileInfo GetFileInfo(this FilePath filePath) => new(filePath);
 
-    public static async Task<ReadOnlyFileHandle> OpenRead(
+    public static async Task<ReadOnlyFileHandle?> OpenRead(
         this FilePath filePath,
         CancellationToken cancellationToken)
     {
-        var fileStream = await filePath.OpenWithRetry(FileAccess.Read, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var fileStream = await filePath.OpenWithRetry(FileAccess.Read, cancellationToken, mode: FileMode.Open).ConfigureAwait(false);
 
-        return new(filePath, fileStream);
+            return new(filePath, fileStream);
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return null;
+        }
     }
 
     public static async Task<ReadWriteFileHandle> OpenReadWrite(
@@ -100,10 +112,15 @@ internal static class FileOperations
         stream.SetLength(stream.Length - lineLength);
     }
 
+    [SuppressMessage(
+        "Major Bug",
+        "S1751:Loops with at most one iteration should be refactored",
+        Justification = "We want to retry opening the file until it is available.")]
     private static async ValueTask<FileStream> OpenWithRetry(
         this FilePath filePath,
         FileAccess access,
         CancellationToken cancellationToken,
+        FileMode mode = FileMode.OpenOrCreate,
         FileShare share = FileShare.Read,
         int maxAttempts = 15,
         int initialDelayMs = 0,
@@ -120,11 +137,11 @@ internal static class FileOperations
             {
                 return new(
                     filePath,
-                    FileMode.OpenOrCreate,
+                    mode,
                     access,
                     share);
             }
-            catch (IOException)
+            catch (IOException iex) when (iex is not FileNotFoundException and not DirectoryNotFoundException)
             {
                 // File is likely in use
                 attempt += 1;
