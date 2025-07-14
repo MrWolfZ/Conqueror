@@ -485,6 +485,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
                                                                         .OfType<Exception>()
                                                                         .OrderBy(ex => ex.Message)
                                                                         .SequenceEqual(handlerExceptions)));
+
             await testCase.OnHandlerExceptions(host);
 
             // the initial connection task should not be affected by handler exceptions

@@ -704,7 +704,7 @@ public static partial class FileSystemSignalTestCases
                        .WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
 
                 // give client time to disconnect due to handler failure
-                await Task.Delay(50, ct);
+                await Task.Delay(100, ct);
 
                 await p.For(TestSignal.T)
                        .WithDefaultPublisherConfiguration().Handle(new() { Payload = 40 }, ct);

@@ -536,8 +536,6 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                     Throws.Nothing);
             }
 
-            AssertReceivedMessages(receivedMessages, testCase, host);
-
             await Assert.ThatAsync(
                 () => receiverHost.ReceiverExecutionHandle.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
                 Throws.InstanceOf<MessageReceiverExecutionFailedException>()
@@ -553,6 +551,9 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                                                                         .OfType<Exception>()
                                                                         .OrderBy(ex => ex.Message)
                                                                         .SequenceEqual(handlerExceptions)));
+
+            AssertReceivedMessages(receivedMessages, testCase, host);
+
             await testCase.OnHandlerExceptions(host);
 
             // the initial connection task should not be affected by handler exceptions
