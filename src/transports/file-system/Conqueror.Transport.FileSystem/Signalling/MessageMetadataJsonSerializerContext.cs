@@ -1,7 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace Conqueror.Transport.FileSystem.Signalling;
+﻿namespace Conqueror.Transport.FileSystem.Signalling;
 
 [JsonSourceGenerationOptions(JsonSerializerDefaults.Web)]
 [JsonSerializable(typeof(SignalMetadata))]

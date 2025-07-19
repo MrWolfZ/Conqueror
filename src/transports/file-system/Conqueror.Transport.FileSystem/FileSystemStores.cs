@@ -8,8 +8,12 @@ internal sealed class FileSystemStores : IDisposable
     private readonly ConcurrentDictionary<DirectoryPath, MessageFileSystemStore> messageStoreByBaseDirectory = [];
     private readonly ConcurrentDictionary<DirectoryPath, SignalFileSystemStore> signalStoreByBaseDirectory = [];
 
+    private int disposedFlag;
+
     public MessageFileSystemStore GetMessageStore(DirectoryPath baseDirectoryPath)
     {
+        ThrowIfDisposed();
+
         baseDirectoryPath.AssertExists();
 
         var messageStoreDirectory = baseDirectoryPath.SubDir("messages");
@@ -33,6 +37,8 @@ internal sealed class FileSystemStores : IDisposable
 
     public SignalFileSystemStore GetSignalStore(DirectoryPath baseDirectoryPath)
     {
+        ThrowIfDisposed();
+
         baseDirectoryPath.AssertExists();
 
         var signalStoreDirectory = baseDirectoryPath.SubDir("signals");
@@ -56,9 +62,23 @@ internal sealed class FileSystemStores : IDisposable
 
     public void Dispose()
     {
-        foreach (var file in messageStoreByBaseDirectory.Values)
+        var prevValue = Interlocked.Exchange(ref disposedFlag, 1);
+
+        if (prevValue != 0)
         {
-            file.Dispose();
+            return;
+        }
+
+        foreach (var store in messageStoreByBaseDirectory.Values)
+        {
+            store.Dispose();
+        }
+
+        foreach (var store in signalStoreByBaseDirectory.Values)
+        {
+            store.Dispose();
         }
     }
+
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(disposedFlag != 0, typeof(FileSystemStores));
 }

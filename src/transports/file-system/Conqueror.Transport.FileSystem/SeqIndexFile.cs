@@ -1,18 +1,23 @@
-﻿namespace Conqueror.Transport.FileSystem;
+﻿using System.Threading.Channels;
 
-internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath) : IDisposable
+namespace Conqueror.Transport.FileSystem;
+
+internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles tagIdFiles) : IDisposable
 {
     private const int SeqNrLength = 12;
-    private const int EntryLength = EntryId.IdLength + 1;
+    private const int HeaderLength = SeqNrLength + 1; // including newline
+    private const int TagIdLength = 6;
+    private const int EntryLength = EntryId.IdLength + 1 + TagIdLength + 1; // including separator and newline
+    private const char Separator = '|';
 
-    private readonly DisposableSemaphore semaphore = new();
+    private readonly ConcurrentDictionary<TimeSpan, Poller> pollerByPollingInterval = new();
     private readonly FilePath seqFilePath = baseDirectoryPath.File("seq-index.txt");
 
-    public async Task<SeqNr> Append(EntryId id, CancellationToken cancellationToken)
+    public async Task<SeqNr> Append(EntryId id, Tag tag, CancellationToken cancellationToken)
     {
         baseDirectoryPath.AssertExists();
 
-        using var d = await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        var tagId = await tagIdFiles.GetId(tag, cancellationToken).ConfigureAwait(false);
 
         var handle = await seqFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
 
@@ -20,103 +25,159 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath) : IDisposabl
 
         ThrowOnInvalidLength(handle);
 
-        SeqNr currentSeqNr;
+        SeqNr compactedSeqNr;
 
         if (handle.Stream.Length == 0)
         {
-            currentSeqNr = new(0);
-            await WriteCompactedSeqNr(handle.Writer, currentSeqNr).ConfigureAwait(false);
+            compactedSeqNr = new(0);
+            await WriteCompactedSeqNr(handle.Writer, compactedSeqNr).ConfigureAwait(false);
         }
         else
         {
-            currentSeqNr = await GetCompactedSeqNr(handle.Reader, cancellationToken).ConfigureAwait(false);
+            compactedSeqNr = await GetCompactedSeqNr(handle.Reader, cancellationToken).ConfigureAwait(false);
         }
 
-        var nrOfEntries = (ulong)(handle.Stream.Length - SeqNrLength - 1) / EntryLength;
+        var nrOfEntries = (ulong)(handle.Stream.Length - HeaderLength) / EntryLength;
 
-        currentSeqNr = new(currentSeqNr + nrOfEntries + 1);
+        var currentSeqNr = new SeqNr(compactedSeqNr + nrOfEntries + 1);
 
         _ = handle.Stream.Seek(0, SeekOrigin.End);
 
+        var content = $"{id}{Separator}{tagId.ToPaddedString(TagIdLength)}\n";
+
+        Debug.Assert(content.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {content.Length}");
+
         // we do not allow cancellation here to prevent corruption of the file
-        await handle.Writer.WriteAsync($"{id}\n".AsMemory(), CancellationToken.None).ConfigureAwait(false);
+        await handle.Writer.WriteAsync(content.AsMemory(), CancellationToken.None).ConfigureAwait(false);
+
+        foreach (var poller in pollerByPollingInterval.Values)
+        {
+            poller.Notify(compactedSeqNr, currentSeqNr);
+        }
 
         return currentSeqNr;
     }
 
-    public async IAsyncEnumerable<(EntryId EntryId, SeqNr SeqNr)> ReadChanges(
+    public async IAsyncEnumerable<IReadOnlyCollection<(EntryId EntryId, Tag Tag, SeqNr SeqNr)>> ReadChanges(
         SeqNr startFromSeqNr,
         TimeSpan pollingInterval,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         baseDirectoryPath.AssertExists();
 
-        var currentSeqNr = (ulong)startFromSeqNr;
+        var currentSeqNr = startFromSeqNr;
 
-        while (!cancellationToken.IsCancellationRequested)
+        var poller = pollerByPollingInterval.GetOrAdd(pollingInterval, i => new(seqFilePath, i));
+
+        var channel = Channel.CreateBounded<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)>(
+            new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest });
+
+        using var watchDisposable = poller.Watch(channel.Writer);
+
+        await foreach (var (compactedSeqNr, latestSeqNr) in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
         {
-            var handle = await seqFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
-
-            if (handle is not null)
+            if (latestSeqNr <= currentSeqNr)
             {
-                EntryId[]? entries = null;
-
-                await using (handle.ConfigureAwait(false))
-                {
-                    if (handle.Stream.Length >= SeqNrLength + 1)
-                    {
-                        var compactedSeqNr = await GetCompactedSeqNr(handle.Reader, cancellationToken).ConfigureAwait(false);
-                        var seqNrOffset = currentSeqNr - compactedSeqNr;
-
-                        // ReSharper disable once ArrangeRedundantParentheses
-                        var startAt = (seqNrOffset * EntryLength) + SeqNrLength + 1;
-
-                        var nrOfCharsToRead = (int)((ulong)handle.Stream.Length - startAt);
-                        var nrOfEntries = nrOfCharsToRead / EntryLength;
-
-                        if (nrOfCharsToRead > 0)
-                        {
-                            using var buffer = new CharBuffer(nrOfCharsToRead);
-
-                            var nowAt = handle.Stream.Seek((long)startAt, SeekOrigin.Begin);
-                            handle.Reader.DiscardBufferedData();
-
-                            Debug.Assert(nowAt == (long)startAt, $"expected to seek to {startAt}, but seeked to {nowAt}");
-
-                            var readCount = await handle.Reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
-
-                            Debug.Assert(readCount == nrOfCharsToRead, $"expected to read {nrOfCharsToRead} bytes, but read {readCount}");
-
-                            entries = new EntryId[nrOfEntries];
-
-                            for (int entryIndex = 0, bufferIndex = 0; bufferIndex < nrOfEntries * EntryLength; bufferIndex += EntryLength, entryIndex += 1)
-                            {
-                                entries[entryIndex] = new(new(buffer.Span.Slice(bufferIndex, EntryId.IdLength)));
-                            }
-                        }
-                    }
-                }
-
-                if (entries is not null)
-                {
-                    foreach (var entry in entries)
-                    {
-                        currentSeqNr += 1;
-
-                        yield return (entry, new(currentSeqNr));
-                    }
-
-                    continue; // try eagerly reading the next batch of entries instead of waiting
-                }
+                continue;
             }
 
-            await Task.Delay(pollingInterval, cancellationToken).ConfigureAwait(false);
+            await foreach (var batch in ReadBetween(
+                                   currentSeqNr,
+                                   latestSeqNr,
+                                   compactedSeqNr,
+                                   cancellationToken)
+                               .ConfigureAwait(false))
+            {
+                yield return batch;
+            }
+
+            currentSeqNr = latestSeqNr;
         }
     }
 
     public void Dispose()
     {
-        semaphore.Dispose();
+        foreach (var poller in pollerByPollingInterval.Values)
+        {
+            poller.Dispose();
+        }
+    }
+
+    private async IAsyncEnumerable<IReadOnlyCollection<(EntryId EntryId, Tag Tag, SeqNr SeqNr)>> ReadBetween(
+        SeqNr startAt,
+        SeqNr endAt,
+        SeqNr compactedSeqNr,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var handle = await seqFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+
+        Debug.Assert(handle is not null, "expected handle to be non-null");
+
+        (EntryId EntryId, Tag Tag, SeqNr SeqNr)[] entries;
+
+        await using (handle.ConfigureAwait(false))
+        {
+            var seqNrOffset = startAt - compactedSeqNr;
+
+            // ReSharper disable once ArrangeRedundantParentheses
+            var startAtOffset = (seqNrOffset * EntryLength) + HeaderLength;
+
+            // TODO: read in batches from read-through cache
+            var nrOfEntries = (int)(endAt - startAt);
+            var nrOfCharsToRead = nrOfEntries * EntryLength;
+
+            Debug.Assert(nrOfCharsToRead > 0, $"expected nr of chars to read to be greater than 0, but was {nrOfCharsToRead}");
+
+            using var buffer = new CharBuffer(nrOfCharsToRead);
+
+            var nowAt = handle.Stream.Seek((long)startAtOffset, SeekOrigin.Begin);
+            handle.Reader.DiscardBufferedData();
+
+            Debug.Assert(nowAt == (long)startAtOffset, $"expected to seek to {startAtOffset}, but seeked to {nowAt}");
+
+            var readCount = await handle.Reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
+
+            Debug.Assert(readCount == nrOfCharsToRead, $"expected to read {nrOfCharsToRead} bytes, but read {readCount}");
+
+            entries = new (EntryId EntryId, Tag Tag, SeqNr SeqNr)[nrOfEntries];
+
+            for (int entryIndex = 0, bufferIndex = 0; bufferIndex < nrOfEntries * EntryLength; bufferIndex += EntryLength, entryIndex += 1)
+            {
+                var entryId = new EntryId(new(buffer.Span.Slice(bufferIndex, EntryId.IdLength)));
+                var tagId = new TagId(uint.Parse(buffer.Span.Slice(bufferIndex + EntryId.IdLength + 1, TagIdLength)));
+                var tag = await tagIdFiles.GetById(tagId, cancellationToken).ConfigureAwait(false);
+                var seqNr = new SeqNr(startAt + (ulong)entryIndex + 1);
+                entries[entryIndex] = (entryId, tag, seqNr);
+            }
+        }
+
+        yield return entries;
+    }
+
+    [SuppressMessage(
+        "Minor Code Smell",
+        "S3398:\"private\" methods called only by inner classes should be moved to those classes",
+        Justification = "the poller should be simple and only contain code related to polling, not file access")]
+    private static async Task<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)?> GetCurrentSeqNr(FilePath seqFilePath, CancellationToken cancellationToken)
+    {
+        var handle = await seqFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+
+        if (handle is null)
+        {
+            return null;
+        }
+
+        await using var handleDisposable = handle.ConfigureAwait(false);
+
+        if (handle.Stream.Length < HeaderLength)
+        {
+            return null;
+        }
+
+        var compactedSeqNr = await GetCompactedSeqNr(handle.Reader, cancellationToken).ConfigureAwait(false);
+        var nrOfEntries = (handle.Stream.Length - HeaderLength) / EntryLength;
+
+        return (compactedSeqNr, new(compactedSeqNr + (ulong)nrOfEntries));
     }
 
     private static async Task<SeqNr> GetCompactedSeqNr(StreamReader reader, CancellationToken cancellationToken)
@@ -156,6 +217,108 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath) : IDisposabl
         {
             throw new InvalidOperationException(
                 $"signal seq index file '{handle.FilePath}' is corrupted, expected length to be a multiple of {EntryLength}, but it was {entriesLength}");
+        }
+    }
+
+    private sealed class Poller(FilePath seqFilePath, TimeSpan pollingInterval) : IDisposable
+    {
+        private readonly CancellationTokenSource cancellationTokenSource = new();
+        private readonly ConcurrentDictionary<Guid, ChannelWriter<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)>> channelWriters = [];
+
+        private long latestFileLength = -1;
+        private (SeqNr CompactedSeqNr, SeqNr LatestSeqNr)? latestResult;
+        private Timer? timer;
+        private int watchCount;
+
+        public IDisposable Watch(ChannelWriter<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)> channelWriter)
+        {
+            var channelWriterId = Guid.NewGuid();
+            _ = channelWriters.TryAdd(channelWriterId, channelWriter);
+
+            if (latestResult is not null)
+            {
+                _ = channelWriter.TryWrite(latestResult.Value);
+            }
+
+            if (Interlocked.Increment(ref watchCount) == 1)
+            {
+                timer = new(
+                    OnTimerElapsed,
+                    null,
+                    TimeSpan.Zero,
+                    pollingInterval);
+            }
+
+            return new Disposable(this, channelWriterId);
+        }
+
+        public void Notify(SeqNr compactedSeqNr, SeqNr latestSeqNr)
+        {
+            var res = (compactedSeqNr, latestSeqNr);
+
+            foreach (var channelWriter in channelWriters.Values)
+            {
+                _ = channelWriter.TryWrite(res);
+            }
+
+            latestResult = res;
+        }
+
+        public void Dispose()
+        {
+            timer?.Dispose();
+
+            cancellationTokenSource.Cancel();
+            cancellationTokenSource.Dispose();
+        }
+
+        private async void OnTimerElapsed(object? state)
+        {
+            try
+            {
+                var seqFileInfo = seqFilePath.GetFileInfo();
+
+                if (!seqFileInfo.Exists || seqFileInfo.Length == latestFileLength)
+                {
+                    return;
+                }
+
+                if (await GetCurrentSeqNr(seqFilePath, cancellationTokenSource.Token).ConfigureAwait(false) is { } seqNr)
+                {
+                    foreach (var channelWriter in channelWriters.Values)
+                    {
+                        _ = channelWriter.TryWrite(seqNr);
+                    }
+
+                    latestResult = seqNr;
+                }
+
+                latestFileLength = seqFileInfo.Length;
+            }
+            catch (Exception e)
+            {
+                foreach (var channelWriter in channelWriters.Values)
+                {
+                    _ = channelWriter.TryComplete(e);
+                }
+            }
+        }
+
+        private sealed class Disposable(Poller poller, Guid channelWriterId) : IDisposable
+        {
+            public void Dispose()
+            {
+                _ = poller.channelWriters.Remove(channelWriterId, out _);
+
+                if (Interlocked.Decrement(ref poller.watchCount) == 0)
+                {
+                    poller.timer?.Dispose();
+                    poller.timer = null;
+
+                    poller.latestResult = null;
+                    poller.latestFileLength = -1;
+                }
+            }
         }
     }
 }

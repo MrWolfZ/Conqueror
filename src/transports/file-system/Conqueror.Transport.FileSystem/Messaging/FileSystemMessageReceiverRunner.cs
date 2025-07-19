@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Transport.FileSystem.Messaging;
 
@@ -23,6 +22,7 @@ internal sealed class FileSystemMessageReceiverRunner(
             onDispose: null);
     }
 
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
     private async Task Run(
         FileSystemMessageReceiver receiver,
         TaskCompletionSource connectionTaskCompletionSource,
@@ -32,134 +32,48 @@ internal sealed class FileSystemMessageReceiverRunner(
 
         var tags = receiver.Tags.Select(t => new Tag(t)).ToArray();
 
+        var inboxName = new InboxName(config.Name);
+
         try
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                Task? seqFileProcessingTask = null;
+                Task? inboxFileProcessingTask = null;
+
                 try
                 {
                     var fileSystemStores = receiver.ServiceProvider.GetRequiredService<FileSystemStores>();
                     var store = fileSystemStores.GetMessageStore(new(config.BaseDirectoryPath));
-
-                    _ = connectionTaskCompletionSource.TrySetResult();
+                    var inboxFiles = store.GetInboxFiles();
 
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    await foreach (var (tag, seqNr, id) in store.InboxFiles.LeaseNextMessage(
-                                                                    tags,
-                                                                    config.PollingInterval,
-                                                                    config.LeaseDuration,
-                                                                    cancellationToken)
-                                                                .ConfigureAwait(false))
-                    {
-                        var (messageFileExtension, responseFileExtension) = receiver.GetFileExtensions(tag);
+                    seqFileProcessingTask = ProcessSeqFileChanges(
+                        store.SeqIndexFile,
+                        inboxFiles,
+                        inboxName,
+                        tags,
+                        config.PollingInterval,
+                        cts.Token);
 
-                        var message = await store.ContentFiles.ReadPayload(
-                                                     tag,
-                                                     id,
-                                                     messageFileExtension,
-                                                     static (s, stream, ct) => s.receiver.ReadMessage(s.tag, stream, ct),
-                                                     (tag, receiver),
-                                                     cancellationToken)
-                                                 .ConfigureAwait(false);
+                    inboxFileProcessingTask = ProcessInbox(
+                        receiver,
+                        inboxFiles,
+                        store.ContentFiles,
+                        inboxName,
+                        config,
+                        cts.Token);
 
-                        Debug.Assert(message is not null, $"the message payload file for tag '{tag}' and ID '{id}' should exist");
+                    _ = connectionTaskCompletionSource.TrySetResult();
 
-                        var messageMetadata = await store.ContentFiles.ReadMetadata(
-                                                             tag,
-                                                             id,
-                                                             fileNameSuffix: null,
-                                                             MessageMetadataJsonSerializerContext.Default.MessageMetadata,
-                                                             cancellationToken)
-                                                         .ConfigureAwait(false);
+                    // if any of the two processing tasks completes, we need to stop
+                    var completedTask = await Task.WhenAny(seqFileProcessingTask, inboxFileProcessingTask).ConfigureAwait(false);
 
-                        if (messageMetadata.TimeToLive is { } ttl)
-                        {
-                            var now = DateTimeOffset.UtcNow;
-                            var isExpired = now > messageMetadata.SentAtUtc + ttl;
-
-                            if (isExpired)
-                            {
-                                // TODO: append to dead letter queue
-                                await store.InboxFiles.RemoveEntry(tag, seqNr, cancellationToken).ConfigureAwait(false);
-
-                                continue;
-                            }
-                        }
-
-                        using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
-
-                        if (messageMetadata.EncodedContextData is not null)
-                        {
-                            conquerorContext.DecodeContextData(messageMetadata.EncodedContextData);
-                        }
-
-                        object response;
-
-                        try
-                        {
-                            config.MessageCallback?.Invoke(message);
-
-                            response = await receiver.InvokeHandler(tag, message, cancellationToken).ConfigureAwait(false);
-                        }
-                        catch
-                        {
-                            var updatedMetadata = messageMetadata with { NrOfFailedProcessingAttempts = messageMetadata.NrOfFailedProcessingAttempts + 1 };
-                            await store.ContentFiles.WriteMetadata(
-                                           tag,
-                                           id,
-                                           updatedMetadata,
-                                           fileNameSuffix: null,
-                                           MessageMetadataJsonSerializerContext.Default.MessageMetadata,
-                                           CancellationToken.None)
-                                       .ConfigureAwait(false);
-
-                            if (updatedMetadata.NrOfFailedProcessingAttempts >= config.LimitNrOfFailedProcessingAttempts)
-                            {
-                                // TODO: append to dead letter queue
-                                await store.InboxFiles.RemoveEntry(tag, seqNr, cancellationToken).ConfigureAwait(false);
-                            }
-                            else
-                            {
-                                await store.InboxFiles.GiveUpLease(tag, seqNr, cancellationToken).ConfigureAwait(false);
-                            }
-
-                            throw;
-                        }
-
-                        if (response is UnitMessageResponse)
-                        {
-                            await store.InboxFiles.RemoveEntry(tag, seqNr, cancellationToken).ConfigureAwait(false);
-
-                            continue;
-                        }
-
-                        var encodedContextData = conquerorContext.EncodeUpstreamContextData();
-
-                        await store.ContentFiles.WriteMetadata(
-                                       tag,
-                                       id,
-                                       new(id, encodedContextData),
-                                       fileNameSuffix: ".response",
-                                       MessageMetadataJsonSerializerContext.Default.MessageResponseMetadata,
-                                       cancellationToken)
-                                   .ConfigureAwait(false);
-
-                        await store.ContentFiles.WritePayload(
-                                       tag,
-                                       id,
-                                       $".response{responseFileExtension}",
-                                       static (state, stream, ct) => state.receiver.WriteResponse(
-                                           state.tag,
-                                           state.response,
-                                           stream,
-                                           ct),
-                                       (tag, receiver, response),
-                                       cancellationToken)
-                                   .ConfigureAwait(false);
-
-                        await store.InboxFiles.RemoveEntry(tag, seqNr, cancellationToken).ConfigureAwait(false);
-                    }
+                    // await the completed task to propagate any exception
+                    await completedTask.ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -184,6 +98,20 @@ internal sealed class FileSystemMessageReceiverRunner(
                         MessageTransportType = new(TransportName, MessageTransportRole.Receiver),
                     };
                 }
+                finally
+                {
+                    await cts.CancelAsync().ConfigureAwait(false);
+
+                    if (seqFileProcessingTask is { IsCompleted: false })
+                    {
+                        await seqFileProcessingTask.ConfigureAwait(false);
+                    }
+
+                    if (inboxFileProcessingTask is { IsCompleted: false })
+                    {
+                        await inboxFileProcessingTask.ConfigureAwait(false);
+                    }
+                }
             }
         }
         catch (Exception ex)
@@ -197,6 +125,197 @@ internal sealed class FileSystemMessageReceiverRunner(
         finally
         {
             _ = connectionTaskCompletionSource.TrySetResult();
+        }
+    }
+
+    private static async Task ProcessSeqFileChanges(
+        SeqIndexFile seqIndexFile,
+        InboxFiles inboxFiles,
+        InboxName inboxName,
+        Tag[] tags,
+        TimeSpan pollingInterval,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var disposable =
+                (await inboxFiles.GetWriteLock(inboxName, pollingInterval, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
+
+            var startAtSeqNr = await inboxFiles.GetCurrentSeqNr(inboxName, cancellationToken).ConfigureAwait(false);
+
+            var latestSeqNr = new SeqNr(0);
+
+            await foreach (var entry in seqIndexFile.ReadChanges(
+                                                        startAtSeqNr,
+                                                        pollingInterval,
+                                                        cancellationToken)
+                                                    .ConfigureAwait(false))
+            {
+                foreach (var (newEntryId, messageTag, seqNr) in entry)
+                {
+                    Debug.Assert(seqNr > latestSeqNr, $"expected the next seq nr {seqNr} to be greater than latest seq nr {latestSeqNr}");
+
+                    latestSeqNr = seqNr;
+
+                    var isRelevantEntry = tags.Contains(messageTag);
+
+                    if (isRelevantEntry)
+                    {
+                        await inboxFiles.Append(
+                                            inboxName,
+                                            seqNr,
+                                            newEntryId,
+                                            messageTag,
+                                            cancellationToken)
+                                        .ConfigureAwait(false);
+                    }
+                }
+            }
+        }
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
+        {
+            // we gracefully exit
+        }
+    }
+
+    private async Task ProcessInbox(
+        FileSystemMessageReceiver receiver,
+        InboxFiles inboxFiles,
+        ContentFiles contentFiles,
+        InboxName inboxName,
+        FileSystemMessageReceiverConfiguration config,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await foreach (var (tag, seqNr, entryId) in inboxFiles.LeaseNextMessage(
+                                                                      inboxName,
+                                                                      config.PollingInterval,
+                                                                      config.LeaseDuration,
+                                                                      cancellationToken)
+                                                                  .ConfigureAwait(false))
+            {
+                try
+                {
+                    var (messageFileExtension, responseFileExtension) = receiver.GetFileExtensions(tag);
+
+                    var message = await contentFiles.ReadPayload(
+                                                        tag,
+                                                        entryId,
+                                                        messageFileExtension,
+                                                        static (s, stream, ct) => s.receiver.ReadMessage(s.tag, stream, ct),
+                                                        (tag, receiver),
+                                                        cancellationToken)
+                                                    .ConfigureAwait(false);
+
+                    Debug.Assert(message is not null, $"the message payload file for tag '{tag}' and ID '{entryId}' should exist");
+
+                    var messageMetadata = await contentFiles.ReadMetadata(
+                                                                tag,
+                                                                entryId,
+                                                                fileNameSuffix: null,
+                                                                MessageMetadataJsonSerializerContext.Default.MessageMetadata,
+                                                                cancellationToken)
+                                                            .ConfigureAwait(false);
+
+                    if (messageMetadata.TimeToLive is { } ttl)
+                    {
+                        var now = DateTimeOffset.UtcNow;
+                        var isExpired = now > messageMetadata.SentAtUtc + ttl;
+
+                        if (isExpired)
+                        {
+                            // TODO: append to dead letter queue
+                            await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+
+                            continue;
+                        }
+                    }
+
+                    using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
+
+                    if (messageMetadata.EncodedContextData is not null)
+                    {
+                        conquerorContext.DecodeContextData(messageMetadata.EncodedContextData);
+                    }
+
+                    object response;
+
+                    try
+                    {
+                        config.MessageCallback?.Invoke(message);
+
+                        response = await receiver.InvokeHandler(tag, message, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        var updatedMetadata = messageMetadata with { NrOfFailedProcessingAttempts = messageMetadata.NrOfFailedProcessingAttempts + 1 };
+                        await contentFiles.WriteMetadata(
+                                              tag,
+                                              entryId,
+                                              updatedMetadata,
+                                              fileNameSuffix: null,
+                                              MessageMetadataJsonSerializerContext.Default.MessageMetadata,
+                                              CancellationToken.None)
+                                          .ConfigureAwait(false);
+
+                        if (updatedMetadata.NrOfFailedProcessingAttempts >= config.LimitNrOfFailedProcessingAttempts)
+                        {
+                            // TODO: append to dead letter queue
+                            await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            await inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                        }
+
+                        throw;
+                    }
+
+                    if (response is UnitMessageResponse)
+                    {
+                        await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+
+                        continue;
+                    }
+
+                    var encodedContextData = conquerorContext.EncodeUpstreamContextData();
+
+                    await contentFiles.WriteMetadata(
+                                          tag,
+                                          entryId,
+                                          new(entryId, encodedContextData),
+                                          fileNameSuffix: ".response",
+                                          MessageMetadataJsonSerializerContext.Default.MessageResponseMetadata,
+                                          cancellationToken)
+                                      .ConfigureAwait(false);
+
+                    await contentFiles.WritePayload(
+                                          tag,
+                                          entryId,
+                                          $".response{responseFileExtension}",
+                                          static (state, stream, ct) => state.receiver.WriteResponse(
+                                              state.tag,
+                                              state.response,
+                                              stream,
+                                              ct),
+                                          (tag, receiver, response),
+                                          cancellationToken)
+                                      .ConfigureAwait(false);
+
+                    await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                    await inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+
+                    throw;
+                }
+            }
+        }
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
+        {
+            // we gracefully exit
         }
     }
 }

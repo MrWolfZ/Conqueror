@@ -1,39 +1,62 @@
 ﻿using System.Diagnostics;
 using BenchmarkDotNet.Running;
 using Conqueror.Benchmarks;
+using Conqueror.Benchmarks.Transports;
 
-// ReSharper disable UnreachableSwitchCaseDueToIntegerAnalysis
-// ReSharper disable once UnreachableSwitchCaseDueToIntegerAnalysis
-
-var toRun = 1;
+var toRun = args.Length > 0 ? args[0] : "message-bench";
 
 switch (toRun)
 {
-    case 1:
+    case "message-bench":
         _ = BenchmarkRunner.Run<MessageBenchmarks>();
 
         break;
 
-    case 2:
+    case "message-manual":
     {
         var sw = Stopwatch.StartNew();
-        new MessageBenchmarks().RunWithConquerorPreBuiltSender(100_000, 16, 20);
+        new MessageBenchmarks().RunWithConquerorPreBuiltSender(numOfExecutions: 100_000, parallelism: 16, numOfMiddlewares: 20);
         Console.WriteLine(sw.Elapsed);
 
         break;
     }
 
-    case 3:
+    case "middleware-logging-bench":
         _ = BenchmarkRunner.Run<MessageLoggingMiddlewareBenchmarks>();
 
         break;
 
-    case 4:
+    case "middleware-logging-manual":
     {
         var sw = Stopwatch.StartNew();
-        new MessageLoggingMiddlewareBenchmarks().Run(100_000, 16);
+        new MessageLoggingMiddlewareBenchmarks().Run(numOfExecutions: 100_000, parallelism: 16);
         Console.WriteLine(sw.Elapsed);
 
         break;
     }
+
+    case "transport-file-system-message-bench":
+        FileSystemMessageBenchmarks.Init();
+        _ = BenchmarkRunner.Run<FileSystemMessageBenchmarks>();
+
+        break;
+
+    case "transport-file-system-message-manual":
+    {
+        FileSystemMessageBenchmarks.Init();
+
+        var sw = Stopwatch.StartNew();
+        new FileSystemMessageBenchmarks().Run(
+            nrOfMessages: 1_000,
+            nrOfSenders: 4,
+            nrOfReceivers: 4,
+            runSendersAndReceiversInSameProvider: false);
+
+        Console.WriteLine(sw.Elapsed);
+
+        break;
+    }
+
+    default:
+        throw new ArgumentOutOfRangeException(nameof(toRun), toRun, $"unknown benchmark to run: {toRun}");
 }

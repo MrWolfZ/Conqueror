@@ -10,6 +10,7 @@ internal sealed class FileSystemMessageReceiver(
     private readonly Dictionary<string, Type> messageTypeByTag = [];
     private readonly Dictionary<string, Func<Stream, CancellationToken, Task<object?>>> parserByTag = [];
     private readonly Dictionary<string, Func<object, Stream, CancellationToken, Task>> responseWriterByTag = [];
+    private readonly List<string> tags = [];
 
     public IReadOnlyCollection<Type> MessageTypes { get; } = messageTypes;
 
@@ -19,7 +20,7 @@ internal sealed class FileSystemMessageReceiver(
 
     public bool IsEnabled => Configuration is not null;
 
-    public IReadOnlyCollection<string> Tags => invokerByTag.Keys;
+    public IReadOnlyCollection<string> Tags => tags;
 
     public FileSystemMessageReceiverConfiguration? Configuration { get; private set; }
 
@@ -27,6 +28,7 @@ internal sealed class FileSystemMessageReceiver(
     {
         Configuration = new()
         {
+            Name = HandlerType?.Name ?? $"delegate-{string.Join("-", Tags)}",
             BaseDirectoryPath = baseDirectoryPath,
 
             // by setting the lease duration to zero, messages will be immediately available for reprocessing
@@ -42,6 +44,7 @@ internal sealed class FileSystemMessageReceiver(
     {
         Configuration = new()
         {
+            Name = HandlerType?.Name ?? $"delegate-{string.Join("-", Tags)}",
             BaseDirectoryPath = baseDirectoryPath,
             LeaseDuration = leaseDuration,
             PollingInterval = pollingInterval,
@@ -63,6 +66,9 @@ internal sealed class FileSystemMessageReceiver(
             throw new InvalidOperationException(
                 $"the tag '{TMessage.Tag}' is already used by message type '{messageTypeByTag[TMessage.Tag]}'");
         }
+
+        tags.Add(TMessage.Tag);
+        tags.Sort(StringComparer.OrdinalIgnoreCase);
 
         invokerByTag[TMessage.Tag] = async (message, ct)
             =>

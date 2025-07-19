@@ -99,7 +99,6 @@ public sealed class FileSystemSignalTransportConformityReceiverTestHost : ISigna
         }
 
         _ = receiver.EnableMultipleCompetingInstances(
-                        receiver.HandlerType?.Name ?? "delegate-test-receiver",
                         baseDirectory.FullName,
                         leaseDuration: host.TestTimeout,
                         pollingInterval: TimeSpan.FromMilliseconds(10))

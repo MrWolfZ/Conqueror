@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
+﻿using System.Text.Json.Serialization.Metadata;
 
 namespace Conqueror.Transport.FileSystem;
 
@@ -10,9 +8,7 @@ internal static class FileOperations
 
     public static FileInfo GetFileInfo(this FilePath filePath) => new(filePath);
 
-    public static async Task<ReadOnlyFileHandle?> OpenRead(
-        this FilePath filePath,
-        CancellationToken cancellationToken)
+    public static async Task<ReadOnlyFileHandle?> OpenRead(this FilePath filePath, CancellationToken cancellationToken)
     {
         try
         {
@@ -30,13 +26,33 @@ internal static class FileOperations
         }
     }
 
-    public static async Task<ReadWriteFileHandle> OpenReadWrite(
-        this FilePath filePath,
-        CancellationToken cancellationToken)
+    public static async Task<ReadWriteFileHandle> OpenReadWrite(this FilePath filePath, CancellationToken cancellationToken)
     {
         var fileStream = await filePath.OpenWithRetry(FileAccess.ReadWrite, cancellationToken).ConfigureAwait(false);
 
         return new(filePath, fileStream);
+    }
+
+    [SuppressMessage(
+        "Reliability",
+        "CA2000:Dispose objects before losing scope",
+        Justification = "false positive, stream is passed to caller in the handle")]
+    public static ReadOnlyFileHandle? TryOpenRead(this FilePath filePath)
+    {
+        try
+        {
+            var fileStream = new FileStream(
+                filePath,
+                FileMode.OpenOrCreate,
+                FileAccess.Read,
+                FileShare.None);
+
+            return new(filePath, fileStream);
+        }
+        catch (IOException)
+        {
+            return null;
+        }
     }
 
     public static async Task WriteJson<T>(
@@ -53,10 +69,7 @@ internal static class FileOperations
                             .ConfigureAwait(false);
     }
 
-    public static async Task<T> ReadJson<T>(
-        this ReadWriteFileHandle handle,
-        JsonTypeInfo<T> jsonTypeInfo,
-        CancellationToken cancellationToken)
+    public static async Task<T> ReadJson<T>(this ReadWriteFileHandle handle, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
     {
         var result = await JsonSerializer.DeserializeAsync(
                                              handle.Stream,
@@ -122,12 +135,14 @@ internal static class FileOperations
         CancellationToken cancellationToken,
         FileMode mode = FileMode.OpenOrCreate,
         FileShare share = FileShare.Read,
-        int maxAttempts = 15,
+        int maxAttempts = 25,
         int initialDelayMs = 0,
         int maxDelayMs = 1000)
     {
         var attempt = 0;
         var delayMs = initialDelayMs;
+
+        Stopwatch? sw = null;
 
         while (true)
         {
@@ -139,16 +154,28 @@ internal static class FileOperations
                     filePath,
                     mode,
                     access,
-                    share);
+                    share,
+                    bufferSize: 0);
             }
             catch (IOException iex) when (iex is not FileNotFoundException and not DirectoryNotFoundException)
             {
+                sw ??= Stopwatch.StartNew();
+
                 // File is likely in use
                 attempt += 1;
 
                 if (attempt >= maxAttempts)
                 {
-                    throw new IOException($"Could not acquire lock on file '{filePath}' after {maxAttempts} attempts.");
+                    throw new IOException(
+                        $"Could not acquire lock on file '{filePath}' after {maxAttempts} attempts (elapsed time: {sw.ElapsedMilliseconds}ms).",
+                        iex);
+                }
+
+                // we try to acquire the file lock a few times without delay before we start backing off
+                if (attempt >= 10)
+                {
+                    // Exponential backoff with cap
+                    delayMs = delayMs == 0 ? 10 : Math.Min(delayMs * 2, maxDelayMs);
                 }
 
                 if (delayMs > 0)
@@ -158,13 +185,6 @@ internal static class FileOperations
                 else
                 {
                     await Task.Yield(); // Yield to other threads to avoid busy-waiting.
-                }
-
-                // we try to acquire the file lock a few times without delay before we start backing off
-                if (attempt >= 5)
-                {
-                    // Exponential backoff with cap
-                    delayMs = delayMs == 0 ? 10 : Math.Min(delayMs * 2, maxDelayMs);
                 }
             }
         }

@@ -2,8 +2,6 @@
 
 internal readonly record struct FilePath
 {
-    public readonly DirectoryPath DirectoryPath;
-
     private readonly string path;
 
     public FilePath(string path)
@@ -16,12 +14,11 @@ internal readonly record struct FilePath
         }
 
         this.path = path;
-
-        var directoryName = Path.GetDirectoryName(path)
-                            ?? throw new ArgumentException($"expected path '{path}' to have a directory name, but it did not");
-
-        DirectoryPath = new(directoryName);
     }
+
+    public DirectoryPath DirectoryPath => new(
+        Path.GetDirectoryName(path)
+        ?? throw new ArgumentException($"expected path '{path}' to have a directory name, but it did not"));
 
     public static implicit operator string(FilePath path) => path.path;
 

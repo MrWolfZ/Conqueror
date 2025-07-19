@@ -10,6 +10,7 @@ internal sealed class FileSystemSignalReceiver(
     private readonly ConcurrentDictionary<Type, List<ISignalReceiverHandlerInvoker>> invokersBySignalType = [];
     private readonly Dictionary<string, Func<Stream, CancellationToken, Task<object?>>> parserByTag = [];
     private readonly Dictionary<string, Type> signalTypeByTag = [];
+    private readonly List<string> tags = [];
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
@@ -18,19 +19,18 @@ internal sealed class FileSystemSignalReceiver(
 
     public bool IsEnabled => Configuration is not null;
 
-    public IReadOnlyCollection<string> Tags => parserByTag.Keys;
+    public IReadOnlyCollection<string> Tags => tags;
 
     public FileSystemSignalReceiverConfiguration? Configuration { get; private set; }
 
     public FileSystemSignalReceiverConfiguration EnableMultipleCompetingInstances(
-        string name,
         string baseDirectoryPath,
         TimeSpan leaseDuration,
         TimeSpan pollingInterval)
     {
         Configuration = new()
         {
-            Name = name,
+            Name = HandlerType?.Name ?? $"delegate-{string.Join("-", Tags)}",
             BaseDirectoryPath = baseDirectoryPath,
             LeaseDuration = leaseDuration,
             PollingInterval = pollingInterval,
@@ -39,11 +39,11 @@ internal sealed class FileSystemSignalReceiver(
         return Configuration;
     }
 
-    public FileSystemSignalReceiverConfiguration EnableSingleInstance(string name, string baseDirectoryPath, TimeSpan pollingInterval)
+    public FileSystemSignalReceiverConfiguration EnableSingleInstance(string baseDirectoryPath, TimeSpan pollingInterval)
     {
         Configuration = new()
         {
-            Name = name,
+            Name = HandlerType?.Name ?? $"delegate-{string.Join("-", Tags)}",
             BaseDirectoryPath = baseDirectoryPath,
             LeaseDuration = TimeSpan.Zero, // by setting the lease duration to zero, signals will be immediately available for reprocessing
             PollingInterval = pollingInterval,
@@ -62,6 +62,9 @@ internal sealed class FileSystemSignalReceiver(
             throw new InvalidOperationException(
                 $"the tag '{TSignal.Tag}' is already used by signal type '{signalTypeByTag[TSignal.Tag]}'");
         }
+
+        tags.Add(TSignal.Tag);
+        tags.Sort(StringComparer.OrdinalIgnoreCase);
 
         invokers.Add(invoker);
         parserByTag[TSignal.Tag] = async (content, ct)

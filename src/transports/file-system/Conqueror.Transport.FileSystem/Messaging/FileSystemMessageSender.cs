@@ -56,14 +56,7 @@ internal sealed class FileSystemMessageSender<TMessage, TResponse>(
                                      cancellationToken)
                                  .ConfigureAwait(false);
 
-            var seqNr = await fileSystemStore.SeqIndexFile.Append(messageId, cancellationToken).ConfigureAwait(false);
-
-            await fileSystemStore.InboxFiles.Append(
-                                     messageTag,
-                                     seqNr,
-                                     messageId,
-                                     cancellationToken)
-                                 .ConfigureAwait(false);
+            _ = await fileSystemStore.SeqIndexFile.Append(messageId, messageTag, cancellationToken).ConfigureAwait(false);
 
             if (typeof(TResponse) == typeof(UnitMessageResponse))
             {
@@ -75,9 +68,10 @@ internal sealed class FileSystemMessageSender<TMessage, TResponse>(
                                                     messageId,
                                                     responseFileExtension,
                                                     static async (p, stream, ct) => await TMessage.FileSystemMessageResponseSerializer.DeserializeResponse(
-                                                        p,
-                                                        stream,
-                                                        ct).ConfigureAwait(false),
+                                                                                                      p,
+                                                                                                      stream,
+                                                                                                      ct)
+                                                                                                  .ConfigureAwait(false),
                                                     serviceProvider,
                                                     pollingInterval,
                                                     cancellationToken)

@@ -49,7 +49,7 @@ internal sealed class FileSystemSignalPublisher<TSignal>(
                                      cancellationToken)
                                  .ConfigureAwait(false);
 
-            _ = await fileSystemStore.SeqIndexFile.Append(signalId, cancellationToken).ConfigureAwait(false);
+            _ = await fileSystemStore.SeqIndexFile.Append(signalId, signalTag, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not FileSystemSignalFailedOnPublisherException)
         {

@@ -473,7 +473,7 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
             await Assert.ThatAsync(
                 () => receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token) ?? Task.CompletedTask,
                 Throws.InstanceOf<SignalReceiverExecutionFailedException>()
-                      .With.InnerException.SameAs(handlerExceptions[0])
+                      .With.InnerException.Matches<Exception>(e => handlerExceptions.Contains(e))
                       .And.Property(nameof(SignalReceiverExecutionFailedException.SignalTransportType))
                       .EqualTo(signalTransportType)
                       .Or.InstanceOf<AggregateException>()

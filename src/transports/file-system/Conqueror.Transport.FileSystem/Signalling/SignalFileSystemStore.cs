@@ -1,10 +1,22 @@
 ﻿namespace Conqueror.Transport.FileSystem.Signalling;
 
-internal sealed class SignalFileSystemStore(DirectoryPath baseDirectoryPath) : IDisposable
+internal sealed class SignalFileSystemStore : IDisposable
 {
-    public SeqIndexFile SeqIndexFile { get; } = new(baseDirectoryPath);
+    private readonly DirectoryPath baseDirectoryPath;
+    private readonly TagIdFiles tagIdFiles;
 
-    public ContentFiles ContentFiles { get; } = new(baseDirectoryPath);
+    public SignalFileSystemStore(DirectoryPath baseDirectoryPath)
+    {
+        this.baseDirectoryPath = baseDirectoryPath;
+
+        tagIdFiles = new(baseDirectoryPath);
+        SeqIndexFile = new(baseDirectoryPath, tagIdFiles);
+        ContentFiles = new(baseDirectoryPath);
+    }
+
+    public SeqIndexFile SeqIndexFile { get; }
+
+    public ContentFiles ContentFiles { get; }
 
     public InboxFiles GetInboxFiles()
     {
@@ -14,7 +26,7 @@ internal sealed class SignalFileSystemStore(DirectoryPath baseDirectoryPath) : I
 
         directoryPath.EnsureExists();
 
-        return new(directoryPath);
+        return new(directoryPath, tagIdFiles);
     }
 
     public void Dispose()

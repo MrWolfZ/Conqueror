@@ -16,6 +16,11 @@ public sealed class FileSystemSignalReceiverConfiguration
 
     internal Action<Exception>? ExceptionCallback { get; private set; }
 
+    /// <summary>
+    ///     Set the name to identify receivers which compete for processing the same signals.
+    /// </summary>
+    /// <param name="name">The name to use</param>
+    /// <returns>The configuration</returns>
     public FileSystemSignalReceiverConfiguration WithName(string name)
     {
         Name = name;

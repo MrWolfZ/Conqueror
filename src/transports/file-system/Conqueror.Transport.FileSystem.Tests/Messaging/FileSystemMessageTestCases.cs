@@ -908,7 +908,8 @@ public static partial class FileSystemMessageTestCases
 
                 handle1.InitialConnectionTask.Wait(ct);
 
-                r.ServiceProvider.GetRequiredService<DirectoryInfo>().Delete(true);
+                // disposing the file stores will trigger the next handler to throw on startup
+                r.ServiceProvider.GetRequiredService<FileSystemStores>().Dispose();
 
                 var handle2 = r.RunFileSystemMessageReceiver<ThrowingTestMessageHandler2>(ct);
 

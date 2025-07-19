@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Transport.FileSystem.Signalling;
 
@@ -33,134 +32,50 @@ internal sealed class FileSystemSignalReceiverRunner(
 
         var tags = receiver.Tags.Select(t => new Tag(t)).ToArray();
 
-        // we are abusing the tag mechanism a bit by creating a tag for the receiver to be able to create
-        // an inbox for the receiver based on this tag; this is in contrast to messages where there is one
-        // inbox per message tag
-        var receiverTag = new Tag(config.Name);
-
-        var latestSeqNr = new SeqNr(0);
+        var inboxName = new InboxName(config.Name);
 
         try
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                Task? seqFileProcessingTask = null;
+                Task? inboxFileProcessingTask = null;
+
                 try
                 {
                     var fileSystemStores = receiver.ServiceProvider.GetRequiredService<FileSystemStores>();
                     var store = fileSystemStores.GetSignalStore(new(config.BaseDirectoryPath));
-                    using var inboxFiles = store.GetInboxFiles();
-
-                    _ = connectionTaskCompletionSource.TrySetResult();
+                    var inboxFiles = store.GetInboxFiles();
 
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var startAtSeqNr = await inboxFiles.GetCurrentSeqNr(receiverTag, cancellationToken).ConfigureAwait(false);
+                    seqFileProcessingTask = ProcessSeqFileChanges(
+                        store.SeqIndexFile,
+                        inboxFiles,
+                        inboxName,
+                        tags,
+                        config.PollingInterval,
+                        cts.Token);
 
-                    var seqFileEnumerator = store.SeqIndexFile.ReadChanges(
-                                                     startAtSeqNr,
-                                                     config.PollingInterval,
-                                                     cancellationToken)
-                                                 .GetAsyncEnumerator(cancellationToken);
+                    inboxFileProcessingTask = ProcessInbox(
+                        receiver,
+                        inboxFiles,
+                        store.ContentFiles,
+                        inboxName,
+                        config.PollingInterval,
+                        config.LeaseDuration,
+                        config.SignalCallback,
+                        cts.Token);
 
-                    var inboxEnumerator = inboxFiles.LeaseNextMessage(
-                                                   [receiverTag],
-                                                   config.PollingInterval,
-                                                   config.LeaseDuration,
-                                                   cancellationToken)
-                                               .GetAsyncEnumerator(cancellationToken);
+                    _ = connectionTaskCompletionSource.TrySetResult();
 
-                    var seqFileTask = seqFileEnumerator.MoveNextAsync().AsTask();
-                    var inboxFileTask = inboxEnumerator.MoveNextAsync().AsTask();
+                    // if any of the two processing tasks completes, we need to stop
+                    var completedTask = await Task.WhenAny(seqFileProcessingTask, inboxFileProcessingTask).ConfigureAwait(false);
 
-                    while (!cancellationToken.IsCancellationRequested)
-                    {
-                        var completedTask = await Task.WhenAny(seqFileTask, inboxFileTask).WaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        var hasNext = await completedTask.ConfigureAwait(false);
-
-                        // the only case in which one of the enumerators will return `false` is when the enumeration was
-                        // cancelled, in which case we can simply stop here
-                        if (!hasNext)
-                        {
-                            Debug.Assert(cancellationToken.IsCancellationRequested, "expected cancellation, but was not cancelled");
-
-                            return;
-                        }
-
-                        if (completedTask == seqFileTask)
-                        {
-                            var (newEntryId, seqNr) = seqFileEnumerator.Current;
-
-                            Debug.Assert(seqNr > latestSeqNr, $"expected the next seq nr {seqNr} to be greater than latest seq nr {latestSeqNr}");
-
-                            latestSeqNr = seqNr;
-
-                            var isRelevantEntry = tags.Any(t => store.ContentFiles.DoesPayloadExist(t, newEntryId, receiver.GetFileExtension(t)));
-
-                            if (isRelevantEntry)
-                            {
-                                await inboxFiles.Append(
-                                                    receiverTag,
-                                                    seqNr,
-                                                    newEntryId,
-                                                    cancellationToken)
-                                                .ConfigureAwait(false);
-                            }
-
-                            seqFileTask = seqFileEnumerator.MoveNextAsync().AsTask();
-                        }
-                        else
-                        {
-                            var (_, seqNr, entryId) = inboxEnumerator.Current;
-
-                            try
-                            {
-                                var tag = tags.First(t => store.ContentFiles.DoesPayloadExist(t, entryId, receiver.GetFileExtension(t)));
-
-                                var fileExtension = receiver.GetFileExtension(tag);
-
-                                var signal = await store.ContentFiles.ReadPayload(
-                                                            tag,
-                                                            entryId,
-                                                            fileExtension,
-                                                            static (s, stream, ct) => s.receiver.ReadSignal(s.tag, stream, ct),
-                                                            (tag, receiver),
-                                                            cancellationToken)
-                                                        .ConfigureAwait(false);
-
-                                Debug.Assert(signal is not null, $"the signal payload file for tag '{tag}' and ID '{entryId}' should exist");
-
-                                var metadata = await store.ContentFiles.ReadMetadata(
-                                                              tag,
-                                                              entryId,
-                                                              fileNameSuffix: null,
-                                                              SignalMetadataJsonSerializerContext.Default.SignalMetadata,
-                                                              cancellationToken)
-                                                          .ConfigureAwait(false);
-
-                                using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
-
-                                if (metadata.EncodedContextData is not null)
-                                {
-                                    conquerorContext.DecodeContextData(metadata.EncodedContextData);
-                                }
-
-                                config.SignalCallback?.Invoke(signal);
-
-                                await receiver.InvokeHandler(signal, cancellationToken).ConfigureAwait(false);
-
-                                await inboxFiles.RemoveEntry(receiverTag, seqNr, cancellationToken).ConfigureAwait(false);
-                            }
-                            catch
-                            {
-                                await inboxFiles.GiveUpLease(receiverTag, seqNr, cancellationToken).ConfigureAwait(false);
-
-                                throw;
-                            }
-
-                            inboxFileTask = inboxEnumerator.MoveNextAsync().AsTask();
-                        }
-                    }
+                    // await the completed task to propagate any exception
+                    await completedTask.ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -185,6 +100,20 @@ internal sealed class FileSystemSignalReceiverRunner(
                         SignalTransportType = new(TransportName, SignalTransportRole.Receiver),
                     };
                 }
+                finally
+                {
+                    await cts.CancelAsync().ConfigureAwait(false);
+
+                    if (seqFileProcessingTask is { IsCompleted: false })
+                    {
+                        await seqFileProcessingTask.ConfigureAwait(false);
+                    }
+
+                    if (inboxFileProcessingTask is { IsCompleted: false })
+                    {
+                        await inboxFileProcessingTask.ConfigureAwait(false);
+                    }
+                }
             }
         }
         catch (Exception ex)
@@ -198,6 +127,125 @@ internal sealed class FileSystemSignalReceiverRunner(
         finally
         {
             _ = connectionTaskCompletionSource.TrySetResult();
+        }
+    }
+
+    private static async Task ProcessSeqFileChanges(
+        SeqIndexFile seqIndexFile,
+        InboxFiles inboxFiles,
+        InboxName inboxName,
+        Tag[] tags,
+        TimeSpan pollingInterval,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var disposable =
+                (await inboxFiles.GetWriteLock(inboxName, pollingInterval, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
+
+            var startAtSeqNr = await inboxFiles.GetCurrentSeqNr(inboxName, cancellationToken).ConfigureAwait(false);
+
+            var latestSeqNr = new SeqNr(0);
+
+            await foreach (var entry in seqIndexFile.ReadChanges(
+                                                        startAtSeqNr,
+                                                        pollingInterval,
+                                                        cancellationToken)
+                                                    .ConfigureAwait(false))
+            {
+                foreach (var (newEntryId, signalTag, seqNr) in entry)
+                {
+                    Debug.Assert(seqNr > latestSeqNr, $"expected the next seq nr {seqNr} to be greater than latest seq nr {latestSeqNr}");
+
+                    latestSeqNr = seqNr;
+
+                    var isRelevantEntry = tags.Contains(signalTag);
+
+                    if (isRelevantEntry)
+                    {
+                        await inboxFiles.Append(
+                                            inboxName,
+                                            seqNr,
+                                            newEntryId,
+                                            signalTag,
+                                            cancellationToken)
+                                        .ConfigureAwait(false);
+                    }
+                }
+            }
+        }
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
+        {
+            // we gracefully exit
+        }
+    }
+
+    private async Task ProcessInbox(
+        FileSystemSignalReceiver receiver,
+        InboxFiles inboxFiles,
+        ContentFiles contentFiles,
+        InboxName inboxName,
+        TimeSpan pollingInterval,
+        TimeSpan leaseDuration,
+        Action<object>? signalCallback,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await foreach (var (tag, seqNr, entryId) in inboxFiles.LeaseNextMessage(
+                                                                      inboxName,
+                                                                      pollingInterval,
+                                                                      leaseDuration,
+                                                                      cancellationToken)
+                                                                  .ConfigureAwait(false))
+            {
+                try
+                {
+                    var fileExtension = receiver.GetFileExtension(tag);
+
+                    var signal = await contentFiles.ReadPayload(
+                                                       tag,
+                                                       entryId,
+                                                       fileExtension,
+                                                       static (s, stream, ct) => s.receiver.ReadSignal(s.tag, stream, ct),
+                                                       (tag, receiver),
+                                                       cancellationToken)
+                                                   .ConfigureAwait(false);
+
+                    Debug.Assert(signal is not null, $"the signal payload file for tag '{tag}' and ID '{entryId}' should exist");
+
+                    var metadata = await contentFiles.ReadMetadata(
+                                                         tag,
+                                                         entryId,
+                                                         fileNameSuffix: null,
+                                                         SignalMetadataJsonSerializerContext.Default.SignalMetadata,
+                                                         cancellationToken)
+                                                     .ConfigureAwait(false);
+
+                    using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
+
+                    if (metadata.EncodedContextData is not null)
+                    {
+                        conquerorContext.DecodeContextData(metadata.EncodedContextData);
+                    }
+
+                    signalCallback?.Invoke(signal);
+
+                    await receiver.InvokeHandler(signal, cancellationToken).ConfigureAwait(false);
+
+                    await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                    await inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+
+                    throw;
+                }
+            }
+        }
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
+        {
+            // we gracefully exit
         }
     }
 }

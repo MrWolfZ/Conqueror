@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Conqueror.Transport.FileSystem;
+﻿namespace Conqueror.Transport.FileSystem;
 
 internal sealed class DisposableSemaphore(int initialCount = 1, int maxCount = 1) : IDisposable
 {

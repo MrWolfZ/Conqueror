@@ -11,8 +11,10 @@
         <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
         <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\middlewares\logging\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj" />
+        <ProjectReference Include="..\transports\file-system\Conqueror.Transport.FileSystem\Conqueror.Transport.FileSystem.csproj" />
         <!-- <PackageReference Include="Conqueror" Version="*-*" /> -->
         <!-- <PackageReference Include="Conqueror.Middleware.Logging" Version="*-*" /> -->
+        <!-- <PackageReference Include="Conqueror.Transport.FileSystem" Version="*-*" /> -->
 
         <!-- third-party packages -->
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />

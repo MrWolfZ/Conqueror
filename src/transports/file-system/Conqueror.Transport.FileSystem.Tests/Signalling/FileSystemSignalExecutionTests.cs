@@ -53,7 +53,6 @@ public sealed partial class FileSystemSignalExecutionTests
                                                     {
                                                         configCount += 1;
                                                         _ = r.EnableSingleInstance(
-                                                            "test-receiver",
                                                             r.ServiceProvider.GetRequiredService<DirectoryInfo>().FullName,
                                                             TimeSpan.FromMilliseconds(10));
                                                     });
@@ -88,10 +87,10 @@ public sealed partial class FileSystemSignalExecutionTests
                 TestSignal.T,
                 (_, _) => throw new InvalidOperationException("test exception"),
                 r => r.EnableMultipleCompetingInstances(
-                          receiverName,
                           baseDirectory.FullName,
                           leaseDuration,
                           pollingInterval: TimeSpan.FromMilliseconds(10))
+                      .WithName(receiverName)
                       .WithExceptionCallback(e => r.ServiceProvider.GetRequiredService<ILogger<FileSystemSignalExecutionTests>>()
                                                    .LogError(e, "error occurred")));
 
@@ -112,10 +111,10 @@ public sealed partial class FileSystemSignalExecutionTests
                 },
                 r => r
                      .EnableMultipleCompetingInstances(
-                         receiverName,
                          baseDirectory.FullName,
                          leaseDuration,
                          pollingInterval: TimeSpan.FromMilliseconds(20)) // higher polling interval so that the other handler sees the message first
+                     .WithName(receiverName)
                      .WithExceptionCallback(e => r.ServiceProvider.GetRequiredService<ILogger<FileSystemSignalExecutionTests>>()
                                                   .LogError(e, "error occurred")));
 
@@ -176,7 +175,6 @@ public sealed partial class FileSystemSignalExecutionTests
 
         static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
             => receiver.EnableSingleInstance(
-                "test-receiver",
                 receiver.ServiceProvider.GetRequiredService<DirectoryInfo>().FullName,
                 TimeSpan.FromMilliseconds(10));
     }

@@ -14,9 +14,7 @@ public sealed class FileSystemTransportTestHost
 
     public bool IsRunningInGithubAction => IsRunningInGithubActionField;
 
-    public static async Task<FileSystemTransportTestHost> Create(
-        Action<IServiceCollection>? configureServices = null,
-        TimeSpan? testTimeout = null)
+    public static async Task<FileSystemTransportTestHost> Create(Action<IServiceCollection>? configureServices = null)
     {
         var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddTestLogger()
                                                                                .SetMinimumLevel(LogLevel.Trace))

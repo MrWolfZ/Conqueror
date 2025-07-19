@@ -87,6 +87,11 @@ public sealed class FileSystemMessageTransportConformityReceiverTestHost : IMess
     {
         onDisposeOrCancel();
 
+        if (ReceiverExecutionHandle is not null)
+        {
+            await ReceiverExecutionHandle.DisposeAsync();
+        }
+
         await FileSystemTransportTestHost.DisposeAsync();
     }
 
