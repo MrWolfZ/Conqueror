@@ -28,12 +28,12 @@ internal sealed class InboxTests
         var receivedEntryIds = new ConcurrentQueue<EntryId>();
 
         var appendTask = Task.Run(
-            async () =>
+            () =>
             {
                 var i = 0;
                 while (entryIdsToAppend.TryDequeue(out var entryId))
                 {
-                    await inboxFiles.Append(
+                    inboxFiles.Append(
                         inboxName,
                         new((ulong)++i),
                         entryId,
@@ -59,7 +59,7 @@ internal sealed class InboxTests
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
-                    await inboxFiles.RemoveEntry(inboxName, seqNr, ct);
+                    inboxFiles.RemoveEntry(inboxName, seqNr, ct);
 
                     if (receiveCount == nrOfMessages / nrOfReaders)
                     {
@@ -75,7 +75,7 @@ internal sealed class InboxTests
             Assert.That(receivedEntryIds, Has.Count.EqualTo(entryIds.Length));
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
-            var inboxContent = await inboxFiles.GetContent(inboxName, CancellationToken.None);
+            var inboxContent = inboxFiles.GetContent(inboxName, CancellationToken.None);
             Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
         });
     }
@@ -99,12 +99,12 @@ internal sealed class InboxTests
         var receivedEntryIds = new ConcurrentQueue<EntryId>();
 
         var appendTask = Task.Run(
-            async () =>
+            () =>
             {
                 var i = 0;
                 while (entryIdsToAppend.TryDequeue(out var entryId))
                 {
-                    await inboxFiles.Append(
+                    inboxFiles.Append(
                         inboxName,
                         new((ulong)++i),
                         entryId,
@@ -128,7 +128,7 @@ internal sealed class InboxTests
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
-                    await inboxFiles.RemoveEntry(inboxName, seqNr, cts.Token);
+                    inboxFiles.RemoveEntry(inboxName, seqNr, cts.Token);
 
                     if (receiveCount == nrOfMessages)
                     {
@@ -145,7 +145,7 @@ internal sealed class InboxTests
             Assert.That(receivedEntryIds, Has.Count.EqualTo(entryIds.Length));
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
-            var inboxContent = await inboxFiles.GetContent(inboxName, CancellationToken.None);
+            var inboxContent = inboxFiles.GetContent(inboxName, CancellationToken.None);
             Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
         });
     }
@@ -170,12 +170,12 @@ internal sealed class InboxTests
         var receivedEntryIds = new ConcurrentQueue<EntryId>();
 
         var appendTask = Task.Run(
-            async () =>
+            () =>
             {
                 var i = 0;
                 while (entryIdsToAppend.TryDequeue(out var entryId))
                 {
-                    await inboxFilesForAppend.Append(
+                    inboxFilesForAppend.Append(
                         inboxName,
                         new((ulong)++i),
                         entryId,
@@ -203,7 +203,7 @@ internal sealed class InboxTests
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
-                    await inboxFilesForLease.RemoveEntry(inboxName, seqNr, ct);
+                    inboxFilesForLease.RemoveEntry(inboxName, seqNr, ct);
 
                     if (receiveCount == nrOfMessages / nrOfReaders)
                     {
@@ -219,7 +219,7 @@ internal sealed class InboxTests
             Assert.That(receivedEntryIds, Has.Count.EqualTo(entryIds.Length));
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
-            var inboxContent = await inboxFilesForAppend.GetContent(inboxName, CancellationToken.None);
+            var inboxContent = inboxFilesForAppend.GetContent(inboxName, CancellationToken.None);
             Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
         });
     }
@@ -243,12 +243,12 @@ internal sealed class InboxTests
         var receivedEntryIds = new ConcurrentQueue<EntryId>();
 
         var appendTask = Task.Run(
-            async () =>
+            () =>
             {
                 var i = 0;
                 while (entryIdsToAppend.TryDequeue(out var entryId))
                 {
-                    await inboxFilesForAppend.Append(
+                    inboxFilesForAppend.Append(
                         inboxName,
                         new((ulong)++i),
                         entryId,
@@ -274,7 +274,7 @@ internal sealed class InboxTests
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
-                    await inboxFilesForLease.RemoveEntry(inboxName, seqNr, cts.Token);
+                    inboxFilesForLease.RemoveEntry(inboxName, seqNr, cts.Token);
 
                     if (receiveCount == nrOfMessages)
                     {
@@ -291,7 +291,7 @@ internal sealed class InboxTests
             Assert.That(receivedEntryIds, Has.Count.EqualTo(entryIds.Length));
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
-            var inboxContent = await inboxFilesForAppend.GetContent(inboxName, CancellationToken.None);
+            var inboxContent = inboxFilesForAppend.GetContent(inboxName, CancellationToken.None);
             Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
         });
     }
@@ -319,7 +319,7 @@ internal sealed class InboxTests
         var i = 0;
         while (entryIdsToAppend.TryDequeue(out var entryId))
         {
-            await inboxFilesForAppend.Append(
+            inboxFilesForAppend.Append(
                 inboxName,
                 new((ulong)++i),
                 entryId,
@@ -345,7 +345,7 @@ internal sealed class InboxTests
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
-                    await inboxFilesForLease.RemoveEntry(inboxName, seqNr, ct);
+                    inboxFilesForLease.RemoveEntry(inboxName, seqNr, ct);
 
                     if (receiveCount == nrOfMessages / nrOfReaders)
                     {
@@ -354,12 +354,12 @@ internal sealed class InboxTests
                 }
             });
 
-        await Assert.MultipleAsync(async () =>
+        Assert.Multiple(() =>
         {
             Assert.That(receivedEntryIds, Has.Count.EqualTo(entryIds.Length));
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
-            var inboxContent = await inboxFilesForAppend.GetContent(inboxName, CancellationToken.None);
+            var inboxContent = inboxFilesForAppend.GetContent(inboxName, CancellationToken.None);
             Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
         });
     }

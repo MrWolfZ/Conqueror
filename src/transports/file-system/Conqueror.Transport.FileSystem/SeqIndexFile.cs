@@ -14,13 +14,13 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
     private readonly ConcurrentDictionary<TimeSpan, Poller> pollerByPollingInterval = new();
     private readonly FilePath seqFilePath = baseDirectoryPath.File("seq-index.txt");
 
-    public async ValueTask<SeqNr> Append(EntryId id, Tag tag, CancellationToken cancellationToken)
+    public SeqNr Append(EntryId id, Tag tag, CancellationToken cancellationToken)
     {
         baseDirectoryPath.AssertExists();
 
-        var tagId = await tagIdFiles.GetId(tag, cancellationToken).ConfigureAwait(false);
+        var tagId = tagIdFiles.GetId(tag, cancellationToken);
 
-        using var handle = await seqFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
+        using var handle = seqFilePath.OpenReadWrite(cancellationToken);
 
         ThrowOnInvalidLength(handle);
 
@@ -80,12 +80,11 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
                 continue;
             }
 
-            await foreach (var batch in ReadBetween(
-                                   currentSeqNr,
-                                   latestSeqNr,
-                                   compactedSeqNr,
-                                   cancellationToken)
-                               .ConfigureAwait(false))
+            foreach (var batch in ReadBetween(
+                         currentSeqNr,
+                         latestSeqNr,
+                         compactedSeqNr,
+                         cancellationToken))
             {
                 yield return batch;
             }
@@ -102,13 +101,13 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
         }
     }
 
-    private async IAsyncEnumerable<IReadOnlyCollection<(EntryId EntryId, Tag Tag, SeqNr SeqNr)>> ReadBetween(
+    private IEnumerable<IReadOnlyCollection<(EntryId EntryId, Tag Tag, SeqNr SeqNr)>> ReadBetween(
         SeqNr startAt,
         SeqNr endAt,
         SeqNr compactedSeqNr,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        var handle = await seqFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+        var handle = seqFilePath.OpenRead(cancellationToken);
 
         Debug.Assert(handle is not null, "expected handle to be non-null");
 
@@ -144,7 +143,7 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
             {
                 var entryId = new EntryId(new(buffer.Span.Slice(bufferIndex, EntryId.IdLength)));
                 var tagId = new TagId(uint.Parse(buffer.Span.Slice(bufferIndex + EntryId.IdLength + 1, TagIdLength)));
-                var tag = await tagIdFiles.GetById(tagId, cancellationToken).ConfigureAwait(false);
+                var tag = tagIdFiles.GetById(tagId, cancellationToken);
                 var seqNr = new SeqNr(startAt + (ulong)entryIndex + 1);
                 entries[entryIndex] = (entryId, tag, seqNr);
             }
@@ -157,9 +156,9 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
         "Minor Code Smell",
         "S3398:\"private\" methods called only by inner classes should be moved to those classes",
         Justification = "the poller should be simple and only contain code related to polling, not file access")]
-    private static async Task<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)?> GetCurrentSeqNr(FilePath seqFilePath, CancellationToken cancellationToken)
+    private static (SeqNr CompactedSeqNr, SeqNr LatestSeqNr)? GetCurrentSeqNr(FilePath seqFilePath, CancellationToken cancellationToken)
     {
-        using var handle = await seqFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+        using var handle = seqFilePath.OpenRead(cancellationToken);
 
         if (handle is null)
         {
@@ -269,7 +268,7 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
             cancellationTokenSource.Dispose();
         }
 
-        private async void OnTimerElapsed(object? state)
+        private void OnTimerElapsed(object? state)
         {
             try
             {
@@ -280,7 +279,7 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
                     return;
                 }
 
-                if (await GetCurrentSeqNr(seqFilePath, cancellationTokenSource.Token).ConfigureAwait(false) is { } seqNr)
+                if (GetCurrentSeqNr(seqFilePath, cancellationTokenSource.Token) is { } seqNr)
                 {
                     foreach (var channelWriter in channelWriters.Values)
                     {

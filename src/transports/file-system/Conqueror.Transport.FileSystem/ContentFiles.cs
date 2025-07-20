@@ -16,12 +16,12 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
 
         payloadFilePath.DirectoryPath.EnsureExists();
 
-        using var handle = await payloadFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
+        using var handle = payloadFilePath.OpenReadWrite(cancellationToken);
 
         await writeFn(state, handle.Stream, cancellationToken).ConfigureAwait(false);
     }
 
-    public async ValueTask WriteMetadata<TMetadata>(
+    public void WriteMetadata<TMetadata>(
         Tag tag,
         EntryId messageId,
         TMetadata metadata,
@@ -33,7 +33,7 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
 
         metadataFilePath.DirectoryPath.AssertExists();
 
-        using var handle = await metadataFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
+        using var handle = metadataFilePath.OpenReadWrite(cancellationToken);
 
         handle.WriteJson(metadata, jsonTypeInfo);
     }
@@ -50,7 +50,7 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
 
         payloadFilePath.DirectoryPath.AssertExists();
 
-        using var handle = await payloadFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+        using var handle = payloadFilePath.OpenRead(cancellationToken);
 
         if (handle is null)
         {
@@ -62,7 +62,7 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         return result ?? throw new IOException($"failed to read payload for entry ID '{entryId}' from path '{payloadFilePath}'");
     }
 
-    public async ValueTask<TMetadata> ReadMetadata<TMetadata>(
+    public TMetadata ReadMetadata<TMetadata>(
         Tag tag,
         EntryId messageId,
         string? fileNameSuffix,
@@ -73,7 +73,7 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
 
         metadataFilePath.DirectoryPath.AssertExists();
 
-        using var handle = await metadataFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
+        using var handle = metadataFilePath.OpenReadWrite(cancellationToken);
 
         return handle.ReadJson(jsonTypeInfo);
     }

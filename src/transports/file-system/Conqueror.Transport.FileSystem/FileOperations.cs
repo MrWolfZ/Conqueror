@@ -9,11 +9,12 @@ internal static class FileOperations
 
     public static FileInfo GetFileInfo(this FilePath filePath) => new(filePath);
 
-    public static async ValueTask<ReadOnlyFileHandle?> OpenRead(this FilePath filePath, CancellationToken cancellationToken)
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
+    public static ReadOnlyFileHandle? OpenRead(this FilePath filePath, CancellationToken cancellationToken)
     {
         try
         {
-            var fileStream = await filePath.OpenWithRetry(FileAccess.Read, cancellationToken, mode: FileMode.Open).ConfigureAwait(false);
+            var fileStream = filePath.OpenWithRetry(FileAccess.Read, cancellationToken, mode: FileMode.Open);
 
             return new(filePath, fileStream);
         }
@@ -27,9 +28,10 @@ internal static class FileOperations
         }
     }
 
-    public static async ValueTask<ReadWriteFileHandle> OpenReadWrite(this FilePath filePath, CancellationToken cancellationToken)
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
+    public static ReadWriteFileHandle OpenReadWrite(this FilePath filePath, CancellationToken cancellationToken)
     {
-        var fileStream = await filePath.OpenWithRetry(FileAccess.ReadWrite, cancellationToken).ConfigureAwait(false);
+        var fileStream = filePath.OpenWithRetry(FileAccess.ReadWrite, cancellationToken);
 
         return new(filePath, fileStream);
     }
@@ -111,7 +113,7 @@ internal static class FileOperations
 
     [SuppressMessage("Security", "CA5394:Do not use insecure randomness", Justification = "we don't need security here")]
     [SuppressMessage("Major Bug", "S1751:Loops with at most one iteration should be refactored", Justification = "by design")]
-    private static async ValueTask<FileStream> OpenWithRetry(
+    private static FileStream OpenWithRetry(
         this FilePath filePath,
         FileAccess access,
         CancellationToken cancellationToken,
@@ -170,11 +172,11 @@ internal static class FileOperations
 
                 if (delayMs > 0)
                 {
-                    await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
+                    Thread.Sleep(delayMs);
                 }
                 else
                 {
-                    await Task.Yield();
+                    Thread.SpinWait(1);
                 }
             }
         }

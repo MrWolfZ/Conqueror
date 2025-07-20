@@ -142,7 +142,7 @@ internal sealed class FileSystemSignalReceiverRunner(
         {
             using var disposable = await inboxFiles.GetWriteLock(inboxName, pollingInterval, cancellationToken).ConfigureAwait(false);
 
-            var startAtSeqNr = await inboxFiles.GetCurrentSeqNr(inboxName, cancellationToken).ConfigureAwait(false);
+            var startAtSeqNr = inboxFiles.GetCurrentSeqNr(inboxName, cancellationToken);
 
             var latestSeqNr = new SeqNr(0);
 
@@ -162,13 +162,12 @@ internal sealed class FileSystemSignalReceiverRunner(
 
                     if (isRelevantEntry)
                     {
-                        await inboxFiles.Append(
-                                            inboxName,
-                                            seqNr,
-                                            newEntryId,
-                                            signalTag,
-                                            cancellationToken)
-                                        .ConfigureAwait(false);
+                        inboxFiles.Append(
+                            inboxName,
+                            seqNr,
+                            newEntryId,
+                            signalTag,
+                            cancellationToken);
                     }
                 }
             }
@@ -213,13 +212,12 @@ internal sealed class FileSystemSignalReceiverRunner(
 
                     Debug.Assert(signal is not null, $"the signal payload file for tag '{tag}' and ID '{entryId}' should exist");
 
-                    var metadata = await contentFiles.ReadMetadata(
+                    var metadata = contentFiles.ReadMetadata(
                                                          tag,
                                                          entryId,
                                                          fileNameSuffix: null,
                                                          SignalMetadataJsonSerializerContext.Default.SignalMetadata,
-                                                         cancellationToken)
-                                                     .ConfigureAwait(false);
+                                                         cancellationToken);
 
                     using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 
@@ -232,11 +230,11 @@ internal sealed class FileSystemSignalReceiverRunner(
 
                     await receiver.InvokeHandler(signal, cancellationToken).ConfigureAwait(false);
 
-                    await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                    inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken);
                 }
                 catch
                 {
-                    await inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                    inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken);
 
                     throw;
                 }

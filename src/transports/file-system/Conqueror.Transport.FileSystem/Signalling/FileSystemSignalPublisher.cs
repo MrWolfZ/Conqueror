@@ -37,19 +37,18 @@ internal sealed class FileSystemSignalPublisher<TSignal>(
                 traceId: conquerorContext.TraceId,
                 signalId: conquerorContext.SignalId);
 
-            await fileSystemStore.ContentFiles.WriteMetadata(
-                                     signalTag,
-                                     signalId,
-                                     new(
-                                         signalId,
-                                         encodedContextData,
-                                         PublishedAtUtc: DateTimeOffset.UtcNow),
-                                     fileNameSuffix: null,
-                                     SignalMetadataJsonSerializerContext.Default.SignalMetadata,
-                                     cancellationToken)
-                                 .ConfigureAwait(false);
+            fileSystemStore.ContentFiles.WriteMetadata(
+                signalTag,
+                signalId,
+                new(
+                    signalId,
+                    encodedContextData,
+                    PublishedAtUtc: DateTimeOffset.UtcNow),
+                fileNameSuffix: null,
+                SignalMetadataJsonSerializerContext.Default.SignalMetadata,
+                cancellationToken);
 
-            _ = await fileSystemStore.SeqIndexFile.Append(signalId, signalTag, cancellationToken).ConfigureAwait(false);
+            _ = fileSystemStore.SeqIndexFile.Append(signalId, signalTag, cancellationToken);
         }
         catch (Exception ex) when (ex is not FileSystemSignalFailedOnPublisherException)
         {

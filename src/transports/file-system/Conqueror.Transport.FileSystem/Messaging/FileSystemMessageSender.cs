@@ -42,21 +42,20 @@ internal sealed class FileSystemMessageSender<TMessage, TResponse>(
                 traceId: conquerorContext.TraceId,
                 messageId: conquerorContext.MessageId);
 
-            await fileSystemStore.ContentFiles.WriteMetadata(
-                                     messageTag,
-                                     messageId,
-                                     new(
-                                         messageId,
-                                         encodedContextData,
-                                         SentAtUtc: DateTimeOffset.UtcNow,
-                                         configuredTimeToLive,
-                                         NrOfFailedProcessingAttempts: 0),
-                                     fileNameSuffix: null,
-                                     MessageMetadataJsonSerializerContext.Default.MessageMetadata,
-                                     cancellationToken)
-                                 .ConfigureAwait(false);
+            fileSystemStore.ContentFiles.WriteMetadata(
+                messageTag,
+                messageId,
+                new(
+                    messageId,
+                    encodedContextData,
+                    SentAtUtc: DateTimeOffset.UtcNow,
+                    configuredTimeToLive,
+                    NrOfFailedProcessingAttempts: 0),
+                fileNameSuffix: null,
+                MessageMetadataJsonSerializerContext.Default.MessageMetadata,
+                cancellationToken);
 
-            _ = await fileSystemStore.SeqIndexFile.Append(messageId, messageTag, cancellationToken).ConfigureAwait(false);
+            _ = fileSystemStore.SeqIndexFile.Append(messageId, messageTag, cancellationToken);
 
             if (typeof(TResponse) == typeof(UnitMessageResponse))
             {
@@ -77,13 +76,12 @@ internal sealed class FileSystemMessageSender<TMessage, TResponse>(
                                                     cancellationToken)
                                                 .ConfigureAwait(false);
 
-            var responseMetadata = await fileSystemStore.ContentFiles.ReadMetadata(
-                                                            messageTag,
-                                                            messageId,
-                                                            fileNameSuffix: ".response",
-                                                            MessageMetadataJsonSerializerContext.Default.MessageResponseMetadata,
-                                                            cancellationToken)
-                                                        .ConfigureAwait(false);
+            var responseMetadata = fileSystemStore.ContentFiles.ReadMetadata(
+                messageTag,
+                messageId,
+                fileNameSuffix: ".response",
+                MessageMetadataJsonSerializerContext.Default.MessageResponseMetadata,
+                cancellationToken);
 
             if (responseMetadata.EncodedContextData is not null)
             {

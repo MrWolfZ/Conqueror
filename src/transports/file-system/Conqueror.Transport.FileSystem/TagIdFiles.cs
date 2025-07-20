@@ -9,7 +9,7 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
     private Dictionary<TagId, Tag> tagCache = [];
     private Dictionary<Tag, TagId> tagIdCache = [];
 
-    public async ValueTask<TagId> GetId(Tag tag, CancellationToken cancellationToken)
+    public TagId GetId(Tag tag, CancellationToken cancellationToken)
     {
         baseDirectoryPath.AssertExists();
 
@@ -18,7 +18,7 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
             return tagId;
         }
 
-        using var handle = await idsFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
+        using var handle = idsFilePath.OpenReadWrite(cancellationToken);
 
         if (handle.Stream.Length > 0)
         {
@@ -51,7 +51,7 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
         return tagIdCache[tag];
     }
 
-    public async ValueTask<Tag> GetById(TagId tagId, CancellationToken cancellationToken)
+    public Tag GetById(TagId tagId, CancellationToken cancellationToken)
     {
         baseDirectoryPath.AssertExists();
 
@@ -60,7 +60,7 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
             return tag;
         }
 
-        using var handle = await idsFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+        using var handle = idsFilePath.OpenRead(cancellationToken);
 
         Debug.Assert(handle is not null, $"handle for file '{idsFilePath}' is null");
 

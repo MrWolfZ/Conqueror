@@ -140,7 +140,7 @@ internal sealed class FileSystemMessageReceiverRunner(
         {
             using var disposable = await inboxFiles.GetWriteLock(inboxName, pollingInterval, cancellationToken).ConfigureAwait(false);
 
-            var startAtSeqNr = await inboxFiles.GetCurrentSeqNr(inboxName, cancellationToken).ConfigureAwait(false);
+            var startAtSeqNr = inboxFiles.GetCurrentSeqNr(inboxName, cancellationToken);
 
             var latestSeqNr = new SeqNr(0);
 
@@ -160,13 +160,12 @@ internal sealed class FileSystemMessageReceiverRunner(
 
                     if (isRelevantEntry)
                     {
-                        await inboxFiles.Append(
-                                            inboxName,
-                                            seqNr,
-                                            newEntryId,
-                                            messageTag,
-                                            cancellationToken)
-                                        .ConfigureAwait(false);
+                        inboxFiles.Append(
+                            inboxName,
+                            seqNr,
+                            newEntryId,
+                            messageTag,
+                            cancellationToken);
                     }
                 }
             }
@@ -209,13 +208,12 @@ internal sealed class FileSystemMessageReceiverRunner(
 
                     Debug.Assert(message is not null, $"the message payload file for tag '{tag}' and ID '{entryId}' should exist");
 
-                    var messageMetadata = await contentFiles.ReadMetadata(
-                                                                tag,
-                                                                entryId,
-                                                                fileNameSuffix: null,
-                                                                MessageMetadataJsonSerializerContext.Default.MessageMetadata,
-                                                                cancellationToken)
-                                                            .ConfigureAwait(false);
+                    var messageMetadata = contentFiles.ReadMetadata(
+                        tag,
+                        entryId,
+                        fileNameSuffix: null,
+                        MessageMetadataJsonSerializerContext.Default.MessageMetadata,
+                        cancellationToken);
 
                     if (messageMetadata.TimeToLive is { } ttl)
                     {
@@ -225,7 +223,7 @@ internal sealed class FileSystemMessageReceiverRunner(
                         if (isExpired)
                         {
                             // TODO: append to dead letter queue
-                            await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                            inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken);
 
                             continue;
                         }
@@ -249,23 +247,22 @@ internal sealed class FileSystemMessageReceiverRunner(
                     catch
                     {
                         var updatedMetadata = messageMetadata with { NrOfFailedProcessingAttempts = messageMetadata.NrOfFailedProcessingAttempts + 1 };
-                        await contentFiles.WriteMetadata(
-                                              tag,
-                                              entryId,
-                                              updatedMetadata,
-                                              fileNameSuffix: null,
-                                              MessageMetadataJsonSerializerContext.Default.MessageMetadata,
-                                              CancellationToken.None)
-                                          .ConfigureAwait(false);
+                        contentFiles.WriteMetadata(
+                            tag,
+                            entryId,
+                            updatedMetadata,
+                            fileNameSuffix: null,
+                            MessageMetadataJsonSerializerContext.Default.MessageMetadata,
+                            CancellationToken.None);
 
                         if (updatedMetadata.NrOfFailedProcessingAttempts >= config.LimitNrOfFailedProcessingAttempts)
                         {
                             // TODO: append to dead letter queue
-                            await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                            inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken);
                         }
                         else
                         {
-                            await inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                            inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken);
                         }
 
                         throw;
@@ -273,21 +270,20 @@ internal sealed class FileSystemMessageReceiverRunner(
 
                     if (response is UnitMessageResponse)
                     {
-                        await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                        inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken);
 
                         continue;
                     }
 
                     var encodedContextData = conquerorContext.EncodeUpstreamContextData();
 
-                    await contentFiles.WriteMetadata(
-                                          tag,
-                                          entryId,
-                                          new(entryId, encodedContextData),
-                                          fileNameSuffix: ".response",
-                                          MessageMetadataJsonSerializerContext.Default.MessageResponseMetadata,
-                                          cancellationToken)
-                                      .ConfigureAwait(false);
+                    contentFiles.WriteMetadata(
+                        tag,
+                        entryId,
+                        new(entryId, encodedContextData),
+                        fileNameSuffix: ".response",
+                        MessageMetadataJsonSerializerContext.Default.MessageResponseMetadata,
+                        cancellationToken);
 
                     await contentFiles.WritePayload(
                                           tag,
@@ -302,11 +298,11 @@ internal sealed class FileSystemMessageReceiverRunner(
                                           cancellationToken)
                                       .ConfigureAwait(false);
 
-                    await inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                    inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken);
                 }
                 catch
                 {
-                    await inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken).ConfigureAwait(false);
+                    inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken);
 
                     throw;
                 }

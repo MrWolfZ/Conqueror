@@ -110,7 +110,30 @@ public sealed class FileSystemMessageTransportConformityTestHost : IMessageTrans
 
         if (baseDirectory.Exists)
         {
-            baseDirectory.Delete(true);
+            var attempts = 0;
+
+            while (true)
+            {
+                // there are some rare edge cases where a receiver might still be accessing a file
+                // even after it was disposed, so we work around that by retrying the deletion of
+                // the test data dir a few times
+                try
+                {
+                    baseDirectory.Delete(true);
+                    return;
+                }
+                catch
+                {
+                    if (attempts > 10)
+                    {
+                        throw;
+                    }
+
+                    attempts += 1;
+
+                    await Task.Delay(1, CancellationToken.None);
+                }
+            }
         }
     }
 }
