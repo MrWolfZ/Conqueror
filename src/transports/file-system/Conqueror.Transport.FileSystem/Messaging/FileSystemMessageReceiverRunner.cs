@@ -260,7 +260,7 @@ internal sealed class FileSystemMessageReceiverRunner(
                             // TODO: append to dead letter queue
                             inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken);
                         }
-                        else
+                        else if (config.LeaseDuration is not null)
                         {
                             inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken);
                         }
@@ -302,7 +302,10 @@ internal sealed class FileSystemMessageReceiverRunner(
                 }
                 catch
                 {
-                    inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken);
+                    if (config.LeaseDuration is not null)
+                    {
+                        inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken);
+                    }
 
                     throw;
                 }

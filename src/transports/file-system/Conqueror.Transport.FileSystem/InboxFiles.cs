@@ -102,6 +102,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         "ReSharper",
         "PossiblyMistakenUseOfCancellationToken",
         Justification = "we are using different tokens for different purposes")]
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
     public async IAsyncEnumerable<(Tag Tag, SeqNr SeqNr, EntryId Id)> LeaseNextMessage(
         InboxName inboxName,
         TimeSpan pollingInterval,
@@ -138,7 +139,12 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                 // we only acquire the file lock when the file exists and has at least one entry (ignoring the marker entry)
                 if (inboxFilePath.GetFileInfo() is { Exists: true, Length: > EntryLength })
                 {
-                    using var handle = inboxFilePath.OpenReadWrite(cancellationToken);
+                    using var handle = leaseDuration is null
+                        ? inboxFilePath.OpenRead(cancellationToken)
+                        : inboxFilePath.OpenReadWrite(cancellationToken);
+
+                    Debug.Assert(handle is not null, $"expected the inbox file handle for file '{inboxFilePath}' to be non-null");
+
                     var nextAvailableEntry = FindNextAvailableEntry(handle, now);
 
                     if (nextAvailableEntry is { Entry: var entry, EntryLineNrInFile: var entryLineNrInFile })
@@ -149,7 +155,15 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
                         Debug.Assert(handle is not null, $"expected the inbox file handle for file '{inboxFilePath}' to be non-null");
 
-                        UpdateInboxEntry(handle, entryLineNrInFile, entry with { State = StateLeased, LeaseExpiresAt = leaseExpiresAt });
+                        // performance: when the lease duration is null (i.e. there is only a single reader) we do not need to
+                        // write the lease to the file
+                        if (leaseDuration is not null)
+                        {
+                            UpdateInboxEntry(
+                                (ReadWriteFileHandle)handle,
+                                entryLineNrInFile,
+                                entry with { State = StateLeased, LeaseExpiresAt = leaseExpiresAt });
+                        }
 
                         var tag = tagIdFiles.GetById(entry.TagId, cancellationToken);
 
@@ -177,7 +191,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                 }
             }
 
-            static (Entry Entry, int EntryLineNrInFile)? FindNextAvailableEntry(ReadWriteFileHandle handle, DateTime now)
+            static (Entry Entry, int EntryLineNrInFile)? FindNextAvailableEntry(ReadOnlyFileHandle handle, DateTime now)
             {
                 ThrowOnInvalidLength(handle);
 
@@ -368,7 +382,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         inboxFileHandle.Writer.Flush();
     }
 
-    private static void ThrowOnInvalidLength(ReadWriteFileHandle handle)
+    private static void ThrowOnInvalidLength(ReadOnlyFileHandle handle)
     {
         if (handle.Stream.Length % EntryLength != 0)
         {

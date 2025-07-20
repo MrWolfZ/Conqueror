@@ -103,6 +103,83 @@ public partial class FileSystemMessageBenchmarks
         }
     }
 
+    [Benchmark]
+    [ArgumentsSource(nameof(Arguments))]
+    public void RunWithoutResponse(
+        int nrOfMessages,
+        int nrOfSenders,
+        int nrOfReceivers,
+        bool runSendersAndReceiversInSameProvider)
+    {
+        var dir = CreateDirectory();
+
+        using var cts = new CancellationTokenSource();
+
+        var withoutResponseResult = new WithoutResponseResult(nrOfMessages);
+        using var receiverProvider = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
+                                                            .AddConquerorFileSystemTransport()
+                                                            .AddSingleton(new RunConfig(dir, nrOfReceivers == 1))
+                                                            .AddSingleton(withoutResponseResult)
+                                                            .BuildServiceProvider();
+
+        using var senderProvider = runSendersAndReceiversInSameProvider
+            ? receiverProvider
+            : new ServiceCollection().AddConquerorFileSystemTransport().BuildServiceProvider();
+
+        var sendersTask = RunSenders(senderProvider, cts.Token);
+        var receiversTask = RunReceivers(receiverProvider, cts.Token);
+
+        sendersTask.GetAwaiter().GetResult();
+        withoutResponseResult.CompletionTask.GetAwaiter().GetResult();
+
+        cts.Cancel();
+
+        receiversTask.GetAwaiter().GetResult();
+
+        async Task RunSenders(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        {
+            var pollingInterval = TimeSpan.FromMilliseconds(100);
+            var messageSenders = serviceProvider.GetRequiredService<IMessageSenders>();
+
+            var senders = Enumerable.Range(0, nrOfSenders)
+                                    .Select(_ => messageSenders.For(TestMessageWithoutResponse.T)
+                                                               .WithTransport(b => b.UseFileSystem(dir.FullName, pollingInterval)))
+                                    .ToArray();
+
+            if (senders.Length == 1)
+            {
+                await RunSender(senders[0], nrOfMessages, cancellationToken);
+
+                return;
+            }
+
+            await Task.WhenAll(senders.Select(s => RunSender(s, nrOfMessages / senders.Length, cancellationToken)));
+        }
+
+        async Task RunReceivers(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        {
+            var messageReceivers = serviceProvider.GetRequiredService<IMessageReceivers>();
+
+            var handles = Enumerable.Range(0, nrOfReceivers)
+                                    .Select(_ => messageReceivers.RunFileSystemMessageReceiver<TestMessageHandler>(cancellationToken))
+                                    .ToArray();
+
+            await using var combinedHandle = messageReceivers.CombineExecutions(handles);
+
+            await combinedHandle.InitialConnectionTask;
+
+            await combinedHandle.CompletionTask;
+        }
+
+        static async Task RunSender(TestMessageWithoutResponse.IHandler sender, int nrOfMessages, CancellationToken cancellationToken)
+        {
+            for (var i = 0; i < nrOfMessages; i += 1)
+            {
+                await sender.Handle(new(i), cancellationToken);
+            }
+        }
+    }
+
     public static IEnumerable<object?[]> Arguments()
     {
         foreach (var t in from nrOfMessages in new[] { 10, 100 }
@@ -135,18 +212,47 @@ public partial class FileSystemMessageBenchmarks
 
     private sealed record RunConfig(DirectoryInfo BaseDirectory, bool IsSingleReceiver);
 
+    private sealed class WithoutResponseResult(int nrOfMessages)
+    {
+        private readonly TaskCompletionSource tcs = new();
+
+        private int nrOfMessagesReceived;
+
+        public Task CompletionTask => tcs.Task;
+
+        public void Signal()
+        {
+            if (Interlocked.Increment(ref nrOfMessagesReceived) == nrOfMessages)
+            {
+                tcs.SetResult();
+            }
+        }
+    }
+
     [FileSystemMessage<TestMessageResponse>]
     private sealed partial record TestMessage(int Value);
 
+    [FileSystemMessage]
+    private sealed partial record TestMessageWithoutResponse(int Value);
+
     private sealed record TestMessageResponse(int Value);
 
-    private sealed partial class TestMessageHandler : TestMessage.IHandler
+    private sealed partial class TestMessageHandler(WithoutResponseResult? withoutResponseResult = null)
+        : TestMessage.IHandler,
+          TestMessageWithoutResponse.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = new())
         {
             await Task.Delay(10, cancellationToken);
 
             return new(message.Value + 1);
+        }
+
+        public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(10, cancellationToken);
+
+            withoutResponseResult?.Signal();
         }
 
         public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)

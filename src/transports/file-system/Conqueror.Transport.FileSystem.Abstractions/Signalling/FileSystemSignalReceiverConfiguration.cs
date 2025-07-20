@@ -7,7 +7,7 @@ public sealed class FileSystemSignalReceiverConfiguration
 
     public required string BaseDirectoryPath { get; init; }
 
-    public required TimeSpan LeaseDuration { get; init; }
+    public required TimeSpan? LeaseDuration { get; init; }
 
     public required TimeSpan PollingInterval { get; init; }
 

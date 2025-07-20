@@ -183,7 +183,7 @@ internal static class FileOperations
     }
 }
 
-internal sealed class ReadOnlyFileHandle(FilePath path, FileStream stream) : IDisposable
+internal class ReadOnlyFileHandle(FilePath path, FileStream stream) : IDisposable
 {
     private StreamReader? reader;
 
@@ -195,28 +195,33 @@ internal sealed class ReadOnlyFileHandle(FilePath path, FileStream stream) : IDi
 
     public void Dispose()
     {
-        reader?.Dispose();
-        stream.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool isDisposing)
+    {
+        if (isDisposing)
+        {
+            reader?.Dispose();
+            stream.Dispose();
+        }
     }
 }
 
-internal sealed class ReadWriteFileHandle(FilePath path, FileStream stream) : IDisposable
+internal sealed class ReadWriteFileHandle(FilePath path, FileStream stream) : ReadOnlyFileHandle(path, stream)
 {
-    private StreamReader? reader;
     private StreamWriter? writer;
-
-    public FilePath FilePath => path;
-
-    public FileStream Stream => stream;
-
-    public StreamReader Reader => reader ??= new(Stream, leaveOpen: true);
 
     public StreamWriter Writer => writer ??= new(Stream, leaveOpen: true);
 
-    public void Dispose()
+    protected override void Dispose(bool isDisposing)
     {
-        reader?.Dispose();
-        writer?.Dispose();
-        stream.Dispose();
+        if (isDisposing)
+        {
+            writer?.Dispose();
+        }
+
+        base.Dispose(isDisposing);
     }
 }

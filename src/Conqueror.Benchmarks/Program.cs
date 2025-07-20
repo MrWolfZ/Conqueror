@@ -57,6 +57,38 @@ switch (toRun)
         break;
     }
 
+    case "transport-file-system-message-no-response-manual":
+    {
+        FileSystemMessageBenchmarks.Init();
+
+        var sw = Stopwatch.StartNew();
+        new FileSystemMessageBenchmarks().RunWithoutResponse(
+            nrOfMessages: 1_000,
+            nrOfSenders: 4,
+            nrOfReceivers: 4,
+            runSendersAndReceiversInSameProvider: false);
+
+        Console.WriteLine(sw.Elapsed);
+
+        break;
+    }
+
+    case "transport-file-system-message-no-response-single-manual":
+    {
+        FileSystemMessageBenchmarks.Init();
+
+        var sw = Stopwatch.StartNew();
+        new FileSystemMessageBenchmarks().RunWithoutResponse(
+            nrOfMessages: 1_000,
+            nrOfSenders: 4,
+            nrOfReceivers: 1,
+            runSendersAndReceiversInSameProvider: false);
+
+        Console.WriteLine(sw.Elapsed);
+
+        break;
+    }
+
     default:
         throw new ArgumentOutOfRangeException(nameof(toRun), toRun, $"unknown benchmark to run: {toRun}");
 }

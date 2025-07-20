@@ -184,7 +184,7 @@ internal sealed class FileSystemSignalReceiverRunner(
         ContentFiles contentFiles,
         InboxName inboxName,
         TimeSpan pollingInterval,
-        TimeSpan leaseDuration,
+        TimeSpan? leaseDuration,
         Action<object>? signalCallback,
         CancellationToken cancellationToken)
     {
@@ -234,7 +234,10 @@ internal sealed class FileSystemSignalReceiverRunner(
                 }
                 catch
                 {
-                    inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken);
+                    if (leaseDuration is not null)
+                    {
+                        inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken);
+                    }
 
                     throw;
                 }

@@ -30,10 +30,7 @@ internal sealed class FileSystemMessageReceiver(
         {
             Name = HandlerType?.Name ?? $"delegate-{string.Join("-", Tags)}",
             BaseDirectoryPath = baseDirectoryPath,
-
-            // by setting the lease duration to zero, messages will be immediately available for reprocessing
-            // by the single handler in case of a crash, ensuring in-order delivery
-            LeaseDuration = TimeSpan.Zero,
+            LeaseDuration = null,
             PollingInterval = pollingInterval,
         };
 

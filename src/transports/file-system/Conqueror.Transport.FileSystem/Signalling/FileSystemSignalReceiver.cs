@@ -45,7 +45,7 @@ internal sealed class FileSystemSignalReceiver(
         {
             Name = HandlerType?.Name ?? $"delegate-{string.Join("-", Tags)}",
             BaseDirectoryPath = baseDirectoryPath,
-            LeaseDuration = TimeSpan.Zero, // by setting the lease duration to zero, signals will be immediately available for reprocessing
+            LeaseDuration = null,
             PollingInterval = pollingInterval,
         };
 
