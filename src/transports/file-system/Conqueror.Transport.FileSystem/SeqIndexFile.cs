@@ -2,6 +2,7 @@
 
 namespace Conqueror.Transport.FileSystem;
 
+[SuppressMessage("Major Code Smell", "S6966:Awaitable method should be used", Justification = "for performance")]
 internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles tagIdFiles) : IDisposable
 {
     private const int SeqNrLength = 12;
@@ -13,15 +14,13 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
     private readonly ConcurrentDictionary<TimeSpan, Poller> pollerByPollingInterval = new();
     private readonly FilePath seqFilePath = baseDirectoryPath.File("seq-index.txt");
 
-    public async Task<SeqNr> Append(EntryId id, Tag tag, CancellationToken cancellationToken)
+    public async ValueTask<SeqNr> Append(EntryId id, Tag tag, CancellationToken cancellationToken)
     {
         baseDirectoryPath.AssertExists();
 
         var tagId = await tagIdFiles.GetId(tag, cancellationToken).ConfigureAwait(false);
 
-        var handle = await seqFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
-
-        await using var handleDisposable = handle.ConfigureAwait(false);
+        using var handle = await seqFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
 
         ThrowOnInvalidLength(handle);
 
@@ -30,11 +29,11 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
         if (handle.Stream.Length == 0)
         {
             compactedSeqNr = new(0);
-            await WriteCompactedSeqNr(handle.Writer, compactedSeqNr).ConfigureAwait(false);
+            WriteCompactedSeqNr(handle.Writer, compactedSeqNr);
         }
         else
         {
-            compactedSeqNr = await GetCompactedSeqNr(handle.Reader, cancellationToken).ConfigureAwait(false);
+            compactedSeqNr = GetCompactedSeqNr(handle.Reader);
         }
 
         var nrOfEntries = (ulong)(handle.Stream.Length - HeaderLength) / EntryLength;
@@ -48,7 +47,7 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
         Debug.Assert(content.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {content.Length}");
 
         // we do not allow cancellation here to prevent corruption of the file
-        await handle.Writer.WriteAsync(content.AsMemory(), CancellationToken.None).ConfigureAwait(false);
+        handle.Writer.Write(content.AsMemory());
 
         foreach (var poller in pollerByPollingInterval.Values)
         {
@@ -115,7 +114,7 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
 
         (EntryId EntryId, Tag Tag, SeqNr SeqNr)[] entries;
 
-        await using (handle.ConfigureAwait(false))
+        using (handle)
         {
             var seqNrOffset = startAt - compactedSeqNr;
 
@@ -128,14 +127,14 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
 
             Debug.Assert(nrOfCharsToRead > 0, $"expected nr of chars to read to be greater than 0, but was {nrOfCharsToRead}");
 
-            using var buffer = new CharBuffer(nrOfCharsToRead);
+            var buffer = new CharBuffer(nrOfCharsToRead);
 
             var nowAt = handle.Stream.Seek((long)startAtOffset, SeekOrigin.Begin);
             handle.Reader.DiscardBufferedData();
 
             Debug.Assert(nowAt == (long)startAtOffset, $"expected to seek to {startAtOffset}, but seeked to {nowAt}");
 
-            var readCount = await handle.Reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
+            var readCount = handle.Reader.Read(buffer.Span);
 
             Debug.Assert(readCount == nrOfCharsToRead, $"expected to read {nrOfCharsToRead} bytes, but read {readCount}");
 
@@ -160,42 +159,40 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
         Justification = "the poller should be simple and only contain code related to polling, not file access")]
     private static async Task<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)?> GetCurrentSeqNr(FilePath seqFilePath, CancellationToken cancellationToken)
     {
-        var handle = await seqFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+        using var handle = await seqFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
 
         if (handle is null)
         {
             return null;
         }
 
-        await using var handleDisposable = handle.ConfigureAwait(false);
-
         if (handle.Stream.Length < HeaderLength)
         {
             return null;
         }
 
-        var compactedSeqNr = await GetCompactedSeqNr(handle.Reader, cancellationToken).ConfigureAwait(false);
+        var compactedSeqNr = GetCompactedSeqNr(handle.Reader);
         var nrOfEntries = (handle.Stream.Length - HeaderLength) / EntryLength;
 
         return (compactedSeqNr, new(compactedSeqNr + (ulong)nrOfEntries));
     }
 
-    private static async Task<SeqNr> GetCompactedSeqNr(StreamReader reader, CancellationToken cancellationToken)
+    private static SeqNr GetCompactedSeqNr(StreamReader reader)
     {
-        using var buffer = new CharBuffer(SeqNrLength);
-        var readChars = await reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
+        Span<char> buffer = stackalloc char[SeqNrLength];
+        var readChars = reader.Read(buffer);
 
         Debug.Assert(readChars == SeqNrLength, $"expected to read {SeqNrLength} chars but read {readChars}");
 
-        return new(ulong.Parse(buffer.Span));
+        return new(ulong.Parse(buffer));
     }
 
-    private static async Task WriteCompactedSeqNr(StreamWriter writer, SeqNr seqNr)
+    private static void WriteCompactedSeqNr(StreamWriter writer, SeqNr seqNr)
     {
         _ = writer.BaseStream.Seek(0, SeekOrigin.Begin);
 
-        await writer.WriteAsync($"{seqNr.ToPaddedString(SeqNrLength)}\n".AsMemory(), CancellationToken.None).ConfigureAwait(false);
-        await writer.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+        writer.Write($"{seqNr.ToPaddedString(SeqNrLength)}\n".AsMemory());
+        writer.Flush();
     }
 
     private static void ThrowOnInvalidLength(ReadWriteFileHandle handle)

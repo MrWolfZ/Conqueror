@@ -8,7 +8,7 @@ internal static class FileOperations
 
     public static FileInfo GetFileInfo(this FilePath filePath) => new(filePath);
 
-    public static async Task<ReadOnlyFileHandle?> OpenRead(this FilePath filePath, CancellationToken cancellationToken)
+    public static async ValueTask<ReadOnlyFileHandle?> OpenRead(this FilePath filePath, CancellationToken cancellationToken)
     {
         try
         {
@@ -26,7 +26,7 @@ internal static class FileOperations
         }
     }
 
-    public static async Task<ReadWriteFileHandle> OpenReadWrite(this FilePath filePath, CancellationToken cancellationToken)
+    public static async ValueTask<ReadWriteFileHandle> OpenReadWrite(this FilePath filePath, CancellationToken cancellationToken)
     {
         var fileStream = await filePath.OpenWithRetry(FileAccess.ReadWrite, cancellationToken).ConfigureAwait(false);
 
@@ -55,36 +55,19 @@ internal static class FileOperations
         }
     }
 
-    public static async Task WriteJson<T>(
-        this ReadWriteFileHandle handle,
-        T value,
-        JsonTypeInfo<T> jsonTypeInfo,
-        CancellationToken cancellationToken)
+    public static void WriteJson<T>(this ReadWriteFileHandle handle, T value, JsonTypeInfo<T> jsonTypeInfo)
     {
-        await JsonSerializer.SerializeAsync(
-                                handle.Stream,
-                                value,
-                                jsonTypeInfo,
-                                cancellationToken)
-                            .ConfigureAwait(false);
+        JsonSerializer.Serialize(handle.Stream, value, jsonTypeInfo);
     }
 
-    public static async Task<T> ReadJson<T>(this ReadWriteFileHandle handle, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
+    public static T ReadJson<T>(this ReadWriteFileHandle handle, JsonTypeInfo<T> jsonTypeInfo)
     {
-        var result = await JsonSerializer.DeserializeAsync(
-                                             handle.Stream,
-                                             jsonTypeInfo,
-                                             cancellationToken)
-                                         .ConfigureAwait(false);
+        var result = JsonSerializer.Deserialize(handle.Stream, jsonTypeInfo);
 
         return result ?? throw new IOException($"failed to JSON-deserialize file '{handle.FilePath}' to object of type '{typeof(T)}'");
     }
 
-    public static async Task DeleteLineFromFile(
-        ReadWriteFileHandle handle,
-        int lineNumber,
-        int lineLength,
-        CancellationToken cancellationToken)
+    public static void DeleteLineFromFile(ReadWriteFileHandle handle, int lineNumber, int lineLength)
     {
         if (lineNumber < 0 || lineLength <= 0)
         {
@@ -102,20 +85,20 @@ internal static class FileOperations
         long readPos = (lineNumber + 1) * lineLength;
         long writePos = lineNumber * lineLength;
 
-        var buffer = new byte[lineLength];
+        Span<byte> buffer = stackalloc byte[lineLength];
 
         // Shift all lines after the deleted one forward
         while (readPos < stream.Length)
         {
             _ = stream.Seek(readPos, SeekOrigin.Begin);
-            var bytesRead = await stream.ReadAsync(buffer.AsMemory(0, lineLength), cancellationToken).ConfigureAwait(false);
+            var bytesRead = stream.Read(buffer);
             if (bytesRead == 0)
             {
                 break;
             }
 
             _ = stream.Seek(writePos, SeekOrigin.Begin);
-            await stream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
+            stream.Write(buffer);
 
             readPos += lineLength;
             writePos += lineLength;
@@ -155,7 +138,7 @@ internal static class FileOperations
                     mode,
                     access,
                     share,
-                    bufferSize: 0);
+                    bufferSize: 128);
             }
             catch (IOException iex) when (iex is not FileNotFoundException and not DirectoryNotFoundException)
             {
@@ -191,7 +174,7 @@ internal static class FileOperations
     }
 }
 
-internal sealed class ReadOnlyFileHandle(FilePath path, FileStream stream) : IAsyncDisposable
+internal sealed class ReadOnlyFileHandle(FilePath path, FileStream stream) : IDisposable
 {
     private StreamReader? reader;
 
@@ -201,15 +184,14 @@ internal sealed class ReadOnlyFileHandle(FilePath path, FileStream stream) : IAs
 
     public StreamReader Reader => reader ??= new(Stream, leaveOpen: true);
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
         reader?.Dispose();
-
-        await Stream.DisposeAsync().ConfigureAwait(false);
+        stream.Dispose();
     }
 }
 
-internal sealed class ReadWriteFileHandle(FilePath path, FileStream stream) : IAsyncDisposable
+internal sealed class ReadWriteFileHandle(FilePath path, FileStream stream) : IDisposable
 {
     private StreamReader? reader;
     private StreamWriter? writer;
@@ -222,15 +204,10 @@ internal sealed class ReadWriteFileHandle(FilePath path, FileStream stream) : IA
 
     public StreamWriter Writer => writer ??= new(Stream, leaveOpen: true);
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
-        if (writer is not null)
-        {
-            await writer.DisposeAsync().ConfigureAwait(false);
-        }
-
         reader?.Dispose();
-
-        await Stream.DisposeAsync().ConfigureAwait(false);
+        writer?.Dispose();
+        stream.Dispose();
     }
 }

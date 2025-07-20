@@ -1,5 +1,8 @@
 ﻿namespace Conqueror.Transport.FileSystem;
 
+[SuppressMessage("Major Code Smell", "S6966:Awaitable method should be used", Justification = "for performance")]
+[SuppressMessage("ReSharper", "MethodHasAsyncOverloadWithCancellation", Justification = "for performance")]
+[SuppressMessage("ReSharper", "MethodHasAsyncOverload", Justification = "for performance")]
 internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tagIdFiles)
 {
     private const int SeqNrLength = 12; // up to 1 trillion messages
@@ -43,58 +46,61 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
         inboxFilePath.DirectoryPath.EnsureExists();
 
-        var handle = await inboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
-
-        await using var handleDisposable = handle.ConfigureAwait(false);
+        using var handle = await inboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
 
         ThrowOnInvalidLength(handle);
 
-        // if we just created the file, we need to create the initial marker entry
-        if (handle.Stream.Length == 0)
-        {
-            var emptyId = new string('_', EntryId.IdLength);
-            var emptyTagId = new string('_', TagIdLength);
-            var markerEntry =
-                $"{seqNr.ToPaddedString(SeqNrLength)}{Separator}{emptyId}{Separator}{emptyTagId}{Separator}{StateMarker}{Separator}{EmptyTimestamp}\n";
-
-            Debug.Assert(markerEntry.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {markerEntry.Length}");
-
-            // we do not allow cancellation here to prevent corruption of the file
-            await handle.Writer.WriteAsync(markerEntry.AsMemory(), CancellationToken.None).ConfigureAwait(false);
-        }
-        else
-        {
-            // otherwise we override the marker with the new seq nr (if it is not a duplicate)
-            var buffer = new char[SeqNrLength];
-            var readChars = await handle.Reader.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-
-            Debug.Assert(readChars == SeqNrLength, $"expected to read {SeqNrLength} chars, but got {readChars}");
-
-            var prevSeqNr = ulong.Parse(buffer);
-
-            Debug.Assert(seqNr > prevSeqNr, $"expected seq nr to be greater than {prevSeqNr}, but it was {seqNr}");
-
-            var seekResult = handle.Stream.Seek(0, SeekOrigin.Begin);
-
-            Debug.Assert(seekResult == 0, $"expected to seek to start of file, but got {seekResult}");
-
-            // we do not allow cancellation here to prevent corruption of the file
-            await handle.Writer.WriteAsync(seqNr.ToPaddedString(SeqNrLength).AsMemory(), CancellationToken.None).ConfigureAwait(false);
-        }
-
-        await handle.Writer.FlushAsync(CancellationToken.None).ConfigureAwait(false);
-
-        _ = handle.Stream.Seek(0, SeekOrigin.End);
-
-        var entry =
-            $"{seqNr.ToPaddedString(SeqNrLength)}{Separator}{id}{Separator}{tagId.ToPaddedString(TagIdLength)}{Separator}{StateAvailable}{Separator}{EmptyTimestamp}\n";
-
-        Debug.Assert(entry.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {entry.Length}");
-
-        // we do not allow cancellation here to prevent corruption of the file
-        await handle.Writer.WriteAsync(entry.AsMemory(), CancellationToken.None).ConfigureAwait(false);
+        AppendToFile(handle, seqNr, id, tagId);
 
         OnAppend?.Invoke(inboxName);
+
+        static void AppendToFile(ReadWriteFileHandle handle, SeqNr seqNr, EntryId id, TagId tagId)
+        {
+            // if we just created the file, we need to create the initial marker entry
+            if (handle.Stream.Length == 0)
+            {
+                var emptyId = new string('_', EntryId.IdLength);
+                var emptyTagId = new string('_', TagIdLength);
+                var markerEntry =
+                    $"{seqNr.ToPaddedString(SeqNrLength)}{Separator}{emptyId}{Separator}{emptyTagId}{Separator}{StateMarker}{Separator}{EmptyTimestamp}\n";
+
+                Debug.Assert(markerEntry.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {markerEntry.Length}");
+
+                // we do not allow cancellation here to prevent corruption of the file
+                handle.Writer.Write(markerEntry);
+            }
+            else
+            {
+                // otherwise we override the marker with the new seq nr (if it is not a duplicate)
+                Span<char> buffer = stackalloc char[SeqNrLength];
+                var readChars = handle.Reader.Read(buffer);
+
+                Debug.Assert(readChars == SeqNrLength, $"expected to read {SeqNrLength} chars, but got {readChars}");
+
+                var prevSeqNr = ulong.Parse(buffer);
+
+                Debug.Assert(seqNr > prevSeqNr, $"expected seq nr to be greater than {prevSeqNr}, but it was {seqNr}");
+
+                var seekResult = handle.Stream.Seek(0, SeekOrigin.Begin);
+
+                Debug.Assert(seekResult == 0, $"expected to seek to start of file, but got {seekResult}");
+
+                // we do not allow cancellation here to prevent corruption of the file
+                handle.Writer.Write(seqNr.ToPaddedString(SeqNrLength));
+            }
+
+            handle.Writer.Flush();
+
+            _ = handle.Stream.Seek(0, SeekOrigin.End);
+
+            var entry =
+                $"{seqNr.ToPaddedString(SeqNrLength)}{Separator}{id}{Separator}{tagId.ToPaddedString(TagIdLength)}{Separator}{StateAvailable}{Separator}{EmptyTimestamp}\n";
+
+            Debug.Assert(entry.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {entry.Length}");
+
+            // we do not allow cancellation here to prevent corruption of the file
+            handle.Writer.Write(entry);
+        }
     }
 
     [SuppressMessage(
@@ -142,15 +148,9 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                     continue;
                 }
 
-                var handle = await inboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
-
-                await using (handle.ConfigureAwait(false))
+                using (var handle = await inboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false))
                 {
-                    var nextAvailableEntry = await FindNextAvailableEntry(
-                            handle,
-                            now,
-                            cancellationToken)
-                        .ConfigureAwait(false);
+                    var nextAvailableEntry = FindNextAvailableEntry(handle, now);
 
                     if (nextAvailableEntry is { Entry: var entry, EntryLineNrInFile: var entryLineNrInFile })
                     {
@@ -160,11 +160,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
                         Debug.Assert(handle is not null, $"expected the inbox file handle for file '{inboxFilePath}' to be non-null");
 
-                        await UpdateInboxEntry(
-                                handle,
-                                entryLineNrInFile,
-                                entry with { State = StateLeased, LeaseExpiresAt = leaseExpiresAt })
-                            .ConfigureAwait(false);
+                        UpdateInboxEntry(handle, entryLineNrInFile, entry with { State = StateLeased, LeaseExpiresAt = leaseExpiresAt });
 
                         var tag = await tagIdFiles.GetById(entry.TagId, cancellationToken).ConfigureAwait(false);
 
@@ -192,26 +188,23 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                 }
             }
 
-            static async Task<(Entry Entry, int EntryLineNrInFile)?> FindNextAvailableEntry(
-                ReadWriteFileHandle handle,
-                DateTime now,
-                CancellationToken cancellationToken)
+            static (Entry Entry, int EntryLineNrInFile)? FindNextAvailableEntry(ReadWriteFileHandle handle, DateTime now)
             {
                 ThrowOnInvalidLength(handle);
 
                 // skip marker entry
                 _ = handle.Stream.Seek(EntryLength, SeekOrigin.Begin);
 
-                using var buffer = new CharBuffer(EntryLength);
+                Span<char> buffer = stackalloc char[EntryLength];
                 var entryLineNrInFile = 1;
 
                 while (!handle.Reader.EndOfStream)
                 {
-                    var readBytes = await handle.Reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
+                    var readBytes = handle.Reader.Read(buffer);
 
                     Debug.Assert(readBytes == EntryLength, $"expected to read {EntryLength} bytes, but read {readBytes}");
 
-                    var entry = Entry.Parse(buffer.Span);
+                    var entry = Entry.Parse(buffer);
                     var entryIsAvailable = entry.State == StateAvailable || now >= entry.LeaseExpiresAt;
 
                     if (entryIsAvailable)
@@ -231,112 +224,109 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         }
     }
 
-    public async Task<SeqNr> GetCurrentSeqNr(InboxName inboxName, CancellationToken cancellationToken)
+    public async ValueTask<SeqNr> GetCurrentSeqNr(InboxName inboxName, CancellationToken cancellationToken)
     {
         var inboxFilePath = GetInboxFilePath(inboxName);
 
-        var handle = await inboxFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+        using var handle = await inboxFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
 
-        if (handle is null)
+        return handle is null ? new(0) : Read(handle);
+
+        static SeqNr Read(ReadOnlyFileHandle handle)
         {
-            return new(0);
+            Span<char> buffer = stackalloc char[SeqNrLength];
+
+            var readChars = handle.Reader.Read(buffer);
+
+            Debug.Assert(readChars == SeqNrLength, $"expected to read {EntryLength} chars but got {readChars}");
+
+            return new(ulong.Parse(buffer));
         }
-
-        await using var handleDisposable = handle.ConfigureAwait(false);
-
-        using var buffer = new CharBuffer(SeqNrLength);
-
-        var readChars = await handle.Reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
-
-        Debug.Assert(readChars == SeqNrLength, $"expected to read {EntryLength} chars but got {readChars}");
-
-        return new(ulong.Parse(buffer.Span));
     }
 
-    public async Task GiveUpLease(InboxName inboxName, SeqNr seqNr, CancellationToken cancellationToken)
+    public async ValueTask GiveUpLease(InboxName inboxName, SeqNr seqNr, CancellationToken cancellationToken)
     {
         var tagInboxFilePath = GetInboxFilePath(inboxName);
 
         tagInboxFilePath.DirectoryPath.AssertExists();
 
-        var handle = await tagInboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
-
-        await using var handleDisposable = handle.ConfigureAwait(false);
+        using var handle = await tagInboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
 
         ThrowOnInvalidLength(handle);
 
-        // skip marker entry
-        _ = handle.Stream.Seek(EntryLength, SeekOrigin.Begin);
+        UpdateEntry(handle, seqNr);
 
-        using var buffer = new CharBuffer(EntryLength);
-        var entryLineNrInFile = 1;
-
-        while (!handle.Reader.EndOfStream)
+        static void UpdateEntry(ReadWriteFileHandle handle, SeqNr seqNr)
         {
-            var readBytes = await handle.Reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
+            // skip marker entry
+            _ = handle.Stream.Seek(EntryLength, SeekOrigin.Begin);
 
-            Debug.Assert(readBytes == EntryLength, $"expected to read {EntryLength} bytes, but read {readBytes}");
+            // TODO: for performance, consider allocating a bigger buffer to read the first few entries at once
+            Span<char> buffer = stackalloc char[EntryLength];
+            var entryLineNrInFile = 1;
 
-            var entry = Entry.Parse(buffer.Span);
-
-            if (entry.SeqNr == seqNr)
+            while (!handle.Reader.EndOfStream)
             {
-                await UpdateInboxEntry(
-                        handle,
-                        entryLineNrInFile,
-                        entry with { State = StateAvailable, LeaseExpiresAt = null })
-                    .ConfigureAwait(false);
+                var readBytes = handle.Reader.Read(buffer);
 
-                return;
+                Debug.Assert(readBytes == EntryLength, $"expected to read {EntryLength} bytes, but read {readBytes}");
+
+                var entry = Entry.Parse(buffer);
+
+                if (entry.SeqNr == seqNr)
+                {
+                    UpdateInboxEntry(handle, entryLineNrInFile, entry with { State = StateAvailable, LeaseExpiresAt = null });
+
+                    return;
+                }
+
+                entryLineNrInFile += 1;
             }
-
-            entryLineNrInFile += 1;
         }
     }
 
-    public async Task RemoveEntry(InboxName inboxName, SeqNr seqNr, CancellationToken cancellationToken)
+    public async ValueTask RemoveEntry(InboxName inboxName, SeqNr seqNr, CancellationToken cancellationToken)
     {
         var tagInboxFilePath = GetInboxFilePath(inboxName);
 
         tagInboxFilePath.DirectoryPath.AssertExists();
 
-        var handle = await tagInboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
-
-        await using var handleDisposable = handle.ConfigureAwait(false);
+        using var handle = await tagInboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
 
         ThrowOnInvalidLength(handle);
 
-        // skip marker entry
-        _ = handle.Stream.Seek(EntryLength, SeekOrigin.Begin);
+        Remove(handle, seqNr);
 
-        using var buffer = new CharBuffer(EntryLength);
-        var entryLineNrInFile = 1;
-
-        while (!handle.Reader.EndOfStream)
+        static void Remove(ReadWriteFileHandle handle, SeqNr seqNr)
         {
-            var readBytes = await handle.Reader.ReadAsync(buffer.Memory, cancellationToken).ConfigureAwait(false);
+            // skip marker entry
+            _ = handle.Stream.Seek(EntryLength, SeekOrigin.Begin);
 
-            Debug.Assert(readBytes == EntryLength, $"expected to read {EntryLength} bytes, but read {readBytes}");
+            // TODO: for performance, consider allocating a bigger buffer to read the first few entries at once
+            Span<char> buffer = stackalloc char[EntryLength];
+            var entryLineNrInFile = 1;
 
-            var entry = Entry.Parse(buffer.Span);
-
-            if (entry.SeqNr == seqNr)
+            while (!handle.Reader.EndOfStream)
             {
-                await FileOperations.DeleteLineFromFile(
-                                        handle,
-                                        entryLineNrInFile,
-                                        EntryLength,
-                                        CancellationToken.None)
-                                    .ConfigureAwait(false);
+                var readBytes = handle.Reader.Read(buffer);
 
-                return;
+                Debug.Assert(readBytes == EntryLength, $"expected to read {EntryLength} bytes, but read {readBytes}");
+
+                var entry = Entry.Parse(buffer);
+
+                if (entry.SeqNr == seqNr)
+                {
+                    FileOperations.DeleteLineFromFile(handle, entryLineNrInFile, EntryLength);
+
+                    return;
+                }
+
+                entryLineNrInFile += 1;
             }
-
-            entryLineNrInFile += 1;
         }
     }
 
-    public async Task<IAsyncDisposable> GetWriteLock(
+    public async ValueTask<IDisposable> GetWriteLock(
         InboxName inboxName,
         TimeSpan pollingInterval,
         CancellationToken cancellationToken)
@@ -358,22 +348,20 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         return handle;
     }
 
-    public async Task<string> GetContent(InboxName inboxName, CancellationToken cancellationToken)
+    public async ValueTask<string> GetContent(InboxName inboxName, CancellationToken cancellationToken)
     {
         var tagInboxFilePath = GetInboxFilePath(inboxName);
 
-        var handle = await tagInboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
+        using var handle = await tagInboxFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
 
-        await using var handleDisposable = handle.ConfigureAwait(false);
-
-        return await handle.Reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+        return handle.Reader.ReadToEnd();
     }
 
     private FilePath GetInboxFilePath(InboxName inboxName) => baseDirectoryPath.File($".{inboxName}.inbox.txt");
 
     private FilePath GetInboxWriteLockFilePath(InboxName inboxName) => baseDirectoryPath.File($".{inboxName}.write.lock");
 
-    private static async Task UpdateInboxEntry(ReadWriteFileHandle inboxFileHandle, int entryLineNrInFile, Entry entry)
+    private static void UpdateInboxEntry(ReadWriteFileHandle inboxFileHandle, int entryLineNrInFile, Entry entry)
     {
         var seekTo = entryLineNrInFile * EntryLength;
         var res = inboxFileHandle.Stream.Seek(seekTo, SeekOrigin.Begin);
@@ -390,8 +378,8 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         Debug.Assert(lineContent.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {lineContent.Length}");
 
         // we do not allow cancellation here to prevent corruption of the file
-        await inboxFileHandle.Writer.WriteAsync(lineContent.AsMemory(), CancellationToken.None).ConfigureAwait(false);
-        await inboxFileHandle.Writer.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+        inboxFileHandle.Writer.Write(lineContent);
+        inboxFileHandle.Writer.Flush();
     }
 
     private static void ThrowOnInvalidLength(ReadWriteFileHandle handle)

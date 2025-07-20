@@ -1,5 +1,7 @@
 ﻿namespace Conqueror.Transport.FileSystem;
 
+[SuppressMessage("Major Code Smell", "S6966:Awaitable method should be used", Justification = "for performance")]
+[SuppressMessage("ReSharper", "MethodHasAsyncOverloadWithCancellation", Justification = "for performance")]
 internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
 {
     private readonly FilePath idsFilePath = baseDirectoryPath.File("tag-ids.json");
@@ -16,17 +18,13 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
             return tagId;
         }
 
-        var handle = await idsFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
-
-        await using var handleDisposable = handle.ConfigureAwait(false);
+        using var handle = await idsFilePath.OpenReadWrite(cancellationToken).ConfigureAwait(false);
 
         if (handle.Stream.Length > 0)
         {
-            tagIdCache = await JsonSerializer.DeserializeAsync(
-                                                 handle.Stream,
-                                                 TagIdsJsonSerializerContext.Default.DictionaryTagTagId,
-                                                 cancellationToken)
-                                             .ConfigureAwait(false)
+            tagIdCache = JsonSerializer.Deserialize(
+                             handle.Stream,
+                             TagIdsJsonSerializerContext.Default.DictionaryTagTagId)
                          ?? throw new InvalidOperationException($"failed to deserialize '{tagIdCache}'");
 
             tagCache = tagIdCache.ToDictionary(pair => pair.Value, pair => pair.Key);
@@ -45,12 +43,10 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
         _ = handle.Stream.Seek(0, SeekOrigin.Begin);
 
         // we do not allow cancellation here to prevent corruption of the file
-        await JsonSerializer.SerializeAsync(
-                                handle.Stream,
-                                tagIdCache,
-                                TagIdsJsonSerializerContext.Default.DictionaryTagTagId,
-                                CancellationToken.None)
-                            .ConfigureAwait(false);
+        JsonSerializer.Serialize(
+            handle.Stream,
+            tagIdCache,
+            TagIdsJsonSerializerContext.Default.DictionaryTagTagId);
 
         return tagIdCache[tag];
     }
@@ -64,17 +60,13 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
             return tag;
         }
 
-        var handle = await idsFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
+        using var handle = await idsFilePath.OpenRead(cancellationToken).ConfigureAwait(false);
 
         Debug.Assert(handle is not null, $"handle for file '{idsFilePath}' is null");
 
-        await using var handleDisposable = handle.ConfigureAwait(false);
-
-        tagIdCache = await JsonSerializer.DeserializeAsync(
-                                             handle.Stream,
-                                             TagIdsJsonSerializerContext.Default.DictionaryTagTagId,
-                                             cancellationToken)
-                                         .ConfigureAwait(false)
+        tagIdCache = JsonSerializer.Deserialize(
+                         handle.Stream,
+                         TagIdsJsonSerializerContext.Default.DictionaryTagTagId)
                      ?? throw new InvalidOperationException($"failed to deserialize '{tagIdCache}'");
 
         tagCache = tagIdCache.ToDictionary(pair => pair.Value, pair => pair.Key);

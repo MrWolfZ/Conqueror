@@ -138,8 +138,7 @@ internal sealed class FileSystemMessageReceiverRunner(
     {
         try
         {
-            await using var disposable =
-                (await inboxFiles.GetWriteLock(inboxName, pollingInterval, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
+            using var disposable = await inboxFiles.GetWriteLock(inboxName, pollingInterval, cancellationToken).ConfigureAwait(false);
 
             var startAtSeqNr = await inboxFiles.GetCurrentSeqNr(inboxName, cancellationToken).ConfigureAwait(false);
 
