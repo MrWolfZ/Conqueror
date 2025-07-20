@@ -35,6 +35,9 @@ dotnet pack %srcDir%\transports\http\Conqueror.Transport.Http.Abstractions -c Re
 dotnet pack %srcDir%\transports\http\Conqueror.Transport.Http.Client -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\transports\http\Conqueror.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols
 
+dotnet pack %srcDir%\transports\file-system\Conqueror.Transport.FileSystem.Abstractions -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\transports\file-system\Conqueror.Transport.FileSystem -c Release -o %publishDir% --include-symbols
+
 REM post-clean
 
 echo cleaning build output directories...
