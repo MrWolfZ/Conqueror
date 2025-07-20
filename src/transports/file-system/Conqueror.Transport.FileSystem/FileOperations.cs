@@ -4,7 +4,8 @@ namespace Conqueror.Transport.FileSystem;
 
 internal static class FileOperations
 {
-    public static bool FileExists(this FilePath filePath) => File.Exists(filePath);
+    [ThreadStatic]
+    private static Random? random;
 
     public static FileInfo GetFileInfo(this FilePath filePath) => new(filePath);
 
@@ -108,10 +109,8 @@ internal static class FileOperations
         stream.SetLength(stream.Length - lineLength);
     }
 
-    [SuppressMessage(
-        "Major Bug",
-        "S1751:Loops with at most one iteration should be refactored",
-        Justification = "We want to retry opening the file until it is available.")]
+    [SuppressMessage("Security", "CA5394:Do not use insecure randomness", Justification = "we don't need security here")]
+    [SuppressMessage("Major Bug", "S1751:Loops with at most one iteration should be refactored", Justification = "by design")]
     private static async ValueTask<FileStream> OpenWithRetry(
         this FilePath filePath,
         FileAccess access,
@@ -143,8 +142,8 @@ internal static class FileOperations
             catch (IOException iex) when (iex is not FileNotFoundException and not DirectoryNotFoundException)
             {
                 sw ??= Stopwatch.StartNew();
+                random ??= new();
 
-                // File is likely in use
                 attempt += 1;
 
                 if (attempt >= maxAttempts)
@@ -154,11 +153,19 @@ internal static class FileOperations
                         iex);
                 }
 
-                // we try to acquire the file lock a few times without delay before we start backing off
                 if (attempt >= 10)
                 {
-                    // Exponential backoff with cap
-                    delayMs = delayMs == 0 ? 10 : Math.Min(delayMs * 2, maxDelayMs);
+                    // Exponential backoff with jitter
+                    var baseDelay = delayMs == 0 ? 10 : Math.Min(delayMs * 2, maxDelayMs);
+
+                    // Add ±50% jitter
+                    var jitterRange = (int)(baseDelay * 0.5);
+                    delayMs = baseDelay + random.Next(-jitterRange, jitterRange + 1);
+                    delayMs = Math.Max(1, delayMs);
+                }
+                else if (attempt >= 5)
+                {
+                    delayMs = random.Next(1, 5);
                 }
 
                 if (delayMs > 0)
@@ -167,7 +174,7 @@ internal static class FileOperations
                 }
                 else
                 {
-                    await Task.Yield(); // Yield to other threads to avoid busy-waiting.
+                    await Task.Yield();
                 }
             }
         }
