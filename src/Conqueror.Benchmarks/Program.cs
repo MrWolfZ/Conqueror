@@ -5,6 +5,8 @@ using Conqueror.Benchmarks.Transports;
 
 var toRun = args.Length > 0 ? args[0] : "message-bench";
 
+Environment.SetEnvironmentVariable("CONQUEROR_INBOX_LOGGING", "true");
+
 switch (toRun)
 {
     case "message-bench":

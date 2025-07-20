@@ -150,7 +150,10 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                     if (nextAvailableEntry is { Entry: var entry, EntryLineNrInFile: var entryLineNrInFile })
                     {
 #if DEBUG
-                        Console.WriteLine($"{nextAvailableEntry}");
+                        if (Environment.GetEnvironmentVariable("CONQUEROR_INBOX_LOGGING") == "true")
+                        {
+                            Console.WriteLine($"{nextAvailableEntry}");
+                        }
 #endif
 
                         Debug.Assert(handle is not null, $"expected the inbox file handle for file '{inboxFilePath}' to be non-null");
