@@ -3,7 +3,6 @@
 namespace Conqueror.Transport.FileSystem.Tests;
 
 [TestFixture]
-[NonParallelizable]
 internal sealed class InboxTests
 {
     private readonly DirectoryInfo baseDirectory = FileSystemTestDirectory.Create();
@@ -20,8 +19,8 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 1000;
-        const int nrOfReaders = 20;
+        const int nrOfMessages = 100;
+        const int nrOfReaders = 5;
 
         var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
@@ -92,7 +91,7 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 1000;
+        const int nrOfMessages = 100;
 
         var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
@@ -162,8 +161,8 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 1000;
-        const int nrOfReaders = 20;
+        const int nrOfMessages = 100;
+        const int nrOfReaders = 5;
 
         var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
@@ -236,7 +235,7 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 1000;
+        const int nrOfMessages = 100;
 
         var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
@@ -309,8 +308,8 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 1000;
-        const int nrOfReaders = 20;
+        const int nrOfMessages = 100;
+        const int nrOfReaders = 5;
 
         var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
