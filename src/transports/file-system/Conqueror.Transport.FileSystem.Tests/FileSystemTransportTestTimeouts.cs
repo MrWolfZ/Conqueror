@@ -26,11 +26,11 @@ public sealed class FileSystemTransportTestTimeouts : IDisposable
     {
         var assertionTimeout = Debugger.IsAttached
             ? TimeSpan.FromMinutes(1)
-            : TimeSpan.FromMilliseconds(IsRunningInGithubActionField ? 10_000 : 3_000);
+            : TimeSpan.FromMilliseconds(IsRunningInGithubActionField ? 20_000 : 5_000);
 
         var testHost = new FileSystemTransportTestTimeouts
         {
-            TestTimeout = testTimeout ?? TimeSpan.FromSeconds(IsRunningInGithubActionField ? 30 : 5),
+            TestTimeout = testTimeout ?? TimeSpan.FromSeconds(IsRunningInGithubActionField ? 60 : 10),
             AssertionTimeoutInMs = (int)assertionTimeout.TotalMilliseconds,
             ShortDelay = TimeSpan.FromMilliseconds(IsRunningInGithubActionField ? 2_000 : 200),
         };

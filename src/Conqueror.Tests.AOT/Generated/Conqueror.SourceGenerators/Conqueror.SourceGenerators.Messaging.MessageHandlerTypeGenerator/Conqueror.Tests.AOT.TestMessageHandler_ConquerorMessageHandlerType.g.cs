@@ -17,13 +17,13 @@ namespace Conqueror.Tests.AOT
 {
     partial class TestMessageHandler : global::Conqueror.IMessageHandlerWithSourceGeneration
     {
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "0.8.2.3")]
         static global::System.Collections.Generic.IEnumerable<global::Conqueror.IMessageHandlerTypesInjector> global::Conqueror.IMessageHandler.GetTypeInjectors()
         {
             yield return global::Conqueror.Tests.AOT.TestMessage.IHandler.CreateCoreTypesInjector<TestMessageHandler>();
         }
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "0.8.2.3")]
         [global::System.Runtime.CompilerServices.ModuleInitializer]
         public static void ModuleInitializer()
             => global::Conqueror.MessageHandlerTypeServiceRegistry.RegisterHandlerType<TestMessageHandler>();

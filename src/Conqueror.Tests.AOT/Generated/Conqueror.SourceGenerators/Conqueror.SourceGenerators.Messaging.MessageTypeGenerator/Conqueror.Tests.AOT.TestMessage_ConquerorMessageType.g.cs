@@ -20,47 +20,47 @@ namespace Conqueror.Tests.AOT
     /// </summary>
     partial record TestMessage : global::Conqueror.IMessage<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse>
     {
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         public static global::Conqueror.MessageTypes<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse, IHandler> T => new();
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static global::Conqueror.IMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse>.CoreTypesInjector { get; } = IHandler.CreateCoreTypesInjector();
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
         {
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
             global::System.Threading.Tasks.Task<global::Conqueror.Tests.AOT.TestMessageResponse> Handle(TestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
 
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
             public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse, IHandler>, IHandler;
         }
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         public partial interface IPipeline : global::Conqueror.IMessagePipeline<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse>
         {
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
             public sealed class Proxy : global::Conqueror.MessagePipelineProxy<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse>, IPipeline;
         }
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static global::System.Threading.Tasks.Task<global::Conqueror.Tests.AOT.TestMessageResponse> global::Conqueror.IMessage<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, TestMessage message, global::System.Threading.CancellationToken cancellationToken)
             => ((IHandler)handler).Handle(message, cancellationToken);
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static TestMessage? global::Conqueror.IMessage<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse>.EmptyInstance => null;
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static global::System.Text.Json.Serialization.JsonSerializerContext global::Conqueror.IMessage<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse>.JsonSerializerContext
             => global::Conqueror.Tests.AOT.TestMessageJsonSerializerContext.Default;
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.IMessage<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse>.PublicConstructors
             => typeof(TestMessage).GetConstructors(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static global::System.Collections.Generic.IEnumerable<global::System.Reflection.PropertyInfo> global::Conqueror.IMessage<TestMessage, global::Conqueror.Tests.AOT.TestMessageResponse>.PublicProperties
             => typeof(TestMessage).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }

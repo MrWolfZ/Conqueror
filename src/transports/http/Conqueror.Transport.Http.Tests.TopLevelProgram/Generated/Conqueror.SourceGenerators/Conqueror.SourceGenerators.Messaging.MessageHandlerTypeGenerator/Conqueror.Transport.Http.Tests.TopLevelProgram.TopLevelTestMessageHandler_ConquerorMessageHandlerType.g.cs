@@ -17,14 +17,14 @@ namespace Conqueror.Transport.Http.Tests.TopLevelProgram
 {
     partial class TopLevelTestMessageHandler : global::Conqueror.IMessageHandlerWithSourceGeneration, global::Conqueror.IHttpMessageHandler
     {
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "0.8.2.3")]
         static global::System.Collections.Generic.IEnumerable<global::Conqueror.IMessageHandlerTypesInjector> global::Conqueror.IMessageHandler.GetTypeInjectors()
         {
             yield return global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessage.IHandler.CreateCoreTypesInjector<TopLevelTestMessageHandler>();
             yield return global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessage.IHandler.CreateHttpTypesInjector<TopLevelTestMessageHandler>();
         }
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageHandlerTypeGenerator", "0.8.2.3")]
         [global::System.Runtime.CompilerServices.ModuleInitializer]
         public static void ModuleInitializer()
             => global::Conqueror.MessageHandlerTypeServiceRegistry.RegisterHandlerType<TopLevelTestMessageHandler>();

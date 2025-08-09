@@ -20,38 +20,38 @@ namespace Conqueror.Tests.AOT
     /// </summary>
     partial record TestSignal : global::Conqueror.ISignal<TestSignal>
     {
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
         public static global::Conqueror.SignalTypes<TestSignal, IHandler> T => new();
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
         static global::Conqueror.ISignalHandlerTypesInjector global::Conqueror.ISignal<TestSignal>.CoreTypesInjector { get; } = IHandler.CreateCoreTypesInjector();
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
         public partial interface IHandler : global::Conqueror.ISignalHandler<TestSignal, IHandler, IHandler.Proxy>
         {
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
             global::System.Threading.Tasks.Task Handle(TestSignal signal, global::System.Threading.CancellationToken cancellationToken = default);
 
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
             public sealed class Proxy : global::Conqueror.SignalHandlerProxy<TestSignal, IHandler, Proxy>, IHandler;
         }
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
         static global::System.Threading.Tasks.Task global::Conqueror.ISignal<TestSignal>.InvokeHandler<TIHandler>(TIHandler handler, TestSignal signal, global::System.Threading.CancellationToken cancellationToken)
             => ((IHandler)handler).Handle(signal, cancellationToken);
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
         static TestSignal? global::Conqueror.ISignal<TestSignal>.EmptyInstance => null;
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
         static global::System.Text.Json.Serialization.JsonSerializerContext global::Conqueror.ISignal<TestSignal>.JsonSerializerContext
             => global::Conqueror.Tests.AOT.TestSignalJsonSerializerContext.Default;
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
         static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.ISignal<TestSignal>.PublicConstructors
             => typeof(TestSignal).GetConstructors(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "0.8.2.3")]
         static global::System.Collections.Generic.IEnumerable<global::System.Reflection.PropertyInfo> global::Conqueror.ISignal<TestSignal>.PublicProperties
             => typeof(TestSignal).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }

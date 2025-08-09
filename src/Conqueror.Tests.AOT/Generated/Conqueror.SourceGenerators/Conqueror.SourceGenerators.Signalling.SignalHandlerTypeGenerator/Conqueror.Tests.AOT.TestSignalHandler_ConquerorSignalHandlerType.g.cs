@@ -17,13 +17,13 @@ namespace Conqueror.Tests.AOT
 {
     partial class TestSignalHandler : global::Conqueror.ISignalHandlerWithSourceGeneration
     {
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "0.8.2.3")]
         static global::System.Collections.Generic.IEnumerable<global::Conqueror.ISignalHandlerTypesInjector> global::Conqueror.ISignalHandler.GetTypeInjectors()
         {
             yield return global::Conqueror.Tests.AOT.TestSignal.IHandler.CreateCoreTypesInjector<TestSignalHandler>();
         }
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalHandlerTypeGenerator", "0.8.2.3")]
         [global::System.Runtime.CompilerServices.ModuleInitializer]
         public static void ModuleInitializer()
             => global::Conqueror.SignalHandlerTypeServiceRegistry.RegisterHandlerType<TestSignalHandler>();

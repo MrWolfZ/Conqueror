@@ -20,43 +20,43 @@ namespace Conqueror.Transport.Http.Tests.TopLevelProgram
     /// </summary>
     partial record TopLevelTestMessage : global::Conqueror.IMessage<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse>
     {
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         public static global::Conqueror.MessageTypes<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse, IHandler> T => new();
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static global::Conqueror.IMessageHandlerTypesInjector global::Conqueror.IMessage<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse>.CoreTypesInjector { get; } = IHandler.CreateCoreTypesInjector();
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         public partial interface IHandler : global::Conqueror.IMessageHandler<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
         {
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
             global::System.Threading.Tasks.Task<global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse> Handle(TopLevelTestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
 
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
             public sealed class Proxy : global::Conqueror.MessageHandlerProxy<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse, IHandler>, IHandler;
         }
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         public partial interface IPipeline : global::Conqueror.IMessagePipeline<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse>
         {
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
             public sealed class Proxy : global::Conqueror.MessagePipelineProxy<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse>, IPipeline;
         }
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static global::System.Threading.Tasks.Task<global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse> global::Conqueror.IMessage<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, TopLevelTestMessage message, global::System.Threading.CancellationToken cancellationToken)
             => ((IHandler)handler).Handle(message, cancellationToken);
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static TopLevelTestMessage? global::Conqueror.IMessage<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse>.EmptyInstance => null;
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.IMessage<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse>.PublicConstructors
             => typeof(TopLevelTestMessage).GetConstructors(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static global::System.Collections.Generic.IEnumerable<global::System.Reflection.PropertyInfo> global::Conqueror.IMessage<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse>.PublicProperties
             => typeof(TopLevelTestMessage).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }
@@ -65,7 +65,7 @@ namespace Conqueror.Transport.Http.Tests.TopLevelProgram
     {
         partial interface IHandler : global::Conqueror.IHttpMessageHandler<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse, IHandler>;
 
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.1.2")]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "0.8.2.3")]
         static string global::Conqueror.IHttpMessage<TopLevelTestMessage, global::Conqueror.Transport.Http.Tests.TopLevelProgram.TopLevelTestMessageResponse>.Path => "test";
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using NUnit.Framework.Interfaces;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Conqueror.Transport.FileSystem.Tests;
 
@@ -61,19 +62,11 @@ file sealed class FileSystemTransportTestLoggerProvider(
     }
 }
 
-internal sealed class FileSystemTransportTestLogSink : IDisposable
+file sealed class FileSystemTransportTestLogSink
 {
     public List<string> LogEntries { get; } = [];
 
-    public void Dispose()
-    {
-        var testContext = TestContext.CurrentContext;
-
-        if (testContext.Result.Outcome.Status == TestStatus.Failed)
-        {
-            Console.Write(string.Join(string.Empty, LogEntries));
-        }
-    }
+    public FileSystemTransportTestLogSink() => FileSystemTransportTestLogPrinter.AddLogSink(this);
 }
 
 internal static class FileSystemTransportTestLoggingBuilderExtensions
@@ -94,4 +87,46 @@ internal static class FileSystemTransportTestLoggingBuilderExtensions
 
         return builder;
     }
+}
+
+file static class FileSystemTransportTestLogPrinter
+{
+    private static readonly ConcurrentDictionary<string, FileSystemTransportTestLogSink> LogSinkByTestId = new();
+
+    public static void AddLogSink(FileSystemTransportTestLogSink logSink)
+    {
+        var testId = TestContext.CurrentContext.Test.ID;
+        LogSinkByTestId[testId] = logSink;
+    }
+
+    public static void PrintLogsIfNecessary()
+    {
+        var testContext = TestContext.CurrentContext;
+        if (testContext.Result.Outcome.Status is TestStatus.Failed
+            && LogSinkByTestId.TryRemove(testContext.Test.ID, out var logSink))
+        {
+            Console.Write(string.Concat(logSink.LogEntries));
+        }
+    }
+}
+
+[AttributeUsage(AttributeTargets.Assembly)]
+internal sealed class FileSystemTransportTestLoggingHookAttribute : Attribute, ITestAction
+{
+    public void BeforeTest(ITest test)
+    {
+        // nothing to do here
+    }
+
+    public void AfterTest(ITest test)
+    {
+        if (test.IsSuite)
+        {
+            return;
+        }
+
+        FileSystemTransportTestLogPrinter.PrintLogsIfNecessary();
+    }
+
+    public ActionTargets Targets => ActionTargets.Test;
 }
