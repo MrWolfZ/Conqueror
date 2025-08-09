@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -140,8 +139,7 @@ public static class MessageHandlerTypeSources
     private static StringBuilder AppendMessageTypeGeneratedCodeAttribute(this StringBuilder sb,
                                                                          Indentation indentation)
     {
-        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-        var version = string.IsNullOrWhiteSpace(assemblyLocation) ? "unknown" : FileVersionInfo.GetVersionInfo(assemblyLocation).FileVersion;
+        var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         return sb.AppendGeneratedCodeAttribute(indentation, typeof(MessageHandlerTypeGenerator).FullName ?? string.Empty, version);
     }
 }
