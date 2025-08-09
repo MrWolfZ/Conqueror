@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -302,8 +301,7 @@ public static class SignalTypeSources
     private static StringBuilder AppendSignalTypeGeneratedCodeAttribute(this StringBuilder sb,
                                                                         Indentation indentation)
     {
-        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-        var version = string.IsNullOrWhiteSpace(assemblyLocation) ? "unknown" : FileVersionInfo.GetVersionInfo(assemblyLocation).FileVersion;
+        var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         return sb.AppendGeneratedCodeAttribute(indentation, typeof(SignalTypeGenerator).FullName ?? string.Empty, version);
     }
 }
