@@ -3,7 +3,7 @@
     <Import Project="../.targets/test.targets" />
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="$(MvcTestingVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" />
     </ItemGroup>
 
     <ItemGroup>

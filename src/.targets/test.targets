@@ -4,32 +4,22 @@
     <Import Project="analyzers.targets" />
 
     <PropertyGroup>
+        <!--suppress MsbuildTargetFrameworkTagInspection -->
         <TargetFrameworks>net8.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <ImplicitUsings>true</ImplicitUsings>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="6.0.2" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(DependencyInjectionVersion)" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-        <PackageReference Include="NUnit" Version="4.1.0" />
-        <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-        <PackageReference Include="NUnit.Analyzers" Version="4.1.0">
+        <PackageReference Include="coverlet.collector" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="NUnit" />
+        <PackageReference Include="NUnit3TestAdapter" />
+        <PackageReference Include="NUnit.Analyzers">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
-
-    <ItemGroup>
-        <Using Include="Microsoft.Extensions.DependencyInjection" />
-        <Using Include="Microsoft.Extensions.DependencyInjection.Extensions" />
-        <Using Include="NUnit.Framework" />
-        <Using Include="System.Diagnostics.CodeAnalysis" />
-    </ItemGroup>
-
-    <PropertyGroup>
-        <MvcTestingVersion>8.0.4</MvcTestingVersion>
-    </PropertyGroup>
 
 </Project>

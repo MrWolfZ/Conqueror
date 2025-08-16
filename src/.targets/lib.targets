@@ -4,6 +4,7 @@
     <Import Project="analyzers.targets" />
 
     <PropertyGroup>
+        <!--suppress MsbuildTargetFrameworkTagInspection -->
         <TargetFrameworks>net8.0</TargetFrameworks>
     </PropertyGroup>
 
@@ -17,8 +18,8 @@
         <Authors>Jonathan Ziller</Authors>
         <Copyright>Copyright (c) 2022-present Jonathan Ziller</Copyright>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <RepositoryUrl>https://github.com/MrWolfZ/Conqueror</RepositoryUrl> 
-        <RepositoryType>git</RepositoryType> 
+        <RepositoryUrl>https://github.com/MrWolfZ/Conqueror</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
         <PackageTags>Conqueror CQS CQRS Command-Query-Separation Messages Messaging Signals Signalling Events PubSub Streaming Iterators</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>

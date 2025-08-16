@@ -20,14 +20,14 @@
 
     <!-- reference the packages if the project is checked out standalone -->
     <ItemGroup>
-        <PackageReference Include="Conqueror" Version="*-*" Condition="$(ShouldReferencePackage) == true" />
-        <PackageReference Include="Conqueror.Middleware.Logging" Version="*-*" Condition="$(ShouldReferencePackage) == true" />
-        <PackageReference Include="Conqueror.Transport.Http.Server.AspNetCore" Version="*-*" Condition="$(ShouldReferencePackage) == true" />
+        <PackageReference Include="Conqueror" Condition="$(ShouldReferencePackage) == true" />
+        <PackageReference Include="Conqueror.Middleware.Logging" Condition="$(ShouldReferencePackage) == true" />
+        <PackageReference Include="Conqueror.Transport.Http.Server.AspNetCore" Condition="$(ShouldReferencePackage) == true" />
     </ItemGroup>
 
     <!-- third-party packages -->
     <ItemGroup>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.4" />
     </ItemGroup>
 
 </Project>
