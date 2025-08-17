@@ -1,24 +1,14 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public abstract class SignalFailedException : Exception
 {
     protected SignalFailedException(string? message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 
     protected SignalFailedException(string? message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
-    protected SignalFailedException()
-    {
-    }
+    protected SignalFailedException() { }
 
     public Type SignalType => SignalPayload.GetType();
 
@@ -31,7 +21,8 @@ public abstract class SignalFailedException : Exception
     [SuppressMessage(
         "Design",
         "CA1034:Nested types should not be visible",
-        Justification = "This is a conscious design decision to maintain logical coherence")]
+        Justification = "This is a conscious design decision to maintain logical coherence"
+    )]
     public static class WellKnownReasons
     {
         public const string None = nameof(None);

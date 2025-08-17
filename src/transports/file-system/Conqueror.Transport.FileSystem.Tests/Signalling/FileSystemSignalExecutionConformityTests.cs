@@ -6,11 +6,13 @@ public sealed class FileSystemSignalExecutionConformityTests
           FileSystemSignalExecutionConformityTests,
           FileSystemSignalTransportConformityTestHost,
           FileSystemSignalConformityExecutionSuccessTestCase,
-          FileSystemSignalConformityExecutionErrorTestCase>,
+          FileSystemSignalConformityExecutionErrorTestCase
+      >,
       ISignalTransportExecutionConformityTests<
           FileSystemSignalTransportConformityTestHost,
           FileSystemSignalConformityExecutionSuccessTestCase,
-          FileSystemSignalConformityExecutionErrorTestCase>
+          FileSystemSignalConformityExecutionErrorTestCase
+      >
 {
     public static bool TransportBuffersSignalsDuringReceiverDowntime => true;
 
@@ -20,12 +22,12 @@ public sealed class FileSystemSignalExecutionConformityTests
 
     public static string TransportTypeName => TransportName;
 
-    public static IEnumerable<FileSystemSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
-        => FileSystemSignalTestCases.CreateSuccessTestCases();
+    public static IEnumerable<FileSystemSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases() =>
+        FileSystemSignalTestCases.CreateSuccessTestCases();
 
-    public static IEnumerable<FileSystemSignalConformityExecutionSuccessTestCase> CreateSimpleSuccessTestCases()
-        => FileSystemSignalTestCases.CreateSimpleSuccessTestCases();
+    public static IEnumerable<FileSystemSignalConformityExecutionSuccessTestCase> CreateSimpleSuccessTestCases() =>
+        FileSystemSignalTestCases.CreateSimpleSuccessTestCases();
 
-    public static IEnumerable<FileSystemSignalConformityExecutionErrorTestCase> CreateErrorTestCases()
-        => FileSystemSignalTestCases.CreateErrorTestCases();
+    public static IEnumerable<FileSystemSignalConformityExecutionErrorTestCase> CreateErrorTestCases() =>
+        FileSystemSignalTestCases.CreateErrorTestCases();
 }

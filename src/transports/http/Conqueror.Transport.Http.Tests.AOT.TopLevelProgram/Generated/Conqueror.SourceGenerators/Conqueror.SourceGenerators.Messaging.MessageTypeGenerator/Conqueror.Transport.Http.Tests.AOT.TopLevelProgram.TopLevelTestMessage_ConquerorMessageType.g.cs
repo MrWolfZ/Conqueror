@@ -10,8 +10,7 @@
 #nullable enable annotations
 #nullable disable warnings
 
-// Suppress warnings about [Obsolete] member usage in generated code.
-#pragma warning disable CS0612, CS0618
+#pragma warning disable
 
 namespace Conqueror.Transport.Http.Tests.AOT.TopLevelProgram
 {

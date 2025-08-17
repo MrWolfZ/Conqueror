@@ -1,5 +1,3 @@
-using System;
-
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 
 internal sealed record HttpEndpoint

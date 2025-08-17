@@ -1,8 +1,6 @@
-﻿using System.Net.Mime;
-using System.Security.Claims;
-using static Conqueror.Transport.Http.Tests.Messaging.HttpMessageTestCases;
+﻿namespace Conqueror.Transport.Http.Tests.Messaging;
 
-namespace Conqueror.Transport.Http.Tests.Messaging;
+using static HttpMessageTestCases;
 
 [TestFixture]
 public sealed class HttpMessageExecutionTests
@@ -15,26 +13,32 @@ public sealed class HttpMessageExecutionTests
         await using var host = await HttpTransportTestHost.Create(
             services =>
             {
-                _ = services.AddMessageHandler<TestMessageHandler>()
-                            .AddSingleton<Action<IHttpMessageReceiver>>(r => r.Disable());
+                _ = services
+                    .AddMessageHandler<TestMessageHandler>()
+                    .AddSingleton<Action<IHttpMessageReceiver>>(r => r.Disable());
 
                 _ = services.AddSingleton<ILogger>(p => p.GetRequiredService<ILogger<HttpMessageExecutionTests>>());
 
                 _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
-            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints())
+        );
 
         await using var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 
         await Assert.ThatAsync(
-            () => clientServiceProvider.GetRequiredService<IMessageSenders>()
-                                       .For(TestMessage.T)
-                                       .WithTransport(b => b.UseHttp(new("http://conqueror.test")).WithHttpClient(httpClient))
-                                       .Handle(new() { Payload = 10 }, testTimeouts.TestTimeoutToken),
-            Throws.TypeOf<HttpMessageFailedOnClientException>()
-                  .With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+            () =>
+                clientServiceProvider
+                    .GetRequiredService<IMessageSenders>()
+                    .For(TestMessage.T)
+                    .WithTransport(b => b.UseHttp(new("http://conqueror.test")).WithHttpClient(httpClient))
+                    .Handle(new() { Payload = 10 }, testTimeouts.TestTimeoutToken),
+            Throws
+                .TypeOf<HttpMessageFailedOnClientException>()
+                .With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode is HttpStatusCode.NotFound)
+        );
     }
 
     [Test]
@@ -45,26 +49,32 @@ public sealed class HttpMessageExecutionTests
         await using var host = await HttpTransportTestHost.Create(
             services =>
             {
-                _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>()
-                            .AddSingleton<Action<IHttpMessageReceiver>>(r => r.Disable());
+                _ = services
+                    .AddMessageHandler<TestMessageWithoutResponseHandler>()
+                    .AddSingleton<Action<IHttpMessageReceiver>>(r => r.Disable());
 
                 _ = services.AddSingleton<ILogger>(p => p.GetRequiredService<ILogger<HttpMessageExecutionTests>>());
 
                 _ = services.AddRouting().AddConquerorHttpServerAspNetCore();
             },
-            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints())
+        );
 
         await using var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 
         await Assert.ThatAsync(
-            () => clientServiceProvider.GetRequiredService<IMessageSenders>()
-                                       .For(TestMessageWithoutResponse.T)
-                                       .WithTransport(b => b.UseHttp(new("http://conqueror.test")).WithHttpClient(httpClient))
-                                       .Handle(new() { Payload = 10 }, testTimeouts.TestTimeoutToken),
-            Throws.TypeOf<HttpMessageFailedOnClientException>()
-                  .With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+            () =>
+                clientServiceProvider
+                    .GetRequiredService<IMessageSenders>()
+                    .For(TestMessageWithoutResponse.T)
+                    .WithTransport(b => b.UseHttp(new("http://conqueror.test")).WithHttpClient(httpClient))
+                    .Handle(new() { Payload = 10 }, testTimeouts.TestTimeoutToken),
+            Throws
+                .TypeOf<HttpMessageFailedOnClientException>()
+                .With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode is HttpStatusCode.NotFound)
+        );
     }
 
     [Test]
@@ -73,37 +83,51 @@ public sealed class HttpMessageExecutionTests
     [TestCase(MessageFailedException.WellKnownReasons.InvalidFormattedContextData, StatusCodes.Status400BadRequest)]
     public async Task GivenTestHttpMessageHandlerThatThrowsWellKnownException_WhenExecutingMessage_ReturnsCorrectStatusCode(
         string reason,
-        int expectedStatusCode)
+        int expectedStatusCode
+    )
     {
         using var testTimeouts = HttpTransportTestTimeouts.Create();
 
         await using var host = await HttpTransportTestHost.Create(
             services =>
             {
-                _ = services.AddMessageHandler<TestMessageHandler>()
-                            .AddSingleton<FnToCallFromHandler>((msg, _) => throw new TestWellKnownException(reason)
+                _ = services
+                    .AddMessageHandler<TestMessageHandler>()
+                    .AddSingleton<FnToCallFromHandler>(
+                        (msg, _) =>
+                            throw new TestWellKnownException(reason)
                             {
                                 MessagePayload = msg,
-                                TransportType = new(TransportName, MessageTransportRole.Receiver),
-                            });
+                                TransportType = new MessageTransportType(TransportName, MessageTransportRole.Receiver),
+                            }
+                    );
 
-                _ = services.AddRouting()
-                            .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<HttpMessageExecutionTests>>())
-                            .AddConquerorHttpServerAspNetCore();
+                _ = services
+                    .AddRouting()
+                    .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<HttpMessageExecutionTests>>())
+                    .AddConquerorHttpServerAspNetCore();
             },
-            app => app.UseConquerorWellKnownErrorHandling().UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+            app =>
+                app.UseConquerorWellKnownErrorHandling()
+                    .UseRouting()
+                    .UseEndpoints(endpoints => endpoints.MapMessageEndpoints())
+        );
 
         await using var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 
         await Assert.ThatAsync(
-            () => clientServiceProvider.GetRequiredService<IMessageSenders>()
-                                       .For(TestMessage.T)
-                                       .WithTransport(b => b.UseHttp(new("http://conqueror.test")).WithHttpClient(httpClient))
-                                       .Handle(new() { Payload = 10 }, testTimeouts.TestTimeoutToken),
-            Throws.TypeOf<HttpMessageFailedOnClientException>()
-                  .With.Matches<HttpMessageFailedOnClientException>(ex => (int?)ex.StatusCode == expectedStatusCode));
+            () =>
+                clientServiceProvider
+                    .GetRequiredService<IMessageSenders>()
+                    .For(TestMessage.T)
+                    .WithTransport(b => b.UseHttp(new("http://conqueror.test")).WithHttpClient(httpClient))
+                    .Handle(new() { Payload = 10 }, testTimeouts.TestTimeoutToken),
+            Throws
+                .TypeOf<HttpMessageFailedOnClientException>()
+                .With.Matches<HttpMessageFailedOnClientException>(ex => (int?)ex.StatusCode == expectedStatusCode)
+        );
     }
 
     [Test]
@@ -118,32 +142,41 @@ public sealed class HttpMessageExecutionTests
         await using var host = await HttpTransportTestHost.Create(
             services =>
             {
-                _ = services.AddMessageHandler(p => new TestMessageHandler((_, _) =>
-                {
-                    seenPrincipal = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.CurrentPrincipal;
+                _ = services.AddMessageHandler(p => new TestMessageHandler(
+                    (_, _) =>
+                    {
+                        seenPrincipal =
+                            p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.CurrentPrincipal;
 
-                    return Task.CompletedTask;
-                }));
+                        return Task.CompletedTask;
+                    }
+                ));
 
-                _ = services.AddRouting()
-                            .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<HttpMessageExecutionTests>>())
-                            .AddConquerorHttpServerAspNetCore();
+                _ = services
+                    .AddRouting()
+                    .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<HttpMessageExecutionTests>>())
+                    .AddConquerorHttpServerAspNetCore();
             },
-            app => app.UseConquerorWellKnownErrorHandling()
-                      .UseAuthentication()
-                      .UseRouting()
-                      .UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+            app =>
+                app.UseConquerorWellKnownErrorHandling()
+                    .UseAuthentication()
+                    .UseRouting()
+                    .UseEndpoints(endpoints => endpoints.MapMessageEndpoints())
+        );
 
         await using var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 
-        _ = await clientServiceProvider.GetRequiredService<IMessageSenders>()
-                                       .For(TestMessage.T)
-                                       .WithTransport(b => b.UseHttp(new("http://conqueror.test"))
-                                                            .WithHttpClient(httpClient)
-                                                            .WithHeaders(h => h.WithAuthenticatedPrincipal(userName)))
-                                       .Handle(new() { Payload = 10 }, testTimeouts.TestTimeoutToken);
+        _ = await clientServiceProvider
+            .GetRequiredService<IMessageSenders>()
+            .For(TestMessage.T)
+            .WithTransport(b =>
+                b.UseHttp(new("http://conqueror.test"))
+                    .WithHttpClient(httpClient)
+                    .WithHeaders(h => h.WithAuthenticatedPrincipal(userName))
+            )
+            .Handle(new() { Payload = 10 }, testTimeouts.TestTimeoutToken);
 
         Assert.That(seenPrincipal, Is.Not.Null);
         Assert.That(seenPrincipal?.Identity?.IsAuthenticated, Is.True);
@@ -154,23 +187,20 @@ public sealed class HttpMessageExecutionTests
     [TestCaseSource(nameof(CreateServerTestCases))]
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
     public async Task GivenTestHttpMessage_WhenCallingHttpEndpointDirectly_ReturnsCorrectResponse(
-        HttpMessageConformityExecutionSuccessTestCase testCase)
+        HttpMessageConformityExecutionSuccessTestCase testCase
+    )
     {
         await using var host = testCase.CreateTestHost();
 
         await using var receiverHost = await host.CreateReceiverTestHost(host.TestTimeoutToken);
 
-        var targetUriBuilder = new UriBuilder
-        {
-            Host = "localhost",
-            Path = testCase.FullPath,
-        };
+        var targetUriBuilder = new UriBuilder { Host = "localhost", Path = testCase.FullPath };
 
         for (var i = 0; i < testCase.ExpectedReceivedMessages.Count; i += 1)
         {
             var queryString = testCase.QueryStrings.ElementAt(i);
             var payload = testCase.MessagePayloads.ElementAt(i);
-            var responsePayload = testCase.ResponsePayloads.Skip(i).FirstOrDefault() ?? string.Empty;
+            var responsePayload = testCase.ResponsePayloads.Skip(i).FirstOrDefault() ?? "";
 
             if (queryString is not null)
             {
@@ -183,22 +213,22 @@ public sealed class HttpMessageExecutionTests
                 ? new(payload, new MediaTypeHeaderValue(testCase.MessageContentType ?? MediaTypeNames.Application.Json))
                 : null;
 
-            if (testCase.HttpMethod != MethodNames.Get)
+            if (!string.Equals(testCase.HttpMethod, MethodNames.Get, StringComparison.Ordinal))
             {
                 request.Content = content;
             }
 
-            var response = await receiverHost.HttpClient.SendAsync(request);
+            var response = await receiverHost.HttpClient.SendAsync(request, host.TestTimeoutToken);
 
             if (!testCase.HandlerIsEnabled)
             {
-                await response.AssertStatusCode(StatusCodes.Status404NotFound);
+                await response.AssertStatusCode(StatusCodes.Status404NotFound, host.TestTimeoutToken);
 
                 return;
             }
 
-            await response.AssertStatusCode(testCase.SuccessStatusCode);
-            var resultString = await response.Content.ReadAsStringAsync();
+            await response.AssertStatusCode(testCase.SuccessStatusCode, host.TestTimeoutToken);
+            var resultString = await response.Content.ReadAsStringAsync(host.TestTimeoutToken);
 
             Assert.That(resultString, Is.EqualTo(responsePayload));
         }
@@ -208,86 +238,90 @@ public sealed class HttpMessageExecutionTests
     [TestCaseSource(nameof(CreateServerTestCases))]
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
     public async Task GivenTestHttpMessage_WhenCallingHttpEndpointDirectlyWithWrongContentType_ReturnsError(
-        HttpMessageConformityExecutionSuccessTestCase testCase)
+        HttpMessageConformityExecutionSuccessTestCase testCase
+    )
     {
         await using var host = testCase.CreateTestHost();
 
         await using var receiverHost = await host.CreateReceiverTestHost(host.TestTimeoutToken);
 
-        var targetUriBuilder = new UriBuilder
-        {
-            Host = "localhost",
-            Path = testCase.FullPath,
-        };
+        var targetUriBuilder = new UriBuilder { Host = "localhost", Path = testCase.FullPath };
 
         for (var i = 0; i < testCase.ExpectedReceivedMessages.Count; i += 1)
         {
             using var request = new HttpRequestMessage(new(testCase.HttpMethod), targetUriBuilder.Uri);
 
-            using StringContent content = new("wrong", new MediaTypeHeaderValue("application/wrong"));
+            using var content = new StringContent("wrong", new MediaTypeHeaderValue("application/wrong"));
             request.Content = content;
 
-            var response = await receiverHost.HttpClient.SendAsync(request);
+            var response = await receiverHost.HttpClient.SendAsync(request, host.TestTimeoutToken);
 
             if (!testCase.HandlerIsEnabled)
             {
-                await response.AssertStatusCode(StatusCodes.Status404NotFound);
+                await response.AssertStatusCode(StatusCodes.Status404NotFound, host.TestTimeoutToken);
 
                 return;
             }
 
-            await response.AssertStatusCode(StatusCodes.Status415UnsupportedMediaType);
+            await response.AssertStatusCode(StatusCodes.Status415UnsupportedMediaType, host.TestTimeoutToken);
         }
     }
 
     [Test]
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
+    [SuppressMessage(
+        "Usage",
+        "MA0127:Use String.Equals instead of is pattern",
+        Justification = "These are well-known values for which we don't need an explicit string comparison"
+    )]
     public async Task GivenTestHttpMessage_WhenCallingHttpEndpointDirectlyWithDifferentEncoding_ReturnsResponse()
     {
         var testCase = CreateSuccessTestCases()
-            .First(tc => tc is
-            {
-                NumOfReceivers: 1,
-                HandlerIsEnabled: true,
-                ExpectedReceivedMessages.Count: > 0,
-                HttpMethod: MethodNames.Post,
-                MessageContentType: MediaTypeNames.Application.Json,
-                ResponseContentType: MediaTypeNames.Application.Json,
-            });
+            .First(tc =>
+                tc
+                    is {
+                        NumOfReceivers: 1,
+                        HandlerIsEnabled: true,
+                        ExpectedReceivedMessages.Count: > 0,
+                        HttpMethod: MethodNames.Post,
+                        MessageContentType: MediaTypeNames.Application.Json,
+                        ResponseContentType: MediaTypeNames.Application.Json,
+                    }
+            );
 
         await using var host = testCase.CreateTestHost();
 
         await using var receiverHost = await host.CreateReceiverTestHost(host.TestTimeoutToken);
 
-        var targetUriBuilder = new UriBuilder
-        {
-            Host = "localhost",
-            Path = testCase.FullPath,
-        };
+        var targetUriBuilder = new UriBuilder { Host = "localhost", Path = testCase.FullPath };
 
         for (var i = 0; i < testCase.ExpectedReceivedMessages.Count; i += 1)
         {
             var payload = testCase.MessagePayloads.ElementAt(i);
-            var responsePayload = testCase.ResponsePayloads.Skip(i).FirstOrDefault() ?? string.Empty;
+            var responsePayload = testCase.ResponsePayloads.Skip(i).FirstOrDefault() ?? "";
 
             using var request = new HttpRequestMessage(new(testCase.HttpMethod), targetUriBuilder.Uri);
 
-            using StringContent content = new(payload!, Encoding.Unicode, new MediaTypeHeaderValue($"{MediaTypeNames.Application.Json}", "utf-16"));
+            using var content = new StringContent(
+                payload!,
+                Encoding.Unicode,
+                new MediaTypeHeaderValue(MediaTypeNames.Application.Json, "utf-16")
+            );
             request.Content = content;
 
-            var response = await receiverHost.HttpClient.SendAsync(request);
+            var response = await receiverHost.HttpClient.SendAsync(request, host.TestTimeoutToken);
 
-            await response.AssertStatusCode(testCase.SuccessStatusCode);
-            var resultString = await response.Content.ReadAsStringAsync();
+            await response.AssertStatusCode(testCase.SuccessStatusCode, host.TestTimeoutToken);
+            var resultString = await response.Content.ReadAsStringAsync(host.TestTimeoutToken);
 
             Assert.That(resultString, Is.EqualTo(responsePayload));
         }
     }
 
-    private static IEnumerable<TestCaseData> CreateServerTestCases()
-        => CreateSuccessTestCases()
-           .Where(tc => tc is { NumOfReceivers: 1, SingleMessageType: not null })
-           .Select(tc => new TestCaseData(tc).SetName(tc.Name));
+    private static IEnumerable<TestCaseData> CreateServerTestCases() =>
+        CreateSuccessTestCases()
+            .Where(tc => tc is { NumOfReceivers: 1, SingleMessageType: not null })
+            .Select(tc => new TestCaseData(tc).SetName(tc.Name));
 
     private sealed class TestWellKnownException(string wellKnownReason) : MessageFailedException
     {

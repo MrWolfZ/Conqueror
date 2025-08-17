@@ -1,13 +1,15 @@
-using System;
-using System.Collections.Generic;
-
 namespace Conqueror.Streaming;
 
 internal sealed class StreamConsumerPipelineBuilder(
     IServiceProvider serviceProvider,
-    StreamConsumerMiddlewareRegistry producerMiddlewareRegistry) : IStreamConsumerPipelineBuilder
+    StreamConsumerMiddlewareRegistry producerMiddlewareRegistry
+) : IStreamConsumerPipelineBuilder
 {
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamConsumerMiddlewareInvoker Invoker)> middlewares = [];
+    private readonly List<(
+        Type MiddlewareType,
+        object? MiddlewareConfiguration,
+        IStreamConsumerMiddlewareInvoker Invoker
+    )> middlewares = [];
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
@@ -15,6 +17,7 @@ internal sealed class StreamConsumerPipelineBuilder(
         where TMiddleware : IStreamConsumerMiddleware
     {
         middlewares.Add((typeof(TMiddleware), null, GetInvoker<TMiddleware>()));
+
         return this;
     }
 
@@ -22,6 +25,7 @@ internal sealed class StreamConsumerPipelineBuilder(
         where TMiddleware : IStreamConsumerMiddleware<TConfiguration>
     {
         middlewares.Add((typeof(TMiddleware), configuration, GetInvoker<TMiddleware>()));
+
         return this;
     }
 
@@ -58,39 +62,44 @@ internal sealed class StreamConsumerPipelineBuilder(
     }
 
     public IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
-        where TMiddleware : IStreamConsumerMiddleware<TConfiguration>
-    {
-        return Configure<TMiddleware, TConfiguration>(_ => configuration);
-    }
+        where TMiddleware : IStreamConsumerMiddleware<TConfiguration> =>
+        Configure<TMiddleware, TConfiguration>(_ => configuration);
 
-    public IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configure)
+    public IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configureFn)
         where TMiddleware : IStreamConsumerMiddleware<TConfiguration>
     {
         return Configure<TMiddleware, TConfiguration>(c =>
         {
-            configure(c);
+            configureFn(c);
+
             return c;
         });
     }
 
-    public IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(Func<TConfiguration, TConfiguration> configure)
+    public IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(
+        Func<TConfiguration, TConfiguration> configureFn
+    )
         where TMiddleware : IStreamConsumerMiddleware<TConfiguration>
     {
         var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
 
         if (index < 0)
         {
-            throw new InvalidOperationException($"middleware ${typeof(TMiddleware).Name} cannot be configured for this pipeline since it is not used");
+            throw new InvalidOperationException(
+                $"middleware ${typeof(TMiddleware).Name} cannot be configured for this pipeline since it is not used"
+            );
         }
 
-        middlewares[index] = (typeof(TMiddleware), configure((TConfiguration)middlewares[index].MiddlewareConfiguration!), GetInvoker<TMiddleware>());
+        middlewares[index] = (
+            typeof(TMiddleware),
+            configureFn((TConfiguration)middlewares[index].MiddlewareConfiguration!),
+            GetInvoker<TMiddleware>()
+        );
+
         return this;
     }
 
-    public StreamConsumerPipeline Build(ConquerorContext conquerorContext)
-    {
-        return new(conquerorContext, middlewares);
-    }
+    public StreamConsumerPipeline Build(ConquerorContext conquerorContext) => new(conquerorContext, middlewares);
 
     private IStreamConsumerMiddlewareInvoker GetInvoker<TMiddleware>()
         where TMiddleware : IStreamConsumerMiddlewareMarker
@@ -100,6 +109,8 @@ internal sealed class StreamConsumerPipelineBuilder(
             return invoker;
         }
 
-        throw new InvalidOperationException($"trying to use unregistered middleware type '{typeof(TMiddleware).Name}' in pipeline; ensure that the middleware is registered in the DI container");
+        throw new InvalidOperationException(
+            $"trying to use unregistered middleware type '{typeof(TMiddleware).Name}' in pipeline; ensure that the middleware is registered in the DI container"
+        );
     }
 }

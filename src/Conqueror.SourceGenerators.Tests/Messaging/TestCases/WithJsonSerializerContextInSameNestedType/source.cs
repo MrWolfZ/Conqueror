@@ -1,11 +1,11 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithJsonSerializerContextInSameNestedType;
+
+using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithJsonSerializerContextInSameNestedType;
 
 public partial class Container
 {
@@ -21,14 +21,15 @@ public partial class Container
 
     public partial class TestMessageHandler : TestMessage.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     internal class TestMessageJsonSerializerContext(JsonSerializerOptions options) : JsonSerializerContext(options)
     {
-        protected override JsonSerializerOptions GeneratedSerializerOptions => null!;
-
         public static JsonSerializerContext Default => null!;
+
+        protected override JsonSerializerOptions GeneratedSerializerOptions => null!;
 
         public override JsonTypeInfo GetTypeInfo(Type type) => throw new NotSupportedException();
     }

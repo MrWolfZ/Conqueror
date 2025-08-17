@@ -1,24 +1,18 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror.Signalling.WebSockets;
-using Microsoft.Extensions.Logging;
-
-namespace Conqueror.Transport.Http.Server.AspNetCore.Signalling.WebSockets;
+﻿namespace Conqueror.Transport.Http.Server.AspNetCore.Signalling.WebSockets;
 
 internal sealed partial class HttpWebSocketsSignalBroker(
     IServiceProvider serviceProvider,
-    ILogger<HttpWebSocketsSignalBroker> logger)
+    ILogger<HttpWebSocketsSignalBroker> logger
+)
 {
-    private readonly ConcurrentDictionary<string, ImmutableList<HttpWebSocketsSignalBrokerStream>> streamsBySignalTag = new();
+    private readonly ConcurrentDictionary<string, ImmutableList<HttpWebSocketsSignalBrokerStream>> streamsBySignalTag =
+    [];
 
-    public IDisposable Subscribe(HttpWebSocketsSignalBrokerStream stream, IEnumerable<string> signalTags, CancellationToken cancellationToken)
+    public IDisposable Subscribe(
+        HttpWebSocketsSignalBrokerStream stream,
+        IEnumerable<string> signalTags,
+        CancellationToken cancellationToken
+    )
     {
         var signalTagsList = signalTags.ToList();
 
@@ -26,7 +20,12 @@ internal sealed partial class HttpWebSocketsSignalBroker(
 
         foreach (var tag in signalTagsList)
         {
-            _ = streamsBySignalTag.AddOrUpdate(tag, _ => [stream], (_, list) => list.Add(stream));
+            _ = streamsBySignalTag.AddOrUpdate(
+                tag,
+                static (_, stream) => [stream],
+                static (_, list, stream) => list.Add(stream),
+                stream
+            );
         }
 
         return cancellationToken.Register(() =>
@@ -37,59 +36,70 @@ internal sealed partial class HttpWebSocketsSignalBroker(
             {
                 _ = streamsBySignalTag.AddOrUpdate(
                     signalTag,
-                    _ => [],
-                    (_, list) => list.Remove(stream));
+                    static (_, _) => [],
+                    static (_, list, stream) => list.Remove(stream),
+                    stream
+                );
             }
         });
     }
 
-    [SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task", Justification = "false positive")]
+    [SuppressMessage(
+        "Reliability",
+        "CA2007:Consider calling ConfigureAwait on the awaited task",
+        Justification = "false positive"
+    )]
     public async Task Publish<TSignal>(
         TSignal signal,
         ConquerorContext conquerorContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         where TSignal : class, IHttpWebSocketsSignal<TSignal>
     {
         try
         {
             LogPublishStart(logger);
 
-            if (!streamsBySignalTag.TryGetValue(TSignal.Tag, out var streams) || streams.Count == 0)
+            if (!streamsBySignalTag.TryGetValue(TSignal.Tag, out var streams) || streams.Count is 0)
             {
                 return;
             }
 
-            Stream stream = streams.Count == 1 ? streams[0] : new MultiplexWriteStream(streams);
+            Stream stream = streams.Count is 1 ? streams[0] : new MultiplexWriteStream(streams);
 
             await using var d = stream is MultiplexWriteStream ? stream : null;
 
             LogWriteStream(logger, streams.Count);
 
-            await HttpWebSocketsSignalProtocolV1.Write(
-                                                    stream,
-                                                    TSignal.Tag,
-                                                    conquerorContext.EncodeDownstreamContextData(
-                                                        traceId: conquerorContext.TraceId,
-                                                        signalId: conquerorContext.SignalId),
-                                                    (s, ct) =>
-                                                    {
-                                                        ct.ThrowIfCancellationRequested();
+            await HttpWebSocketsSignalProtocolV1
+                .Write(
+                    stream,
+                    TSignal.Tag,
+                    conquerorContext.EncodeDownstreamContextData(
+                        conquerorContext.TraceId,
+                        signalId: conquerorContext.SignalId
+                    ),
+                    (s, ct) =>
+                    {
+                        ct.ThrowIfCancellationRequested();
 
-                                                        return new(TSignal.HttpWebSocketsSignalSerializer.SerializeSignal(
-                                                                       serviceProvider,
-                                                                       signal,
-                                                                       s,
-                                                                       ct));
-                                                    },
-                                                    cancellationToken)
-                                                .ConfigureAwait(false);
+                        return new(
+                            TSignal.HttpWebSocketsSignalSerializer.SerializeSignal(serviceProvider, signal, s, ct)
+                        );
+                    },
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not HttpSseSignalFailedOnPublisherException)
         {
-            throw new HttpSseSignalFailedOnPublisherException($"web sockets signal of type '{typeof(TSignal)}' failed", ex)
+            throw new HttpSseSignalFailedOnPublisherException(
+                $"web sockets {nameof(signal)} of type '{typeof(TSignal)}' failed",
+                ex
+            )
             {
                 SignalPayload = signal,
-                TransportType = new(WebSocketsTransportName, SignalTransportRole.Publisher),
+                TransportType = new SignalTransportType(WebSocketsTransportName, SignalTransportRole.Publisher),
             };
         }
     }

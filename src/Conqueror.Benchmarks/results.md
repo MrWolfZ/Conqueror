@@ -2,8 +2,8 @@
 
 ## 2025-05-03 (6709d55dcf38e718d4d06441943ca1efc8cb80d5)
 
-| Method              | NumOfMiddlewares | Mean         | Error      | StdDev     |
-|-------------------- |----------------- |-------------:|-----------:|-----------:|
+| Method              | NumOfMiddlewares |         Mean |      Error |     StdDev |
+|---------------------|------------------|-------------:|-----------:|-----------:|
 | RunMessageBenchmark | ?                |     2.934 us |  0.2339 us |  0.6824 us |
 | RunMessageBenchmark | 0                |     6.661 us |  0.1328 us |  0.2326 us |
 | RunMessageBenchmark | 100              |   100.086 us |  1.5207 us |  1.2699 us |

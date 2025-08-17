@@ -1,13 +1,10 @@
 ﻿#nullable enable
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Signalling;
-
 namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransportWithSignalTypeOverride
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
     using WithCustomTransportWithSignalTypeOverrideCustomTransport;
 
     [CustomTestTransportSignal(ExtraProperty = "Test")]
@@ -17,13 +14,21 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransp
 
     public partial class TestSignalHandler : TestSignal.IHandler
     {
-        public Task Handle(TestSignal message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task Handle(TestSignal message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 
 namespace WithCustomTransportWithSignalTypeOverrideOriginalTransport
 {
-    [SignalTransport(Prefix = "TestTransport", Namespace = "WithCustomTransportWithSignalTypeOverrideOriginalTransport")]
+    using System;
+    using Conqueror;
+    using Conqueror.Signalling;
+
+    [SignalTransport(
+        Prefix = "TestTransport",
+        Namespace = "WithCustomTransportWithSignalTypeOverrideOriginalTransport"
+    )]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransportSignalAttribute : Attribute
     {
@@ -43,27 +48,32 @@ namespace WithCustomTransportWithSignalTypeOverrideOriginalTransport
         where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
     {
         static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 
 namespace WithCustomTransportWithSignalTypeOverrideCustomTransport
 {
-    [SignalTransport(Prefix = "TestTransport", Namespace = "WithCustomTransportWithSignalTypeOverrideOriginalTransport",
-    FullyQualifiedSignalTypeName = "WithCustomTransportWithSignalTypeOverrideCustomTransport.ICustomTestTransportSignal")]
+    using System;
+    using Conqueror.Signalling;
+    using WithCustomTransportWithSignalTypeOverrideOriginalTransport;
+
+    [SignalTransport(
+        Prefix = "TestTransport",
+        Namespace = "WithCustomTransportWithSignalTypeOverrideOriginalTransport",
+        FullyQualifiedSignalTypeName = "WithCustomTransportWithSignalTypeOverrideCustomTransport.ICustomTestTransportSignal"
+    )]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class CustomTestTransportSignalAttribute : Attribute
     {
         public string? ExtraProperty { get; init; }
     }
 
-    public interface ICustomTestTransportSignal<TSignal> : WithCustomTransportWithSignalTypeOverrideOriginalTransport.ITestTransportSignal<TSignal>
+    public interface ICustomTestTransportSignal<TSignal> : ITestTransportSignal<TSignal>
         where TSignal : class, ICustomTestTransportSignal<TSignal>
     {
-        static string WithCustomTransportWithSignalTypeOverrideOriginalTransport.ITestTransportSignal<TSignal>.StringProperty { get; } = TSignal.ExtraProperty ?? "Default";
-
         static virtual string? ExtraProperty { get; }
+        static string ITestTransportSignal<TSignal>.StringProperty { get; } = TSignal.ExtraProperty ?? "Default";
     }
 }
 

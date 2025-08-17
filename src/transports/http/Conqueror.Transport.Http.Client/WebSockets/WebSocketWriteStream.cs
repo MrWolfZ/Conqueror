@@ -1,11 +1,7 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Conqueror.Transport.Http.Client.WebSockets;
 
-namespace Conqueror.Transport.Http.Client.WebSockets;
+using System.Diagnostics.CodeAnalysis;
+using System.Net.WebSockets;
 
 internal sealed class WebSocketWriteStream(ConquerorWebSocket socket) : Stream
 {
@@ -23,58 +19,44 @@ internal sealed class WebSocketWriteStream(ConquerorWebSocket socket) : Stream
         set => throw new NotSupportedException();
     }
 
-    public override void Flush()
-        => throw new NotSupportedException("This stream does not support synchronous flushing");
+    public override void Flush() =>
+        throw new NotSupportedException("This stream does not support synchronous flushing");
 
     public override Task FlushAsync(CancellationToken cancellationToken)
     {
-        if (socket.State is not WebSocketState.Open && socket.State is not WebSocketState.CloseReceived)
+        if (socket.State is not WebSocketState.Open and not WebSocketState.CloseReceived)
         {
             return Task.CompletedTask;
         }
 
-        return socket.SendAsync(
-            Memory<byte>.Empty,
-            true,
-            cancellationToken).AsTask();
+        return socket.SendAsync(Memory<byte>.Empty, endOfMessage: true, cancellationToken).AsTask();
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-        => throw new NotSupportedException("This stream does not support reading");
+    public override int Read(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException("This stream does not support reading");
 
-    public override long Seek(long offset, SeekOrigin origin)
-        => throw new NotSupportedException("This stream does not support seeking");
+    public override long Seek(long offset, SeekOrigin origin) =>
+        throw new NotSupportedException("This stream does not support seeking");
 
-    public override void SetLength(long value)
-        => throw new NotSupportedException("This stream does not support setting length");
+    public override void SetLength(long value) =>
+        throw new NotSupportedException("This stream does not support setting length");
 
-    public override void Write(byte[] buffer, int offset, int count)
-        => throw new NotSupportedException("This stream does not support synchronous writing");
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException("This stream does not support synchronous writing");
 
-    public override void Write(ReadOnlySpan<byte> buffer)
-        => throw new NotSupportedException("This stream does not support synchronous writing");
+    public override void Write(ReadOnlySpan<byte> buffer) =>
+        throw new NotSupportedException("This stream does not support synchronous writing");
 
-    public override Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken)
+    public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+        WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+
+    public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
     {
-        return WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
-    }
-
-    public override ValueTask WriteAsync(
-        ReadOnlyMemory<byte> buffer,
-        CancellationToken cancellationToken = default)
-    {
-        if (socket.State is not WebSocketState.Open && socket.State is not WebSocketState.CloseReceived)
+        if (socket.State is not WebSocketState.Open and not WebSocketState.CloseReceived)
         {
             return default;
         }
 
-        return socket.SendAsync(
-            buffer,
-            false,
-            cancellationToken);
+        return socket.SendAsync(buffer, endOfMessage: false, cancellationToken);
     }
 }

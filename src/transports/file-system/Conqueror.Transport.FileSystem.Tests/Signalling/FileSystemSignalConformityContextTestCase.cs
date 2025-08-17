@@ -4,6 +4,7 @@ public sealed class FileSystemSignalConformityContextTestCase
     : FileSystemSignalConformityTestCase,
       ISignalTransportConformityContextTestCase<FileSystemSignalTransportConformityTestHost>
 {
+    public Func<FileSystemSignalTransportConformityTestHost, Task>? BeforePublish { get; init; }
     public int NumOfReceivers { get; init; } = 1;
 
     public required bool HasActivity { get; init; }
@@ -12,9 +13,7 @@ public sealed class FileSystemSignalConformityContextTestCase
 
     public required bool HasBidirectionalData { get; init; }
 
-    public Func<FileSystemSignalTransportConformityTestHost, Task>? BeforePublish { get; init; }
-
     Task ISignalTransportConformityContextTestCase<FileSystemSignalTransportConformityTestHost>.BeforePublish(
-        FileSystemSignalTransportConformityTestHost testHost)
-        => BeforePublish?.Invoke(testHost) ?? Task.CompletedTask;
+        FileSystemSignalTransportConformityTestHost testHost
+    ) => BeforePublish?.Invoke(testHost) ?? Task.CompletedTask;
 }

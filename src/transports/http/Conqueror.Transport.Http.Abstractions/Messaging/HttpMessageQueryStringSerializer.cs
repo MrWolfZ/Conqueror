@@ -1,28 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Conqueror;
 
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
-
-internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHttpMessageSerializer<TMessage, TResponse>
+internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse>
+    : IHttpMessageSerializer<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public static readonly HttpMessageQueryStringSerializer<TMessage, TResponse> Default = new();
 
-    public string ContentType => string.Empty;
+    public string ContentType => "";
 
     public string? SerializeMessageToQuery(IServiceProvider serviceProvider, TMessage message)
     {
         var props = TMessage.PublicProperties.ToList();
-        if (props.Count == 0)
+        if (props.Count is 0)
         {
             return null;
         }
@@ -44,10 +33,11 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
             {
                 foreach (var v in enumerable)
                 {
-                    _ = uriBuilder.Append(isFirst ? '?' : '&')
-                                  .Append(propName)
-                                  .Append('=')
-                                  .Append(Uri.EscapeDataString(v?.ToString() ?? string.Empty));
+                    _ = uriBuilder
+                        .Append(isFirst ? '?' : '&')
+                        .Append(propName)
+                        .Append(value: '=')
+                        .Append(Uri.EscapeDataString(string.Create(CultureInfo.InvariantCulture, $"{v ?? ""}")));
 
                     isFirst = false;
                 }
@@ -55,10 +45,11 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
                 continue;
             }
 
-            _ = uriBuilder.Append(isFirst ? '?' : '&')
-                          .Append(propName)
-                          .Append('=')
-                          .Append(Uri.EscapeDataString(propValue.ToString() ?? string.Empty));
+            _ = uriBuilder
+                .Append(isFirst ? '?' : '&')
+                .Append(propName)
+                .Append(value: '=')
+                .Append(Uri.EscapeDataString(string.Create(CultureInfo.InvariantCulture, $"{propValue}")));
 
             isFirst = false;
         }
@@ -70,10 +61,8 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         IServiceProvider serviceProvider,
         TMessage message,
         Stream bodyStream,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+        CancellationToken cancellationToken
+    ) => Task.CompletedTask;
 
     public Task<TMessage> DeserializeMessage(
         IServiceProvider serviceProvider,
@@ -81,7 +70,8 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         Encoding? encoding,
         string path,
         IEnumerable<KeyValuePair<string, IReadOnlyList<string?>>> query,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         ArgumentNullException.ThrowIfNull(query);
 
@@ -90,34 +80,38 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
             return Task.FromResult(TMessage.EmptyInstance);
         }
 
-        var queryDict = query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        var queryDict = query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
 
         if (FindMatchingConstructor(queryDict) is { } constructor)
         {
             var parameters = BuildConstructorParameters(constructor, queryDict);
 
-            var messageFromConstructor = constructor.Invoke(parameters) as TMessage
-                   ?? throw new InvalidOperationException($"failed to invoke constructor for message type '{typeof(TMessage)}'");
+            var messageFromConstructor =
+                constructor.Invoke(parameters) as TMessage
+                ?? throw new InvalidOperationException(
+                    $"failed to invoke constructor for message type '{typeof(TMessage)}'"
+                );
 
             return Task.FromResult(messageFromConstructor);
         }
 
-        var parameterlessConstructor = TMessage.PublicConstructors.FirstOrDefault(c => c.GetParameters().Length == 0);
+        var parameterlessConstructor =
+            TMessage.PublicConstructors.FirstOrDefault(c => c.GetParameters().Length is 0)
+            ?? throw new InvalidOperationException(
+                $"could not find a matching constructor or public parameterless constructor for message type '{typeof(TMessage)}'"
+            );
 
-        if (parameterlessConstructor is null)
-        {
-            throw new InvalidOperationException(
-                $"could not find a matching constructor or public parameterless constructor for message type '{typeof(TMessage)}'");
-        }
-
-        var message = parameterlessConstructor.Invoke([]) as TMessage
-                      ?? throw new InvalidOperationException($"failed to invoke parameterless constructor for message type '{typeof(TMessage)}'");
+        var message =
+            parameterlessConstructor.Invoke([]) as TMessage
+            ?? throw new InvalidOperationException(
+                $"failed to invoke parameterless constructor for message type '{typeof(TMessage)}'"
+            );
 
         foreach (var prop in TMessage.PublicProperties)
         {
             var values = queryDict.GetValueOrDefault(Uncapitalize(prop.Name)) ?? queryDict.GetValueOrDefault(prop.Name);
 
-            if (values is null || values.Count == 0)
+            if (values is null || values.Count is 0)
             {
                 continue;
             }
@@ -125,7 +119,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
             if (IsCollectionType(prop.PropertyType))
             {
                 var collectionValues = ConvertCollection(values, prop.PropertyType);
-                if (collectionValues != null)
+                if (collectionValues is not null)
                 {
                     prop.SetValue(message, collectionValues);
                 }
@@ -140,7 +134,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
             }
 
             var convertedValue = ConvertValue(value, prop.PropertyType);
-            if (convertedValue != null)
+            if (convertedValue is not null)
             {
                 prop.SetValue(message, convertedValue);
             }
@@ -153,21 +147,23 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
     {
         var queryParamNames = new HashSet<string>(query.Keys, StringComparer.OrdinalIgnoreCase);
 
-        return TMessage.PublicConstructors
-                       .Where(c => c.GetParameters().Length > 0)
-                       .Select(c => new
-                       {
-                           Constructor = c,
-                           Parameters = c.GetParameters(),
-                           MatchCount = c.GetParameters().Count(p => (p.Name is not null && queryParamNames.Contains(p.Name)) || p.HasDefaultValue),
-                       })
-                       .FirstOrDefault(x => x.MatchCount >= queryParamNames.Count)
-                       ?.Constructor;
+        return TMessage
+            .PublicConstructors.Where(c => c.GetParameters().Length > 0)
+            .Select(c => new
+            {
+                Constructor = c,
+                Parameters = c.GetParameters(),
+                MatchCount = c.GetParameters()
+                    .Count(p => (p.Name is not null && queryParamNames.Contains(p.Name)) || p.HasDefaultValue),
+            })
+            .FirstOrDefault(x => x.MatchCount >= queryParamNames.Count)
+            ?.Constructor;
     }
 
     private static object?[] BuildConstructorParameters(
         ConstructorInfo constructor,
-        IReadOnlyDictionary<string, IReadOnlyList<string?>> query)
+        Dictionary<string, IReadOnlyList<string?>> query
+    )
     {
         var parameters = constructor.GetParameters();
         var paramValues = new object?[parameters.Length];
@@ -176,11 +172,13 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         {
             var param = parameters[i];
 
-            if (param.Name is not null
+            if (
+                param.Name is not null
                 && (
                     query.TryGetValue(param.Name, out var values)
-                    || (query.TryGetValue(Uncapitalize(param.Name), out values)
-                        && values.Count > 0)))
+                    || (query.TryGetValue(Uncapitalize(param.Name), out values) && values.Count > 0)
+                )
+            )
             {
                 if (IsCollectionType(param.ParameterType))
                 {
@@ -189,7 +187,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
                 else
                 {
                     var value = values[0];
-                    if (value != null)
+                    if (value is not null)
                     {
                         paramValues[i] = ConvertValue(value, param.ParameterType);
                     }
@@ -197,12 +195,21 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
                     {
                         paramValues[i] = param.DefaultValue;
                     }
+                    else
+                    {
+                        paramValues[i] = null;
+                    }
                 }
             }
             else if (param.HasDefaultValue)
             {
                 // If parameter not in query but has default value, use it
                 paramValues[i] = param.DefaultValue;
+            }
+            else
+            {
+                // If parameter not in query and no default value, use null
+                paramValues[i] = null;
             }
         }
 
@@ -223,12 +230,14 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
             var genericTypeDefinition = type.GetGenericTypeDefinition();
 
             // Check for common collection interfaces and types
-            if (genericTypeDefinition == typeof(IEnumerable<>)
+            if (
+                genericTypeDefinition == typeof(IEnumerable<>)
                 || genericTypeDefinition == typeof(ICollection<>)
                 || genericTypeDefinition == typeof(IList<>)
                 || genericTypeDefinition == typeof(List<>)
                 || genericTypeDefinition == typeof(IReadOnlyCollection<>)
-                || genericTypeDefinition == typeof(IReadOnlyList<>))
+                || genericTypeDefinition == typeof(IReadOnlyList<>)
+            )
             {
                 return true;
             }
@@ -254,36 +263,28 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
 
         if (underlyingType == typeof(int))
         {
-            if (int.TryParse(value, out var result))
+            if (int.TryParse(value, CultureInfo.InvariantCulture, out var result))
             {
                 return result;
             }
         }
         else if (underlyingType == typeof(long))
         {
-            if (long.TryParse(value, out var result))
+            if (long.TryParse(value, CultureInfo.InvariantCulture, out var result))
             {
                 return result;
             }
         }
         else if (underlyingType == typeof(double))
         {
-            if (double.TryParse(
-                    value,
-                    NumberStyles.Any,
-                    CultureInfo.InvariantCulture,
-                    out var result))
+            if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
             {
                 return result;
             }
         }
         else if (underlyingType == typeof(decimal))
         {
-            if (decimal.TryParse(
-                    value,
-                    NumberStyles.Any,
-                    CultureInfo.InvariantCulture,
-                    out var result))
+            if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
             {
                 return result;
             }
@@ -297,31 +298,25 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         }
         else if (underlyingType == typeof(DateTime))
         {
-            if (DateTime.TryParse(
-                    value,
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None,
-                    out var result))
+            if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
             {
                 return result;
             }
         }
         else if (underlyingType == typeof(Guid))
         {
-            if (Guid.TryParse(value, out var result))
+            if (Guid.TryParse(value, CultureInfo.InvariantCulture, out var result))
             {
                 return result;
             }
         }
         else if (underlyingType.IsEnum)
         {
-            return Enum.TryParse(
-                underlyingType,
-                value,
-                true,
-                out var result)
-                ? result
-                : null;
+            return Enum.TryParse(underlyingType, value, ignoreCase: true, out var result) ? result : null;
+        }
+        else
+        {
+            // nothing more we can do
         }
 
         throw new InvalidOperationException($"unable to convert value '{value}' to type '{targetType.FullName}'");
@@ -346,7 +341,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         }
 
         // Filter out null values
-        var filteredValues = values.Where(v => v != null).ToList();
+        var filteredValues = values.Where(v => v is not null).ToList();
 
         // Handle arrays in AOT-compatible way by handling specific types directly
         if (collectionType.IsArray)
@@ -398,7 +393,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
                 for (var i = 0; i < filteredValues.Count; i++)
                 {
                     var convertedValue = ConvertValue(filteredValues[i]!, itemType);
-                    if (convertedValue != null)
+                    if (convertedValue is not null)
                     {
                         objectArray[i] = convertedValue;
                     }
@@ -408,10 +403,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
             }
 
             // Fallback to List<object> for unsupported array types
-            return filteredValues
-                   .Select(v => ConvertValue(v!, itemType))
-                   .Where(v => v != null)
-                   .ToList();
+            return filteredValues.Select(v => ConvertValue(v!, itemType)).Where(v => v is not null).ToList();
         }
 
         // Handle generic collections
@@ -420,12 +412,14 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
             var genericTypeDef = collectionType.GetGenericTypeDefinition();
 
             // For all supported collection types, return a List<T>
-            if (genericTypeDef == typeof(List<>)
+            if (
+                genericTypeDef == typeof(List<>)
                 || genericTypeDef == typeof(IList<>)
                 || genericTypeDef == typeof(ICollection<>)
                 || genericTypeDef == typeof(IEnumerable<>)
                 || genericTypeDef == typeof(IReadOnlyCollection<>)
-                || genericTypeDef == typeof(IReadOnlyList<>))
+                || genericTypeDef == typeof(IReadOnlyList<>)
+            )
             {
                 // Handle specific element types directly using generic methods
                 if (itemType == typeof(string))
@@ -476,7 +470,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
                     foreach (var value in filteredValues)
                     {
                         var convertedValue = ConvertValue(value!, itemType);
-                        if (convertedValue != null)
+                        if (convertedValue is not null)
                         {
                             list.Add(convertedValue);
                         }
@@ -490,7 +484,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         return null;
     }
 
-    private static T[] CreateArray<T>(IReadOnlyList<string?> values, Type itemType)
+    private static T[] CreateArray<T>(List<string?> values, Type itemType)
     {
         var array = new T[values.Count];
         var validCount = 0;
@@ -498,7 +492,7 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         foreach (var t in values.OfType<string>())
         {
             var convertedValue = ConvertValue(t, itemType);
-            if (convertedValue != null)
+            if (convertedValue is not null)
             {
                 array[validCount++] = (T)convertedValue;
             }
@@ -516,12 +510,8 @@ internal sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IH
         return array;
     }
 
-    private static List<T> CreateTypedList<T>(IReadOnlyList<string?> values, Type itemType)
-        => values.OfType<string>()
-                 .Select(value => ConvertValue(value, itemType))
-                 .OfType<T>()
-                 .ToList();
+    private static List<T> CreateTypedList<T>(IReadOnlyList<string?> values, Type itemType) =>
+        values.OfType<string>().Select(value => ConvertValue(value, itemType)).OfType<T>().ToList();
 
-    private static string Uncapitalize(string str)
-        => char.ToLower(str[0], CultureInfo.InvariantCulture) + str[1..];
+    private static string Uncapitalize(string str) => char.ToLower(str[0], CultureInfo.InvariantCulture) + str[1..];
 }

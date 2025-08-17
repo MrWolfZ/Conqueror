@@ -8,8 +8,7 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -17,7 +16,7 @@ public sealed class StreamConsumerCustomInterfaceTests
 
         var item = new TestItem();
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.Items, Is.EquivalentTo(new[] { item }));
     }
@@ -28,8 +27,7 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<GenericTestStreamConsumer<string>>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<GenericTestStreamConsumer<string>>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -37,7 +35,7 @@ public sealed class StreamConsumerCustomInterfaceTests
 
         var item = new GenericTestItem<string>("test string");
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.Items, Is.EquivalentTo(new[] { item }));
     }
@@ -48,8 +46,7 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -67,16 +64,15 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<ITestStreamConsumer>();
 
-        await consumer.HandleItem(new());
+        await consumer.HandleItem(new(), CancellationToken.None);
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { CancellationToken.None }));
     }
 
     [Test]
@@ -85,14 +81,13 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var exception = new Exception();
 
-        _ = services.AddConquerorStreamConsumer<ThrowingStreamConsumer>()
-                    .AddSingleton(exception);
+        _ = services.AddConquerorStreamConsumer<ThrowingStreamConsumer>().AddSingleton(exception);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IThrowingStreamConsumer>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => consumer.HandleItem(new()));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => consumer.HandleItem(new(), CancellationToken.None));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -103,18 +98,19 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumer>(ServiceLifetime.Singleton)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var plainInterfaceConsumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
         var customInterfaceConsumer = provider.GetRequiredService<ITestStreamConsumer>();
 
-        await plainInterfaceConsumer.HandleItem(new());
-        await customInterfaceConsumer.HandleItem(new());
+        await plainInterfaceConsumer.HandleItem(new(), CancellationToken.None);
+        await customInterfaceConsumer.HandleItem(new(), CancellationToken.None);
 
-        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances, Has.Count.EqualTo(expected: 2));
         Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
@@ -124,8 +120,7 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -138,8 +133,7 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -152,8 +146,7 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithMultipleInterfaces>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithMultipleInterfaces>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -167,18 +160,19 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithMultipleInterfaces>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithMultipleInterfaces>(ServiceLifetime.Singleton)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer1 = provider.GetRequiredService<ITestStreamConsumer>();
         var consumer2 = provider.GetRequiredService<ITestStreamConsumer2>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
 
-        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances, Has.Count.EqualTo(expected: 2));
         Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
@@ -187,7 +181,9 @@ public sealed class StreamConsumerCustomInterfaceTests
     {
         var services = new ServiceCollection();
 
-        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorStreamConsumer<TestStreamConsumerWithCustomInterfaceWithExtraMethod>());
+        _ = Assert.Throws<ArgumentException>(() =>
+            services.AddConquerorStreamConsumer<TestStreamConsumerWithCustomInterfaceWithExtraMethod>()
+        );
     }
 
     [Test]
@@ -195,9 +191,16 @@ public sealed class StreamConsumerCustomInterfaceTests
     {
         var services = new ServiceCollection().AddConquerorStreamConsumer<TestStreamConsumer>();
 
-        var thrownException = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamConsumer<DuplicateTestStreamConsumerForCustomInterface>());
+        var thrownException = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamConsumer<DuplicateTestStreamConsumerForCustomInterface>()
+        );
 
-        Assert.That(thrownException.Message, Is.EqualTo($"cannot add stream consumer type {typeof(DuplicateTestStreamConsumerForCustomInterface)} since a stream consumer type for item type {typeof(TestItem)} is already registered ({typeof(TestStreamConsumer)}); consider using keyed service registrations instead if you want multiple consumers for the same item type"));
+        Assert.That(
+            thrownException.Message,
+            Is.EqualTo(
+                $"cannot add stream consumer type {typeof(DuplicateTestStreamConsumerForCustomInterface)} since a stream consumer type for item type {typeof(TestItem)} is already registered ({typeof(TestStreamConsumer)}); consider using keyed service registrations instead if you want multiple consumers for the same item type"
+            )
+        );
     }
 
     [Test]
@@ -206,22 +209,30 @@ public sealed class StreamConsumerCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer))
-                    .AddConquerorStreamConsumerKeyed<DuplicateTestStreamConsumerForCustomInterface>(nameof(DuplicateTestStreamConsumerForCustomInterface))
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer))
+            .AddConquerorStreamConsumerKeyed<DuplicateTestStreamConsumerForCustomInterface>(
+                nameof(DuplicateTestStreamConsumerForCustomInterface)
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer1 = provider.GetRequiredKeyedService<ITestStreamConsumer>(nameof(TestStreamConsumer));
-        var consumer2 = provider.GetRequiredKeyedService<ITestStreamConsumer>(nameof(DuplicateTestStreamConsumerForCustomInterface));
+        var consumer2 = provider.GetRequiredKeyedService<ITestStreamConsumer>(
+            nameof(DuplicateTestStreamConsumerForCustomInterface)
+        );
 
         var item = new TestItem();
 
-        await consumer1.HandleItem(item);
-        await consumer2.HandleItem(item);
+        await consumer1.HandleItem(item, CancellationToken.None);
+        await consumer2.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.Items, Is.EquivalentTo(new[] { item, item }));
-        Assert.That(observations.Instances.Select(i => i.GetType()), Is.EquivalentTo(new[] { typeof(TestStreamConsumer), typeof(DuplicateTestStreamConsumerForCustomInterface) }));
+        Assert.That(
+            observations.Instances.Select(i => i.GetType()),
+            Is.EquivalentTo(new[] { typeof(TestStreamConsumer), typeof(DuplicateTestStreamConsumerForCustomInterface) })
+        );
     }
 
     public sealed record TestItem(int Payload = 10);
@@ -254,7 +265,8 @@ public sealed class StreamConsumerCustomInterfaceTests
         }
     }
 
-    private sealed class DuplicateTestStreamConsumerForCustomInterface(TestObservations observations) : ITestStreamConsumer
+    private sealed class DuplicateTestStreamConsumerForCustomInterface(TestObservations observations)
+        : ITestStreamConsumer
     {
         public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
         {
@@ -265,8 +277,9 @@ public sealed class StreamConsumerCustomInterfaceTests
         }
     }
 
-    private sealed class TestStreamConsumerWithMultipleInterfaces(TestObservations observations) : ITestStreamConsumer,
-                                                                                                   ITestStreamConsumer2
+    private sealed class TestStreamConsumerWithMultipleInterfaces(TestObservations observations)
+        : ITestStreamConsumer,
+            ITestStreamConsumer2
     {
         public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
         {
@@ -300,13 +313,15 @@ public sealed class StreamConsumerCustomInterfaceTests
         public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
+
             throw exception;
         }
     }
 
     private sealed class TestStreamConsumerWithCustomInterfaceWithExtraMethod : ITestStreamConsumerWithExtraMethod
     {
-        public Task HandleItem(TestItem item, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task HandleItem(TestItem item, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
 
         public void ExtraMethod() => throw new NotSupportedException();
     }

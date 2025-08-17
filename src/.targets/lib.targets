@@ -1,31 +1,26 @@
 <Project>
-
-    <Import Project="common.targets" />
-    <Import Project="analyzers.targets" />
-
-    <PropertyGroup>
-        <!--suppress MsbuildTargetFrameworkTagInspection -->
-        <TargetFrameworks>net8.0</TargetFrameworks>
-    </PropertyGroup>
-
-    <!-- for NuGet -->
-    <PropertyGroup>
-        <PackageId>$(ProjectName)</PackageId>
-        <Title>$(PackageId)</Title>
-        <PackageVersion>$(ConquerorVersion)</PackageVersion>
-        <AssemblyVersion>$(ConquerorAssemblyVersion)</AssemblyVersion>
-        <FileVersion>$(AssemblyVersion)</FileVersion>
-        <Authors>Jonathan Ziller</Authors>
-        <Copyright>Copyright (c) 2022-present Jonathan Ziller</Copyright>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <RepositoryUrl>https://github.com/MrWolfZ/Conqueror</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <PackageTags>Conqueror CQS CQRS Command-Query-Separation Messages Messaging Signals Signalling Events PubSub Streaming Iterators</PackageTags>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath="\" Visible="false" />
-    </ItemGroup>
-
+  <Import Project="common.targets" />
+  <Import Project="analyzers.targets" />
+  <PropertyGroup>
+    <!--suppress MsbuildTargetFrameworkTagInspection -->
+    <TargetFrameworks>net8.0</TargetFrameworks>
+  </PropertyGroup>
+  <!-- for NuGet -->
+  <PropertyGroup>
+    <PackageId>$(ProjectName)</PackageId>
+    <Title>$(PackageId)</Title>
+    <PackageVersion>$(ConquerorVersion)</PackageVersion>
+    <AssemblyVersion>$(ConquerorAssemblyVersion)</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <Authors>Jonathan Ziller</Authors>
+    <Copyright>Copyright (c) 2022-present Jonathan Ziller</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/MrWolfZ/Conqueror</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Conqueror CQS CQRS Command-Query-Separation Messages Messaging Signals Signalling Events PubSub Streaming Iterators</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
 </Project>

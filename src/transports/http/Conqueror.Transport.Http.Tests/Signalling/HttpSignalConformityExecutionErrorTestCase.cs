@@ -1,26 +1,36 @@
 ﻿namespace Conqueror.Transport.Http.Tests.Signalling;
 
-public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConformityExecutionTestCase,
-                                                                 ISignalTransportConformityExecutionErrorTestCase<HttpSignalTransportConformityTestHost>
+public sealed class HttpSignalConformityExecutionErrorTestCase
+    : HttpSignalConformityExecutionTestCase,
+        ISignalTransportConformityExecutionErrorTestCase<HttpSignalTransportConformityTestHost>
 {
-    public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
-
     public required IReadOnlyCollection<Exception?> ConfigurationExceptions { get; init; }
+
+    public required IReadOnlyCollection<(
+        int StatusCode,
+        string ContentType,
+        bool KeepAlive
+    )?> ConnectionResponses { get; init; }
+
+    public required int ExpectedInitialConnectionCount { get; init; }
+    public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
 
     public required Exception? PublishException { get; init; }
 
     public required IReadOnlyCollection<Exception?> HandlerExceptions { get; init; }
 
-    public int? NumOfExpectedUnrecoverableConnectionErrors => ConnectionResponses
-        .Count(r => r is not null
-                    && (r.Value.StatusCode is >= 400 and < 500
-                        || (TransportType == HttpSignalTransportType.Sse
-                            && r.Value.StatusCode is >= 200 and < 400
-                            && r.Value.ContentType != ContentTypes.EventStream)));
-
-    public required IReadOnlyCollection<(int StatusCode, string ContentType, bool KeepAlive)?> ConnectionResponses { get; init; }
-
-    public required int ExpectedInitialConnectionCount { get; init; }
+    public int? NumOfExpectedUnrecoverableConnectionErrors =>
+        ConnectionResponses.Count(r =>
+            r is not null
+            && (
+                r.Value.StatusCode is >= 400 and < 500
+                || (
+                    TransportType is HttpSignalTransportType.Sse
+                    && r.Value.StatusCode is >= 200 and < 400
+                    && !string.Equals(r.Value.ContentType, ContentTypes.EventStream, StringComparison.Ordinal)
+                )
+            )
+        );
 
     public override HttpSignalTransportConformityTestHost CreateTestHost()
     {
@@ -34,6 +44,75 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
         }
 
         return host;
+    }
+
+    public Task OnReceiverConfigurationException(HttpSignalTransportConformityTestHost testHost)
+    {
+        Assert.That(testHost.PublisherHost.ServerCallCount, Is.EqualTo(expected: 0));
+
+        return Task.CompletedTask;
+    }
+
+    public async Task OnInitialReceiverConnection(HttpSignalTransportConformityTestHost testHost)
+    {
+        Assert.That(
+            () => testHost.PublisherHost.ServerCallCount,
+            Is.EqualTo(ExpectedInitialConnectionCount)
+                .After(testHost.AssertionTimeoutInMs)
+                .MilliSeconds.PollEvery(milliSeconds: 10)
+                .MilliSeconds
+        );
+
+        await Task.Delay(millisecondsDelay: 10, testHost.TestTimeoutToken);
+
+        if (NumOfExpectedUnrecoverableConnectionErrors > 0)
+        {
+            Assert.That(
+                () => testHost.PublisherHost.ServerResponseHasFinishedCount,
+                Is.EqualTo(NumOfReceivers)
+                    .After(testHost.AssertionTimeoutInMs)
+                    .MilliSeconds.PollEvery(milliSeconds: 10)
+                    .MilliSeconds
+            );
+
+            return;
+        }
+
+        Assert.That(
+            () => testHost.PublisherHost.ServerResponseHasBegunCount,
+            Is.EqualTo(ExpectedInitialConnectionCount)
+                .After(testHost.AssertionTimeoutInMs)
+                .MilliSeconds.PollEvery(milliSeconds: 10)
+                .MilliSeconds
+        );
+    }
+
+    public Task OnHandlerExceptions(HttpSignalTransportConformityTestHost testHost)
+    {
+        Assert.That(
+            () => testHost.PublisherHost.ServerResponseHasFinishedCount,
+            Is.EqualTo(NumOfReceivers)
+                .After(testHost.AssertionTimeoutInMs)
+                .MilliSeconds.PollEvery(milliSeconds: 10)
+                .MilliSeconds
+        );
+
+        return Task.CompletedTask;
+    }
+
+    public Task TriggerReconnect(HttpSignalTransportConformityTestHost testHost) => testHost.TriggerReconnect();
+
+    public Task AfterSuccessfulReconnect(HttpSignalTransportConformityTestHost testHost)
+    {
+        Assert.That(
+            () => testHost.PublisherHost.ServerResponseHasBegunCount,
+            Is.EqualTo(NumOfReceivers)
+                .After(testHost.AssertionTimeoutInMs)
+                .MilliSeconds.PollEvery(milliSeconds: 10)
+                .MilliSeconds
+        );
+
+        return Task.CompletedTask;
     }
 
     public override void RegisterServerServices(IServiceCollection services)
@@ -53,7 +132,10 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
         base.RegisterClientServices(services);
     }
 
-    public override void ConfigureWebSocketsReceiver(HttpSignalTransportConformityTestHost host, IHttpWebSocketsSignalReceiver receiver)
+    public override void ConfigureWebSocketsReceiver(
+        HttpSignalTransportConformityTestHost host,
+        IHttpWebSocketsSignalReceiver receiver
+    )
     {
         if (host.ReceiverConfigurationExceptions.TryDequeue(out var ex) && ex is not null)
         {
@@ -63,7 +145,10 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
         base.ConfigureWebSocketsReceiver(host, receiver);
     }
 
-    public override void ConfigureSseReceiver(HttpSignalTransportConformityTestHost host, IHttpSseSignalReceiver receiver)
+    public override void ConfigureSseReceiver(
+        HttpSignalTransportConformityTestHost host,
+        IHttpSseSignalReceiver receiver
+    )
     {
         if (host.ReceiverConfigurationExceptions.TryDequeue(out var ex) && ex is not null)
         {
@@ -71,74 +156,5 @@ public sealed class HttpSignalConformityExecutionErrorTestCase : HttpSignalConfo
         }
 
         base.ConfigureSseReceiver(host, receiver);
-    }
-
-    public Task OnReceiverConfigurationException(HttpSignalTransportConformityTestHost testHost)
-    {
-        Assert.That(testHost.PublisherHost.ServerCallCount, Is.EqualTo(0));
-
-        return Task.CompletedTask;
-    }
-
-    public async Task OnInitialReceiverConnection(HttpSignalTransportConformityTestHost testHost)
-    {
-        Assert.That(
-            () => testHost.PublisherHost.ServerCallCount,
-            Is.EqualTo(ExpectedInitialConnectionCount)
-              .After(testHost.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
-
-        await Task.Delay(10, testHost.TestTimeoutToken);
-
-        if (NumOfExpectedUnrecoverableConnectionErrors > 0)
-        {
-            Assert.That(
-                () => testHost.PublisherHost.ServerResponseHasFinishedCount,
-                Is.EqualTo(NumOfReceivers)
-                  .After(testHost.AssertionTimeoutInMs)
-                  .MilliSeconds
-                  .PollEvery(10)
-                  .MilliSeconds);
-
-            return;
-        }
-
-        Assert.That(
-            () => testHost.PublisherHost.ServerResponseHasBegunCount,
-            Is.EqualTo(ExpectedInitialConnectionCount)
-              .After(testHost.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
-    }
-
-    public Task OnHandlerExceptions(HttpSignalTransportConformityTestHost testHost)
-    {
-        Assert.That(
-            () => testHost.PublisherHost.ServerResponseHasFinishedCount,
-            Is.EqualTo(NumOfReceivers)
-              .After(testHost.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
-
-        return Task.CompletedTask;
-    }
-
-    public Task TriggerReconnect(HttpSignalTransportConformityTestHost testHost) => testHost.TriggerReconnect();
-
-    public Task AfterSuccessfulReconnect(HttpSignalTransportConformityTestHost testHost)
-    {
-        Assert.That(
-            () => testHost.PublisherHost.ServerResponseHasBegunCount,
-            Is.EqualTo(NumOfReceivers)
-              .After(testHost.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
-
-        return Task.CompletedTask;
     }
 }

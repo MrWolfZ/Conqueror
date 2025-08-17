@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.AbstractWithoutResponse;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.AbstractWithoutResponse;
 
 [Message]
 public abstract partial record TestMessage;

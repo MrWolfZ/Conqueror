@@ -1,19 +1,17 @@
-using System;
+namespace Conqueror.Middleware.Logging.Messaging;
+
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-
-namespace Conqueror.Middleware.Logging.Messaging;
 
 /// <summary>
 ///     The configuration options for <see cref="LoggingMessageMiddleware{TMessage,TResponse}" />.
 /// </summary>
+/// <typeparam name="TMessage">the message type</typeparam>
+/// <typeparam name="TResponse">the response type</typeparam>
 public sealed class LoggingMessageMiddlewareConfiguration<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    internal LoggingMessageMiddlewareConfiguration(Type? handlerType)
-    {
-        HandlerType = handlerType;
-    }
+    internal LoggingMessageMiddlewareConfiguration(Type? handlerType) => HandlerType = handlerType;
 
     /// <summary>
     ///     The level at which the pre-execution log message is logged.
@@ -72,27 +70,27 @@ public sealed class LoggingMessageMiddlewareConfiguration<TMessage, TResponse>
 
     /// <summary>
     ///     A hook that is called just before the pre-execution log message
-    ///     is written. Return <c>true</c> to allow the log message to be
-    ///     written or return <c>false</c> for the log message to be skipped.
-    ///     This hook can be used to customize the logging by returning <c>false</c>
+    ///     is written. Return <see langword="true" /> to allow the log message to be
+    ///     written or return <see langword="false" /> for the log message to be skipped.
+    ///     This hook can be used to customize the logging by returning <see langword="false" />
     ///     and using the <see cref="LoggingMessagePreExecutionContext{TMessage,TResponse}.Logger" />.
     /// </summary>
     public Func<LoggingMessagePreExecutionContext<TMessage, TResponse>, bool>? PreExecutionHook { get; set; }
 
     /// <summary>
     ///     A hook that is called just before the post-execution log message
-    ///     is written. Return <c>true</c> to allow the log message to be
-    ///     written or return <c>false</c> for the log message to be skipped.
-    ///     This hook can be used to customize the logging by returning <c>false</c>
+    ///     is written. Return <see langword="true" /> to allow the log message to be
+    ///     written or return <see langword="false" /> for the log message to be skipped.
+    ///     This hook can be used to customize the logging by returning <see langword="false" />
     ///     and using the <see cref="LoggingMessagePostExecutionContext{TMessage,TResponse}.Logger" />.
     /// </summary>
     public Func<LoggingMessagePostExecutionContext<TMessage, TResponse>, bool>? PostExecutionHook { get; set; }
 
     /// <summary>
     ///     A hook that is called just before the exception log message
-    ///     is written. Return <c>true</c> to allow the log message to be
-    ///     written or return <c>false</c> for the log message to be skipped.
-    ///     This hook can be used to customize the logging by returning <c>false</c>
+    ///     is written. Return <see langword="true" /> to allow the log message to be
+    ///     written or return <see langword="false" /> for the log message to be skipped.
+    ///     This hook can be used to customize the logging by returning <see langword="false" />
     ///     and using the <see cref="LoggingMessageExceptionContext{TMessage,TResponse}.Logger" />.<br />
     ///     <br />
     ///     Note that this hook does not influence what happens with the exception
@@ -119,6 +117,8 @@ public sealed class LoggingMessageMiddlewareConfiguration<TMessage, TResponse>
 ///     The context passed to a <see cref="LoggingMessageMiddleware{TMessage,TResponse}" />'s
 ///     <see cref="LoggingMessageMiddlewareConfiguration{TMessage,TResponse}.PreExecutionHook" />.
 /// </summary>
+/// <typeparam name="TMessage">the message type</typeparam>
+/// <typeparam name="TResponse">the response type</typeparam>
 public sealed record LoggingMessagePreExecutionContext<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -158,6 +158,8 @@ public sealed record LoggingMessagePreExecutionContext<TMessage, TResponse>
 ///     The context passed to a <see cref="LoggingMessageMiddleware{TMessage,TResponse}" />'s
 ///     <see cref="LoggingMessageMiddlewareConfiguration{TMessage,TResponse}.PostExecutionHook" />.
 /// </summary>
+/// <typeparam name="TMessage">the message type</typeparam>
+/// <typeparam name="TResponse">the response type</typeparam>
 public sealed record LoggingMessagePostExecutionContext<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -215,6 +217,8 @@ public sealed record LoggingMessagePostExecutionContext<TMessage, TResponse>
 ///     The context passed to a <see cref="LoggingMessageMiddleware{TMessage,TResponse}" />'s
 ///     <see cref="LoggingMessageMiddlewareConfiguration{TMessage,TResponse}.ExceptionHook" />.
 /// </summary>
+/// <typeparam name="TMessage">the message type</typeparam>
+/// <typeparam name="TResponse">the response type</typeparam>
 public sealed record LoggingMessageExceptionContext<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -259,7 +263,7 @@ public sealed record LoggingMessageExceptionContext<TMessage, TResponse>
     ///     can be combined with <see cref="Exception.StackTrace" /> to get the
     ///     full stack trace of the exception, since the exception's stack trace
     ///     only contains the stack frames from the middleware execution to the
-    ///     handler. Is <c>null</c> when capturing of the stack trace is disabled.
+    ///     handler. Is <see langword="null" /> when capturing of the stack trace is disabled.
     /// </summary>
     public required StackTrace? ExecutionStackTrace { get; init; }
 

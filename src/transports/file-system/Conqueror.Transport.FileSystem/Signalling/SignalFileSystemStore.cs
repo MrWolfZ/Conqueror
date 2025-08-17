@@ -9,14 +9,16 @@ internal sealed class SignalFileSystemStore : IDisposable
     {
         this.baseDirectoryPath = baseDirectoryPath;
 
-        tagIdFiles = new(baseDirectoryPath);
-        SeqIndexFile = new(baseDirectoryPath, tagIdFiles);
-        ContentFiles = new(baseDirectoryPath);
+        tagIdFiles = new TagIdFiles(baseDirectoryPath);
+        SeqIndexFile = new SeqIndexFile(baseDirectoryPath, tagIdFiles);
+        ContentFiles = new ContentFiles(baseDirectoryPath);
     }
 
     public SeqIndexFile SeqIndexFile { get; }
 
     public ContentFiles ContentFiles { get; }
+
+    public void Dispose() => SeqIndexFile.Dispose();
 
     public InboxFiles GetInboxFiles()
     {
@@ -26,11 +28,6 @@ internal sealed class SignalFileSystemStore : IDisposable
 
         directoryPath.EnsureExists();
 
-        return new(directoryPath, tagIdFiles);
-    }
-
-    public void Dispose()
-    {
-        SeqIndexFile.Dispose();
+        return new InboxFiles(directoryPath, tagIdFiles);
     }
 }

@@ -10,9 +10,14 @@ internal sealed class FileSystemMessageReceiverFactory(IServiceProvider serviceP
     public FileSystemMessageReceiver? CreateReceiverForHandlerType(
         Type? handlerType,
         IReadOnlyCollection<IMessageReceiverHandlerInvoker<IFileSystemMessageHandlerTypesInjector>> invokers,
-        IFileSystemMessageHandlerTypesInjector typesInjector)
+        IFileSystemMessageHandlerTypesInjector typesInjector
+    )
     {
-        var receiver = new FileSystemMessageReceiver(serviceProvider, invokers.Select(i => i.MessageType).ToArray(), handlerType);
+        var receiver = new FileSystemMessageReceiver(
+            serviceProvider,
+            invokers.Select(i => i.MessageType).ToArray(),
+            handlerType
+        );
         typesInjector.ConfigureFileSystemReceiver(receiver);
 
         if (!receiver.IsEnabled)
@@ -28,12 +33,19 @@ internal sealed class FileSystemMessageReceiverFactory(IServiceProvider serviceP
         return receiver;
     }
 
-    private readonly record struct ConfigurationInjectableArg(IMessageReceiverHandlerInvoker Invoker, FileSystemMessageReceiver Receiver);
+    private readonly record struct ConfigurationInjectableArg(
+        IMessageReceiverHandlerInvoker Invoker,
+        FileSystemMessageReceiver Receiver
+    );
 
-    private sealed class ConfigurationInjectable : IFileSystemMessageTypesInjectable<ConfigurationInjectableArg, object?>
+    private sealed class ConfigurationInjectable
+        : IFileSystemMessageTypesInjectable<ConfigurationInjectableArg, object?>
     {
-        object? IFileSystemMessageTypesInjectable<ConfigurationInjectableArg, object?>
-            .WithInjectedTypes<TMessage, TResponse, TIHandler>(ConfigurationInjectableArg arg)
+        object? IFileSystemMessageTypesInjectable<ConfigurationInjectableArg, object?>.WithInjectedTypes<
+            TMessage,
+            TResponse,
+            TIHandler
+        >(ConfigurationInjectableArg arg)
         {
             arg.Receiver.AddMessageType<TMessage, TResponse>(arg.Invoker);
 

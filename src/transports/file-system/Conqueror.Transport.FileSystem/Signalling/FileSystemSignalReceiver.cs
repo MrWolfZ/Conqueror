@@ -3,7 +3,8 @@
 internal sealed class FileSystemSignalReceiver(
     IServiceProvider serviceProvider,
     IReadOnlyCollection<Type> signalTypes,
-    Type? handlerType) : IFileSystemSignalReceiver
+    Type? handlerType
+) : IFileSystemSignalReceiver
 {
     private readonly Dictionary<string, string> fileExtensionByTag = [];
     private readonly List<ISignalReceiverHandlerInvoker> invokers = [];
@@ -12,6 +13,8 @@ internal sealed class FileSystemSignalReceiver(
     private readonly Dictionary<string, Type> signalTypeByTag = [];
     private readonly List<string> tags = [];
 
+    public IReadOnlyCollection<string> Tags => tags;
+
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public IReadOnlyCollection<Type> SignalTypes { get; } = signalTypes;
@@ -19,18 +22,17 @@ internal sealed class FileSystemSignalReceiver(
 
     public bool IsEnabled => Configuration is not null;
 
-    public IReadOnlyCollection<string> Tags => tags;
-
     public FileSystemSignalReceiverConfiguration? Configuration { get; private set; }
 
     public FileSystemSignalReceiverConfiguration EnableMultipleCompetingInstances(
         string baseDirectoryPath,
         TimeSpan leaseDuration,
-        TimeSpan pollingInterval)
+        TimeSpan pollingInterval
+    )
     {
-        Configuration = new()
+        Configuration = new FileSystemSignalReceiverConfiguration
         {
-            Name = HandlerType?.Name ?? $"delegate-{string.Join("-", Tags)}",
+            Name = HandlerType?.Name ?? $"delegate-{string.Join('-', Tags)}",
             BaseDirectoryPath = baseDirectoryPath,
             LeaseDuration = leaseDuration,
             PollingInterval = pollingInterval,
@@ -39,11 +41,14 @@ internal sealed class FileSystemSignalReceiver(
         return Configuration;
     }
 
-    public FileSystemSignalReceiverConfiguration EnableSingleInstance(string baseDirectoryPath, TimeSpan pollingInterval)
+    public FileSystemSignalReceiverConfiguration EnableSingleInstance(
+        string baseDirectoryPath,
+        TimeSpan pollingInterval
+    )
     {
-        Configuration = new()
+        Configuration = new FileSystemSignalReceiverConfiguration
         {
-            Name = HandlerType?.Name ?? $"delegate-{string.Join("-", Tags)}",
+            Name = HandlerType?.Name ?? $"delegate-{string.Join('-', Tags)}",
             BaseDirectoryPath = baseDirectoryPath,
             LeaseDuration = null,
             PollingInterval = pollingInterval,
@@ -60,40 +65,40 @@ internal sealed class FileSystemSignalReceiver(
         if (!signalTypeByTag.TryAdd(TSignal.Tag, typeof(TSignal)))
         {
             throw new InvalidOperationException(
-                $"the tag '{TSignal.Tag}' is already used by signal type '{signalTypeByTag[TSignal.Tag]}'");
+                $"the tag '{TSignal.Tag}' is already used by signal type '{signalTypeByTag[TSignal.Tag]}'"
+            );
         }
 
         tags.Add(TSignal.Tag);
         tags.Sort(StringComparer.OrdinalIgnoreCase);
 
         invokers.Add(invoker);
-        parserByTag[TSignal.Tag] = async (content, ct)
-            => await TSignal.FileSystemSignalSerializer.DeserializeSignal(ServiceProvider, content, ct).ConfigureAwait(false);
+        parserByTag[TSignal.Tag] = async (content, ct) =>
+            await TSignal
+                .FileSystemSignalSerializer.DeserializeSignal(ServiceProvider, content, ct)
+                .ConfigureAwait(false);
 
         fileExtensionByTag[TSignal.Tag] = TSignal.FileSystemSignalSerializer.FileExtension;
     }
 
     public string GetFileExtension(string tag) => fileExtensionByTag[tag];
 
-    public Task<object?> ReadSignal(string tag, Stream stream, CancellationToken cancellationToken)
-    {
-        return parserByTag[tag].Invoke(stream, cancellationToken);
-    }
+    public Task<object?> ReadSignal(string tag, Stream stream, CancellationToken cancellationToken) =>
+        parserByTag[tag].Invoke(stream, cancellationToken);
 
     public async Task InvokeHandler(object signal, CancellationToken cancellationToken)
     {
-        var relevantInvokers = invokersBySignalType.GetOrAdd(signal.GetType(), _ => invokers.Where(i => i.SignalType.IsInstanceOfType(signal)).ToList());
+        var relevantInvokers = invokersBySignalType.GetOrAdd(
+            signal.GetType(),
+            static (_, state) => state.invokers.Where(i => i.SignalType.IsInstanceOfType(state.signal)).ToList(),
+            (invokers, signal)
+        );
 
         // looping over the invokers handles the edge case where a handler observes a signal
         // multiple times through the signal's type hierarchy
         foreach (var invoker in relevantInvokers)
         {
-            await invoker.Invoke(
-                             signal,
-                             ServiceProvider,
-                             TransportName,
-                             cancellationToken)
-                         .ConfigureAwait(false);
+            await invoker.Invoke(signal, ServiceProvider, TransportName, cancellationToken).ConfigureAwait(false);
         }
     }
 }

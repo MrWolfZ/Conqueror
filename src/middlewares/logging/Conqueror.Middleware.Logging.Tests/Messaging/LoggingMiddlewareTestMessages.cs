@@ -1,14 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace Conqueror.Middleware.Logging.Tests.Messaging;
+
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
-namespace Conqueror.Middleware.Logging.Tests.Messaging;
-
 public static partial class LoggingMiddlewareTestMessages
 {
+    public const string TestTransportName = "test-transport";
+
     public enum HookTestBehavior
     {
         HookDoesNotLogAndReturnsFalse,
@@ -17,16 +19,17 @@ public static partial class LoggingMiddlewareTestMessages
         HookLogsAndReturnsTrue,
     }
 
-    public const string TestTransportName = "test-transport";
-
-    public static void RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(this IServiceCollection services,
-                                                                                     MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
+    public static void RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(
+        this IServiceCollection services,
+        MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
         where THandler : class, TIHandler, IMessageHandlerWithSourceGeneration
     {
-        _ = services.AddMessageHandler<THandler>()
-                    .AddSingleton<IMessageTestCasePipelineConfiguration<TMessage, TResponse>>(testCase);
+        _ = services
+            .AddMessageHandler<THandler>()
+            .AddSingleton<IMessageTestCasePipelineConfiguration<TMessage, TResponse>>(testCase);
 
         if (testCase.Exception is not null)
         {
@@ -34,53 +37,68 @@ public static partial class LoggingMiddlewareTestMessages
         }
     }
 
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1102:Query clause should follow previous clause", Justification = "needed for comment")]
+    [SuppressMessage(
+        "StyleCop.CSharp.ReadabilityRules",
+        "SA1102:Query clause should follow previous clause",
+        Justification = "needed for comment"
+    )]
     public static IEnumerable<TestCaseData> GenerateTestCaseData()
     {
-        LogLevel?[] allLogLevels = [null, ..Enum.GetValues<LogLevel>()];
-        PayloadLoggingStrategy?[] allPayloadLoggingStrategies = [null, ..Enum.GetValues<PayloadLoggingStrategy>()];
-        HookTestBehavior?[] allHookTestBehaviors = [null, ..Enum.GetValues<HookTestBehavior>()];
+        LogLevel?[] allLogLevels = [null, .. Enum.GetValues<LogLevel>()];
+        PayloadLoggingStrategy?[] allPayloadLoggingStrategies = [null, .. Enum.GetValues<PayloadLoggingStrategy>()];
+        HookTestBehavior?[] allHookTestBehaviors = [null, .. Enum.GetValues<HookTestBehavior>()];
 
-        foreach (var t in from configuredLogLevel in allLogLevels
-                          where configuredLogLevel is not null
-                          from logLevel in allLogLevels
+        foreach (
+            var t in from configuredLogLevel in allLogLevels
+            where configuredLogLevel is not null
+            from logLevel in allLogLevels
 
-                          // to reduce the number of test cases we only create those combinations that are
-                          // where the configured log level and actual log level are close
-                          where Math.Abs((int)(logLevel ?? LogLevel.Information) - (int)configuredLogLevel) <= 1
-                          let willLog = logLevel != LogLevel.None && logLevel >= configuredLogLevel
-
-                          // to reduce the number of test cases we don't test generate additional cases
-                          // when we know that nothing will be logged anyway
-                          from hasException in willLog ? new[] { true, false } : [false]
-                          from payloadLoggingStrategy in willLog ? allPayloadLoggingStrategies : [null]
-                          from payloadLoggingStrategyFromFactory in willLog ? new PayloadLoggingStrategy?[] { null, PayloadLoggingStrategy.Raw } : [null]
-                          from hasCustomCategoryFactory in willLog && payloadLoggingStrategy is null ? new[] { true, false } : [false]
-                          from hookTestBehavior in willLog && payloadLoggingStrategy is null ? allHookTestBehaviors : [HookTestBehavior.HookLogsAndReturnsTrue]
-                          select (configuredLogLevel: (LogLevel)configuredLogLevel,
-                                  preExecutionLogLevel: logLevel,
-                                  postExecutionLogLevel: logLevel,
-                                  exceptionLogLevel: logLevel,
-                                  hasException,
-                                  messagePayloadLoggingStrategy: payloadLoggingStrategy,
-                                  messagePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
-                                  responsePayloadLoggingStrategy: payloadLoggingStrategy,
-                                  responsePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
-                                  hasCustomCategoryFactory,
-                                  hookTestBehavior))
+            // to reduce the number of test cases we only create those combinations that are
+            // where the configured log level and actual log level are close
+            where Math.Abs((int)(logLevel ?? LogLevel.Information) - (int)configuredLogLevel) <= 1
+            let willLog = logLevel is not LogLevel.None && logLevel >= configuredLogLevel
+            // to reduce the number of test cases we don't test generate additional cases
+            // when we know that nothing will be logged anyway
+            from hasException in willLog ? new[] { true, false } : [false]
+            from payloadLoggingStrategy in willLog ? allPayloadLoggingStrategies : [null]
+            from payloadLoggingStrategyFromFactory in willLog
+                ? new PayloadLoggingStrategy?[] { null, PayloadLoggingStrategy.Raw }
+                : [null]
+            from hasCustomCategoryFactory in willLog && payloadLoggingStrategy is null ? new[] { true, false } : [false]
+            from hookTestBehavior in willLog && payloadLoggingStrategy is null
+                ? allHookTestBehaviors
+                : [HookTestBehavior.HookLogsAndReturnsTrue]
+            select (
+                configuredLogLevel: (LogLevel)configuredLogLevel,
+                preExecutionLogLevel: logLevel,
+                postExecutionLogLevel: logLevel,
+                exceptionLogLevel: logLevel,
+                hasException,
+                messagePayloadLoggingStrategy: payloadLoggingStrategy,
+                messagePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
+                responsePayloadLoggingStrategy: payloadLoggingStrategy,
+                responsePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
+                hasCustomCategoryFactory,
+                hookTestBehavior
+            )
+        )
         {
-            foreach (var c in GenerateTestCasesWithSettings(t.configuredLogLevel,
-                                                            t.preExecutionLogLevel,
-                                                            t.postExecutionLogLevel,
-                                                            t.exceptionLogLevel,
-                                                            t.hasException,
-                                                            stackTraceCaptureIsDisabled: false,
-                                                            t.messagePayloadLoggingStrategy,
-                                                            t.messagePayloadLoggingStrategyFromFactory,
-                                                            t.responsePayloadLoggingStrategy,
-                                                            t.responsePayloadLoggingStrategyFromFactory,
-                                                            t.hasCustomCategoryFactory,
-                                                            t.hookTestBehavior))
+            foreach (
+                var c in GenerateTestCasesWithSettings(
+                    t.configuredLogLevel,
+                    t.preExecutionLogLevel,
+                    t.postExecutionLogLevel,
+                    t.exceptionLogLevel,
+                    t.hasException,
+                    stackTraceCaptureIsDisabled: false,
+                    t.messagePayloadLoggingStrategy,
+                    t.messagePayloadLoggingStrategyFromFactory,
+                    t.responsePayloadLoggingStrategy,
+                    t.responsePayloadLoggingStrategyFromFactory,
+                    t.hasCustomCategoryFactory,
+                    t.hookTestBehavior
+                )
+            )
             {
                 yield return c;
             }
@@ -89,26 +107,32 @@ public static partial class LoggingMiddlewareTestMessages
 
     public static IEnumerable<TestCaseData> GenerateSnapshotTestCaseData()
     {
-        PayloadLoggingStrategy?[] allPayloadLoggingStrategies = [null, ..Enum.GetValues<PayloadLoggingStrategy>()];
+        PayloadLoggingStrategy?[] allPayloadLoggingStrategies = [null, .. Enum.GetValues<PayloadLoggingStrategy>()];
 
-        foreach (var t in from hasException in new[] { true, false }
-                          from stackTraceCaptureIsDisabled in hasException ? new[] { true, false } : [false]
-                          from hasCustomCategoryFactory in new[] { true, false }
-                          from payloadLoggingStrategy in allPayloadLoggingStrategies
-                          select (hasException, stackTraceCaptureIsDisabled, hasCustomCategoryFactory, payloadLoggingStrategy))
+        foreach (
+            var t in from hasException in new[] { true, false }
+            from stackTraceCaptureIsDisabled in hasException ? new[] { true, false } : [false]
+            from hasCustomCategoryFactory in new[] { true, false }
+            from payloadLoggingStrategy in allPayloadLoggingStrategies
+            select (hasException, stackTraceCaptureIsDisabled, hasCustomCategoryFactory, payloadLoggingStrategy)
+        )
         {
-            foreach (var c in GenerateTestCasesWithSettings(configuredLogLevel: LogLevel.Information,
-                                                            preExecutionLogLevel: null,
-                                                            postExecutionLogLevel: null,
-                                                            exceptionLogLevel: null,
-                                                            t.hasException,
-                                                            t.stackTraceCaptureIsDisabled,
-                                                            t.payloadLoggingStrategy,
-                                                            messagePayloadLoggingStrategyFromFactory: null,
-                                                            t.payloadLoggingStrategy,
-                                                            responsePayloadLoggingStrategyFromFactory: null,
-                                                            t.hasCustomCategoryFactory,
-                                                            hookTestBehavior: null))
+            foreach (
+                var c in GenerateTestCasesWithSettings(
+                    LogLevel.Information,
+                    preExecutionLogLevel: null,
+                    postExecutionLogLevel: null,
+                    exceptionLogLevel: null,
+                    t.hasException,
+                    t.stackTraceCaptureIsDisabled,
+                    t.payloadLoggingStrategy,
+                    messagePayloadLoggingStrategyFromFactory: null,
+                    t.payloadLoggingStrategy,
+                    responsePayloadLoggingStrategyFromFactory: null,
+                    t.hasCustomCategoryFactory,
+                    hookTestBehavior: null
+                )
+            )
             {
                 yield return c;
             }
@@ -127,13 +151,14 @@ public static partial class LoggingMiddlewareTestMessages
         PayloadLoggingStrategy? responsePayloadLoggingStrategy,
         PayloadLoggingStrategy? responsePayloadLoggingStrategyFromFactory,
         bool hasCustomCategoryFactory,
-        HookTestBehavior? hookTestBehavior)
+        HookTestBehavior? hookTestBehavior
+    )
     {
         yield return new MessageTestCase<TestMessage, TestMessageResponse, TestMessage.IHandler, TestMessageHandler>
         {
-            Message = new() { Payload = 10 },
+            Message = new TestMessage { Payload = 10 },
             MessageJson = "{\"Payload\":10}",
-            Response = new() { Payload = 11 },
+            Response = new TestMessageResponse { Payload = 11 },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
             StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
@@ -150,9 +175,14 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithoutResponse, UnitMessageResponse, TestMessageWithoutResponse.IHandler, TestMessageWithoutResponseHandler>
+        yield return new MessageTestCase<
+            TestMessageWithoutResponse,
+            UnitMessageResponse,
+            TestMessageWithoutResponse.IHandler,
+            TestMessageWithoutResponseHandler
+        >
         {
-            Message = new() { Payload = 10 },
+            Message = new TestMessageWithoutResponse { Payload = 10 },
             MessageJson = "{\"Payload\":10}",
             Response = null,
             ResponseJson = null,
@@ -171,11 +201,16 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithoutPayload, TestMessageResponse, TestMessageWithoutPayload.IHandler, TestMessageWithoutPayloadHandler>
+        yield return new MessageTestCase<
+            TestMessageWithoutPayload,
+            TestMessageResponse,
+            TestMessageWithoutPayload.IHandler,
+            TestMessageWithoutPayloadHandler
+        >
         {
-            Message = new(),
+            Message = new TestMessageWithoutPayload(),
             MessageJson = null,
-            Response = new() { Payload = 11 },
+            Response = new TestMessageResponse { Payload = 11 },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
             StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
@@ -192,9 +227,14 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithoutResponseWithoutPayload, UnitMessageResponse, TestMessageWithoutResponseWithoutPayload.IHandler, TestMessageWithoutResponseWithoutPayloadHandler>
+        yield return new MessageTestCase<
+            TestMessageWithoutResponseWithoutPayload,
+            UnitMessageResponse,
+            TestMessageWithoutResponseWithoutPayload.IHandler,
+            TestMessageWithoutResponseWithoutPayloadHandler
+        >
         {
-            Message = new(),
+            Message = new TestMessageWithoutResponseWithoutPayload(),
             MessageJson = null,
             Response = null,
             ResponseJson = null,
@@ -213,11 +253,20 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithComplexPayload, TestMessageResponse, TestMessageWithComplexPayload.IHandler, TestMessageWithComplexPayloadHandler>
+        yield return new MessageTestCase<
+            TestMessageWithComplexPayload,
+            TestMessageResponse,
+            TestMessageWithComplexPayload.IHandler,
+            TestMessageWithComplexPayloadHandler
+        >
         {
-            Message = new() { Payload = 10, NestedPayload = new() { Payload = 11, Payload2 = 12 } },
+            Message = new TestMessageWithComplexPayload
+            {
+                Payload = 10,
+                NestedPayload = new TestMessageWithComplexPayloadPayload { Payload = 11, Payload2 = 12 },
+            },
             MessageJson = "{\"Payload\":10,\"NestedPayload\":{\"Payload\":11,\"Payload2\":12}}",
-            Response = new() { Payload = 33 },
+            Response = new TestMessageResponse { Payload = 33 },
             ResponseJson = "{\"Payload\":33}",
             Exception = hasException ? new TestException() : null,
             StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
@@ -234,11 +283,22 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithCustomSerializedPayloadType, TestMessageWithCustomSerializedPayloadTypeResponse, TestMessageWithCustomSerializedPayloadType.IHandler, TestMessageWithCustomSerializedPayloadTypeHandler>
+        yield return new MessageTestCase<
+            TestMessageWithCustomSerializedPayloadType,
+            TestMessageWithCustomSerializedPayloadTypeResponse,
+            TestMessageWithCustomSerializedPayloadType.IHandler,
+            TestMessageWithCustomSerializedPayloadTypeHandler
+        >
         {
-            Message = new() { Payload = new(10) },
+            Message = new TestMessageWithCustomSerializedPayloadType
+            {
+                Payload = new TestMessageWithCustomSerializedPayloadTypePayload(Payload: 10),
+            },
             MessageJson = "{\"Payload\":10}",
-            Response = new() { Payload = new(11) },
+            Response = new TestMessageWithCustomSerializedPayloadTypeResponse
+            {
+                Payload = new TestMessageWithCustomSerializedPayloadTypePayload(Payload: 11),
+            },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
             StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
@@ -255,11 +315,16 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithCustomJsonTypeInfo, TestMessageWithCustomJsonTypeInfoResponse, TestMessageWithCustomJsonTypeInfo.IHandler, TestMessageWithCustomJsonTypeInfoHandler>
+        yield return new MessageTestCase<
+            TestMessageWithCustomJsonTypeInfo,
+            TestMessageWithCustomJsonTypeInfoResponse,
+            TestMessageWithCustomJsonTypeInfo.IHandler,
+            TestMessageWithCustomJsonTypeInfoHandler
+        >
         {
-            Message = new() { MessagePayload = 10 },
+            Message = new TestMessageWithCustomJsonTypeInfo { MessagePayload = 10 },
             MessageJson = "{\"MESSAGE_PAYLOAD\":10}",
-            Response = new() { ResponsePayload = 11 },
+            Response = new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 11 },
             ResponseJson = "{\"RESPONSE_PAYLOAD\":11}",
             Exception = hasException ? new TestException() : null,
             StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
@@ -276,11 +341,16 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithCustomTransport, TestMessageResponse, TestMessageWithCustomTransport.IHandler, TestMessageWithCustomTransportHandler>
+        yield return new MessageTestCase<
+            TestMessageWithCustomTransport,
+            TestMessageResponse,
+            TestMessageWithCustomTransport.IHandler,
+            TestMessageWithCustomTransportHandler
+        >
         {
-            Message = new() { Payload = 10 },
+            Message = new TestMessageWithCustomTransport { Payload = 10 },
             MessageJson = "{\"Payload\":10}",
-            Response = new() { Payload = 11 },
+            Response = new TestMessageResponse { Payload = 11 },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
             StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
@@ -297,11 +367,16 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = TestTransportName,
         };
 
-        yield return new MessageTestCase<TestMessageBase, TestMessageResponse, TestMessageBase.IHandler, TestMessageBaseHandler>
+        yield return new MessageTestCase<
+            TestMessageBase,
+            TestMessageResponse,
+            TestMessageBase.IHandler,
+            TestMessageBaseHandler
+        >
         {
             Message = new TestMessageSub { PayloadBase = 10, PayloadSub = 11 },
             MessageJson = "{\"PayloadSub\":11,\"PayloadBase\":10}",
-            Response = new() { Payload = 11 },
+            Response = new TestMessageResponse { Payload = 11 },
             ResponseJson = "{\"Payload\":11}",
             Exception = hasException ? new TestException() : null,
             StackTraceCaptureIsDisabled = stackTraceCaptureIsDisabled,
@@ -319,8 +394,10 @@ public static partial class LoggingMiddlewareTestMessages
         };
     }
 
-    public static void ConfigureLoggingPipeline<TMessage, TResponse>(IMessagePipeline<TMessage, TResponse> pipeline,
-                                                                     IMessageTestCasePipelineConfiguration<TMessage, TResponse> testCase)
+    public static void ConfigureLoggingPipeline<TMessage, TResponse>(
+        IMessagePipeline<TMessage, TResponse> pipeline,
+        IMessageTestCasePipelineConfiguration<TMessage, TResponse> testCase
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         _ = pipeline.UseLogging(c =>
@@ -357,7 +434,8 @@ public static partial class LoggingMiddlewareTestMessages
 
             if (testCase.ResponsePayloadLoggingStrategyFromFactory is not null)
             {
-                c.ResponsePayloadLoggingStrategyFactory = (_, _) => testCase.ResponsePayloadLoggingStrategyFromFactory.Value;
+                c.ResponsePayloadLoggingStrategyFactory = (_, _) =>
+                    testCase.ResponsePayloadLoggingStrategyFromFactory.Value;
             }
 
             if (testCase.LoggerCategoryFactory is not null)
@@ -369,8 +447,14 @@ public static partial class LoggingMiddlewareTestMessages
 
             if (testCase.HookBehavior is { } hookTestBehavior)
             {
-                var hookReturn = hookTestBehavior is HookTestBehavior.HookLogsAndReturnsTrue or HookTestBehavior.HookDoesNotLogAndReturnsTrue;
-                var hookLogs = hookTestBehavior is HookTestBehavior.HookLogsAndReturnsTrue or HookTestBehavior.HookLogsAndReturnsFalse;
+                var hookReturn =
+                    hookTestBehavior
+                        is HookTestBehavior.HookLogsAndReturnsTrue
+                            or HookTestBehavior.HookDoesNotLogAndReturnsTrue;
+                var hookLogs =
+                    hookTestBehavior
+                        is HookTestBehavior.HookLogsAndReturnsTrue
+                            or HookTestBehavior.HookLogsAndReturnsFalse;
 
                 c.PreExecutionHook = ctx =>
                 {
@@ -379,13 +463,15 @@ public static partial class LoggingMiddlewareTestMessages
 
                     if (hookLogs)
                     {
-                        ctx.Logger.Log(ctx.LogLevel,
-                                       "PreHook:{MessageType},{MessageId},{TraceId},{TransportTypeName},{TransportRole}",
-                                       ctx.Message.GetType().Name,
-                                       ctx.MessageId,
-                                       ctx.TraceId,
-                                       ctx.TransportType.Name,
-                                       ctx.TransportType.Role);
+                        ctx.Logger.Log(
+                            ctx.LogLevel,
+                            "PreHook:{MessageType},{MessageId},{TraceId},{TransportTypeName},{TransportRole}",
+                            ctx.Message.GetType().Name,
+                            ctx.MessageId,
+                            ctx.TraceId,
+                            ctx.TransportType.Name,
+                            ctx.TransportType.Role
+                        );
                     }
 
                     return hookReturn;
@@ -400,13 +486,15 @@ public static partial class LoggingMiddlewareTestMessages
 
                     if (hookLogs)
                     {
-                        ctx.Logger.Log(ctx.LogLevel,
-                                       "PostHook:{ResponseType},{MessageId},{TraceId},{TransportTypeName},{TransportRole}",
-                                       ctx.Response.GetType().Name,
-                                       ctx.MessageId,
-                                       ctx.TraceId,
-                                       ctx.TransportType.Name,
-                                       ctx.TransportType.Role);
+                        ctx.Logger.Log(
+                            ctx.LogLevel,
+                            "PostHook:{ResponseType},{MessageId},{TraceId},{TransportTypeName},{TransportRole}",
+                            ctx.Response.GetType().Name,
+                            ctx.MessageId,
+                            ctx.TraceId,
+                            ctx.TransportType.Name,
+                            ctx.TransportType.Role
+                        );
                     }
 
                     return hookReturn;
@@ -418,15 +506,19 @@ public static partial class LoggingMiddlewareTestMessages
 
                     if (hookLogs)
                     {
-                        var exceptionToLog = ctx.ExecutionStackTrace is null ? ctx.Exception : new WrappingException(ctx.Exception, ctx.ExecutionStackTrace.ToString());
-                        ctx.Logger.Log(ctx.LogLevel,
-                                       exceptionToLog,
-                                       "ExceptionHook:{ExceptionType},{MessageId},{TraceId},{TransportTypeName},{TransportRole}",
-                                       ctx.Exception.GetType().Name,
-                                       ctx.MessageId,
-                                       ctx.TraceId,
-                                       ctx.TransportType.Name,
-                                       ctx.TransportType.Role);
+                        var exceptionToLog = ctx.ExecutionStackTrace is null
+                            ? ctx.Exception
+                            : new WrappingException(ctx.Exception, ctx.ExecutionStackTrace.ToString());
+                        ctx.Logger.Log(
+                            ctx.LogLevel,
+                            exceptionToLog,
+                            "ExceptionHook:{ExceptionType},{MessageId},{TraceId},{TransportTypeName},{TransportRole}",
+                            ctx.Exception.GetType().Name,
+                            ctx.MessageId,
+                            ctx.TraceId,
+                            ctx.TransportType.Name,
+                            ctx.TransportType.Role
+                        );
                     }
 
                     return hookReturn;
@@ -438,7 +530,9 @@ public static partial class LoggingMiddlewareTestMessages
     private static void ConfigureLoggingPipeline<TMessage, TResponse>(IMessagePipeline<TMessage, TResponse> pipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        var testCase = pipeline.ServiceProvider.GetService<IMessageTestCasePipelineConfiguration<TMessage, TResponse>>();
+        var testCase = pipeline.ServiceProvider.GetService<
+            IMessageTestCasePipelineConfiguration<TMessage, TResponse>
+        >();
 
         if (testCase is not null)
         {
@@ -446,28 +540,372 @@ public static partial class LoggingMiddlewareTestMessages
         }
     }
 
-    public sealed class MessageTestCase<TMessage, TResponse, TIHandler, THandler> : IMessageTestCasePipelineConfiguration<TMessage, TResponse>
+    public sealed class MessageTestCase<TMessage, TResponse, TIHandler, THandler>
+        : IMessageTestCasePipelineConfiguration<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
         where THandler : class, TIHandler
     {
         public required TMessage Message { get; init; }
 
-        object IMessageTestCasePipelineConfiguration.Message => Message;
-
         public required string? MessageJson { get; init; }
 
         public required TResponse? Response { get; init; }
-
-        object? IMessageTestCasePipelineConfiguration.Response => Response;
 
         public required string? ResponseJson { get; init; }
 
         public required Exception? Exception { get; init; }
 
-        public required bool StackTraceCaptureIsDisabled { get; init; }
-
         public required LogLevel ConfiguredLogLevel { get; init; }
+
+        public required string? TransportTypeName { get; init; }
+
+        [SuppressMessage(
+            "Performance",
+            "SYSLIB1045:Convert to \'GeneratedRegexAttribute\'.",
+            Justification = "we don't need the performance here"
+        )]
+        public IEnumerable<(string Category, LogLevel LogLevel, Regex MessagePattern)> ExpectedLogMessages
+        {
+            [SuppressMessage(
+                "Globalization",
+                "CA1308:Normalize strings to uppercase",
+                Justification = "it is a well-known value"
+            )]
+            get
+            {
+                var expectedHandlerCategory =
+                    LoggerCategoryFactory?.Invoke(Message)
+                    ?? typeof(THandler).FullName?.Replace(oldChar: '+', newChar: '.')!;
+                var expectedSenderCategory =
+                    LoggerCategoryFactory?.Invoke(Message)
+                    ?? Message.GetType().FullName?.Replace(oldChar: '+', newChar: '.')!;
+
+                var hookSuppressesMessage =
+                    HookBehavior
+                        is HookTestBehavior.HookLogsAndReturnsFalse
+                            or HookTestBehavior.HookDoesNotLogAndReturnsFalse;
+
+                if (PreExecutionLogLevel is not LogLevel.None && PreExecutionLogLevel >= ConfiguredLogLevel)
+                {
+                    var hasPayload = TMessage.EmptyInstance is null;
+
+                    if (!hookSuppressesMessage)
+                    {
+                        var preExecutionLogRegexBuilder = new StringBuilder();
+
+                        _ = preExecutionLogRegexBuilder.Append("Handling ");
+
+                        if (TransportTypeName is not null)
+                        {
+                            _ = preExecutionLogRegexBuilder.Append(TransportTypeName).Append(value: ' ');
+                        }
+
+                        _ = preExecutionLogRegexBuilder.Append($"message of type '{Message.GetType().Name}' ");
+
+                        if (hasPayload)
+                        {
+                            var messagePayloadLoggingStrategy =
+                                MessagePayloadLoggingStrategyFromFactory ?? MessagePayloadLoggingStrategy;
+
+                            if (messagePayloadLoggingStrategy is PayloadLoggingStrategy.Raw)
+                            {
+                                _ = preExecutionLogRegexBuilder.Append($"with payload {Message} ");
+                            }
+
+                            if (messagePayloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
+                            {
+                                var json = JsonSerializer.Serialize(
+                                    JsonDocument.Parse(MessageJson!),
+                                    new JsonSerializerOptions { WriteIndented = true }
+                                );
+                                _ = preExecutionLogRegexBuilder.Append(
+                                    $"with payload{Environment.NewLine}      {json.Replace(Environment.NewLine, $"{Environment.NewLine}      ", StringComparison.Ordinal)}{Environment.NewLine}      "
+                                );
+                            }
+
+                            if (messagePayloadLoggingStrategy is PayloadLoggingStrategy.MinimalJson or null)
+                            {
+                                _ = preExecutionLogRegexBuilder.Append($"with payload {MessageJson} ");
+                            }
+                        }
+
+                        _ = preExecutionLogRegexBuilder.Append(@"\(Message ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)");
+
+                        var preExecutionMessage = new Regex(
+                            preExecutionLogRegexBuilder.ToString(),
+                            RegexOptions.Compiled | RegexOptions.Singleline
+                        );
+
+                        yield return (
+                            expectedHandlerCategory,
+                            PreExecutionLogLevel ?? LogLevel.Information,
+                            preExecutionMessage
+                        );
+
+                        _ = TransportTypeName is not null
+                            ? preExecutionLogRegexBuilder.Replace(
+                                $"Handling {TransportTypeName}",
+                                $"Sending {TransportTypeName}"
+                            )
+                            : preExecutionLogRegexBuilder.Replace("Handling", "Sending in-process");
+
+                        var preExecutionServerMessage = new Regex(
+                            preExecutionLogRegexBuilder.ToString(),
+                            RegexOptions.Compiled | RegexOptions.Singleline
+                        );
+
+                        yield return (
+                            expectedSenderCategory,
+                            PreExecutionLogLevel ?? LogLevel.Information,
+                            preExecutionServerMessage
+                        );
+                    }
+
+                    if (
+                        HookBehavior
+                        is HookTestBehavior.HookLogsAndReturnsFalse
+                            or HookTestBehavior.HookLogsAndReturnsTrue
+                    )
+                    {
+                        var preExecutionMessageFromHook =
+                            $"PreHook:{Message.GetType().Name},[a-f0-9]{{16}},[a-f0-9]{{32}}";
+                        var preExecutionMessageFromHandlerHook =
+                            $"{preExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Receiver";
+                        var preExecutionMessageFromSenderHook =
+                            $"{preExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Sender";
+
+                        yield return (
+                            expectedHandlerCategory,
+                            PreExecutionLogLevel ?? LogLevel.Information,
+                            new(preExecutionMessageFromHandlerHook)
+                        );
+                        yield return (
+                            expectedSenderCategory,
+                            PreExecutionLogLevel ?? LogLevel.Information,
+                            new(preExecutionMessageFromSenderHook)
+                        );
+                    }
+                }
+
+                if (
+                    Exception is null
+                    && PostExecutionLogLevel is not LogLevel.None
+                    && PostExecutionLogLevel >= ConfiguredLogLevel
+                )
+                {
+                    var hasResponse = Response is not null;
+
+                    if (!hookSuppressesMessage)
+                    {
+                        var postExecutionLogRegexBuilder = new StringBuilder();
+
+                        _ = postExecutionLogRegexBuilder.Append("Handled ");
+
+                        if (TransportTypeName is not null)
+                        {
+                            _ = postExecutionLogRegexBuilder.Append(TransportTypeName).Append(value: ' ');
+                        }
+
+                        _ = postExecutionLogRegexBuilder.Append($"message of type '{Message.GetType().Name}' ");
+
+                        if (hasResponse)
+                        {
+                            var responsePayloadLoggingStrategy =
+                                ResponsePayloadLoggingStrategyFromFactory ?? ResponsePayloadLoggingStrategy;
+
+                            if (responsePayloadLoggingStrategy is PayloadLoggingStrategy.Raw)
+                            {
+                                _ = postExecutionLogRegexBuilder.Append($"and got response {Response} ");
+                            }
+
+                            if (responsePayloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
+                            {
+                                var json = JsonSerializer.Serialize(
+                                    JsonDocument.Parse(ResponseJson!),
+                                    new JsonSerializerOptions { WriteIndented = true }
+                                );
+                                _ = postExecutionLogRegexBuilder.Append(
+                                    $"and got response{Environment.NewLine}      {json.Replace(Environment.NewLine, $"{Environment.NewLine}      ", StringComparison.Ordinal)}{Environment.NewLine}      "
+                                );
+                            }
+
+                            if (responsePayloadLoggingStrategy is PayloadLoggingStrategy.MinimalJson or null)
+                            {
+                                _ = postExecutionLogRegexBuilder.Append($"and got response {ResponseJson} ");
+                            }
+                        }
+
+                        _ = postExecutionLogRegexBuilder.Append(
+                            @"in [0-9]+\.[0-9]+ms \(Message ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)"
+                        );
+
+                        var postExecutionMessage = new Regex(
+                            postExecutionLogRegexBuilder.ToString(),
+                            RegexOptions.Compiled | RegexOptions.Singleline
+                        );
+
+                        yield return (
+                            expectedHandlerCategory,
+                            PostExecutionLogLevel ?? LogLevel.Information,
+                            postExecutionMessage
+                        );
+
+                        _ = TransportTypeName is not null
+                            ? postExecutionLogRegexBuilder.Replace(
+                                $"Handled {TransportTypeName}",
+                                $"Sent {TransportTypeName}"
+                            )
+                            : postExecutionLogRegexBuilder.Replace("Handled", "Sent in-process");
+
+                        var postExecutionServerMessage = new Regex(
+                            postExecutionLogRegexBuilder.ToString(),
+                            RegexOptions.Compiled | RegexOptions.Singleline
+                        );
+
+                        yield return (
+                            expectedSenderCategory,
+                            PostExecutionLogLevel ?? LogLevel.Information,
+                            postExecutionServerMessage
+                        );
+                    }
+
+                    if (
+                        HookBehavior
+                        is HookTestBehavior.HookLogsAndReturnsFalse
+                            or HookTestBehavior.HookLogsAndReturnsTrue
+                    )
+                    {
+                        var postExecutionMessageFromHook =
+                            $"PostHook:{Response?.GetType().Name ?? nameof(UnitMessageResponse)},[a-f0-9]{{16}},[a-f0-9]{{32}}";
+                        var postExecutionMessageFromHandlerHook =
+                            $"{postExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Receiver";
+                        var postExecutionMessageFromSenderHook =
+                            $"{postExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Sender";
+
+                        yield return (
+                            expectedHandlerCategory,
+                            PostExecutionLogLevel ?? LogLevel.Information,
+                            new(postExecutionMessageFromHandlerHook)
+                        );
+                        yield return (
+                            expectedSenderCategory,
+                            PostExecutionLogLevel ?? LogLevel.Information,
+                            new(postExecutionMessageFromSenderHook)
+                        );
+                    }
+                }
+
+                if (
+                    Exception is not null
+                    && ExceptionLogLevel is not LogLevel.None
+                    && ExceptionLogLevel >= ConfiguredLogLevel
+                )
+                {
+                    if (!hookSuppressesMessage)
+                    {
+                        var exceptionLogRegexBuilder = new StringBuilder();
+
+                        _ = exceptionLogRegexBuilder.Append("An exception occurred while handling ");
+
+                        if (TransportTypeName is not null)
+                        {
+                            _ = exceptionLogRegexBuilder.Append(TransportTypeName).Append(value: ' ');
+                        }
+
+                        _ = exceptionLogRegexBuilder.Append($"message of type '{Message.GetType().Name}' ");
+
+                        _ = exceptionLogRegexBuilder.Append(
+                            @"after [0-9]+\.[0-9]+ms \(Message ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)"
+                        );
+
+                        _ = exceptionLogRegexBuilder.Append(".*test exception");
+
+                        var exceptionMessage = new Regex(
+                            exceptionLogRegexBuilder.ToString(),
+                            RegexOptions.Compiled | RegexOptions.Singleline
+                        );
+
+                        yield return (expectedHandlerCategory, ExceptionLogLevel ?? LogLevel.Error, exceptionMessage);
+
+                        _ = TransportTypeName is not null
+                            ? exceptionLogRegexBuilder.Replace(
+                                $"handling {TransportTypeName}",
+                                $"sending {TransportTypeName}"
+                            )
+                            : exceptionLogRegexBuilder.Replace("handling", "sending in-process");
+
+                        var exceptionServerMessage = new Regex(
+                            exceptionLogRegexBuilder.ToString(),
+                            RegexOptions.Compiled | RegexOptions.Singleline
+                        );
+
+                        yield return (
+                            expectedSenderCategory,
+                            ExceptionLogLevel ?? LogLevel.Error,
+                            exceptionServerMessage
+                        );
+                    }
+
+                    if (
+                        HookBehavior
+                        is HookTestBehavior.HookLogsAndReturnsFalse
+                            or HookTestBehavior.HookLogsAndReturnsTrue
+                    )
+                    {
+                        var exceptionMessageFromHook =
+                            $"ExceptionHook:{Exception.GetType().Name},[a-f0-9]{{16}},[a-f0-9]{{32}}";
+                        var exceptionMessageFromHandlerHook =
+                            $"{exceptionMessageFromHook},{TransportTypeName ?? "in-process"},Receiver";
+                        var exceptionMessageFromSenderHook =
+                            $"{exceptionMessageFromHook},{TransportTypeName ?? "in-process"},Sender";
+
+                        yield return (
+                            expectedHandlerCategory,
+                            ExceptionLogLevel ?? LogLevel.Error,
+                            new(exceptionMessageFromHandlerHook)
+                        );
+                        yield return (
+                            expectedSenderCategory,
+                            ExceptionLogLevel ?? LogLevel.Error,
+                            new(exceptionMessageFromSenderHook)
+                        );
+                    }
+                }
+            }
+        }
+
+        public string TestLabelShort =>
+            new StringBuilder()
+                .Append(typeof(TMessage).Name)
+                .Append($",{ConfiguredLogLevel}")
+                .Append($",{PreExecutionLogLevel?.ToString() ?? "Default"}")
+                .Append($",{MessagePayloadLoggingStrategy?.ToString() ?? "Default"}")
+                .Append($",{MessagePayloadLoggingStrategyFromFactory?.ToString() ?? ""}")
+                .Append($",{LoggerCategoryFactory is not null}")
+                .Append($",{Exception is not null}")
+                .Append($",{StackTraceCaptureIsDisabled}")
+                .Append($",{HookBehavior?.ToString() ?? "None"}")
+                .ToString();
+
+        public string TestLabel =>
+            new StringBuilder()
+                .Append(typeof(TMessage).Name)
+                .Append($",conf lvl:{ConfiguredLogLevel}")
+                .Append($",logged lvl:{PreExecutionLogLevel?.ToString() ?? "Default"}")
+                .Append($",strategy:{MessagePayloadLoggingStrategy?.ToString() ?? "Default"}")
+                .Append($",stratFromFac:{MessagePayloadLoggingStrategyFromFactory?.ToString() ?? ""}")
+                .Append($",has cat:{LoggerCategoryFactory is not null}")
+                .Append($",has ex:{Exception is not null}")
+                .Append($",no stack:{StackTraceCaptureIsDisabled}")
+                .Append($",hook:{HookBehavior?.ToString() ?? "None"}")
+                .ToString();
+
+        object IMessageTestCasePipelineConfiguration.Message => Message;
+
+        object? IMessageTestCasePipelineConfiguration.Response => Response;
+
+        public required bool StackTraceCaptureIsDisabled { get; init; }
 
         public required LogLevel? PreExecutionLogLevel { get; init; }
 
@@ -487,212 +925,9 @@ public static partial class LoggingMiddlewareTestMessages
 
         public required HookTestBehavior? HookBehavior { get; init; }
 
-        public required string? TransportTypeName { get; init; }
-
-        [SuppressMessage("Performance", "SYSLIB1045:Convert to \'GeneratedRegexAttribute\'.", Justification = "we don't need the performance here")]
-        public IEnumerable<(string Category, LogLevel LogLevel, Regex MessagePattern)> ExpectedLogMessages
-        {
-            [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "it is a well-known value")]
-            get
-            {
-                var expectedHandlerCategory = LoggerCategoryFactory?.Invoke(Message) ?? typeof(THandler).FullName?.Replace('+', '.')!;
-                var expectedSenderCategory = LoggerCategoryFactory?.Invoke(Message) ?? Message.GetType().FullName?.Replace('+', '.')!;
-
-                var hookSuppressesMessage = HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookDoesNotLogAndReturnsFalse;
-
-                if (PreExecutionLogLevel is not LogLevel.None && PreExecutionLogLevel >= ConfiguredLogLevel)
-                {
-                    var hasPayload = TMessage.EmptyInstance is null;
-
-                    if (!hookSuppressesMessage)
-                    {
-                        var preExecutionLogRegexBuilder = new StringBuilder();
-
-                        _ = preExecutionLogRegexBuilder.Append("Handling ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = preExecutionLogRegexBuilder.Append(TransportTypeName).Append(' ');
-                        }
-
-                        _ = preExecutionLogRegexBuilder.Append($"message of type '{Message.GetType().Name}' ");
-
-                        if (hasPayload)
-                        {
-                            var messagePayloadLoggingStrategy = MessagePayloadLoggingStrategyFromFactory ?? MessagePayloadLoggingStrategy;
-
-                            if (messagePayloadLoggingStrategy is PayloadLoggingStrategy.Raw)
-                            {
-                                _ = preExecutionLogRegexBuilder.Append($"with payload {Message} ");
-                            }
-
-                            if (messagePayloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
-                            {
-                                var json = JsonSerializer.Serialize(JsonDocument.Parse(MessageJson!), new JsonSerializerOptions { WriteIndented = true });
-                                _ = preExecutionLogRegexBuilder.Append($"with payload{Environment.NewLine}      {json.Replace(Environment.NewLine, $"{Environment.NewLine}      ")}{Environment.NewLine}      ");
-                            }
-
-                            if (messagePayloadLoggingStrategy is PayloadLoggingStrategy.MinimalJson or null)
-                            {
-                                _ = preExecutionLogRegexBuilder.Append($"with payload {MessageJson} ");
-                            }
-                        }
-
-                        _ = preExecutionLogRegexBuilder.Append(@"\(Message ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)");
-
-                        var preExecutionMessage = new Regex(preExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
-
-                        yield return (expectedHandlerCategory, PreExecutionLogLevel ?? LogLevel.Information, preExecutionMessage);
-
-                        _ = TransportTypeName is not null
-                            ? preExecutionLogRegexBuilder.Replace($"Handling {TransportTypeName}", $"Sending {TransportTypeName}")
-                            : preExecutionLogRegexBuilder.Replace("Handling", "Sending in-process");
-
-                        var preExecutionServerMessage = new Regex(preExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
-
-                        yield return (expectedSenderCategory, PreExecutionLogLevel ?? LogLevel.Information, preExecutionServerMessage);
-                    }
-
-                    if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
-                    {
-                        var preExecutionMessageFromHook = $"PreHook:{Message.GetType().Name},[a-f0-9]{{16}},[a-f0-9]{{32}}";
-                        var preExecutionMessageFromHandlerHook = $"{preExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Receiver";
-                        var preExecutionMessageFromSenderHook = $"{preExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Sender";
-                        yield return (expectedHandlerCategory, PreExecutionLogLevel ?? LogLevel.Information, new(preExecutionMessageFromHandlerHook));
-                        yield return (expectedSenderCategory, PreExecutionLogLevel ?? LogLevel.Information, new(preExecutionMessageFromSenderHook));
-                    }
-                }
-
-                if (Exception is null && PostExecutionLogLevel is not LogLevel.None && PostExecutionLogLevel >= ConfiguredLogLevel)
-                {
-                    var hasResponse = Response is not null;
-
-                    if (!hookSuppressesMessage)
-                    {
-                        var postExecutionLogRegexBuilder = new StringBuilder();
-
-                        _ = postExecutionLogRegexBuilder.Append("Handled ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = postExecutionLogRegexBuilder.Append(TransportTypeName).Append(' ');
-                        }
-
-                        _ = postExecutionLogRegexBuilder.Append($"message of type '{Message.GetType().Name}' ");
-
-                        if (hasResponse)
-                        {
-                            var responsePayloadLoggingStrategy = ResponsePayloadLoggingStrategyFromFactory ?? ResponsePayloadLoggingStrategy;
-
-                            if (responsePayloadLoggingStrategy is PayloadLoggingStrategy.Raw)
-                            {
-                                _ = postExecutionLogRegexBuilder.Append($"and got response {Response} ");
-                            }
-
-                            if (responsePayloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
-                            {
-                                var json = JsonSerializer.Serialize(JsonDocument.Parse(ResponseJson!), new JsonSerializerOptions { WriteIndented = true });
-                                _ = postExecutionLogRegexBuilder.Append($"and got response{Environment.NewLine}      {json.Replace(Environment.NewLine, $"{Environment.NewLine}      ")}{Environment.NewLine}      ");
-                            }
-
-                            if (responsePayloadLoggingStrategy is PayloadLoggingStrategy.MinimalJson or null)
-                            {
-                                _ = postExecutionLogRegexBuilder.Append($"and got response {ResponseJson} ");
-                            }
-                        }
-
-                        _ = postExecutionLogRegexBuilder.Append(@"in [0-9]+\.[0-9]+ms \(Message ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)");
-
-                        var postExecutionMessage = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
-
-                        yield return (expectedHandlerCategory, PostExecutionLogLevel ?? LogLevel.Information, postExecutionMessage);
-
-                        _ = TransportTypeName is not null
-                            ? postExecutionLogRegexBuilder.Replace($"Handled {TransportTypeName}", $"Sent {TransportTypeName}")
-                            : postExecutionLogRegexBuilder.Replace("Handled", "Sent in-process");
-
-                        var postExecutionServerMessage = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
-
-                        yield return (expectedSenderCategory, PostExecutionLogLevel ?? LogLevel.Information, postExecutionServerMessage);
-                    }
-
-                    if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
-                    {
-                        var postExecutionMessageFromHook = $"PostHook:{Response?.GetType().Name ?? nameof(UnitMessageResponse)},[a-f0-9]{{16}},[a-f0-9]{{32}}";
-                        var postExecutionMessageFromHandlerHook = $"{postExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Receiver";
-                        var postExecutionMessageFromSenderHook = $"{postExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Sender";
-                        yield return (expectedHandlerCategory, PostExecutionLogLevel ?? LogLevel.Information, new(postExecutionMessageFromHandlerHook));
-                        yield return (expectedSenderCategory, PostExecutionLogLevel ?? LogLevel.Information, new(postExecutionMessageFromSenderHook));
-                    }
-                }
-
-                if (Exception is not null && ExceptionLogLevel is not LogLevel.None && ExceptionLogLevel >= ConfiguredLogLevel)
-                {
-                    if (!hookSuppressesMessage)
-                    {
-                        var exceptionLogRegexBuilder = new StringBuilder();
-
-                        _ = exceptionLogRegexBuilder.Append("An exception occurred while handling ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = exceptionLogRegexBuilder.Append(TransportTypeName).Append(' ');
-                        }
-
-                        _ = exceptionLogRegexBuilder.Append($"message of type '{Message.GetType().Name}' ");
-
-                        _ = exceptionLogRegexBuilder.Append(@"after [0-9]+\.[0-9]+ms \(Message ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)");
-
-                        _ = exceptionLogRegexBuilder.Append(".*test exception");
-
-                        var exceptionMessage = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
-
-                        yield return (expectedHandlerCategory, ExceptionLogLevel ?? LogLevel.Error, exceptionMessage);
-
-                        _ = TransportTypeName is not null
-                            ? exceptionLogRegexBuilder.Replace($"handling {TransportTypeName}", $"sending {TransportTypeName}")
-                            : exceptionLogRegexBuilder.Replace("handling", "sending in-process");
-
-                        var exceptionServerMessage = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
-
-                        yield return (expectedSenderCategory, ExceptionLogLevel ?? LogLevel.Error, exceptionServerMessage);
-                    }
-
-                    if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
-                    {
-                        var exceptionMessageFromHook = $"ExceptionHook:{Exception?.GetType().Name},[a-f0-9]{{16}},[a-f0-9]{{32}}";
-                        var exceptionMessageFromHandlerHook = $"{exceptionMessageFromHook},{TransportTypeName ?? "in-process"},Receiver";
-                        var exceptionMessageFromSenderHook = $"{exceptionMessageFromHook},{TransportTypeName ?? "in-process"},Sender";
-                        yield return (expectedHandlerCategory, ExceptionLogLevel ?? LogLevel.Error, new(exceptionMessageFromHandlerHook));
-                        yield return (expectedSenderCategory, ExceptionLogLevel ?? LogLevel.Error, new(exceptionMessageFromSenderHook));
-                    }
-                }
-            }
-        }
-
-        public string TestLabelShort => new StringBuilder().Append(typeof(TMessage).Name)
-                                                           .Append($",{ConfiguredLogLevel}")
-                                                           .Append($",{PreExecutionLogLevel?.ToString() ?? "Default"}")
-                                                           .Append($",{MessagePayloadLoggingStrategy?.ToString() ?? "Default"}")
-                                                           .Append($",{MessagePayloadLoggingStrategyFromFactory?.ToString() ?? string.Empty}")
-                                                           .Append($",{LoggerCategoryFactory is not null}")
-                                                           .Append($",{Exception is not null}")
-                                                           .Append($",{StackTraceCaptureIsDisabled}")
-                                                           .Append($",{HookBehavior?.ToString() ?? "None"}")
-                                                           .ToString();
-
-        private string TestLabel => new StringBuilder().Append(typeof(TMessage).Name)
-                                                       .Append($",conf lvl:{ConfiguredLogLevel}")
-                                                       .Append($",logged lvl:{PreExecutionLogLevel?.ToString() ?? "Default"}")
-                                                       .Append($",strategy:{MessagePayloadLoggingStrategy?.ToString() ?? "Default"}")
-                                                       .Append($",stratFromFac:{MessagePayloadLoggingStrategyFromFactory?.ToString() ?? string.Empty}")
-                                                       .Append($",has cat:{LoggerCategoryFactory is not null}")
-                                                       .Append($",has ex:{Exception is not null}")
-                                                       .Append($",no stack:{StackTraceCaptureIsDisabled}")
-                                                       .Append($",hook:{HookBehavior?.ToString() ?? "None"}")
-                                                       .ToString();
-
-        public static implicit operator TestCaseData(MessageTestCase<TMessage, TResponse, TIHandler, THandler> messageTestCase)
+        public static implicit operator TestCaseData(
+            MessageTestCase<TMessage, TResponse, TIHandler, THandler> messageTestCase
+        )
         {
             return new(messageTestCase)
             {
@@ -727,7 +962,8 @@ public static partial class LoggingMiddlewareTestMessages
         HookTestBehavior? HookBehavior { get; }
     }
 
-    public interface IMessageTestCasePipelineConfiguration<in TMessage, TResponse> : IMessageTestCasePipelineConfiguration
+    public interface IMessageTestCasePipelineConfiguration<in TMessage, TResponse>
+        : IMessageTestCasePipelineConfiguration
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         Func<TMessage, string>? LoggerCategoryFactory { get; }
@@ -746,7 +982,10 @@ public static partial class LoggingMiddlewareTestMessages
 
     public sealed partial class TestMessageHandler(Exception? exception = null) : TestMessage.IHandler
     {
-        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessage message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -756,7 +995,7 @@ public static partial class LoggingMiddlewareTestMessages
                 throw exception;
             }
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
         public static void ConfigurePipeline(TestMessage.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
@@ -765,9 +1004,13 @@ public static partial class LoggingMiddlewareTestMessages
     [Message<TestMessageResponse>]
     public sealed partial record TestMessageWithoutPayload;
 
-    public sealed partial class TestMessageWithoutPayloadHandler(Exception? exception = null) : TestMessageWithoutPayload.IHandler
+    public sealed partial class TestMessageWithoutPayloadHandler(Exception? exception = null)
+        : TestMessageWithoutPayload.IHandler
     {
-        public async Task<TestMessageResponse> Handle(TestMessageWithoutPayload message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithoutPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -777,10 +1020,11 @@ public static partial class LoggingMiddlewareTestMessages
                 throw exception;
             }
 
-            return new() { Payload = 11 };
+            return new TestMessageResponse { Payload = 11 };
         }
 
-        public static void ConfigurePipeline(TestMessageWithoutPayload.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
+        public static void ConfigurePipeline(TestMessageWithoutPayload.IPipeline pipeline) =>
+            ConfigureLoggingPipeline(pipeline);
     }
 
     [Message]
@@ -789,7 +1033,8 @@ public static partial class LoggingMiddlewareTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithoutResponseHandler(Exception? exception = null) : TestMessageWithoutResponse.IHandler
+    public sealed partial class TestMessageWithoutResponseHandler(Exception? exception = null)
+        : TestMessageWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
         {
@@ -802,15 +1047,20 @@ public static partial class LoggingMiddlewareTestMessages
             }
         }
 
-        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
+        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline) =>
+            ConfigureLoggingPipeline(pipeline);
     }
 
     [Message]
     public sealed partial record TestMessageWithoutResponseWithoutPayload;
 
-    public sealed partial class TestMessageWithoutResponseWithoutPayloadHandler(Exception? exception = null) : TestMessageWithoutResponseWithoutPayload.IHandler
+    public sealed partial class TestMessageWithoutResponseWithoutPayloadHandler(Exception? exception = null)
+        : TestMessageWithoutResponseWithoutPayload.IHandler
     {
-        public async Task Handle(TestMessageWithoutResponseWithoutPayload message, CancellationToken cancellationToken = default)
+        public async Task Handle(
+            TestMessageWithoutResponseWithoutPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -821,7 +1071,8 @@ public static partial class LoggingMiddlewareTestMessages
             }
         }
 
-        public static void ConfigurePipeline(TestMessageWithoutResponseWithoutPayload.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
+        public static void ConfigurePipeline(TestMessageWithoutResponseWithoutPayload.IPipeline pipeline) =>
+            ConfigureLoggingPipeline(pipeline);
     }
 
     [Message<TestMessageResponse>]
@@ -841,9 +1092,13 @@ public static partial class LoggingMiddlewareTestMessages
         public required int? Payload2 { get; init; }
     }
 
-    public sealed partial class TestMessageWithComplexPayloadHandler(Exception? exception = null) : TestMessageWithComplexPayload.IHandler
+    public sealed partial class TestMessageWithComplexPayloadHandler(Exception? exception = null)
+        : TestMessageWithComplexPayload.IHandler
     {
-        public async Task<TestMessageResponse> Handle(TestMessageWithComplexPayload message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithComplexPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -853,10 +1108,17 @@ public static partial class LoggingMiddlewareTestMessages
                 throw exception;
             }
 
-            return new() { Payload = (message.Payload ?? 0) + (message.NestedPayload.Payload ?? 0) + (message.NestedPayload.Payload2 ?? 0) };
+            return new TestMessageResponse
+            {
+                Payload =
+                    (message.Payload ?? 0)
+                    + (message.NestedPayload.Payload ?? 0)
+                    + (message.NestedPayload.Payload2 ?? 0),
+            };
         }
 
-        public static void ConfigurePipeline(TestMessageWithComplexPayload.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
+        public static void ConfigurePipeline(TestMessageWithComplexPayload.IPipeline pipeline) =>
+            ConfigureLoggingPipeline(pipeline);
     }
 
     [Message<TestMessageWithCustomSerializedPayloadTypeResponse>]
@@ -873,10 +1135,13 @@ public static partial class LoggingMiddlewareTestMessages
     [JsonConverter(typeof(TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverter))]
     public sealed record TestMessageWithCustomSerializedPayloadTypePayload(int Payload);
 
-    public sealed partial class TestMessageWithCustomSerializedPayloadTypeHandler(Exception? exception = null) : TestMessageWithCustomSerializedPayloadType.IHandler
+    public sealed partial class TestMessageWithCustomSerializedPayloadTypeHandler(Exception? exception = null)
+        : TestMessageWithCustomSerializedPayloadType.IHandler
     {
-        public async Task<TestMessageWithCustomSerializedPayloadTypeResponse> Handle(TestMessageWithCustomSerializedPayloadType message,
-                                                                                     CancellationToken cancellationToken = default)
+        public async Task<TestMessageWithCustomSerializedPayloadTypeResponse> Handle(
+            TestMessageWithCustomSerializedPayloadType message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -886,22 +1151,28 @@ public static partial class LoggingMiddlewareTestMessages
                 throw exception;
             }
 
-            return new() { Payload = new(message.Payload.Payload + 1) };
+            return new TestMessageWithCustomSerializedPayloadTypeResponse
+            {
+                Payload = new TestMessageWithCustomSerializedPayloadTypePayload(message.Payload.Payload + 1),
+            };
         }
 
-        public static void ConfigurePipeline(TestMessageWithCustomSerializedPayloadType.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
+        public static void ConfigurePipeline(TestMessageWithCustomSerializedPayloadType.IPipeline pipeline) =>
+            ConfigureLoggingPipeline(pipeline);
 
         internal sealed class PayloadJsonConverter : JsonConverter<TestMessageWithCustomSerializedPayloadTypePayload>
         {
-            public override TestMessageWithCustomSerializedPayloadTypePayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                return new(reader.GetInt32());
-            }
+            public override TestMessageWithCustomSerializedPayloadTypePayload Read(
+                ref Utf8JsonReader reader,
+                Type typeToConvert,
+                JsonSerializerOptions options
+            ) => new(reader.GetInt32());
 
-            public override void Write(Utf8JsonWriter writer, TestMessageWithCustomSerializedPayloadTypePayload value, JsonSerializerOptions options)
-            {
-                writer.WriteNumberValue(value.Payload);
-            }
+            public override void Write(
+                Utf8JsonWriter writer,
+                TestMessageWithCustomSerializedPayloadTypePayload value,
+                JsonSerializerOptions options
+            ) => writer.WriteNumberValue(value.Payload);
         }
     }
 
@@ -916,9 +1187,13 @@ public static partial class LoggingMiddlewareTestMessages
         public int ResponsePayload { get; init; }
     }
 
-    public sealed partial class TestMessageWithCustomJsonTypeInfoHandler(Exception? exception = null) : TestMessageWithCustomJsonTypeInfo.IHandler
+    public sealed partial class TestMessageWithCustomJsonTypeInfoHandler(Exception? exception = null)
+        : TestMessageWithCustomJsonTypeInfo.IHandler
     {
-        public async Task<TestMessageWithCustomJsonTypeInfoResponse> Handle(TestMessageWithCustomJsonTypeInfo message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageWithCustomJsonTypeInfoResponse> Handle(
+            TestMessageWithCustomJsonTypeInfo message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -928,10 +1203,11 @@ public static partial class LoggingMiddlewareTestMessages
                 throw exception;
             }
 
-            return new() { ResponsePayload = message.MessagePayload + 1 };
+            return new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = message.MessagePayload + 1 };
         }
 
-        public static void ConfigurePipeline(TestMessageWithCustomJsonTypeInfo.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
+        public static void ConfigurePipeline(TestMessageWithCustomJsonTypeInfo.IPipeline pipeline) =>
+            ConfigureLoggingPipeline(pipeline);
     }
 
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseUpper)]
@@ -945,9 +1221,13 @@ public static partial class LoggingMiddlewareTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithCustomTransportHandler(Exception? exception = null) : TestMessageWithCustomTransport.IHandler
+    public sealed partial class TestMessageWithCustomTransportHandler(Exception? exception = null)
+        : TestMessageWithCustomTransport.IHandler
     {
-        public async Task<TestMessageResponse> Handle(TestMessageWithCustomTransport message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithCustomTransport message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -957,28 +1237,36 @@ public static partial class LoggingMiddlewareTestMessages
                 throw exception;
             }
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigurePipeline(TestMessageWithCustomTransport.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
+        public static void ConfigurePipeline(TestMessageWithCustomTransport.IPipeline pipeline) =>
+            ConfigureLoggingPipeline(pipeline);
     }
 
-    public sealed class TestMessageTransport<TMessage, TResponse>
-        : IMessageSender<TMessage, TResponse>
+    public sealed class TestMessageTransport<TMessage, TResponse> : IMessageSender<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         public string TransportTypeName => TestTransportName;
 
-        public async Task<TResponse> Send(TMessage message,
-                                          IServiceProvider serviceProvider,
-                                          ConquerorContext conquerorContext,
-                                          CancellationToken cancellationToken)
+        public async Task<TResponse> Send(
+            TMessage message,
+            IServiceProvider serviceProvider,
+            ConquerorContext conquerorContext,
+            CancellationToken cancellationToken
+        )
         {
             await Task.Yield();
-            var invoker = serviceProvider.GetRequiredService<IMessageHandlerRegistry>()
-                                         .GetReceiverHandlerInvoker<TMessage, TResponse, ITestTransportMessageHandlerTypesInjector>();
+            var invoker = serviceProvider
+                .GetRequiredService<IMessageHandlerRegistry>()
+                .GetReceiverHandlerInvoker<TMessage, TResponse, ITestTransportMessageHandlerTypesInjector>();
 
-            return await invoker!.Invoke<TMessage, TResponse>(message, serviceProvider, TransportTypeName, cancellationToken);
+            return await invoker!.Invoke<TMessage, TResponse>(
+                message,
+                serviceProvider,
+                TransportTypeName,
+                cancellationToken
+            );
         }
     }
 
@@ -995,7 +1283,10 @@ public static partial class LoggingMiddlewareTestMessages
 
     public sealed partial class TestMessageBaseHandler(Exception? exception = null) : TestMessageBase.IHandler
     {
-        public async Task<TestMessageResponse> Handle(TestMessageBase message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageBase message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -1005,7 +1296,7 @@ public static partial class LoggingMiddlewareTestMessages
                 throw exception;
             }
 
-            return new() { Payload = message.PayloadBase + 1 };
+            return new TestMessageResponse { Payload = message.PayloadBase + 1 };
         }
 
         public static void ConfigurePipeline(TestMessageBase.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);

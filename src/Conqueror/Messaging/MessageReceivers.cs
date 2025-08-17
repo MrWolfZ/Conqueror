@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Conqueror.Messaging;
+﻿namespace Conqueror.Messaging;
 
 internal sealed class MessageReceivers(IServiceProvider serviceProvider) : IMessageReceivers
 {
@@ -14,7 +7,8 @@ internal sealed class MessageReceivers(IServiceProvider serviceProvider) : IMess
     public ReceiverExecutionHandle RunReceivers<TTypesInjector, TReceiver>(
         IMessageReceiverFactory<TTypesInjector, TReceiver> receiverFactory,
         IMessageReceiverRunner<TReceiver> receiverRunner,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         where TTypesInjector : class, IMessageHandlerTypesInjector
         where TReceiver : class
     {
@@ -23,77 +17,83 @@ internal sealed class MessageReceivers(IServiceProvider serviceProvider) : IMess
 
         var configuredHandlerTypes = new HashSet<Type>();
 
-        var configuredReceivers = invokers.GroupBy(i => i.HandlerType)
-                                          .SelectMany(g =>
-                                          {
-                                              var handlerType = g.Key;
-                                              var invokersForHandlerType = g.ToList();
-                                              var typesInjector = invokersForHandlerType[0].TypesInjector;
+        var configuredReceivers = invokers
+            .GroupBy(i => i.HandlerType)
+            .SelectMany(g =>
+            {
+                var handlerType = g.Key;
+                var invokersForHandlerType = g.ToList();
+                var typesInjector = invokersForHandlerType[0].TypesInjector;
 
-                                              // for delegate handlers
-                                              if (handlerType is null)
-                                              {
-                                                  return invokersForHandlerType.Select(i => CreateReceiverForHandlerType(
-                                                                                           receiverFactory,
-                                                                                           null,
-                                                                                           [i],
-                                                                                           typesInjector));
-                                              }
+                // for delegate handlers
+                if (handlerType is null)
+                {
+                    return invokersForHandlerType.Select(i =>
+                        CreateReceiverForHandlerType(receiverFactory, handlerType: null, [i], typesInjector)
+                    );
+                }
 
-                                              if (!configuredHandlerTypes.Add(handlerType))
-                                              {
-                                                  // if the receiver was already configured, we can skip it
-                                                  return [];
-                                              }
+                if (!configuredHandlerTypes.Add(handlerType))
+                {
+                    // if the receiver was already configured, we can skip it
+                    return [];
+                }
 
-                                              return
-                                              [
-                                                  CreateReceiverForHandlerType(
-                                                      receiverFactory,
-                                                      handlerType,
-                                                      invokersForHandlerType,
-                                                      typesInjector),
-                                              ];
-                                          })
-                                          .OfType<(TReceiver Receiver, Type? HandlerType)>()
-                                          .ToList();
+                return
+                [
+                    CreateReceiverForHandlerType(receiverFactory, handlerType, invokersForHandlerType, typesInjector),
+                ];
+            })
+            .OfType<(TReceiver Receiver, Type? HandlerType)>()
+            .ToList();
 
         return CombineExecutions(
-            configuredReceivers.Select(t => RunReceiver(
-                                           receiverRunner,
-                                           t.Receiver,
-                                           t.HandlerType,
-                                           receiverFactory.TransportTypeName,
-                                           cancellationToken))
-                               .ToList());
+            configuredReceivers.ConvertAll(t =>
+                RunReceiver(
+                    receiverRunner,
+                    t.Receiver,
+                    t.HandlerType,
+                    receiverFactory.TransportTypeName,
+                    cancellationToken
+                )
+            )
+        );
     }
 
     public ReceiverExecutionHandle RunReceiver<THandler, TTypesInjector, TReceiver>(
         IMessageReceiverFactory<TTypesInjector, TReceiver> receiverFactory,
         IMessageReceiverRunner<TReceiver> receiverRunner,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         where TTypesInjector : class, IMessageHandlerTypesInjector
         where TReceiver : class
     {
         var registry = ServiceProvider.GetRequiredService<IMessageHandlerRegistry>();
-        var invokersForHandlerType = registry.GetReceiverHandlerInvokers<TTypesInjector>().Where(i => i.HandlerType == typeof(THandler)).ToList();
-        var typesInjector = invokersForHandlerType.FirstOrDefault()?.TypesInjector
-                            ?? throw new InvalidOperationException($"did not find registrations for message handler type {typeof(THandler)}");
+        var invokersForHandlerType = registry
+            .GetReceiverHandlerInvokers<TTypesInjector>()
+            .Where(i => i.HandlerType == typeof(THandler))
+            .ToList();
+        var typesInjector =
+            invokersForHandlerType.FirstOrDefault()?.TypesInjector
+            ?? throw new InvalidOperationException(
+                $"did not find registrations for message handler type {typeof(THandler)}"
+            );
 
         var receiver = CreateReceiverForHandlerType(
-                receiverFactory,
-                typeof(THandler),
-                invokersForHandlerType,
-                typesInjector)
-            ?.Receiver;
+            receiverFactory,
+            typeof(THandler),
+            invokersForHandlerType,
+            typesInjector
+        )?.Receiver;
 
         if (receiver is null)
         {
-            return new(
+            return new ReceiverExecutionHandle(
                 Task.CompletedTask,
                 Task.CompletedTask,
                 cancellationTokenSource: null,
-                onDispose: null);
+                onDispose: null
+            );
         }
 
         return RunReceiver(
@@ -101,7 +101,8 @@ internal sealed class MessageReceivers(IServiceProvider serviceProvider) : IMess
             receiver,
             typeof(THandler),
             receiverFactory.TransportTypeName,
-            cancellationToken);
+            cancellationToken
+        );
     }
 
     public ReceiverExecutionHandle CombineExecutions(IReadOnlyCollection<ReceiverExecutionHandle> executionHandles)
@@ -111,6 +112,7 @@ internal sealed class MessageReceivers(IServiceProvider serviceProvider) : IMess
 
         return combinedRun;
 
+        [SuppressMessage("Design", "MA0155:Do not use async void methods", Justification = "we are making it safe")]
         static async void HandleErrors(ReceiverExecutionHandle combinedExecutionHandle)
         {
             try
@@ -122,7 +124,8 @@ internal sealed class MessageReceivers(IServiceProvider serviceProvider) : IMess
 
                 while (executionsToObserve.Count > 0)
                 {
-                    var completedTask = await Task.WhenAny(executionsToObserve.Select(r => r.CompletionTask)).ConfigureAwait(false);
+                    var completedTask = await Task.WhenAny(executionsToObserve.Select(r => r.CompletionTask))
+                        .ConfigureAwait(false);
 
                     if (completedTask.IsFaulted)
                     {
@@ -150,7 +153,8 @@ internal sealed class MessageReceivers(IServiceProvider serviceProvider) : IMess
         IMessageReceiverFactory<TTypesInjector, TReceiver> receiverFactory,
         Type? handlerType,
         IReadOnlyCollection<IMessageReceiverHandlerInvoker<TTypesInjector>> invokersForHandlerType,
-        TTypesInjector typesInjector)
+        TTypesInjector typesInjector
+    )
         where TTypesInjector : class, IMessageHandlerTypesInjector
         where TReceiver : class
     {
@@ -159,26 +163,35 @@ internal sealed class MessageReceivers(IServiceProvider serviceProvider) : IMess
             var receiver = receiverFactory.CreateReceiverForHandlerType(
                 handlerType,
                 invokersForHandlerType,
-                typesInjector);
+                typesInjector
+            );
 
             return receiver is null ? null : (receiver, handlerType);
         }
         catch (Exception ex)
         {
-            throw new MessageReceiverExecutionFailedException($"failed to run the message receiver for handler type '{handlerType}'", ex)
+            throw new MessageReceiverExecutionFailedException(
+                $"failed to run the message receiver for handler type '{handlerType}'",
+                ex
+            )
             {
                 HandlerType = handlerType,
-                MessageTransportType = new(receiverFactory.TransportTypeName, MessageTransportRole.Receiver),
+                MessageTransportType = new MessageTransportType(
+                    receiverFactory.TransportTypeName,
+                    MessageTransportRole.Receiver
+                ),
             };
         }
     }
 
+    [SuppressMessage("Critical Code Smell", "S2302:\"nameof\" should be used", Justification = "false positive")]
     private static ReceiverExecutionHandle RunReceiver<TReceiver>(
         IMessageReceiverRunner<TReceiver> receiverRunner,
         TReceiver receiver,
         Type? handlerType,
         string transportTypeName,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         where TReceiver : class
     {
         try
@@ -187,10 +200,13 @@ internal sealed class MessageReceivers(IServiceProvider serviceProvider) : IMess
         }
         catch (Exception ex)
         {
-            throw new MessageReceiverExecutionFailedException($"failed to run the message receiver for handler type '{handlerType}'", ex)
+            throw new MessageReceiverExecutionFailedException(
+                $"failed to run the message receiver for handler type '{handlerType}'",
+                ex
+            )
             {
                 HandlerType = handlerType,
-                MessageTransportType = new(transportTypeName, MessageTransportRole.Receiver),
+                MessageTransportType = new MessageTransportType(transportTypeName, MessageTransportRole.Receiver),
             };
         }
     }

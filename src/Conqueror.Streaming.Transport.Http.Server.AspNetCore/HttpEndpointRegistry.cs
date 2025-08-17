@@ -1,13 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
+
+using System.Reflection;
 
 internal sealed class HttpEndpointRegistry(
     IStreamProducerRegistry producerRegistry,
-    ConquerorStreamingHttpTransportServerAspNetCoreOptions options)
+    ConquerorStreamingHttpTransportServerAspNetCoreOptions options
+)
 {
     private const string DefaultControllerName = "Streams";
 
@@ -15,15 +13,21 @@ internal sealed class HttpEndpointRegistry(
     {
         var allEndpoints = GetStreamEndpoints().ToList();
 
-        var duplicatePaths = allEndpoints.GroupBy(e => e.Path)
-                                         .Where(g => g.Count() > 1)
-                                         .Select(g => new { Path = g.Key, RequestTypes = g.Select(e => e.RequestType).ToList() })
-                                         .ToList();
+        var duplicatePaths = allEndpoints
+            .GroupBy(e => e.Path, StringComparer.Ordinal)
+            .Where(g => g.Skip(1).Any())
+            .Select(g => new { Path = g.Key, RequestTypes = g.Select(e => e.RequestType).ToList() })
+            .ToList();
 
-        if (duplicatePaths.Any())
+        if (duplicatePaths.Count is not 0)
         {
-            var formattedDuplicatePaths = duplicatePaths.Select(a => $"{a.Path} => {string.Join(", ", a.RequestTypes.Select(t => t.Name))}");
-            throw new InvalidOperationException($"found multiple endpoints with identical path, which is not allowed:\n{string.Join("\n", formattedDuplicatePaths)}");
+            var formattedDuplicatePaths = duplicatePaths.Select(a =>
+                $"{a.Path} => {string.Join(", ", a.RequestTypes.Select(t => t.Name))}"
+            );
+
+            throw new InvalidOperationException(
+                $"found multiple endpoints with identical path, which is not allowed:\n{string.Join('\n', formattedDuplicatePaths)}"
+            );
         }
 
         return allEndpoints;
@@ -35,7 +39,9 @@ internal sealed class HttpEndpointRegistry(
         {
             var attribute = query.RequestType.GetCustomAttribute<HttpStreamAttribute>()!;
 
-            var path = options.PathConvention?.GetStreamPath(query.RequestType, attribute) ?? DefaultHttpStreamPathConvention.Instance.GetStreamPath(query.RequestType, attribute);
+            var path =
+                options.PathConvention?.GetStreamPath(query.RequestType, attribute)
+                ?? DefaultHttpStreamPathConvention.Instance.GetStreamPath(query.RequestType, attribute);
 
             var endpoint = new HttpEndpoint
             {
@@ -53,6 +59,8 @@ internal sealed class HttpEndpointRegistry(
         }
     }
 
-    private IEnumerable<StreamProducerRegistration> GetHttpStreams() => producerRegistry.GetStreamProducerRegistrations()
-                                                                                        .Where(m => m.RequestType.GetCustomAttributes(typeof(HttpStreamAttribute), true).Any());
+    private IEnumerable<StreamProducerRegistration> GetHttpStreams() =>
+        producerRegistry
+            .GetStreamProducerRegistrations()
+            .Where(m => m.RequestType.GetCustomAttributes(typeof(HttpStreamAttribute), inherit: true).Length is not 0);
 }

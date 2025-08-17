@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 // TODO: make this public once the API is more stable
 internal interface IHttpMessageSerializer<TMessage, TResponse>
@@ -22,11 +14,13 @@ internal interface IHttpMessageSerializer<TMessage, TResponse>
         IServiceProvider serviceProvider,
         TMessage message,
         Stream bodyStream,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     bool TryGetBodyLength(IServiceProvider serviceProvider, TMessage message, out long length)
     {
         length = 0;
+
         return false;
     }
 
@@ -36,7 +30,8 @@ internal interface IHttpMessageSerializer<TMessage, TResponse>
         Encoding? encoding,
         string path,
         IEnumerable<KeyValuePair<string, IReadOnlyList<string?>>> query,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 }
 
 internal interface IHttpMessageResponseSerializer<TMessage, TResponse>
@@ -48,11 +43,13 @@ internal interface IHttpMessageResponseSerializer<TMessage, TResponse>
         IServiceProvider serviceProvider,
         Stream bodyStream,
         TResponse response,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     Task<TResponse> DeserializeResponse(
         IServiceProvider serviceProvider,
         Stream bodyStream,
         Encoding? encoding,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 }

@@ -1,22 +1,18 @@
-﻿using Microsoft.CodeAnalysis;
+﻿namespace Conqueror.SourceGenerators.Util;
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Conqueror.SourceGenerators.Util;
-
-public readonly record struct LocationDescriptor(
-    string FilePath,
-    TextSpan TextSpan,
-    LinePositionSpan LineSpan)
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct LocationDescriptor(string FilePath, TextSpan TextSpan, LinePositionSpan LineSpan)
 {
     public readonly string FilePath = FilePath;
     public readonly LinePositionSpan LineSpan = LineSpan;
     public readonly TextSpan TextSpan = TextSpan;
 
-    public Location ToLocation()
-        => Location.Create(FilePath, TextSpan, LineSpan);
+    public Location ToLocation() => Location.Create(FilePath, TextSpan, LineSpan);
 
-    public static LocationDescriptor? CreateFrom(SyntaxToken? token)
-        => CreateFrom(token?.GetLocation());
+    public static LocationDescriptor? CreateFrom(SyntaxToken? token) => CreateFrom(token?.GetLocation());
 
     public static LocationDescriptor? CreateFrom(Location? location)
     {

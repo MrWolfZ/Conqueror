@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithHierarchy;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithHierarchy;
 
 [Signal]
 public partial record TestSignal(int Payload);

@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+﻿namespace Examples.BlazorWebAssembly.UI;
 
-namespace Examples.BlazorWebAssembly.UI;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 public static class ConfigurationServiceProviderExtensions
 {
@@ -11,6 +11,6 @@ public static class ConfigurationServiceProviderExtensions
             ? serviceProvider.GetRequiredService<IWebAssemblyHostEnvironment>().BaseAddress
             : baseAddressFromConfig;
 
-        return new(baseAddress);
+        return new Uri(baseAddress);
     }
 }

@@ -18,7 +18,7 @@ internal sealed class TruncatedLoggingException(Exception wrapped) : Exception(w
 
         while (currentIndex < wrappedToString.Length && numOfNewLinesFound < numOfLinesToKeep)
         {
-            var nextIndex = wrappedToString.IndexOf("\n", currentIndex + 1, StringComparison.InvariantCulture);
+            var nextIndex = wrappedToString.IndexOf('\n', currentIndex + 1);
 
             if (nextIndex == -1)
             {

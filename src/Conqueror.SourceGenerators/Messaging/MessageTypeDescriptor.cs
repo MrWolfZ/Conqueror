@@ -1,14 +1,15 @@
-﻿using Conqueror.SourceGenerators.Util;
+﻿namespace Conqueror.SourceGenerators.Messaging;
 
-namespace Conqueror.SourceGenerators.Messaging;
+using System.Runtime.InteropServices;
 
-public readonly record struct MessageTypeDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct MessageTypeDescriptor(
     TypeDescriptor MessageDescriptor,
     TypeDescriptor ResponseDescriptor,
     EquatableArray<MessageAttributeDescriptor> Attributes,
     bool HasJsonSerializerContext,
-    EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics)
-    : IHasDiagnostics
+    EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics
+) : IHasDiagnostics
 {
     public readonly EquatableArray<MessageAttributeDescriptor> Attributes = Attributes;
     public readonly EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics = Diagnostics;
@@ -19,11 +20,13 @@ public readonly record struct MessageTypeDescriptor(
     EquatableArray<DiagnosticWithLocationDescriptor> IHasDiagnostics.Diagnostics => Diagnostics;
 }
 
-public readonly record struct MessageAttributeDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct MessageAttributeDescriptor(
     string Prefix,
     string Namespace,
     string? FullyQualifiedMessageTypeName,
-    EquatableArray<AttributeParameterDescriptor> Properties)
+    EquatableArray<AttributeParameterDescriptor> Properties
+)
 {
     public readonly string? FullyQualifiedMessageTypeName = FullyQualifiedMessageTypeName;
     public readonly string Namespace = Namespace;

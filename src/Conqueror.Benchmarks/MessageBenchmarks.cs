@@ -1,34 +1,40 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿namespace Conqueror.Benchmarks;
+
+using System.Globalization;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Conqueror.Benchmarks;
-
 [Config(typeof(ConfigWithCustomEnvVars))]
 [MemoryDiagnoser]
-[SuppressMessage("ReSharper", "ClassCanBeSealed.Global", Justification = "Benchmark.NET requires non-sealed classes")]
-public partial class MessageBenchmarks
+internal sealed partial class MessageBenchmarks
 {
     [Benchmark]
     [ArgumentsSource(nameof(NoConquerorArguments))]
     public void RunWithoutConqueror(int numOfExecutions, int? parallelism)
     {
-        var serviceProvider = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
-                                                     .AddSingleton(new TestRunConfig(numOfExecutions, parallelism, 0))
-                                                     .BuildServiceProvider();
+        var serviceProvider = new ServiceCollection()
+            .AddMessageHandler<TestMessageHandler>()
+            .AddSingleton(new TestRunConfig(numOfExecutions, parallelism, NumOfMiddlewares: 0))
+            .BuildServiceProvider();
 
         Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();
 
         async ValueTask RunSingle(int idx)
         {
-            var response = await serviceProvider.GetRequiredService<TestMessageHandler>()
-                                                .Handle(new(idx));
+            var response = await serviceProvider
+                .GetRequiredService<TestMessageHandler>()
+                .Handle(new(idx), CancellationToken.None);
 
             if (response.Value != idx)
             {
-                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {idx}");
+                throw new InvalidOperationException(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"got wrong result {response.Value} on execution {idx}, expected {idx}"
+                    )
+                );
             }
         }
     }
@@ -37,38 +43,51 @@ public partial class MessageBenchmarks
     [ArgumentsSource(nameof(ConquerorArguments))]
     public void RunWithConquerorWithAdHocSender(int numOfExecutions, int? parallelism, int numOfMiddlewares)
     {
-        var serviceProvider = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
-                                                     .AddSingleton(new TestRunConfig(numOfExecutions, parallelism, numOfMiddlewares))
-                                                     .BuildServiceProvider();
+        var serviceProvider = new ServiceCollection()
+            .AddMessageHandler<TestMessageHandler>()
+            .AddSingleton(new TestRunConfig(numOfExecutions, parallelism, numOfMiddlewares))
+            .BuildServiceProvider();
 
         Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();
 
         async ValueTask RunSingle(int idx)
         {
-            var response = await serviceProvider.GetRequiredService<IMessageSenders>()
-                                                .For(TestMessage.T)
-                                                .WithPipeline(static pipeline =>
-                                                {
-                                                    var numOfMiddlewares = pipeline.ServiceProvider.GetRequiredService<TestRunConfig>().NumOfMiddlewares;
+            var response = await serviceProvider
+                .GetRequiredService<IMessageSenders>()
+                .For(TestMessage.T)
+                .WithPipeline(static pipeline =>
+                {
+                    var numOfMiddlewares = pipeline
+                        .ServiceProvider.GetRequiredService<TestRunConfig>()
+                        .NumOfMiddlewares;
 
-                                                    for (var i = 0; i < numOfMiddlewares; i += 1)
-                                                    {
-                                                        pipeline.Use(
-                                                            new TestMessageMiddleware<TestMessage, TestMessageResponse>
-                                                                { Configuration = new() { Parameter = i } });
-                                                    }
+                    for (var i = 0; i < numOfMiddlewares; i += 1)
+                    {
+                        _ = pipeline.Use(
+                            new TestMessageMiddleware<TestMessage, TestMessageResponse>
+                            {
+                                Configuration = new TestMessageMiddlewareConfiguration { Parameter = i },
+                            }
+                        );
+                    }
 
-                                                    if (numOfMiddlewares > 0)
-                                                    {
-                                                        pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m => m.Configuration
-                                                            .Parameter = 1);
-                                                    }
-                                                })
-                                                .Handle(new(idx));
+                    if (numOfMiddlewares > 0)
+                    {
+                        _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m =>
+                            m.Configuration.Parameter = 1
+                        );
+                    }
+                })
+                .Handle(new(idx), CancellationToken.None);
 
-            if (response.Value != numOfMiddlewares * 2 + idx)
+            if (response.Value != (numOfMiddlewares * 2) + idx)
             {
-                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {numOfMiddlewares * 2 + idx}");
+                throw new InvalidOperationException(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"got wrong result {response.Value} on execution {idx}, expected {(numOfMiddlewares * 2) + idx}"
+                    )
+                );
             }
         }
     }
@@ -77,48 +96,62 @@ public partial class MessageBenchmarks
     [ArgumentsSource(nameof(ConquerorArguments))]
     public void RunWithConquerorPreBuiltSender(int numOfExecutions, int? parallelism, int numOfMiddlewares)
     {
-        var serviceProvider = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
-                                                     .AddSingleton(new TestRunConfig(numOfExecutions, parallelism, numOfMiddlewares))
-                                                     .BuildServiceProvider();
+        var serviceProvider = new ServiceCollection()
+            .AddMessageHandler<TestMessageHandler>()
+            .AddSingleton(new TestRunConfig(numOfExecutions, parallelism, numOfMiddlewares))
+            .BuildServiceProvider();
 
-        var sender = serviceProvider.GetRequiredService<IMessageSenders>()
-                                    .For(TestMessage.T)
-                                    .WithPipeline(static pipeline =>
-                                    {
-                                        var numOfMiddlewares = pipeline.ServiceProvider.GetRequiredService<TestRunConfig>().NumOfMiddlewares;
+        var sender = serviceProvider
+            .GetRequiredService<IMessageSenders>()
+            .For(TestMessage.T)
+            .WithPipeline(static pipeline =>
+            {
+                var numOfMiddlewares = pipeline.ServiceProvider.GetRequiredService<TestRunConfig>().NumOfMiddlewares;
 
-                                        for (var i = 0; i < numOfMiddlewares; i += 1)
-                                        {
-                                            pipeline.Use(
-                                                new TestMessageMiddleware<TestMessage, TestMessageResponse> { Configuration = new() { Parameter = i } });
-                                        }
+                for (var i = 0; i < numOfMiddlewares; i += 1)
+                {
+                    _ = pipeline.Use(
+                        new TestMessageMiddleware<TestMessage, TestMessageResponse>
+                        {
+                            Configuration = new TestMessageMiddlewareConfiguration { Parameter = i },
+                        }
+                    );
+                }
 
-                                        if (numOfMiddlewares > 0)
-                                        {
-                                            pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m => m.Configuration
-                                                .Parameter = 1);
-                                        }
-                                    });
+                if (numOfMiddlewares > 0)
+                {
+                    _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m =>
+                        m.Configuration.Parameter = 1
+                    );
+                }
+            });
 
         Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();
 
         async ValueTask RunSingle(int idx)
         {
-            var response = await sender.Handle(new(idx));
+            var response = await sender.Handle(new(idx), CancellationToken.None);
 
-            if (response.Value != numOfMiddlewares * 2 + idx)
+            if (response.Value != (numOfMiddlewares * 2) + idx)
             {
-                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {numOfMiddlewares * 2 + idx}");
+                throw new InvalidOperationException(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"got wrong result {response.Value} on execution {idx}, expected {(numOfMiddlewares * 2) + idx}"
+                    )
+                );
             }
         }
     }
 
     public static IEnumerable<object?[]> NoConquerorArguments()
     {
-        foreach (var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000 }
-                                                       from parallelism in new int?[] { null, 4 }
-                                                       where parallelism is null || numOfExecutions >= parallelism
-                                                       select (numOfExecutions, parallelism))
+        foreach (
+            var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000 }
+            from parallelism in new int?[] { null, 4 }
+            where parallelism is null || numOfExecutions >= parallelism
+            select (numOfExecutions, parallelism)
+        )
         {
             yield return [numOfExecutions, parallelism];
         }
@@ -126,11 +159,13 @@ public partial class MessageBenchmarks
 
     public static IEnumerable<object?[]> ConquerorArguments()
     {
-        foreach (var (args, numOfMiddlewares) in from args in NoConquerorArguments()
-                                                 from numOfMiddlewares in new[] { 0, 10, 100 }
-                                                 select (args, numOfMiddlewares))
+        foreach (
+            var (args, numOfMiddlewares) in from args in NoConquerorArguments()
+            from numOfMiddlewares in new[] { 0, 10, 100 }
+            select (args, numOfMiddlewares)
+        )
         {
-            yield return [..args, numOfMiddlewares];
+            yield return [.. args, numOfMiddlewares];
         }
     }
 
@@ -139,9 +174,10 @@ public partial class MessageBenchmarks
         if (parallelism is not null)
         {
             await Parallel.ForEachAsync(
-                Enumerable.Range(0, numOfExecutions),
+                Enumerable.Range(start: 0, numOfExecutions),
                 new ParallelOptions { MaxDegreeOfParallelism = parallelism.Value },
-                (i, _) => runSingle(i));
+                (i, _) => runSingle(i)
+            );
 
             return;
         }
@@ -158,7 +194,7 @@ public partial class MessageBenchmarks
         // ReSharper disable once EmptyConstructor
         public ConfigWithCustomEnvVars()
         {
-            AddJob(Job.ShortRun);
+            _ = AddJob(Job.ShortRun);
 
             // AddJob(Job.Default
             //           .WithEnvironmentVariables(new EnvironmentVariable("SOME_VAR", "SOME_VALUE"))
@@ -175,11 +211,14 @@ public partial class MessageBenchmarks
 
     private sealed partial class TestMessageHandler : TestMessage.IHandler
     {
-        public async Task<TestMessageResponse> Handle(TestMessage query, CancellationToken cancellationToken = new())
+        public async Task<TestMessageResponse> Handle(
+            TestMessage message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
 
-            return new(query.Value);
+            return new TestMessageResponse(message.Value);
         }
 
         public static void ConfigurePipeline(TestMessage.IPipeline pipeline)
@@ -188,12 +227,19 @@ public partial class MessageBenchmarks
 
             for (var i = 0; i < numOfMiddlewares; i += 1)
             {
-                pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse> { Configuration = new() { Parameter = i } });
+                _ = pipeline.Use(
+                    new TestMessageMiddleware<TestMessage, TestMessageResponse>
+                    {
+                        Configuration = new TestMessageMiddlewareConfiguration { Parameter = i },
+                    }
+                );
             }
 
             if (numOfMiddlewares > 0)
             {
-                pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m => m.Configuration.Parameter = 1);
+                _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(static m =>
+                    m.Configuration.Parameter = 1
+                );
             }
         }
     }

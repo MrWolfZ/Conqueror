@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IFileSystemSignalReceiver
 {
@@ -34,13 +31,17 @@ public interface IFileSystemSignalReceiver
     ///     the signal becomes available for processing by other instances with the same name).
     /// </summary>
     /// <param name="baseDirectoryPath">The path to the directory to use for publishing and receiving signals</param>
-    /// <param name="leaseDuration">The duration a handler has to process the signal before it becomes available to other handlers</param>
+    /// <param name="leaseDuration">
+    ///     The duration a handler has to process the signal before it becomes available to other
+    ///     handlers
+    /// </param>
     /// <param name="pollingInterval">The interval with which to poll the file system for new signals</param>
     /// <returns>The receiver's configuration</returns>
     FileSystemSignalReceiverConfiguration EnableMultipleCompetingInstances(
         string baseDirectoryPath,
         TimeSpan leaseDuration,
-        TimeSpan pollingInterval);
+        TimeSpan pollingInterval
+    );
 
     void Disable();
 }

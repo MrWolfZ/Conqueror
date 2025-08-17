@@ -8,7 +8,8 @@ public interface IMessageTransportConformityTestCase<out TTestHost> : ITransport
     Task<IReadOnlyCollection<object>> SendMessages(IMessageSenders messageSenders, CancellationToken cancellationToken);
 }
 
-public interface IMessageTransportConformityExecutionTestCase<out TTestHost> : IMessageTransportConformityTestCase<TTestHost>
+public interface IMessageTransportConformityExecutionTestCase<out TTestHost>
+    : IMessageTransportConformityTestCase<TTestHost>
     where TTestHost : IMessageTransportConformityTestHost
 {
     int NumOfReceivers { get; }
@@ -20,7 +21,8 @@ public interface IMessageTransportConformityExecutionTestCase<out TTestHost> : I
     IReadOnlyCollection<object> ExpectedResponses { get; }
 }
 
-public interface IMessageTransportConformityExecutionSuccessTestCase<TTestHost> : IMessageTransportConformityExecutionTestCase<TTestHost>
+public interface IMessageTransportConformityExecutionSuccessTestCase<TTestHost>
+    : IMessageTransportConformityExecutionTestCase<TTestHost>
     where TTestHost : IMessageTransportConformityTestHost
 {
     bool ShouldCompleteImmediately { get; }
@@ -30,7 +32,8 @@ public interface IMessageTransportConformityExecutionSuccessTestCase<TTestHost> 
     Task AfterMessagesAreReceived(TTestHost host) => Task.CompletedTask;
 }
 
-public interface IMessageTransportConformityExecutionErrorTestCase<TTestHost> : IMessageTransportConformityExecutionTestCase<TTestHost>
+public interface IMessageTransportConformityExecutionErrorTestCase<TTestHost>
+    : IMessageTransportConformityExecutionTestCase<TTestHost>
     where TTestHost : IMessageTransportConformityTestHost
 {
     Exception? ReceiverConfigurationException { get; }

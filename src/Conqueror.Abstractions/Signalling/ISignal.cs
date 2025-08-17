@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 /// <summary>
 ///     This interface does not need to be added manually to user code. It is
@@ -36,9 +28,9 @@ public interface ISignal<TSignal>
     /// <summary>
     ///     The <see cref="System.Text.Json.Serialization.JsonSerializerContext" />
     ///     to use by default for any operation that needs to JSON-serialize or
-    ///     deserialize a signal of type <see cref="TSignal" />.<br />
+    ///     deserialize a signal of type <typeparamref name="TSignal" />.<br />
     ///     <br />
-    ///     When this is <c>null</c> and dynamic code generation is enabled (i.e.
+    ///     When this is <see langword="null" /> and dynamic code generation is enabled (i.e.
     ///     the app is not running with AOT) then the serialization will use a default
     ///     context depending on where it is being used.
     /// </summary>
@@ -48,7 +40,11 @@ public interface ISignal<TSignal>
 
     static abstract IEnumerable<PropertyInfo> PublicProperties { get; }
 
-    static abstract Task InvokeHandler<TIHandler>(TIHandler handler, TSignal signal, CancellationToken cancellationToken)
+    static abstract Task InvokeHandler<TIHandler>(
+        TIHandler handler,
+        TSignal signal,
+        CancellationToken cancellationToken
+    )
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>;
 }
 
@@ -61,11 +57,22 @@ public sealed class SignalTypes<TSignal, TIHandler>
     where TSignal : class, ISignal<TSignal>
     where TIHandler : class, ISignalHandler<TSignal, TIHandler>
 {
+    [SuppressMessage(
+        "Usage",
+        "MA0015:Specify the parameter name in ArgumentException",
+        Justification = $"false positive, {nameof(TIHandler)} is a generic type parameter"
+    )]
     public SignalTypes()
     {
-        if (!typeof(TIHandler).IsInterface || typeof(TIHandler).Name != "IHandler")
+        if (
+            !typeof(TIHandler).IsInterface
+            || !string.Equals(typeof(TIHandler).Name, "IHandler", StringComparison.Ordinal)
+        )
         {
-            throw new ArgumentException($"expected signal handler interface for signal type '{typeof(TSignal)}', but got '{typeof(TIHandler)}'", nameof(TIHandler));
+            throw new ArgumentException(
+                $"expected signal handler interface for signal type '{typeof(TSignal)}', but got '{typeof(TIHandler)}'",
+                nameof(TIHandler)
+            );
         }
     }
 }

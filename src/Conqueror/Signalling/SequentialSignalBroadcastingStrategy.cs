@@ -1,26 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
-using static Conqueror.Signalling.SequentialSignalBroadcastingStrategyConfiguration;
+﻿namespace Conqueror.Signalling;
 
-namespace Conqueror.Signalling;
+using System.Runtime.ExceptionServices;
+using static SequentialSignalBroadcastingStrategyConfiguration;
 
 internal sealed class SequentialSignalBroadcastingStrategy(
-    SequentialSignalBroadcastingStrategyConfiguration configuration)
-    : ISignalBroadcastingStrategy
+    SequentialSignalBroadcastingStrategyConfiguration configuration
+) : ISignalBroadcastingStrategy
 {
     public static readonly SequentialSignalBroadcastingStrategy Default = new(new());
 
-    public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
-                                               IServiceProvider serviceProvider,
-                                               TSignal signal,
-                                               CancellationToken cancellationToken)
+    public async Task BroadcastSignal<TSignal>(
+        IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
+        IServiceProvider serviceProvider,
+        TSignal signal,
+        CancellationToken cancellationToken
+    )
         where TSignal : class, ISignal<TSignal>
     {
-        var shouldThrowOnFirst = configuration.ExceptionHandling == ExceptionHandlingStrategy.ThrowOnFirstException;
+        var shouldThrowOnFirst = configuration.ExceptionHandling is ExceptionHandlingStrategy.ThrowOnFirstException;
         var thrownExceptions = new List<Exception>();
         var thrownCancellationExceptions = new List<Exception>();
 
@@ -34,23 +31,21 @@ internal sealed class SequentialSignalBroadcastingStrategy(
             {
                 thrownCancellationExceptions.Add(e);
             }
+            catch (Exception) when (shouldThrowOnFirst && thrownCancellationExceptions.Count is 0)
+            {
+                throw;
+            }
+            catch (Exception ex) when (shouldThrowOnFirst)
+            {
+                throw new AggregateException(new[] { ex }.Concat(thrownCancellationExceptions));
+            }
             catch (Exception e)
             {
-                if (shouldThrowOnFirst)
-                {
-                    if (thrownCancellationExceptions.Count > 0)
-                    {
-                        throw new AggregateException(new[] { e }.Concat(thrownCancellationExceptions));
-                    }
-
-                    throw;
-                }
-
                 thrownExceptions.Add(e);
             }
         }
 
-        if (thrownExceptions.Count == 0)
+        if (thrownExceptions.Count is 0)
         {
             if (thrownCancellationExceptions.FirstOrDefault() is { } cancelException)
             {
@@ -62,7 +57,7 @@ internal sealed class SequentialSignalBroadcastingStrategy(
 
         thrownExceptions.AddRange(thrownCancellationExceptions);
 
-        if (thrownExceptions.Count == 1)
+        if (thrownExceptions.Count is 1)
         {
             ExceptionDispatchInfo.Capture(thrownExceptions[0]).Throw();
         }

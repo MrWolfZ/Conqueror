@@ -1,13 +1,15 @@
-﻿using Serilog;
+﻿namespace Conqueror.Middleware.Logging.Tests;
+
+using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
 
-namespace Conqueror.Middleware.Logging.Tests;
-
 file sealed class SerilogTestSink(ILogEventSink wrapped, DateTimeOffset timestamp) : ILogEventSink, IDisposable
 {
+    public void Dispose() => (wrapped as IDisposable)?.Dispose();
+
     public void Emit(LogEvent logEvent)
     {
         var newLogEvent = new LogEvent(
@@ -15,23 +17,26 @@ file sealed class SerilogTestSink(ILogEventSink wrapped, DateTimeOffset timestam
             logEvent.Level,
             logEvent.Exception is null ? null : new TruncatedLoggingException(logEvent.Exception),
             logEvent.MessageTemplate,
-            logEvent.Properties
-                    .Select(kv => new LogEventProperty(kv.Key, kv.Value)));
+            logEvent.Properties.Select(kv => new LogEventProperty(kv.Key, kv.Value))
+        );
 
         wrapped.Emit(newLogEvent);
     }
-
-    public void Dispose() => (wrapped as IDisposable)?.Dispose();
 }
 
-public static class LoggerSinkConfigurationStableTimestampExtensions
+internal static class LoggerSinkConfigurationStableTimestampExtensions
 {
     public static LoggerConfiguration TestSink(
         this LoggerSinkConfiguration loggerSinkConfiguration,
         DateTimeOffset timestamp,
-        TextWriter textWriter)
+        TextWriter textWriter
+    )
     {
-        var sink = LoggerSinkConfiguration.Wrap(sink => new SerilogTestSink(sink, timestamp), c => c.TextWriter(textWriter));
+        var sink = LoggerSinkConfiguration.Wrap(
+            sink => new SerilogTestSink(sink, timestamp),
+            c => c.TextWriter(textWriter)
+        );
+
         return loggerSinkConfiguration.Sink(sink);
     }
 
@@ -39,9 +44,14 @@ public static class LoggerSinkConfigurationStableTimestampExtensions
         this LoggerSinkConfiguration loggerSinkConfiguration,
         DateTimeOffset timestamp,
         ITextFormatter textFormatter,
-        TextWriter textWriter)
+        TextWriter textWriter
+    )
     {
-        var sink = LoggerSinkConfiguration.Wrap(sink => new SerilogTestSink(sink, timestamp), c => c.TextWriter(textFormatter, textWriter));
+        var sink = LoggerSinkConfiguration.Wrap(
+            sink => new SerilogTestSink(sink, timestamp),
+            c => c.TextWriter(textFormatter, textWriter)
+        );
+
         return loggerSinkConfiguration.Sink(sink);
     }
 }

@@ -1,10 +1,8 @@
-﻿using Conqueror.Transport.ConformityTests.Messaging;
-
-namespace Conqueror.Transport.FileSystem.Tests.Messaging;
+﻿namespace Conqueror.Transport.FileSystem.Tests.Messaging;
 
 public sealed class FileSystemMessageConformityContextTestCase
     : FileSystemMessageConformityTestCase,
-      IMessageTransportConformityContextTestCase<FileSystemMessageTransportConformityTestHost>
+        IMessageTransportConformityContextTestCase<FileSystemMessageTransportConformityTestHost>
 {
     public required bool HasActivity { get; init; }
 

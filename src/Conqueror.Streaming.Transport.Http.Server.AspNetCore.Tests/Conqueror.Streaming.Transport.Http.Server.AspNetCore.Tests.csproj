@@ -1,16 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-    <Import Project="../.targets/test.targets" />
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.Streaming.Transport.Http.Common\Conqueror.Streaming.Transport.Http.Common.csproj" />
-        <ProjectReference Include="..\Conqueror.Streaming.Transport.Http.Server.AspNetCore\Conqueror.Streaming.Transport.Http.Server.AspNetCore.csproj" />
-        <ProjectReference Include="..\Conqueror.Streaming\Conqueror.Streaming.csproj" />
-    </ItemGroup>
-
+  <Import Project="../.targets/test.targets" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
+    <ProjectReference Include="..\Conqueror.Streaming.Transport.Http.Common\Conqueror.Streaming.Transport.Http.Common.csproj" />
+    <ProjectReference Include="..\Conqueror.Streaming.Transport.Http.Server.AspNetCore\Conqueror.Streaming.Transport.Http.Server.AspNetCore.csproj" />
+    <ProjectReference Include="..\Conqueror.Streaming\Conqueror.Streaming.csproj" />
+  </ItemGroup>
 </Project>

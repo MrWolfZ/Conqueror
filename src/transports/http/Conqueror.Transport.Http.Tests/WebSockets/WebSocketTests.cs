@@ -1,7 +1,7 @@
-﻿using Conqueror.Transport.Http.Client.WebSockets;
-using Conqueror.Transport.Http.Server.AspNetCore.WebSockets;
+﻿namespace Conqueror.Transport.Http.Tests.WebSockets;
 
-namespace Conqueror.Transport.Http.Tests.WebSockets;
+using Client.WebSockets;
+using Server.AspNetCore.WebSockets;
 
 [TestFixture]
 public sealed class WebSocketTests
@@ -12,28 +12,37 @@ public sealed class WebSocketTests
     [Test]
     public async Task GivenSocketEndpoint_WhenWritingToAndReadingFromSocket_EverythingWorks()
     {
-        await using var host = await CreateHost(async (s, logger, ct) =>
-        {
-            await using var d = ct.Register(() => logger.LogTrace("canceled"));
+        await using var host = await CreateHost(
+            async (s, logger, ct) =>
+            {
+                await using var d = ct.Register(() => logger.LogTrace("canceled"));
 
-            logger.LogTrace("writing message 1");
+                logger.LogTrace("writing message 1");
 
-            await s.WriteAsync(Encoding.UTF8.GetBytes(Content1), ct);
-            await s.FlushAsync(ct);
+                await s.WriteAsync(Encoding.UTF8.GetBytes(Content1), ct);
+                await s.FlushAsync(ct);
 
-            logger.LogTrace("writing message 2");
+                logger.LogTrace("writing message 2");
 
-            await s.WriteAsync(Encoding.UTF8.GetBytes(Content2), ct);
-            await s.FlushAsync(ct);
+                await s.WriteAsync(Encoding.UTF8.GetBytes(Content2), ct);
+                await s.FlushAsync(ct);
 
-            logger.LogTrace("sleeping");
-            await Task.Delay(TimeSpan.FromSeconds(10), ct);
-        });
+                logger.LogTrace("sleeping");
+                await Task.Delay(TimeSpan.FromSeconds(value: 10), TimeProvider.System, ct);
+            }
+        );
 
-        var query = QueryStringBuilder.Of((QueryParameterNames.HeartbeatInterval, "10"), (QueryParameterNames.HeartbeatTimeout, "60"));
+        var query = QueryStringBuilder.Of(
+            (QueryParameterNames.HeartbeatInterval, "10"),
+            (QueryParameterNames.HeartbeatTimeout, "60")
+        );
         using var webSocket = await host.ConnectToWebSocket(new($"ws://localhost{query}"));
 
-        await using var conquerorWebSocket = new ConquerorWebSocket(webSocket, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(60));
+        await using var conquerorWebSocket = new ConquerorWebSocket(
+            webSocket,
+            TimeSpan.FromSeconds(value: 10),
+            TimeSpan.FromSeconds(value: 60)
+        );
 
         var logger = host.Resolve<ILogger<WebSocketTests>>();
 
@@ -72,18 +81,22 @@ public sealed class WebSocketTests
         var runTask = Run(conquerorWebSocket, cts.Token);
 
         // give the client time to receive the signals
-        await Task.Delay(TimeSpan.FromMilliseconds(host.IsRunningInGithubAction ? 10_000 : 100), host.TestTimeoutToken);
+        await Task.Delay(
+            TimeSpan.FromMilliseconds(host.IsRunningInGithubAction ? 10_000 : 100),
+            TimeProvider.System,
+            host.TestTimeoutToken
+        );
 
         await cts.CancelAsync();
 
         await runTask;
 
-        Assert.That(result, Is.EqualTo(new[] { Content1, Content2 }));
+        Assert.That(result, Is.EqualTo([Content1, Content2]));
     }
 
     [Test]
-    [TestCase(null, "60")]
-    [TestCase("60", null)]
+    [TestCase(arg1: null, "60")]
+    [TestCase("60", arg2: null)]
     [TestCase("", "60")]
     [TestCase("60", "")]
     [TestCase("foo", "60")]
@@ -97,12 +110,15 @@ public sealed class WebSocketTests
     [TestCase("10", "5")]
     public async Task GivenSocketEndpoint_WhenSendingInvalidHeartbeatParameters_ReturnsBadRequest(
         string? heartbeatInterval,
-        string? heartbeatTimeout)
+        string? heartbeatTimeout
+    )
     {
-        await using var host = await CreateHost(async (_, _, ct) =>
-        {
-            await Task.Delay(TimeSpan.FromSeconds(10), ct);
-        });
+        await using var host = await CreateHost(
+            async (_, _, ct) =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(value: 10), TimeProvider.System, ct);
+            }
+        );
 
         var qb = QueryStringBuilder.Create();
 
@@ -118,7 +134,8 @@ public sealed class WebSocketTests
 
         await Assert.ThatAsync(
             () => host.ConnectToWebSocket(new($"ws://localhost{qb.Build()}")),
-            Throws.InvalidOperationException.With.Message.Contains($"status code: {StatusCodes.Status400BadRequest}"));
+            Throws.InvalidOperationException.With.Message.Contains($"status code: {StatusCodes.Status400BadRequest}")
+        );
     }
 
     [Test]
@@ -127,13 +144,18 @@ public sealed class WebSocketTests
         await using var host = await CreateHost(
             async (_, _, ct) =>
             {
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                await Task.Delay(TimeSpan.FromSeconds(value: 10), TimeProvider.System, ct);
             },
-            (TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(50)));
+            (TimeSpan.FromMilliseconds(value: 10), TimeSpan.FromMilliseconds(value: 50))
+        );
 
         using var webSocket = await host.ConnectToWebSocket(new("ws://localhost"));
 
-        await using var conquerorWebSocket = new ConquerorWebSocket(webSocket, TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(50));
+        await using var conquerorWebSocket = new ConquerorWebSocket(
+            webSocket,
+            TimeSpan.FromMilliseconds(value: 10),
+            TimeSpan.FromMilliseconds(value: 50)
+        );
 
         var logger = host.Resolve<ILogger<WebSocketTests>>();
 
@@ -165,7 +187,7 @@ public sealed class WebSocketTests
         var runTask = Run(conquerorWebSocket, cts.Token);
 
         // give the client time to receive the heartbeats
-        await Task.Delay(TimeSpan.FromMilliseconds(100), host.TestTimeoutToken);
+        await Task.Delay(TimeSpan.FromMilliseconds(value: 100), TimeProvider.System, host.TestTimeoutToken);
 
         Assert.That(conquerorWebSocket.State, Is.EqualTo(WebSocketState.Open));
 
@@ -180,13 +202,18 @@ public sealed class WebSocketTests
         await using var host = await CreateHost(
             async (_, _, ct) =>
             {
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                await Task.Delay(TimeSpan.FromSeconds(value: 10), TimeProvider.System, ct);
             },
-            (TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(60)));
+            (TimeSpan.FromSeconds(value: 1), TimeSpan.FromSeconds(value: 60))
+        );
 
         using var webSocket = await host.ConnectToWebSocket(new("ws://localhost"));
 
-        await using var conquerorWebSocket = new ConquerorWebSocket(webSocket, TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(50));
+        await using var conquerorWebSocket = new ConquerorWebSocket(
+            webSocket,
+            TimeSpan.FromSeconds(value: 1),
+            TimeSpan.FromMilliseconds(value: 50)
+        );
 
         var logger = host.Resolve<ILogger<WebSocketTests>>();
 
@@ -218,7 +245,7 @@ public sealed class WebSocketTests
         var runTask = Run(conquerorWebSocket, cts.Token);
 
         // give the client time to time out the heartbeat
-        await Task.Delay(TimeSpan.FromMilliseconds(100), host.TestTimeoutToken);
+        await Task.Delay(TimeSpan.FromMilliseconds(value: 100), TimeProvider.System, host.TestTimeoutToken);
 
         Assert.That(conquerorWebSocket.State, Is.EqualTo(WebSocketState.Closed));
 
@@ -233,13 +260,18 @@ public sealed class WebSocketTests
         await using var host = await CreateHost(
             async (_, _, ct) =>
             {
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                await Task.Delay(TimeSpan.FromSeconds(value: 10), TimeProvider.System, ct);
             },
-            (TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(50)));
+            (TimeSpan.FromSeconds(value: 1), TimeSpan.FromMilliseconds(value: 50))
+        );
 
         using var webSocket = await host.ConnectToWebSocket(new("ws://localhost"));
 
-        await using var conquerorWebSocket = new ConquerorWebSocket(webSocket, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(60));
+        await using var conquerorWebSocket = new ConquerorWebSocket(
+            webSocket,
+            TimeSpan.FromSeconds(value: 1),
+            TimeSpan.FromSeconds(value: 60)
+        );
 
         var logger = host.Resolve<ILogger<WebSocketTests>>();
 
@@ -271,7 +303,7 @@ public sealed class WebSocketTests
         var runTask = Run(conquerorWebSocket, cts.Token);
 
         // give the server time to time out the heartbeat
-        await Task.Delay(TimeSpan.FromMilliseconds(100), host.TestTimeoutToken);
+        await Task.Delay(TimeSpan.FromMilliseconds(value: 100), TimeProvider.System, host.TestTimeoutToken);
 
         Assert.That(conquerorWebSocket.State, Is.EqualTo(WebSocketState.Closed));
 
@@ -282,7 +314,8 @@ public sealed class WebSocketTests
 
     private static async Task<HttpTransportTestHost> CreateHost(
         Func<Stream, ILogger, CancellationToken, Task> handler,
-        (TimeSpan HeartbeatInterval, TimeSpan HeartbeatTimeout)? heartbeat = null)
+        (TimeSpan HeartbeatInterval, TimeSpan HeartbeatTimeout)? heartbeat = null
+    )
     {
         var host = await HttpTransportTestHost.Create(
             services =>
@@ -291,8 +324,7 @@ public sealed class WebSocketTests
             },
             app =>
             {
-                _ = app.UseRouting()
-                       .UseWebSockets();
+                _ = app.UseRouting().UseWebSockets();
 
                 _ = app.UseEndpoints(endpoints =>
                 {
@@ -305,12 +337,15 @@ public sealed class WebSocketTests
                             var heartbeatInterval = heartbeat?.HeartbeatInterval ?? Timeout.InfiniteTimeSpan;
                             var heartbeatTimeout = heartbeat?.HeartbeatTimeout ?? Timeout.InfiniteTimeSpan;
 
-                            if (heartbeat is null
+                            if (
+                                heartbeat is null
                                 && !WebSocketEndpoint.TryGetHeartbeatParameters(
                                     context,
                                     out heartbeatInterval,
                                     out heartbeatTimeout,
-                                    out _))
+                                    out _
+                                )
+                            )
                             {
                                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
 
@@ -331,13 +366,17 @@ public sealed class WebSocketTests
                                     logger,
                                     heartbeatInterval,
                                     heartbeatTimeout,
-                                    s => tcs.TrySetResult(s)),
-                                RunHandler());
+                                    s => tcs.TrySetResult(s)
+                                ),
+                                RunHandler()
+                            );
 
-                            _ = tcs.TrySetCanceled();
-                        });
+                            _ = tcs.TrySetCanceled(CancellationToken.None);
+                        }
+                    );
                 });
-            });
+            }
+        );
 
         return host;
     }

@@ -1,20 +1,16 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+namespace Conqueror.Transport.Http.Tests;
+
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Repositories;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 
-namespace Conqueror.Transport.Http.Tests;
-
 public sealed class HttpTransportTestHost
 {
-    private static readonly bool IsRunningInGithubActionField = Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
+    private static readonly bool IsRunningInGithubActionField =
+        Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
 
-    private HttpTransportTestHost()
-    {
-    }
+    private HttpTransportTestHost() { }
 
     public required HttpClient HttpClient { get; init; }
 
@@ -37,39 +33,45 @@ public sealed class HttpTransportTestHost
     public static async Task<HttpTransportTestHost> Create(
         Action<IServiceCollection>? configureServices = null,
         Action<IApplicationBuilder>? configure = null,
-        TimeSpan? testTimeout = null)
+        TimeSpan? testTimeout = null
+    )
     {
-        var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddTestLogger()
-                                                                               .SetMinimumLevel(LogLevel.Trace)
+        var hostBuilder = new HostBuilder()
+            .ConfigureLogging(logging =>
+                logging
+                    .AddTestLogger()
+                    .SetMinimumLevel(LogLevel.Trace)
+                    // set some very verbose loggers to info to reduce noise in the logs
+                    .AddFilter(typeof(FileSystemXmlRepository).FullName, LogLevel.Information)
+                    .AddFilter(typeof(XmlKeyManager).FullName, LogLevel.Information)
+            )
+            .UseEnvironment(Environments.Development)
+            .ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
 
-                                                                               // set some very verbose loggers to info to reduce noise in the logs
-                                                                               .AddFilter(typeof(FileSystemXmlRepository).FullName, LogLevel.Information)
-                                                                               .AddFilter(typeof(XmlKeyManager).FullName, LogLevel.Information))
-                                           .UseEnvironment(Environments.Development)
-                                           .ConfigureWebHost(webHost =>
-                                           {
-                                               _ = webHost.UseTestServer();
+                _ = webHost.ConfigureServices(services =>
+                {
+                    ConfigureBearerAuthentication(services);
 
-                                               _ = webHost.ConfigureServices(services =>
-                                               {
-                                                   ConfigureBearerAuthentication(services);
+                    configureServices?.Invoke(services);
+                });
 
-                                                   configureServices?.Invoke(services);
-                                               });
+                if (configure is not null)
+                {
+                    _ = webHost.Configure(configure);
+                }
+            });
 
-                                               if (configure is not null)
-                                               {
-                                                   _ = webHost.Configure(configure);
-                                               }
-                                           });
+        using var cts = new CancellationTokenSource(testTimeout ?? TimeSpan.FromSeconds(60));
 
-        var host = await hostBuilder.StartAsync();
+        var host = await hostBuilder.StartAsync(cts.Token);
         var client = host.GetTestClient();
 
-        client.BaseAddress = new("http://conqueror.test/");
+        client.BaseAddress = new Uri("http://conqueror.test/");
 
         var assertionTimeout = Debugger.IsAttached
-            ? TimeSpan.FromMinutes(1)
+            ? TimeSpan.FromMinutes(value: 1)
             : TimeSpan.FromMilliseconds(IsRunningInGithubActionField ? 10_000 : 1_000);
 
         var testHost = new HttpTransportTestHost
@@ -132,12 +134,13 @@ public sealed class HttpTransportTestHost
 
     private static void ConfigureBearerAuthentication(IServiceCollection services)
     {
-        _ = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                    .AddJwtBearer(options =>
-                    {
-                        options.TokenValidationParameters.NameClaimType = "id";
-                        options.TokenValidationParameters.RoleClaimType = "role";
-                    });
+        _ = services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters.NameClaimType = "id";
+                options.TokenValidationParameters.RoleClaimType = "role";
+            });
 
         _ = services.PostConfigure<JwtBearerOptions>(
             JwtBearerDefaults.AuthenticationScheme,
@@ -149,11 +152,9 @@ public sealed class HttpTransportTestHost
                 options.TokenValidationParameters.ValidAudience = HttpTransportTestAuthenticationUtil.Audience;
                 options.TokenValidationParameters.ValidIssuer = HttpTransportTestAuthenticationUtil.Issuer;
 
-                options.TokenValidationParameters.IssuerSigningKeyResolver = (
-                    _,
-                    _,
-                    _,
-                    _) => [HttpTransportTestAuthenticationUtil.SigningKey];
-            });
+                options.TokenValidationParameters.IssuerSigningKeyResolver = (_, _, _, _) =>
+                    [HttpTransportTestAuthenticationUtil.SigningKey];
+            }
+        );
     }
 }

@@ -1,24 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
-        <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-        <ProjectReference Include="..\middlewares\logging\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj" />
-        <ProjectReference Include="..\transports\file-system\Conqueror.Transport.FileSystem\Conqueror.Transport.FileSystem.csproj" />
-        <!-- <PackageReference Include="Conqueror" /> -->
-        <!-- <PackageReference Include="Conqueror.Middleware.Logging" /> -->
-        <!-- <PackageReference Include="Conqueror.Transport.FileSystem" /> -->
-
-        <!-- third-party packages -->
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-        <PackageReference Include="BenchmarkDotNet" />
-    </ItemGroup>
-
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
+    <ProjectReference
+      Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+    <ProjectReference Include="..\middlewares\logging\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj" />
+    <ProjectReference Include="..\transports\file-system\Conqueror.Transport.FileSystem\Conqueror.Transport.FileSystem.csproj" />
+    <!-- <PackageReference Include="Conqueror" /> -->
+    <!-- <PackageReference Include="Conqueror.Middleware.Logging" /> -->
+    <!-- <PackageReference Include="Conqueror.Transport.FileSystem" /> -->
+    <!-- third-party packages -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
 </Project>

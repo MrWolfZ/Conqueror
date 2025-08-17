@@ -5,4 +5,5 @@ internal sealed record MessageMetadata(
     string? EncodedContextData,
     DateTimeOffset SentAtUtc,
     TimeSpan? TimeToLive,
-    int NrOfFailedProcessingAttempts);
+    int NrOfFailedProcessingAttempts
+);

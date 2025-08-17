@@ -1,8 +1,8 @@
-﻿using System;
-using System.ComponentModel;
+﻿#pragma warning disable SA1201 // ElementsMustAppearInTheCorrectOrder
 
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
+
+using System.ComponentModel;
 
 /// <summary>
 ///     Base interface for transports to be able to get an injector that works
@@ -34,8 +34,8 @@ internal interface ICoreSignalHandlerTypesInjector : ISignalHandlerTypesInjector
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal sealed class CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy>(
     Delegate? configurePipeline,
-    Action<IInProcessSignalReceiver>? configureInProcessReceiver)
-    : ICoreSignalHandlerTypesInjector
+    Action<IInProcessSignalReceiver>? configureInProcessReceiver
+) : ICoreSignalHandlerTypesInjector
     where TSignal : class, ISignal<TSignal>
     where TIHandler : class, ISignalHandler<TSignal, TIHandler, TProxy>
     where TProxy : SignalHandlerProxy<TSignal, TIHandler, TProxy>, TIHandler, new()
@@ -50,8 +50,8 @@ internal sealed class CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy>
         configureInProcessReceiver?.Invoke(receiver);
     }
 
-    public TResult Inject<TArg, TResult>(ICoreSignalHandlerTypesInjectable<TArg, TResult> injectable, TArg arg)
-        => injectable.WithInjectedTypes<TSignal, TIHandler, TProxy>(arg);
+    public TResult Inject<TArg, TResult>(ICoreSignalHandlerTypesInjectable<TArg, TResult> injectable, TArg arg) =>
+        injectable.WithInjectedTypes<TSignal, TIHandler, TProxy>(arg);
 }
 
 /// <summary>

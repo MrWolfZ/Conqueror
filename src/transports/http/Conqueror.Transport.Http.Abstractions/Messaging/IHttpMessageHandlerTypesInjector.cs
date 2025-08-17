@@ -1,8 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal interface IHttpMessageHandlerTypesInjector : IMessageHandlerTypesInjector
@@ -23,8 +19,8 @@ internal interface IHttpMessageHandlerTypesInjector : IMessageHandlerTypesInject
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal sealed class HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(
-    Action<IHttpMessageReceiver>? configureReceiver)
-    : IHttpMessageHandlerTypesInjector
+    Action<IHttpMessageReceiver>? configureReceiver
+) : IHttpMessageHandlerTypesInjector
     where TMessage : class, IHttpMessage<TMessage, TResponse>
     where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
 {
@@ -36,8 +32,8 @@ internal sealed class HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHan
         configureReceiver?.Invoke(receiver);
     }
 
-    public TResult Inject<TArg, TResult>(IHttpMessageTypesInjectable<TArg, TResult> injectable, TArg arg)
-        => injectable.WithInjectedTypes<TMessage, TResponse, TIHandler>(arg);
+    public TResult Inject<TArg, TResult>(IHttpMessageTypesInjectable<TArg, TResult> injectable, TArg arg) =>
+        injectable.WithInjectedTypes<TMessage, TResponse, TIHandler>(arg);
 }
 
 /// <summary>
@@ -47,6 +43,11 @@ internal sealed class HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHan
 /// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
+[SuppressMessage(
+    "StyleCop.CSharp.OrderingRules",
+    "SA1201:Elements should appear in the correct order",
+    Justification = "order makes sense here"
+)]
 internal interface IHttpMessageTypesInjectable<in TArg, out TResult>
 {
     TResult WithInjectedTypes<TMessage, TResponse, TIHandler>(TArg arg)

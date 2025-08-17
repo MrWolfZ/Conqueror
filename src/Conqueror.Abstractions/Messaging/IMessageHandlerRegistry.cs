@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public interface IMessageHandlerRegistry

@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿#pragma warning disable SA1201 // ElementsMustAppearInTheCorrectOrder
 
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public static class SignalHandlerTypeServiceRegistry
 {
     private static readonly List<Action<ISignalHandlerServiceRegisterable>> RegistrationActions = [];
 
-    public static void RegisterHandlerType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>()
-        where THandler : class, ISignalHandler
-        => RegisterHandlerTypeInternal<THandler>();
+    public static void RegisterHandlerType<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+    >()
+        where THandler : class, ISignalHandler => RegisterHandlerTypeInternal<THandler>();
 
     internal static void RunWithRegisteredTypes(ISignalHandlerServiceRegisterable registerable)
     {
@@ -21,11 +19,10 @@ public static class SignalHandlerTypeServiceRegistry
         }
     }
 
-    private static void RegisterHandlerTypeInternal<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>()
-        where THandler : class, ISignalHandler
-    {
-        RegistrationActions.Add(r => r.Register<THandler>());
-    }
+    private static void RegisterHandlerTypeInternal<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+    >()
+        where THandler : class, ISignalHandler => RegistrationActions.Add(r => r.Register<THandler>());
 }
 
 internal interface ISignalHandlerServiceRegisterable

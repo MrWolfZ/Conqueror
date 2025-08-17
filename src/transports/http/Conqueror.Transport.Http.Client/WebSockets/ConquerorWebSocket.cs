@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
+namespace Conqueror.Transport.Http.Client.WebSockets;
+
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Conqueror.Transport.Http.Client.WebSockets;
 
 internal sealed class ConquerorWebSocket : IAsyncDisposable
 {
@@ -35,20 +30,22 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
         this.heartbeatInterval = heartbeatInterval;
         this.heartbeatTimeout = heartbeatTimeout;
 
-        heartbeatTimer = new(
+        heartbeatTimer = new Timer(
             OnSendHeartbeat,
-            null,
+            state: null,
             heartbeatInterval == TimeSpan.Zero ? Timeout.InfiniteTimeSpan : heartbeatInterval,
-            heartbeatInterval == TimeSpan.Zero ? Timeout.InfiniteTimeSpan : heartbeatInterval);
+            heartbeatInterval == TimeSpan.Zero ? Timeout.InfiniteTimeSpan : heartbeatInterval
+        );
 
-        heartbeatTimeoutTimer = new(
+        heartbeatTimeoutTimer = new Timer(
             OnHeartbeatTimeout,
-            null,
+            state: null,
             heartbeatInterval == TimeSpan.Zero ? Timeout.InfiniteTimeSpan : heartbeatTimeout,
-            Timeout.InfiniteTimeSpan);
+            Timeout.InfiniteTimeSpan
+        );
 
-        WriteStream = new(this);
-        ReadStream = new(this);
+        WriteStream = new WebSocketWriteStream(this);
+        ReadStream = new WebSocketReadStream(this);
     }
 
     public WebSocketState State => socket.State;
@@ -75,7 +72,7 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
 
     public async IAsyncEnumerable<Stream> Read([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        if (Interlocked.CompareExchange(ref readState, 1, 0) != 0)
+        if (Interlocked.CompareExchange(ref readState, value: 1, comparand: 0) is not 0)
         {
             // if someone is already reading, or we are closing the connection, we just break
             yield break;
@@ -89,13 +86,11 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
 
             if (socket.CloseStatus.HasValue)
             {
-                if (socket.State == WebSocketState.CloseReceived)
+                if (socket.State is WebSocketState.CloseReceived)
                 {
-                    await socket.CloseOutputAsync(
-                                    socket.CloseStatus.Value,
-                                    socket.CloseStatusDescription,
-                                    cancellationToken)
-                                .ConfigureAwait(false);
+                    await socket
+                        .CloseOutputAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, cancellationToken)
+                        .ConfigureAwait(false);
                 }
 
                 yield break;
@@ -114,32 +109,33 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
             yield return ReadStream;
         }
 
-        _ = Interlocked.CompareExchange(ref readState, 0, 1);
+        _ = Interlocked.CompareExchange(ref readState, 0, comparand: 1);
     }
 
-    public ValueTask<ValueWebSocketReceiveResult> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        return socket.ReceiveAsync(buffer, cancellationToken);
-    }
+    public ValueTask<ValueWebSocketReceiveResult> ReceiveAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken
+    ) => socket.ReceiveAsync(buffer, cancellationToken);
 
-    public async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, bool endOfMessage, CancellationToken cancellationToken)
+    public async ValueTask SendAsync(
+        ReadOnlyMemory<byte> buffer,
+        bool endOfMessage,
+        CancellationToken cancellationToken
+    )
     {
-        while (Interlocked.CompareExchange(ref sendState, 1, 0) > 1)
+        while (Interlocked.CompareExchange(ref sendState, value: 1, comparand: 0) > 1)
         {
             // there is a heartbeat in progress, so we yield
             await Task.Yield();
         }
 
-        await socket.SendAsync(
-                        buffer,
-                        WebSocketMessageType.Binary,
-                        endOfMessage,
-                        cancellationToken)
-                    .ConfigureAwait(false);
+        await socket
+            .SendAsync(buffer, WebSocketMessageType.Binary, endOfMessage, cancellationToken)
+            .ConfigureAwait(false);
 
         if (endOfMessage)
         {
-            _ = Interlocked.CompareExchange(ref sendState, 0, 1);
+            _ = Interlocked.CompareExchange(ref sendState, 0, comparand: 1);
 
             // any message counts as a heartbeat, so we reset the timer on any message
             _ = heartbeatTimer.Change(heartbeatInterval, heartbeatInterval);
@@ -152,11 +148,13 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
         {
             if (socket.State is WebSocketState.CloseReceived)
             {
-                await socket.CloseOutputAsync(
-                                socket.CloseStatus ?? WebSocketCloseStatus.NormalClosure,
-                                socket.CloseStatusDescription,
-                                cancellationToken)
-                            .ConfigureAwait(false);
+                await socket
+                    .CloseOutputAsync(
+                        socket.CloseStatus ?? WebSocketCloseStatus.NormalClosure,
+                        socket.CloseStatusDescription,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
 
                 return;
             }
@@ -166,13 +164,15 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
                 return;
             }
 
-            await socket.CloseAsync(
-                            WebSocketCloseStatus.NormalClosure,
-                            nameof(WebSocketCloseStatus.NormalClosure),
-                            cancellationToken)
-                        .ConfigureAwait(false);
+            await socket
+                .CloseAsync(
+                    WebSocketCloseStatus.NormalClosure,
+                    nameof(WebSocketCloseStatus.NormalClosure),
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
 
-            if (Interlocked.CompareExchange(ref readState, 2, 0) == 0)
+            if (Interlocked.CompareExchange(ref readState, value: 2, comparand: 0) is 0)
             {
                 while (socket.State is not WebSocketState.Closed)
                 {
@@ -181,7 +181,8 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
                 }
             }
         }
-        catch (Exception ex) when (ex is ObjectDisposedException or IOException { InnerException: ObjectDisposedException })
+        catch (Exception ex)
+            when (ex is ObjectDisposedException or IOException { InnerException: ObjectDisposedException })
         {
             // if closing the connection fails due to a disposed object, we consider
             // the closing successful; this can, for example, happen with the ASP Core
@@ -190,29 +191,36 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
         }
     }
 
+    [SuppressMessage(
+        "Design",
+        "MA0155:Do not use async void methods",
+        Justification = "necessary for timer callbacks, and we handle all exceptions"
+    )]
     private async void OnSendHeartbeat(object? state)
     {
         try
         {
-            if (socket.State is not WebSocketState.Open && socket.State is not WebSocketState.CloseReceived)
+            if (socket.State is not WebSocketState.Open and not WebSocketState.CloseReceived)
             {
                 return;
             }
 
-            if (Interlocked.CompareExchange(ref sendState, 2, 0) != 0)
+            if (Interlocked.CompareExchange(ref sendState, value: 2, comparand: 0) is not 0)
             {
                 // a message is currently being sent, so we don't need the heartbeat
                 return;
             }
 
-            await socket.SendAsync(
-                            Memory<byte>.Empty,
-                            WebSocketMessageType.Binary,
-                            true,
-                            cancellationTokenSource.Token)
-                        .ConfigureAwait(false);
+            await socket
+                .SendAsync(
+                    Memory<byte>.Empty,
+                    WebSocketMessageType.Binary,
+                    endOfMessage: true,
+                    cancellationTokenSource.Token
+                )
+                .ConfigureAwait(false);
 
-            _ = Interlocked.CompareExchange(ref sendState, 0, 2);
+            _ = Interlocked.CompareExchange(ref sendState, 0, comparand: 2);
         }
         catch
         {
@@ -221,6 +229,11 @@ internal sealed class ConquerorWebSocket : IAsyncDisposable
         }
     }
 
+    [SuppressMessage(
+        "Design",
+        "MA0155:Do not use async void methods",
+        Justification = "necessary for timer callbacks, and we handle all exceptions"
+    )]
     private async void OnHeartbeatTimeout(object? state)
     {
         try

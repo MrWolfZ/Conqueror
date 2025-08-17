@@ -1,14 +1,12 @@
 ﻿#nullable enable
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Messaging;
-using Messaging.WithCustomTransportWithHierarchy;
-
 namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using global::Messaging.WithCustomTransportWithHierarchy;
+
     [TestTransportMessage<TestMessageResponse>]
     public abstract partial record TestMessage;
 
@@ -19,17 +17,23 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
 
     public partial class TestMessageHandler : TestMessage.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     public partial class TestMessageSubHandler : TestMessageSub.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessageSub message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<TestMessageResponse> Handle(TestMessageSub message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 
 namespace Messaging.WithCustomTransportWithHierarchy
 {
+    using System;
+    using Conqueror;
+    using Conqueror.Messaging;
+
     [MessageTransport(Prefix = "TestTransport", Namespace = "Messaging.WithCustomTransportWithHierarchy")]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TestTransportMessageAttribute : Attribute;
@@ -48,8 +52,7 @@ namespace Messaging.WithCustomTransportWithHierarchy
         where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
     {
         static IMessageHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 

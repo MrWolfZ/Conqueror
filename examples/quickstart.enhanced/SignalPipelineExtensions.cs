@@ -1,6 +1,6 @@
-﻿using Conqueror;
+﻿namespace Quickstart.Enhanced;
 
-namespace Quickstart.Enhanced;
+using Conqueror;
 
 public static class SignalPipelineExtensions
 {
@@ -37,7 +37,7 @@ public static class SignalPipelineExtensions
 
             ctx.ConquerorContext.InProcessData.Set(
                 marker,
-                true,
+                value: true,
                 ConquerorContextDataFlowDirection.Bidirectional);
 
             return ctx.Next(ctx.Signal, ctx.CancellationToken);

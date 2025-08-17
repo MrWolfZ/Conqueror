@@ -1,10 +1,12 @@
-﻿using Microsoft.CodeAnalysis;
+﻿namespace Conqueror.SourceGenerators.Util;
 
-namespace Conqueror.SourceGenerators.Util;
+using Microsoft.CodeAnalysis;
 
-public readonly record struct DiagnosticWithLocationDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct DiagnosticWithLocationDescriptor(
     DiagnosticDescriptor Diagnostic,
-    LocationDescriptor? Location)
+    LocationDescriptor? Location
+)
 {
     public readonly DiagnosticDescriptor Diagnostic = Diagnostic;
     public readonly LocationDescriptor? Location = Location;

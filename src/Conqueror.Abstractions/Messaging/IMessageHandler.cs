@@ -1,26 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
+#pragma warning disable SA1201 // ElementsMustAppearInTheCorrectOrder
 
-// #pragma warning disable CA1000 // For this particular API it makes sense to have static methods on generic types
-// #pragma warning disable CA1034 // we want to explicitly nest types to hide them from intellisense
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
+
+using System.ComponentModel;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IMessageHandler
 {
     /// <summary>
     ///     Implemented by source generator for each handler type. Cannot be abstract since otherwise
-    ///     the generated <code>IHandler</code> types could not be used as generic arguments.
+    ///     the generated <c>IHandler</c> types could not be used as generic arguments.
     /// </summary>
-    static virtual IEnumerable<IMessageHandlerTypesInjector> GetTypeInjectors()
-        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler type");
+    /// <returns>The types injectors for all message types handled by this handler</returns>
+    static virtual IEnumerable<IMessageHandlerTypesInjector> GetTypeInjectors() =>
+        throw new NotSupportedException(
+            "this should be implemented by the source generator for each concrete handler type"
+        );
 
     static virtual void ConfigureInProcessReceiver(IInProcessMessageReceiver receiver)
     {
@@ -61,26 +56,39 @@ public interface IMessageHandler<TMessage, TResponse, TIHandler, TProxy, in TIPi
 
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    static IMessageHandlerTypesInjector CreateCoreTypesInjector()
-        => new CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(null, null);
+    static IMessageHandlerTypesInjector CreateCoreTypesInjector() =>
+        new CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(
+            configurePipeline: null,
+            configureInProcessReceiver: null
+        );
 
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
     static IMessageHandlerTypesInjector CreateCoreTypesInjector<THandler>()
-        where THandler : class, TIHandler
-        => new CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(
+        where THandler : class, TIHandler =>
+        new CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(
             THandler.ConfigurePipeline,
-            THandler.ConfigureInProcessReceiver);
+            THandler.ConfigureInProcessReceiver
+        );
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler> : IMessageHandlerProxy<TMessage, TResponse, TIHandler>
+public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler>
+    : IMessageHandlerProxy<TMessage, TResponse, TIHandler>
     where TMessage : class, IMessage<TMessage, TResponse>
     where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
 {
+    [SuppressMessage(
+        "Blocker Code Smell",
+        "S3060:\"is\" should not be used with \"this\"",
+        Justification = "the proxy should only be inherited by a specific source-generated type, and we need to assert this"
+    )]
     protected MessageHandlerProxy()
     {
-        Debug.Assert(this is TIHandler, $"the proxy should implement {typeof(TIHandler).Name}, but it is {GetType()} instead");
+        Debug.Assert(
+            this is TIHandler,
+            $"the proxy should implement {typeof(TIHandler).Name}, but it is {GetType()} instead"
+        );
 
         This = (this as TIHandler)!;
     }
@@ -94,19 +102,14 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler> : IMes
 
     private IMessageSender<TMessage, TResponse>? Sender { get; set; }
 
+    [SuppressMessage(
+        "Design",
+        "MA0138:Do not use \'Async\' suffix when a method does not return an awaitable type",
+        Justification = "false positive"
+    )]
     private ConfigureMessageSenderAsync<TMessage, TResponse>? ConfigureSenderAsync { get; set; }
 
     private TIHandler This { get; }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
-        => Dispatcher.Dispatch(
-            message,
-            ServiceProvider,
-            Pipeline,
-            Sender,
-            ConfigureSenderAsync,
-            cancellationToken);
 
     public TIHandler WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
     {
@@ -131,18 +134,23 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler> : IMes
         return This;
     }
 
-    static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors()
-        => throw new NotSupportedException("this method should never be called on the proxy");
+    static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors() =>
+        throw new NotSupportedException("this method should never be called on the proxy");
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default) =>
+        Dispatcher.Dispatch(message, ServiceProvider, Pipeline, Sender, ConfigureSenderAsync, cancellationToken);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class MessageHandlerProxy<TMessage, TIHandler> : MessageHandlerProxy<TMessage, UnitMessageResponse, TIHandler>
+public abstract class MessageHandlerProxy<TMessage, TIHandler>
+    : MessageHandlerProxy<TMessage, UnitMessageResponse, TIHandler>
     where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     where TIHandler : class, IMessageHandler<TMessage, UnitMessageResponse, TIHandler>
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new Task Handle(TMessage message, CancellationToken cancellationToken = default)
-        => base.Handle(message, cancellationToken);
+    public new Task Handle(TMessage message, CancellationToken cancellationToken = default) =>
+        base.Handle(message, cancellationToken);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]

@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.WebSockets;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Conqueror;
 
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+public delegate Task<WebSocket> HttpWebSocketsSignalWebSocketFactory(Uri address, CancellationToken cancellationToken);
+
+public delegate Task HttpWebSocketsSignalReceiverReconnectDelayFn(
+    WebSocketCloseStatus closeStatus,
+    int statusCode,
+    Exception? exception,
+    CancellationToken cancellationToken
+);
 
 public interface IHttpWebSocketsSignalReceiver
 {
@@ -26,24 +27,17 @@ public interface IHttpWebSocketsSignalReceiver
     void Disable();
 }
 
-public delegate Task<WebSocket> HttpWebSocketsSignalWebSocketFactory(
-    Uri address,
-    CancellationToken cancellationToken);
-
 public sealed class HttpWebSocketsSignalReceiverConfiguration
 {
-    public HttpWebSocketsSignalReceiverConfiguration()
-    {
-        WebSocketFactory = DefaultWebSocketFactory;
-    }
+    public HttpWebSocketsSignalReceiverConfiguration() => WebSocketFactory = DefaultWebSocketFactory;
 
     public required Uri Address { get; init; }
 
     public HttpWebSocketsSignalWebSocketFactory WebSocketFactory { get; private set; }
 
-    public TimeSpan HeartbeatInterval { get; private set; } = TimeSpan.FromSeconds(10);
+    public TimeSpan HeartbeatInterval { get; private set; } = TimeSpan.FromSeconds(value: 10);
 
-    public TimeSpan HeartbeatTimeout { get; private set; } = TimeSpan.FromSeconds(30);
+    public TimeSpan HeartbeatTimeout { get; private set; } = TimeSpan.FromSeconds(value: 30);
 
     public HttpWebSocketsSignalReceiverReconnectDelayFn? ReconnectDelayFn { get; private set; }
 
@@ -57,7 +51,9 @@ public sealed class HttpWebSocketsSignalReceiverConfiguration
     /// </summary>
     /// <param name="webSocketFactory">The factory to create a connected web socket</param>
     /// <returns>The updated configuration for the receiver</returns>
-    public HttpWebSocketsSignalReceiverConfiguration WithWebSocketFactory(HttpWebSocketsSignalWebSocketFactory webSocketFactory)
+    public HttpWebSocketsSignalReceiverConfiguration WithWebSocketFactory(
+        HttpWebSocketsSignalWebSocketFactory webSocketFactory
+    )
     {
         WebSocketFactory = webSocketFactory;
 
@@ -66,16 +62,23 @@ public sealed class HttpWebSocketsSignalReceiverConfiguration
 
     public HttpWebSocketsSignalReceiverConfiguration WithHeartbeatInterval(TimeSpan heartbeatInterval)
     {
-        if (heartbeatInterval.TotalSeconds % 1 != 0)
+        if (heartbeatInterval.TotalSeconds % 1 is not 0)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(heartbeatInterval),
-                $"{nameof(heartbeatInterval)} must be a multiple of 1s, got {heartbeatInterval.TotalSeconds}");
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{nameof(heartbeatInterval)} must be a multiple of 1s, got {heartbeatInterval.TotalSeconds}"
+                )
+            );
         }
 
         if (heartbeatInterval >= HeartbeatTimeout)
         {
-            throw new ArgumentException($"{nameof(heartbeatInterval)} must be less than {nameof(HeartbeatTimeout)}", nameof(heartbeatInterval));
+            throw new ArgumentException(
+                $"{nameof(heartbeatInterval)} must be less than {nameof(HeartbeatTimeout)}",
+                nameof(heartbeatInterval)
+            );
         }
 
         HeartbeatInterval = heartbeatInterval;
@@ -85,16 +88,23 @@ public sealed class HttpWebSocketsSignalReceiverConfiguration
 
     public HttpWebSocketsSignalReceiverConfiguration WithHeartbeatTimeout(TimeSpan heartbeatTimeout)
     {
-        if (heartbeatTimeout.TotalSeconds % 1 != 0)
+        if (heartbeatTimeout.TotalSeconds % 1 is not 0)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(heartbeatTimeout),
-                $"{nameof(heartbeatTimeout)} must be a multiple of 1s, got {heartbeatTimeout.TotalSeconds}");
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{nameof(heartbeatTimeout)} must be a multiple of 1s, got {heartbeatTimeout.TotalSeconds}"
+                )
+            );
         }
 
         if (heartbeatTimeout < HeartbeatInterval)
         {
-            throw new ArgumentException($"{nameof(heartbeatTimeout)} must be greater than {nameof(HeartbeatInterval)}", nameof(heartbeatTimeout));
+            throw new ArgumentException(
+                $"{nameof(heartbeatTimeout)} must be greater than {nameof(HeartbeatInterval)}",
+                nameof(heartbeatTimeout)
+            );
         }
 
         HeartbeatTimeout = heartbeatTimeout;
@@ -102,7 +112,9 @@ public sealed class HttpWebSocketsSignalReceiverConfiguration
         return this;
     }
 
-    public HttpWebSocketsSignalReceiverConfiguration WithReconnectDelayFunction(HttpWebSocketsSignalReceiverReconnectDelayFn retryDelayFn)
+    public HttpWebSocketsSignalReceiverConfiguration WithReconnectDelayFunction(
+        HttpWebSocketsSignalReceiverReconnectDelayFn retryDelayFn
+    )
     {
         ReconnectDelayFn = retryDelayFn;
 
@@ -139,9 +151,3 @@ public sealed class HttpWebSocketsSignalReceiverConfiguration
         return webSocket;
     }
 }
-
-public delegate Task HttpWebSocketsSignalReceiverReconnectDelayFn(
-    WebSocketCloseStatus closeStatus,
-    int statusCode,
-    Exception? exception,
-    CancellationToken cancellationToken);

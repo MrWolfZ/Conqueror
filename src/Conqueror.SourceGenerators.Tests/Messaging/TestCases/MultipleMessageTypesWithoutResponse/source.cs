@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypesWithoutResponse;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypesWithoutResponse;
 
 [Message]
 public partial record TestMessage;
@@ -10,8 +10,7 @@ public partial record TestMessage;
 [Message]
 public partial record TestMessage2;
 
-public partial class TestMessageHandler : TestMessage.IHandler,
-                                          TestMessage2.IHandler
+public partial class TestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler
 {
     public Task Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
 

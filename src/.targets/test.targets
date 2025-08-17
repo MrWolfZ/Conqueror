@@ -1,25 +1,21 @@
 <Project>
-
-    <Import Project="common.targets" />
-    <Import Project="analyzers.targets" />
-
-    <PropertyGroup>
-        <!--suppress MsbuildTargetFrameworkTagInspection -->
-        <TargetFrameworks>net8.0</TargetFrameworks>
-        <IsPackable>false</IsPackable>
-        <ImplicitUsings>true</ImplicitUsings>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <PackageReference Include="coverlet.collector" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="NUnit" />
-        <PackageReference Include="NUnit3TestAdapter" />
-        <PackageReference Include="NUnit.Analyzers">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-    </ItemGroup>
-
+  <Import Project="common.targets" />
+  <Import Project="analyzers.targets" />
+  <PropertyGroup>
+    <!--suppress MsbuildTargetFrameworkTagInspection -->
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <ImplicitUsings>true</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="NUnit.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

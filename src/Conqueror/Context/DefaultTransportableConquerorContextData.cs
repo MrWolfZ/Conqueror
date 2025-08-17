@@ -1,13 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
+﻿namespace Conqueror.Context;
 
-namespace Conqueror.Context;
+using System.Collections;
 
 internal sealed class DefaultTransportableConquerorContextData(DefaultTransportableConquerorContextData? parent = null)
     : IEnumerable<(string Key, string Value)>
 {
+    public static readonly DefaultTransportableConquerorContextData Empty = new();
+
     private ConcurrentDictionary<string, string>? items;
 
     // track keys that were removed in this context (to override parent values)
@@ -24,12 +23,11 @@ internal sealed class DefaultTransportableConquerorContextData(DefaultTransporta
         }
 
         // yield entries from parent that haven't been overridden or removed
-        if (parent != null)
+        if (parent is not null)
         {
             foreach (var (key, value) in parent)
             {
-                if ((items is null || !items.ContainsKey(key))
-                    && (removedKeys is null || !removedKeys.ContainsKey(key)))
+                if (((items?.ContainsKey(key)) is not true) && ((removedKeys?.ContainsKey(key)) is not true))
                 {
                     yield return (key, value);
                 }
@@ -42,24 +40,24 @@ internal sealed class DefaultTransportableConquerorContextData(DefaultTransporta
     public bool Add(string key, string value)
     {
         var result = EnsureItems().GetOrAdd(key, value);
-        _ = removedKeys is not null && removedKeys.TryRemove(key, out _);
+        _ = removedKeys?.TryRemove(key, out _);
 
-        return result != value;
+        return !string.Equals(result, value, StringComparison.Ordinal);
     }
 
     public void Set(string key, string value)
     {
         EnsureItems()[key] = value;
-        _ = removedKeys is not null && removedKeys.TryRemove(key, out _);
+        _ = removedKeys?.TryRemove(key, out _);
     }
 
     public bool Remove(string key)
     {
-        var removed = items is not null && items.TryRemove(key, out _);
+        var removed = (items?.TryRemove(key, out _)) is true;
 
-        _ = EnsureRemovedKeys().TryAdd(key, null);
+        _ = EnsureRemovedKeys().TryAdd(key, value: null);
 
-        return removed || parent?.Get(key) != null;
+        return removed || parent?.Get(key) is not null;
     }
 
     public void Clear()
@@ -71,7 +69,7 @@ internal sealed class DefaultTransportableConquerorContextData(DefaultTransporta
 
         foreach (var key in items.Keys)
         {
-            _ = EnsureRemovedKeys().TryAdd(key, null);
+            _ = EnsureRemovedKeys().TryAdd(key, value: null);
         }
 
         items.Clear();
@@ -92,11 +90,17 @@ internal sealed class DefaultTransportableConquerorContextData(DefaultTransporta
         return parent?.Get(key);
     }
 
-    public bool IsRemoved(string key) => removedKeys is not null && removedKeys.ContainsKey(key);
+    public bool IsRemoved(string key) => removedKeys?.ContainsKey(key) ?? false;
 
-    private ConcurrentDictionary<string, string> EnsureItems()
-        => LazyInitializer.EnsureInitialized(ref items, static () => new(1, 4));
+    private ConcurrentDictionary<string, string> EnsureItems() =>
+        LazyInitializer.EnsureInitialized(
+            ref items,
+            static () => new(concurrencyLevel: 1, capacity: 4, StringComparer.Ordinal)
+        );
 
-    private ConcurrentDictionary<string, string?> EnsureRemovedKeys()
-        => LazyInitializer.EnsureInitialized(ref removedKeys, static () => new(1, 4));
+    private ConcurrentDictionary<string, string?> EnsureRemovedKeys() =>
+        LazyInitializer.EnsureInitialized(
+            ref removedKeys,
+            static () => new(concurrencyLevel: 1, capacity: 4, StringComparer.Ordinal)
+        );
 }

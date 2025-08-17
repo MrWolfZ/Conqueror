@@ -10,9 +10,14 @@ internal sealed class FileSystemSignalReceiverFactory(IServiceProvider servicePr
     public FileSystemSignalReceiver? CreateReceiverForHandlerType(
         Type? handlerType,
         IReadOnlyCollection<ISignalReceiverHandlerInvoker<IFileSystemSignalHandlerTypesInjector>> invokers,
-        IFileSystemSignalHandlerTypesInjector typesInjector)
+        IFileSystemSignalHandlerTypesInjector typesInjector
+    )
     {
-        var receiver = new FileSystemSignalReceiver(serviceProvider, invokers.Select(i => i.SignalType).ToArray(), handlerType);
+        var receiver = new FileSystemSignalReceiver(
+            serviceProvider,
+            invokers.Select(i => i.SignalType).ToArray(),
+            handlerType
+        );
         typesInjector.ConfigureFileSystemReceiver(receiver);
 
         if (!receiver.IsEnabled)
@@ -28,12 +33,17 @@ internal sealed class FileSystemSignalReceiverFactory(IServiceProvider servicePr
         return receiver;
     }
 
-    private readonly record struct ConfigurationInjectableArg(ISignalReceiverHandlerInvoker Invoker, FileSystemSignalReceiver Receiver);
+    private readonly record struct ConfigurationInjectableArg(
+        ISignalReceiverHandlerInvoker Invoker,
+        FileSystemSignalReceiver Receiver
+    );
 
     private sealed class ConfigurationInjectable : IFileSystemSignalTypesInjectable<ConfigurationInjectableArg, object?>
     {
-        object? IFileSystemSignalTypesInjectable<ConfigurationInjectableArg, object?>
-            .WithInjectedTypes<TSignal, TIHandler>(ConfigurationInjectableArg arg)
+        object? IFileSystemSignalTypesInjectable<ConfigurationInjectableArg, object?>.WithInjectedTypes<
+            TSignal,
+            TIHandler
+        >(ConfigurationInjectableArg arg)
         {
             arg.Receiver.AddSignalType<TSignal>(arg.Invoker);
 

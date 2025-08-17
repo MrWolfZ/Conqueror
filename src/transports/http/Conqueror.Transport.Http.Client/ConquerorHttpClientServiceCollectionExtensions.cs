@@ -1,10 +1,5 @@
-using Conqueror;
-using Conqueror.Transport.Http.Client.Messaging;
-using Conqueror.Transport.Http.Client.Signalling.Sse;
-using Conqueror.Transport.Http.Client.Signalling.WebSockets;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
 
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpClientServiceCollectionExtensions
@@ -19,10 +14,8 @@ public static class ConquerorHttpClientServiceCollectionExtensions
         return services;
     }
 
-    private static void AddMessaging(IServiceCollection services)
-    {
+    private static void AddMessaging(IServiceCollection services) =>
         services.TryAddSingleton<IHttpMessageSenderFactory, HttpMessageSenderFactory>();
-    }
 
     private static void AddSignalling(IServiceCollection services)
     {

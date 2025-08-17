@@ -1,9 +1,9 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.HandlerWithModuleInitializerMethod;
+
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.HandlerWithModuleInitializerMethod;
 
 [Message<TestMessageResponse>]
 public partial record TestMessage;
@@ -12,11 +12,13 @@ public record TestMessageResponse;
 
 public partial class TestMessageHandler : TestMessage.IHandler
 {
-    public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 
     [ModuleInitializer]
     public static void ModuleInitializer()
     {
+        // Method intentionally left empty.
     }
 }
 

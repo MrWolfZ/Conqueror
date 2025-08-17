@@ -1,34 +1,40 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿namespace Conqueror.Transport.FileSystem.Messaging;
 
-namespace Conqueror.Transport.FileSystem.Messaging;
-
-internal sealed class FileSystemMessageReceiverRunner(
-    IConquerorContextAccessor conquerorContextAccessor)
+internal sealed class FileSystemMessageReceiverRunner(IConquerorContextAccessor conquerorContextAccessor)
     : IMessageReceiverRunner<FileSystemMessageReceiver>
 {
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
-        Justification = "false positive, the source is returned to the caller")]
+        Justification = "false positive, the source is returned to the caller"
+    )]
     public ReceiverExecutionHandle RunReceiver(FileSystemMessageReceiver receiver, CancellationToken cancellationToken)
     {
         var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var connectionTaskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var connectionTaskCompletionSource = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
 
-        return new(
+        return new ReceiverExecutionHandle(
             connectionTaskCompletionSource.Task,
             Run(receiver, connectionTaskCompletionSource, linkedSource.Token),
             linkedSource,
-            onDispose: null);
+            onDispose: null
+        );
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
     private async Task Run(
         FileSystemMessageReceiver receiver,
         TaskCompletionSource connectionTaskCompletionSource,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var config = receiver.Configuration ?? throw new InvalidOperationException($"the receiver for handler type '{receiver.HandlerType}' is not enabled");
+        var config =
+            receiver.Configuration
+            ?? throw new InvalidOperationException(
+                $"the receiver for handler type '{receiver.HandlerType}' is not enabled"
+            );
 
         var tags = receiver.Tags.Select(t => new Tag(t)).ToArray();
 
@@ -57,7 +63,8 @@ internal sealed class FileSystemMessageReceiverRunner(
                         inboxName,
                         tags,
                         config.PollingInterval,
-                        cts.Token);
+                        cts.Token
+                    );
 
                     inboxFileProcessingTask = ProcessInbox(
                         receiver,
@@ -65,12 +72,14 @@ internal sealed class FileSystemMessageReceiverRunner(
                         store.ContentFiles,
                         inboxName,
                         config,
-                        cts.Token);
+                        cts.Token
+                    );
 
                     _ = connectionTaskCompletionSource.TrySetResult();
 
                     // if any of the two processing tasks completes, we need to stop
-                    var completedTask = await Task.WhenAny(seqFileProcessingTask, inboxFileProcessingTask).ConfigureAwait(false);
+                    var completedTask = await Task.WhenAny(seqFileProcessingTask, inboxFileProcessingTask)
+                        .ConfigureAwait(false);
 
                     // await the completed task to propagate any exception
                     await completedTask.ConfigureAwait(false);
@@ -91,11 +100,12 @@ internal sealed class FileSystemMessageReceiverRunner(
                 catch (Exception ex)
                 {
                     throw new MessageReceiverExecutionFailedException(
-                        $"an exception occured while running receiver for message handler type '{receiver.HandlerType}'",
-                        ex)
+                        $"an exception occured while running {nameof(receiver)} for message handler type '{receiver.HandlerType}'",
+                        ex
+                    )
                     {
                         HandlerType = receiver.HandlerType,
-                        MessageTransportType = new(TransportName, MessageTransportRole.Receiver),
+                        MessageTransportType = new MessageTransportType(TransportName, MessageTransportRole.Receiver),
                     };
                 }
                 finally
@@ -134,25 +144,31 @@ internal sealed class FileSystemMessageReceiverRunner(
         InboxName inboxName,
         Tag[] tags,
         TimeSpan pollingInterval,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         try
         {
-            using var disposable = await inboxFiles.GetWriteLock(inboxName, pollingInterval, cancellationToken).ConfigureAwait(false);
+            using var disposable = await inboxFiles
+                .GetWriteLock(inboxName, pollingInterval, cancellationToken)
+                .ConfigureAwait(false);
 
             var startAtSeqNr = inboxFiles.GetCurrentSeqNr(inboxName, cancellationToken);
 
             var latestSeqNr = new SeqNr(0);
 
-            await foreach (var entry in seqIndexFile.ReadChanges(
-                                                        startAtSeqNr,
-                                                        pollingInterval,
-                                                        cancellationToken)
-                                                    .ConfigureAwait(false))
+            await foreach (
+                var entry in seqIndexFile
+                    .ReadChanges(startAtSeqNr, pollingInterval, cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 foreach (var (newEntryId, messageTag, seqNr) in entry)
                 {
-                    Debug.Assert(seqNr > latestSeqNr, $"expected the next seq nr {seqNr} to be greater than latest seq nr {latestSeqNr}");
+                    Debug.Assert(
+                        seqNr > latestSeqNr,
+                        $"expected the next seq nr {seqNr} to be greater than latest seq nr {latestSeqNr}"
+                    );
 
                     latestSeqNr = seqNr;
 
@@ -160,12 +176,7 @@ internal sealed class FileSystemMessageReceiverRunner(
 
                     if (isRelevantEntry)
                     {
-                        inboxFiles.Append(
-                            inboxName,
-                            seqNr,
-                            newEntryId,
-                            messageTag,
-                            cancellationToken);
+                        inboxFiles.Append(inboxName, seqNr, newEntryId, messageTag, cancellationToken);
                     }
                 }
             }
@@ -182,42 +193,48 @@ internal sealed class FileSystemMessageReceiverRunner(
         ContentFiles contentFiles,
         InboxName inboxName,
         FileSystemMessageReceiverConfiguration config,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         try
         {
-            await foreach (var (tag, seqNr, entryId) in inboxFiles.LeaseNextMessage(
-                                                                      inboxName,
-                                                                      config.PollingInterval,
-                                                                      config.LeaseDuration,
-                                                                      cancellationToken)
-                                                                  .ConfigureAwait(false))
+            await foreach (
+                var (tag, seqNr, entryId) in inboxFiles
+                    .LeaseNextMessage(inboxName, config.PollingInterval, config.LeaseDuration, cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 try
                 {
                     var (messageFileExtension, responseFileExtension) = receiver.GetFileExtensions(tag);
 
-                    var message = await contentFiles.ReadPayload(
-                                                        tag,
-                                                        entryId,
-                                                        messageFileExtension,
-                                                        static (s, stream, ct) => s.receiver.ReadMessage(s.tag, stream, ct),
-                                                        (tag, receiver),
-                                                        cancellationToken)
-                                                    .ConfigureAwait(false);
+                    var message = await contentFiles
+                        .ReadPayload(
+                            tag,
+                            entryId,
+                            messageFileExtension,
+                            static (s, stream, ct) => s.receiver.ReadMessage(s.tag, stream, ct),
+                            (tag, receiver),
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
 
-                    Debug.Assert(message is not null, $"the message payload file for tag '{tag}' and ID '{entryId}' should exist");
+                    Debug.Assert(
+                        message is not null,
+                        $"the message payload file for tag '{tag}' and ID '{entryId}' should exist"
+                    );
 
                     var messageMetadata = contentFiles.ReadMetadata(
                         tag,
                         entryId,
                         fileNameSuffix: null,
                         MessageMetadataJsonSerializerContext.Default.MessageMetadata,
-                        cancellationToken);
+                        cancellationToken
+                    );
 
                     if (messageMetadata.TimeToLive is { } ttl)
                     {
-                        var now = DateTimeOffset.UtcNow;
+                        var now = TimeProvider.System.GetUtcNow();
                         var isExpired = now > messageMetadata.SentAtUtc + ttl;
 
                         if (isExpired)
@@ -246,14 +263,18 @@ internal sealed class FileSystemMessageReceiverRunner(
                     }
                     catch
                     {
-                        var updatedMetadata = messageMetadata with { NrOfFailedProcessingAttempts = messageMetadata.NrOfFailedProcessingAttempts + 1 };
+                        var updatedMetadata = messageMetadata with
+                        {
+                            NrOfFailedProcessingAttempts = messageMetadata.NrOfFailedProcessingAttempts + 1,
+                        };
                         contentFiles.WriteMetadata(
                             tag,
                             entryId,
                             updatedMetadata,
                             fileNameSuffix: null,
                             MessageMetadataJsonSerializerContext.Default.MessageMetadata,
-                            CancellationToken.None);
+                            CancellationToken.None
+                        );
 
                         if (updatedMetadata.NrOfFailedProcessingAttempts >= config.LimitNrOfFailedProcessingAttempts)
                         {
@@ -263,6 +284,11 @@ internal sealed class FileSystemMessageReceiverRunner(
                         else if (config.LeaseDuration is not null)
                         {
                             inboxFiles.GiveUpLease(inboxName, seqNr, cancellationToken);
+                        }
+                        else
+                        {
+                            // if the lease duration is null, it means we are the single reader, so the next loop
+                            // iteration will simply process the message again
                         }
 
                         throw;
@@ -281,22 +307,22 @@ internal sealed class FileSystemMessageReceiverRunner(
                         tag,
                         entryId,
                         new(entryId, encodedContextData),
-                        fileNameSuffix: ".response",
+                        ".response",
                         MessageMetadataJsonSerializerContext.Default.MessageResponseMetadata,
-                        cancellationToken);
+                        cancellationToken
+                    );
 
-                    await contentFiles.WritePayload(
-                                          tag,
-                                          entryId,
-                                          $".response{responseFileExtension}",
-                                          static (state, stream, ct) => state.receiver.WriteResponse(
-                                              state.tag,
-                                              state.response,
-                                              stream,
-                                              ct),
-                                          (tag, receiver, response),
-                                          cancellationToken)
-                                      .ConfigureAwait(false);
+                    await contentFiles
+                        .WritePayload(
+                            tag,
+                            entryId,
+                            $".response{responseFileExtension}",
+                            static (state, stream, ct) =>
+                                state.receiver.WriteResponse(state.tag, state.response, stream, ct),
+                            (tag, receiver, response),
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
 
                     inboxFiles.RemoveEntry(inboxName, seqNr, cancellationToken);
                 }

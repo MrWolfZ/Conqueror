@@ -1,21 +1,19 @@
-﻿using Conqueror;
+﻿namespace Quickstart.Enhanced;
 
-namespace Quickstart.Enhanced;
+using Conqueror;
 
 public static class SignalPublisherBuilderExtensions
 {
     public static ISignalPublisher<TSignal> UseInProcessAndServerSentEvents<TSignal>(
-        this SignalPublisherBuilder<TSignal> builder)
-        where TSignal : class, IHttpSseSignal<TSignal>
-    {
-        return builder.UseAggregate(builder.UseInProcess(), builder.UseHttpServerSentEvents());
-    }
+        this SignalPublisherBuilder<TSignal> builder
+    )
+        where TSignal : class, IHttpSseSignal<TSignal> =>
+        builder.UseAggregate(builder.UseInProcess(), builder.UseHttpServerSentEvents());
 
     public static TIHandler WithInProcessAndServerSentEventsTransport<TSignal, TIHandler>(
-        this ISignalHandler<TSignal, TIHandler> handler)
+        this ISignalHandler<TSignal, TIHandler> handler
+    )
         where TSignal : class, IHttpSseSignal<TSignal>
-        where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>
-    {
-        return handler.WithTransport(b => b.UseInProcessAndServerSentEvents());
-    }
+        where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler> =>
+        handler.WithTransport(UseInProcessAndServerSentEvents);
 }

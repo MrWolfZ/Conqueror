@@ -1,9 +1,9 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.HandlerWithGetTypeInjectorsMethod;
+
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.HandlerWithGetTypeInjectorsMethod;
 
 [Message<TestMessageResponse>]
 public partial record TestMessage;
@@ -12,9 +12,11 @@ public record TestMessageResponse;
 
 public partial class TestMessageHandler : TestMessage.IHandler
 {
-    public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+    static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors() =>
+        throw new NotSupportedException();
 
-    static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors() => throw new NotSupportedException();
+    public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 }
 
 // make the compiler happy during design time

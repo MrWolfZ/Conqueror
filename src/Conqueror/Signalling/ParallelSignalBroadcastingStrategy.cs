@@ -1,37 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace Conqueror.Signalling;
+
 using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Conqueror.Signalling;
-
-internal sealed class ParallelSignalBroadcastingStrategy(
-    ParallelSignalBroadcastingStrategyConfiguration configuration)
+internal sealed class ParallelSignalBroadcastingStrategy(ParallelSignalBroadcastingStrategyConfiguration configuration)
     : ISignalBroadcastingStrategy
 {
     public static readonly ParallelSignalBroadcastingStrategy Default = new(new());
 
-    public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
-                                               IServiceProvider serviceProvider,
-                                               TSignal signal,
-                                               CancellationToken cancellationToken)
+    public async Task BroadcastSignal<TSignal>(
+        IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
+        IServiceProvider serviceProvider,
+        TSignal signal,
+        CancellationToken cancellationToken
+    )
         where TSignal : class, ISignal<TSignal>
     {
         using var semaphore = new SemaphoreSlim(configuration.MaxDegreeOfParallelism ?? 1_000_000);
 
-        var potentialExceptions = await Task.WhenAll(signalHandlerInvocationFns.Select(ExecuteInvoker)).ConfigureAwait(false);
+        var potentialExceptions = await Task.WhenAll(signalHandlerInvocationFns.Select(ExecuteInvoker))
+            .ConfigureAwait(false);
 
         var thrownExceptions = potentialExceptions.OfType<Exception>().ToList();
 
-        if (thrownExceptions.Count == 0)
+        if (thrownExceptions.Count is 0)
         {
             return;
         }
 
         // ReSharper disable once MergeIntoPattern (not supported for .NET 6)
-        if (thrownExceptions.Count == 1 && thrownExceptions[0] is OperationCanceledException canceledException)
+        if (thrownExceptions.Count is 1 && thrownExceptions[0] is OperationCanceledException canceledException)
         {
             ExceptionDispatchInfo.Capture(canceledException).Throw();
         }

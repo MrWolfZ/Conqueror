@@ -1,3 +1,5 @@
+namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests;
+
 using System.Diagnostics;
 using System.Net.WebSockets;
 using Microsoft.AspNetCore.Builder;
@@ -6,9 +8,16 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests;
-
-[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "resources are disposed in test teardown")]
+[SuppressMessage(
+    "Design",
+    "CA1001:Types that own disposable fields should be disposable",
+    Justification = "resources are disposed in test teardown"
+)]
+[SuppressMessage(
+    "Blocker Bug",
+    "S2931:Classes with \"IDisposable\" members should implement \"IDisposable\"",
+    Justification = "resources are disposed in test teardown"
+)]
 public abstract class TestBase
 {
     private HttpClient? client;
@@ -20,7 +29,7 @@ public abstract class TestBase
     {
         get
         {
-            if (client == null)
+            if (client is null)
             {
                 throw new InvalidOperationException("test fixture must be initialized before using http client");
             }
@@ -33,7 +42,7 @@ public abstract class TestBase
     {
         get
         {
-            if (webSocketClient == null)
+            if (webSocketClient is null)
             {
                 throw new InvalidOperationException("test fixture must be initialized before using web socket client");
             }
@@ -46,7 +55,7 @@ public abstract class TestBase
     {
         get
         {
-            if (host == null)
+            if (host is null)
             {
                 throw new InvalidOperationException("test fixture must be initialized before using host");
             }
@@ -55,7 +64,8 @@ public abstract class TestBase
         }
     }
 
-    protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 2 : 10);
+    protected virtual TimeSpan TestTimeout =>
+        TimeSpan.FromSeconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 2 : 10);
 
     protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
 
@@ -63,9 +73,11 @@ public abstract class TestBase
     {
         get
         {
-            if (timeoutCancellationTokenSource == null)
+            if (timeoutCancellationTokenSource is null)
             {
-                throw new InvalidOperationException("test fixture must be initialized before timeout cancellation token source");
+                throw new InvalidOperationException(
+                    "test fixture must be initialized before timeout cancellation token source"
+                );
             }
 
             return timeoutCancellationTokenSource;
@@ -75,16 +87,17 @@ public abstract class TestBase
     [SetUp]
     public async Task SetUp()
     {
-        timeoutCancellationTokenSource = new();
+        timeoutCancellationTokenSource = new CancellationTokenSource();
 
-        var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace))
-                                           .ConfigureWebHost(webHost =>
-                                           {
-                                               _ = webHost.UseTestServer();
+        var hostBuilder = new HostBuilder()
+            .ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace))
+            .ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
 
-                                               _ = webHost.ConfigureServices(ConfigureServices);
-                                               _ = webHost.Configure(Configure);
-                                           });
+                _ = webHost.ConfigureServices(ConfigureServices);
+                _ = webHost.Configure(Configure);
+            });
 
         host = await hostBuilder.StartAsync(TestTimeoutToken);
         client = host.GetTestClient();
@@ -114,6 +127,9 @@ public abstract class TestBase
 
     protected Task<WebSocket> ConnectToWebSocket(string path)
     {
-        return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path }.Uri, CancellationToken.None);
+        return WebSocketClient.ConnectAsync(
+            new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path }.Uri,
+            CancellationToken.None
+        );
     }
 }

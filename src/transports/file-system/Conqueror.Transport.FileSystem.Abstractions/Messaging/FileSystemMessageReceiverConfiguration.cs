@@ -1,5 +1,4 @@
-﻿// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public sealed class FileSystemMessageReceiverConfiguration
 {
@@ -30,7 +29,9 @@ public sealed class FileSystemMessageReceiverConfiguration
         return this;
     }
 
-    public FileSystemMessageReceiverConfiguration WithLimitNrOfFailedProcessingAttempts(int limitNrOfFailedProcessingAttempts)
+    public FileSystemMessageReceiverConfiguration WithLimitNrOfFailedProcessingAttempts(
+        int limitNrOfFailedProcessingAttempts
+    )
     {
         LimitNrOfFailedProcessingAttempts = limitNrOfFailedProcessingAttempts;
 

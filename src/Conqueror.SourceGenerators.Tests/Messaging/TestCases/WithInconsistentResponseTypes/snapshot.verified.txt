@@ -11,8 +11,7 @@
 #nullable enable annotations
 #nullable disable warnings
 
-// Suppress warnings about [Obsolete] member usage in generated code.
-#pragma warning disable CS0612, CS0618
+#pragma warning disable
 
 namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithInconsistentResponseTypes
 {
@@ -76,8 +75,7 @@ Conqueror.SourceGenerators/Conqueror.SourceGenerators.Messaging.MessageHandlerTy
 #nullable enable annotations
 #nullable disable warnings
 
-// Suppress warnings about [Obsolete] member usage in generated code.
-#pragma warning disable CS0612, CS0618
+#pragma warning disable
 
 namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithInconsistentResponseTypes
 {
@@ -98,4 +96,4 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithInconsistentR
 
 
 Diagnostics:
-Program.cs(15,23): error CONQM0001: Message type has multiple message attributes with inconsistent response types
+Program.cs(18,23): error CONQM0001: Message type has multiple message attributes with inconsistent response types

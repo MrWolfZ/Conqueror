@@ -1,8 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal interface IHttpSseSignalHandlerTypesInjector : ISignalHandlerTypesInjector
@@ -23,8 +19,8 @@ internal interface IHttpSseSignalHandlerTypesInjector : ISignalHandlerTypesInjec
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal sealed class HttpSseSignalHandlerTypesInjector<TSignal, TIHandler>(
-    Action<IHttpSseSignalReceiver> configureReceiver)
-    : IHttpSseSignalHandlerTypesInjector
+    Action<IHttpSseSignalReceiver> configureReceiver
+) : IHttpSseSignalHandlerTypesInjector
     where TSignal : class, IHttpSseSignal<TSignal>
     where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>
 {
@@ -32,8 +28,8 @@ internal sealed class HttpSseSignalHandlerTypesInjector<TSignal, TIHandler>(
 
     public void ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) => configureReceiver(receiver);
 
-    public TResult Inject<TArg, TResult>(IHttpSseSignalTypesInjectable<TArg, TResult> injectable, TArg arg)
-        => injectable.WithInjectedTypes<TSignal, TIHandler>(arg);
+    public TResult Inject<TArg, TResult>(IHttpSseSignalTypesInjectable<TArg, TResult> injectable, TArg arg) =>
+        injectable.WithInjectedTypes<TSignal, TIHandler>(arg);
 }
 
 /// <summary>
@@ -43,6 +39,11 @@ internal sealed class HttpSseSignalHandlerTypesInjector<TSignal, TIHandler>(
 /// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
+[SuppressMessage(
+    "StyleCop.CSharp.OrderingRules",
+    "SA1201:Elements should appear in the correct order",
+    Justification = "order makes sense here"
+)]
 internal interface IHttpSseSignalTypesInjectable<in TArg, out TResult>
 {
     TResult WithInjectedTypes<TSignal, TIHandler>(TArg arg)

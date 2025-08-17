@@ -1,18 +1,6 @@
-using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Conqueror.Transport.Http.Client.Messaging;
 
-internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
-    : IHttpMessageSender<TMessage, TResponse>
+internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress) : IHttpMessageSender<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "intentional design")]
@@ -22,9 +10,7 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
     private HttpClient? configuredHttpClient;
 
-    private Action<HttpRequestHeaders> configureRequestHeaders = _ =>
-    {
-    };
+    private Action<HttpRequestHeaders> configureRequestHeaders = _ => { };
 
     private Version httpVersionField = HttpVersion.Version11;
     private HttpVersionPolicy httpVersionPolicyField = HttpVersionPolicy.RequestVersionOrLower;
@@ -35,7 +21,8 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
         TMessage message,
         IServiceProvider serviceProvider,
         ConquerorContext conquerorContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var httpClient = configuredHttpClient ?? defaultHttpClientSingletonLazy.Value;
 
@@ -52,21 +39,17 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
         var messageSerializer = TMessage.HttpMessageSerializer;
 
         var path = messageSerializer.SerializeMessageToPath(serviceProvider, message) ?? TMessage.FullPath;
-        var queryString = messageSerializer.SerializeMessageToQuery(serviceProvider, message) ?? string.Empty;
+        var queryString = messageSerializer.SerializeMessageToQuery(serviceProvider, message) ?? "";
 
-        requestMessage.RequestUri = new(configuredHttpClient?.BaseAddress ?? baseAddress, path + queryString);
+        requestMessage.RequestUri = new Uri(configuredHttpClient?.BaseAddress ?? baseAddress, path + queryString);
 
         if (TMessage.EmptyInstance is null)
         {
-            requestMessage.Content = new MessageContent(
-                serviceProvider,
-                message,
-                messageSerializer,
-                cancellationToken);
+            requestMessage.Content = new MessageContent(serviceProvider, message, messageSerializer, cancellationToken);
 
             if (!string.IsNullOrWhiteSpace(messageSerializer.ContentType))
             {
-                requestMessage.Content.Headers.ContentType = new(messageSerializer.ContentType);
+                requestMessage.Content.Headers.ContentType = new MediaTypeHeaderValue(messageSerializer.ContentType);
             }
         }
 
@@ -76,14 +59,15 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
             if (!response.IsSuccessStatusCode)
             {
-                var responseContent = await response.BufferAndReadContent().ConfigureAwait(false);
+                var responseContent = await response.BufferAndReadContent(cancellationToken).ConfigureAwait(false);
 
                 throw new HttpMessageFailedOnClientException(
-                    $"HTTP message of type '{typeof(TMessage)}' failed with status code {response.StatusCode} and response content: {responseContent}")
+                    $"HTTP {nameof(message)} of type '{typeof(TMessage)}' failed with status code {response.StatusCode} and response content: {responseContent}"
+                )
                 {
                     Response = response,
                     MessagePayload = message,
-                    TransportType = new(TransportTypeName, MessageTransportRole.Sender),
+                    TransportType = new MessageTransportType(TransportTypeName, MessageTransportRole.Sender),
                 };
             }
 
@@ -96,25 +80,33 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
                 if (mediaType?.MediaType is not null)
                 {
                     throw new HttpMessageFailedOnClientException(
-                        $"HTTP message of type '{typeof(TMessage)}' failed due to mismatching content type; expected no response, got '{mediaType.MediaType}'")
+                        $"HTTP {nameof(message)} of type '{typeof(TMessage)}' failed due to mismatching content type; expected no response, got '{mediaType.MediaType}'"
+                    )
                     {
                         Response = response,
                         MessagePayload = message,
-                        TransportType = new(TransportTypeName, MessageTransportRole.Sender),
+                        TransportType = new MessageTransportType(TransportTypeName, MessageTransportRole.Sender),
                     };
                 }
 
                 return (TResponse)(object)UnitMessageResponse.Instance;
             }
 
-            if (mediaType?.MediaType != TMessage.HttpMessageResponseSerializer.ContentType)
+            if (
+                !string.Equals(
+                    mediaType?.MediaType,
+                    TMessage.HttpMessageResponseSerializer.ContentType,
+                    StringComparison.Ordinal
+                )
+            )
             {
                 throw new HttpMessageFailedOnClientException(
-                    $"HTTP message of type '{typeof(TMessage)}' failed due to mismatching content type; expected '{TMessage.HttpMessageResponseSerializer.ContentType}', got '{mediaType?.MediaType}'")
+                    $"HTTP {nameof(message)} of type '{typeof(TMessage)}' failed due to mismatching content type; expected '{TMessage.HttpMessageResponseSerializer.ContentType}', got '{mediaType?.MediaType}'"
+                )
                 {
                     Response = response,
                     MessagePayload = message,
-                    TransportType = new(TransportTypeName, MessageTransportRole.Sender),
+                    TransportType = new MessageTransportType(TransportTypeName, MessageTransportRole.Sender),
                 };
             }
 
@@ -122,16 +114,24 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
 
             var responseSerializer = TMessage.HttpMessageResponseSerializer;
 
-            var encoding = string.IsNullOrWhiteSpace(mediaType.CharSet) ? null : Encoding.GetEncoding(mediaType.CharSet);
-            return await responseSerializer.DeserializeResponse(serviceProvider, responseStream, encoding, cancellationToken).ConfigureAwait(false);
+            var encoding = string.IsNullOrWhiteSpace(mediaType?.CharSet)
+                ? null
+                : Encoding.GetEncoding(mediaType.CharSet);
+
+            return await responseSerializer
+                .DeserializeResponse(serviceProvider, responseStream, encoding, cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not HttpMessageFailedOnClientException)
         {
-            throw new HttpMessageFailedOnClientException($"HTTP message of type '{typeof(TMessage)}' failed", ex)
+            throw new HttpMessageFailedOnClientException(
+                $"HTTP {nameof(message)} of type '{typeof(TMessage)}' failed",
+                ex
+            )
             {
                 Response = null,
                 MessagePayload = message,
-                TransportType = new(TransportTypeName, MessageTransportRole.Sender),
+                TransportType = new MessageTransportType(TransportTypeName, MessageTransportRole.Sender),
             };
         }
     }
@@ -190,16 +190,13 @@ internal sealed class HttpMessageSender<TMessage, TResponse>(Uri baseAddress)
         IServiceProvider serviceProvider,
         TMessage message,
         IHttpMessageSerializer<TMessage, TResponse> serializer,
-        CancellationToken cancellationToken) : HttpContent
+        CancellationToken cancellationToken
+    ) : HttpContent
     {
-        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
-            => serializer.SerializeMessageToBody(
-                serviceProvider,
-                message,
-                stream,
-                cancellationToken);
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) =>
+            serializer.SerializeMessageToBody(serviceProvider, message, stream, cancellationToken);
 
-        protected override bool TryComputeLength(out long length)
-            => serializer.TryGetBodyLength(serviceProvider, message, out length);
+        protected override bool TryComputeLength(out long length) =>
+            serializer.TryGetBodyLength(serviceProvider, message, out length);
     }
 }

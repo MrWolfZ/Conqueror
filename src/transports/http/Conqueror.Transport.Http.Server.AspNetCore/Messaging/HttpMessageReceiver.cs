@@ -1,10 +1,10 @@
-﻿using System;
+﻿namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 
-namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
-
-internal sealed class HttpMessageReceiver<TMessage, TResponse>(Type? handlerType, IServiceProvider serviceProvider) : IHttpMessageReceiver
+internal sealed class HttpMessageReceiver<TMessage, TResponse>(Type? handlerType, IServiceProvider serviceProvider)
+    : IHttpMessageReceiver
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
+    public bool IsOmittedFromApiDescription { get; private set; }
     public Type MessageType { get; } = typeof(TMessage);
 
     public Type? HandlerType { get; } = handlerType;
@@ -12,16 +12,12 @@ internal sealed class HttpMessageReceiver<TMessage, TResponse>(Type? handlerType
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
     public bool IsEnabled { get; private set; } = true;
 
-    public bool IsOmittedFromApiDescription { get; private set; }
-
-    public void Disable()
-    {
-        IsEnabled = false;
-    }
+    public void Disable() => IsEnabled = false;
 
     public IHttpMessageReceiver OmitFromApiDescription()
     {
         IsOmittedFromApiDescription = true;
+
         return this;
     }
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using Conqueror.Signalling;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 /// <summary>
 ///     A signal transport that uses HTTP Server-Sent Events (SSE) to publish and receive signals.

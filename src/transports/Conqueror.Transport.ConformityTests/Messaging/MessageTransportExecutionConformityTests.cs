@@ -1,22 +1,22 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.Linq.Expressions;
-using System.Reflection;
-using Microsoft.Extensions.Logging;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
-
-namespace Conqueror.Transport.ConformityTests.Messaging;
+﻿namespace Conqueror.Transport.ConformityTests.Messaging;
 
 public abstract class MessageTransportExecutionConformityTests<TTestClass, TTestHost, TSuccessTestCase, TErrorTestCase>
-    where TTestClass : MessageTransportExecutionConformityTests<TTestClass, TTestHost, TSuccessTestCase, TErrorTestCase>,
-    IMessageTransportExecutionConformityTests<TTestHost, TSuccessTestCase, TErrorTestCase>
+    where TTestClass : MessageTransportExecutionConformityTests<
+            TTestClass,
+            TTestHost,
+            TSuccessTestCase,
+            TErrorTestCase
+        >,
+        IMessageTransportExecutionConformityTests<TTestHost, TSuccessTestCase, TErrorTestCase>
     where TTestHost : IMessageTransportConformityTestHost
     where TSuccessTestCase : IMessageTransportConformityExecutionSuccessTestCase<TTestHost>
     where TErrorTestCase : IMessageTransportConformityExecutionErrorTestCase<TTestHost>
 {
     [Test]
     [TestCaseSource(nameof(CreateSuccessTestCasesPrivate))]
-    public async Task GivenTestCase_WhenRunningReceivers_ReceiversReceiveCorrectMessagesAndReturnCorrectResponses(TSuccessTestCase testCase)
+    public async Task GivenTestCase_WhenRunningReceivers_ReceiversReceiveCorrectMessagesAndReturnCorrectResponses(
+        TSuccessTestCase testCase
+    )
     {
         await using var host = testCase.CreateTestHost();
 
@@ -32,43 +32,49 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                 receivedMessages.Enqueue(message);
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         _ = receiverHost.ReceiverExecutionHandle?.CompletionTask.ContinueWith(
-            static (t, l) =>
-            {
-                ((ILogger)l!).LogError(t.Exception!, "error in run");
-            },
+            static (t, l) => ((ILogger)l!).LogError(t.Exception, "error in run"),
             host.Logger,
             host.TestTimeoutToken,
             TaskContinuationOptions.OnlyOnFaulted,
-            TaskScheduler.Default);
+            TaskScheduler.Default
+        );
 
         if (testCase.ShouldCompleteImmediately)
         {
             var runTask = receiverHost.ReceiverExecutionHandle?.CompletionTask ?? Task.CompletedTask;
             Assert.That(
                 () => runTask.IsCompletedSuccessfully,
-                Is.True
-                  .After(host.AssertionTimeoutInMs)
-                  .MilliSeconds
-                  .PollEvery(10)
-                  .MilliSeconds);
+                Is.True.After(host.AssertionTimeoutInMs).MilliSeconds.PollEvery(milliSeconds: 10).MilliSeconds
+            );
 
             return;
         }
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
 
         await using var senderHost = await host.CreateSenderTestHost(host.TestTimeoutToken);
 
         await testCase.BeforeSend(host);
 
         await Assert.ThatAsync(
-            async () => returnedResponses.AddRange(await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)),
-            Throws.Nothing);
+            async () =>
+                returnedResponses.AddRange(
+                    await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)
+                ),
+            Throws.Nothing
+        );
 
         AssertReceivedMessages(receivedMessages, testCase, host);
         AssertReturnedResponses(returnedResponses, testCase, host);
@@ -78,13 +84,21 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
         await cts.CancelAsync();
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
     }
 
     [Test]
     [TestCaseSource(nameof(CreateTestCasesForConcurrentExecution))]
-    public async Task GivenTestCase_WhenRunningReceiversMultipleTimesConcurrently_MessagesAreReceivedByEachReceiver(TSuccessTestCase testCase)
+    public async Task GivenTestCase_WhenRunningReceiversMultipleTimesConcurrently_MessagesAreReceivedByEachReceiver(
+        TSuccessTestCase testCase
+    )
     {
         await using var host = testCase.CreateTestHost();
 
@@ -100,7 +114,8 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                 receivedMessages.Enqueue(message);
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         await using var receiverHost2 = await host.CreateReceiverTestHost(
             cts.Token,
@@ -109,28 +124,32 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                 receivedMessages.Enqueue(message);
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         await Assert.ThatAsync(
-            () => Task.WhenAll(
-                          receiverHost1.ReceiverExecutionHandle?.InitialConnectionTask ?? Task.CompletedTask,
-                          receiverHost2.ReceiverExecutionHandle?.InitialConnectionTask ?? Task.CompletedTask)
-                      .WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
-            Throws.Nothing);
+            () =>
+                Task.WhenAll(
+                        receiverHost1.ReceiverExecutionHandle?.InitialConnectionTask ?? Task.CompletedTask,
+                        receiverHost2.ReceiverExecutionHandle?.InitialConnectionTask ?? Task.CompletedTask
+                    )
+                    .WaitAsync(host.AssertionTimeout, TimeProvider.System, host.TestTimeoutToken),
+            Throws.Nothing
+        );
 
         await using var senderHost = await host.CreateSenderTestHost(host.TestTimeoutToken);
 
         await testCase.BeforeSend(host);
 
         await Assert.ThatAsync(
-            async () => returnedResponses.AddRange(await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)),
-            Throws.Nothing);
+            async () =>
+                returnedResponses.AddRange(
+                    await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)
+                ),
+            Throws.Nothing
+        );
 
-        AssertReceivedMessages(
-            receivedMessages,
-            testCase,
-            host,
-            allowOutOfOrder: true);
+        AssertReceivedMessages(receivedMessages, testCase, host, allowOutOfOrder: true);
 
         // even when there are multiple competing receivers, we should only receive one set of responses
         AssertReturnedResponses(returnedResponses, testCase, host);
@@ -140,17 +159,31 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
         await cts.CancelAsync();
 
         await Assert.ThatAsync(
-            () => receiverHost1.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost1.ReceiverExecutionHandle?.CompletionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
 
         await Assert.ThatAsync(
-            () => receiverHost2.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost2.ReceiverExecutionHandle?.CompletionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
     }
 
     [Test]
     [TestCaseSource(nameof(CreateSimpleSuccessTestCasesPrivate))]
-    public async Task GivenTestCase_WhenRunningAndStoppingReceiversMultipleTimes_MessagesAreReceivedMultipleTimes(TSuccessTestCase testCase)
+    public async Task GivenTestCase_WhenRunningAndStoppingReceiversMultipleTimes_MessagesAreReceivedMultipleTimes(
+        TSuccessTestCase testCase
+    )
     {
         await using var host = testCase.CreateTestHost();
 
@@ -166,19 +199,30 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                 receivedMessages1.Enqueue(message);
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         await Assert.ThatAsync(
-            () => receiverHost1.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost1.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
 
         await using var senderHost = await host.CreateSenderTestHost(host.TestTimeoutToken);
 
         await testCase.BeforeSend(host);
 
         await Assert.ThatAsync(
-            async () => returnedResponses1.AddRange(await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)),
-            Throws.Nothing);
+            async () =>
+                returnedResponses1.AddRange(
+                    await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)
+                ),
+            Throws.Nothing
+        );
 
         AssertReceivedMessages(receivedMessages1, testCase, host);
         AssertReturnedResponses(returnedResponses1, testCase, host);
@@ -186,19 +230,26 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
         await cts1.CancelAsync();
 
         await Assert.ThatAsync(
-            () => receiverHost1.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost1.ReceiverExecutionHandle?.CompletionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
 
         // send some messages during downtime to assert whether they are received or not
         if (TTestClass.TransportBuffersMessagesDuringReceiverDowntime)
         {
-            if (testCase.ExpectedResponses.Count == 0)
+            if (testCase.ExpectedResponses.Count is 0)
             {
                 // for messages without response, sending them without an active receiver and with
                 // buffering should complete fine
                 await Assert.ThatAsync(
                     () => testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken),
-                    Throws.Nothing);
+                    Throws.Nothing
+                );
             }
             else
             {
@@ -209,7 +260,10 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                 // buffering should time out waiting for the response
                 await Assert.ThatAsync(
                     () => testCase.SendMessages(senderHost.MessageSenders, sendCts.Token),
-                    Throws.InstanceOf<OperationCanceledException>().Or.InnerException.InstanceOf<OperationCanceledException>());
+                    Throws
+                        .InstanceOf<OperationCanceledException>()
+                        .Or.InnerException.InstanceOf<OperationCanceledException>()
+                );
 
                 // additional assert to ensure that the exception above is not due to a test timeout
                 Assert.That(host.TestTimeoutToken.IsCancellationRequested, Is.False);
@@ -220,10 +274,11 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
             // when messages are not buffered, sending them should lead to some kind of exception
             await Assert.ThatAsync(
                 () => testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken),
-                Throws.Exception.Not.InstanceOf<OperationCanceledException>());
+                Throws.Exception.Not.InstanceOf<OperationCanceledException>()
+            );
         }
 
-        await Task.Delay(host.ShortDelay, host.TestTimeoutToken); // ensure that the messages are sent before restarting the receivers
+        await Task.Delay(host.ShortDelay, TimeProvider.System, host.TestTimeoutToken); // ensure that the messages are sent before restarting the receivers
 
         using var cts2 = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
 
@@ -237,17 +292,28 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                 receivedMessages2.Enqueue(message);
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         await Assert.ThatAsync(
-            () => receiverHost2.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost2.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
 
         await testCase.BeforeSend(host);
 
         await Assert.ThatAsync(
-            async () => returnedResponses2.AddRange(await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)),
-            Throws.Nothing);
+            async () =>
+                returnedResponses2.AddRange(
+                    await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)
+                ),
+            Throws.Nothing
+        );
 
         var expectedReceivedMessages = new List<object>(testCase.ExpectedReceivedMessages);
 
@@ -261,30 +327,39 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
             }
             else
             {
-                expectedReceivedMessages.AddRange([..expectedReceivedMessages]);
+                expectedReceivedMessages.AddRange([.. expectedReceivedMessages]);
             }
         }
 
         Assert.That(
             () => receivedMessages2,
             Is.EquivalentTo(expectedReceivedMessages)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+                .After(host.AssertionTimeoutInMs)
+                .MilliSeconds.PollEvery(milliSeconds: 10)
+                .MilliSeconds
+        );
 
         AssertReturnedResponses(returnedResponses2, testCase, host);
 
         await cts2.CancelAsync();
 
         await Assert.ThatAsync(
-            () => receiverHost2.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost2.ReceiverExecutionHandle?.CompletionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
     }
 
     [Test]
     [TestCaseSource(nameof(CreateShutdownTestCasesPrivate))]
-    public async Task GivenTestCase_WhenShuttingDownReceiverHost_PerformsCleanShutdown(TSuccessTestCase testCase, bool useCancel)
+    public async Task GivenTestCase_WhenShuttingDownReceiverHost_PerformsCleanShutdown(
+        TSuccessTestCase testCase,
+        bool useCancel
+    )
     {
         await using var host = testCase.CreateTestHost();
 
@@ -300,29 +375,38 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                 receivedMessages.Enqueue(message);
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         _ = receiverHost.ReceiverExecutionHandle?.CompletionTask.ContinueWith(
-            static (t, l) =>
-            {
-                ((ILogger)l!).LogError(t.Exception!, "error in run");
-            },
+            static (t, l) => ((ILogger)l!).LogError(t.Exception, "error in run"),
             host.Logger,
             host.TestTimeoutToken,
             TaskContinuationOptions.OnlyOnFaulted,
-            TaskScheduler.Default);
+            TaskScheduler.Default
+        );
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
 
         await using var senderHost = await host.CreateSenderTestHost(host.TestTimeoutToken);
 
         await testCase.BeforeSend(host);
 
         await Assert.ThatAsync(
-            async () => returnedResponses.AddRange(await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)),
-            Throws.Nothing);
+            async () =>
+                returnedResponses.AddRange(
+                    await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)
+                ),
+            Throws.Nothing
+        );
 
         AssertReceivedMessages(receivedMessages, testCase, host);
         AssertReturnedResponses(returnedResponses, testCase, host);
@@ -343,13 +427,21 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
         }
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
     }
 
     [Test]
     [TestCaseSource(nameof(CreateSimpleSuccessTestCasesPrivate))]
-    public async Task GivenTestCase_WhenCancellingSending_CallerReceivesOperationCanceledExceptionAndReceiversReceiveNoMessages(TSuccessTestCase testCase)
+    public async Task GivenTestCase_WhenCancellingSending_CallerReceivesOperationCanceledExceptionAndReceiversReceiveNoMessages(
+        TSuccessTestCase testCase
+    )
     {
         await using var host = testCase.CreateTestHost();
 
@@ -364,25 +456,33 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
                 receivedMessages.Enqueue(message);
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         _ = receiverHost.ReceiverExecutionHandle?.CompletionTask.ContinueWith(
-            static (t, l) =>
-            {
-                ((ILogger)l!).LogError(t.Exception!, "error in run");
-            },
+            static (t, l) => ((ILogger)l!).LogError(t.Exception, "error in run"),
             host.Logger,
             host.TestTimeoutToken,
             TaskContinuationOptions.OnlyOnFaulted,
-            TaskScheduler.Default);
+            TaskScheduler.Default
+        );
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        await using var senderHost = await host.CreateSenderTestHost(host.TestTimeoutToken, (_, _, ct) => tcs.Task.WaitAsync(ct));
+        await using var senderHost = await host.CreateSenderTestHost(
+            host.TestTimeoutToken,
+            (_, _, ct) => tcs.Task.WaitAsync(ct)
+        );
 
         await testCase.BeforeSend(host);
 
@@ -394,22 +494,31 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
 
         tcs.SetResult();
 
-        await Assert.ThatAsync(() => sendTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken), Throws.InstanceOf<OperationCanceledException>());
+        await Assert.ThatAsync(
+            () => sendTask.WaitAsync(host.AssertionTimeout, TimeProvider.System, host.TestTimeoutToken),
+            Throws.InstanceOf<OperationCanceledException>()
+        );
 
-        await Task.Delay(host.ShortDelay, host.TestTimeoutToken); // give any potential erroneous send operations time to complete
+        await Task.Delay(host.ShortDelay, TimeProvider.System, host.TestTimeoutToken); // give any potential erroneous send operations time to complete
 
         Assert.That(receivedMessages, Is.Empty);
 
         await cts.CancelAsync();
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
     }
 
     [Test]
     [TestCaseSource(nameof(CreateErrorTestCasesPrivate))]
-    [Repeat(10)] // we repeat this test many times to catch any potential race conditions in the error handling
+    [Repeat(count: 10)] // we repeat this test many times to catch any potential race conditions in the error handling
     public async Task GivenReceivers_WhenErrorsOccur_CorrectBehaviorIsExecuted(TErrorTestCase testCase)
     {
         await using var host = testCase.CreateTestHost();
@@ -419,16 +528,21 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(host.TestTimeoutToken);
 
-        var messageTransportType = new MessageTransportType(TTestClass.TransportTypeName, MessageTransportRole.Receiver);
+        var messageTransportType = new MessageTransportType(
+            TTestClass.TransportTypeName,
+            MessageTransportRole.Receiver
+        );
 
         if (testCase.ReceiverConfigurationException is { } configurationException)
         {
             await Assert.ThatAsync(
                 () => host.CreateReceiverTestHost(cts.Token),
-                Throws.InstanceOf<MessageReceiverExecutionFailedException>()
-                      .With.InnerException.SameAs(configurationException)
-                      .And.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
-                      .EqualTo(messageTransportType));
+                Throws
+                    .InstanceOf<MessageReceiverExecutionFailedException>()
+                    .With.InnerException.SameAs(configurationException)
+                    .And.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
+                    .EqualTo(messageTransportType)
+            );
 
             await testCase.OnReceiverConfigurationException(host);
 
@@ -439,40 +553,65 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
 
         await using var receiverHost = await host.CreateReceiverTestHost(
             cts.Token,
-            messageCallback: (message, _, _) =>
+            (message, _, _) =>
             {
                 receivedMessages.Enqueue(message);
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         await testCase.OnInitialReceiverConnection(host);
 
-        await Task.Delay(host.ShortDelay, host.TestTimeoutToken); // give the connections time to start properly
+        await Task.Delay(host.ShortDelay, TimeProvider.System, host.TestTimeoutToken); // give the connections time to start properly
 
         if (testCase.NumOfExpectedUnrecoverableConnectionErrors > 0)
         {
             await Assert.ThatAsync(
-                () => receiverHost.ReceiverExecutionHandle!.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                Throws.InstanceOf<MessageReceiverExecutionFailedException>()
-                      .With.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
-                      .EqualTo(messageTransportType)
-                      .Or.InstanceOf<AggregateException>()
-                      .With.Property("InnerExceptions")
-                      .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
-                      .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is MessageReceiverExecutionFailedException e && e.MessageTransportType == messageTransportType)));
+                () =>
+                    receiverHost.ReceiverExecutionHandle!.InitialConnectionTask.WaitAsync(
+                        host.AssertionTimeout,
+                        TimeProvider.System,
+                        cts.Token
+                    ),
+                Throws
+                    .InstanceOf<MessageReceiverExecutionFailedException>()
+                    .With.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
+                    .EqualTo(messageTransportType)
+                    .Or.InstanceOf<AggregateException>()
+                    .With.Property("InnerExceptions")
+                    .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
+                    .With.Property("InnerExceptions")
+                    .Matches<ReadOnlyCollection<Exception>>(exs =>
+                        exs.All(ex =>
+                            ex is MessageReceiverExecutionFailedException e
+                            && e.MessageTransportType == messageTransportType
+                        )
+                    )
+            );
 
             await Assert.ThatAsync(
-                () => receiverHost.ReceiverExecutionHandle!.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                Throws.InstanceOf<MessageReceiverExecutionFailedException>()
-                      .With.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
-                      .EqualTo(messageTransportType)
-                      .Or.InstanceOf<AggregateException>()
-                      .With.Property("InnerExceptions")
-                      .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
-                      .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.All(ex => ex is MessageReceiverExecutionFailedException e && e.MessageTransportType == messageTransportType)));
+                () =>
+                    receiverHost.ReceiverExecutionHandle!.CompletionTask.WaitAsync(
+                        host.AssertionTimeout,
+                        TimeProvider.System,
+                        cts.Token
+                    ),
+                Throws
+                    .InstanceOf<MessageReceiverExecutionFailedException>()
+                    .With.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
+                    .EqualTo(messageTransportType)
+                    .Or.InstanceOf<AggregateException>()
+                    .With.Property("InnerExceptions")
+                    .Count.EqualTo(testCase.NumOfExpectedUnrecoverableConnectionErrors)
+                    .With.Property("InnerExceptions")
+                    .Matches<ReadOnlyCollection<Exception>>(exs =>
+                        exs.All(ex =>
+                            ex is MessageReceiverExecutionFailedException e
+                            && e.MessageTransportType == messageTransportType
+                        )
+                    )
+            );
         }
 
         await using var senderHost = await host.CreateSenderTestHost(host.TestTimeoutToken);
@@ -484,7 +623,8 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
             // we expect the test case to internally handle that the send exception is thrown
             await Assert.ThatAsync(
                 () => testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken),
-                Throws.Exception.With.InnerException.SameAs(sendException));
+                Throws.Exception.With.InnerException.SameAs(sendException)
+            );
 
             await testCase.OnSendException(host);
 
@@ -494,7 +634,7 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
         }
 
         // return if no active receivers are expected
-        if (testCase.ExpectedReceivedMessages.Count == 0)
+        if (testCase.ExpectedReceivedMessages.Count is 0)
         {
             return;
         }
@@ -509,13 +649,19 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
 
         // at this point, all handlers should have connected successfully
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle.InitialConnectionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ),
+            Throws.Nothing
+        );
 
-        var handlerExceptions = testCase.HandlerExceptions
-                                        .OfType<Exception>()
-                                        .OrderBy(ex => ex.Message)
-                                        .ToList();
+        var handlerExceptions = testCase
+            .HandlerExceptions.OfType<Exception>()
+            .OrderBy(ex => ex.Message, StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
         if (handlerExceptions.Count > 0)
         {
@@ -527,30 +673,43 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
 
                 await Assert.ThatAsync(
                     () => testCase.SendMessages(senderHost.MessageSenders, sendCts.Token),
-                    Throws.InstanceOf<OperationCanceledException>().Or.InnerException.InstanceOf<OperationCanceledException>());
+                    Throws
+                        .InstanceOf<OperationCanceledException>()
+                        .Or.InnerException.InstanceOf<OperationCanceledException>()
+                );
             }
             else
             {
                 await Assert.ThatAsync(
                     () => testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken),
-                    Throws.Nothing);
+                    Throws.Nothing
+                );
             }
 
             await Assert.ThatAsync(
-                () => receiverHost.ReceiverExecutionHandle.CompletionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-                Throws.InstanceOf<MessageReceiverExecutionFailedException>()
-                      .With.InnerException.SameAs(handlerExceptions[0])
-                      .And.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
-                      .EqualTo(messageTransportType)
-                      .Or.InstanceOf<AggregateException>()
-                      .With.Property("InnerExceptions")
-                      .Count.EqualTo(handlerExceptions.Count)
-                      .With.Property("InnerExceptions")
-                      .Matches<ReadOnlyCollection<Exception>>(exs => exs.OfType<MessageReceiverExecutionFailedException>()
-                                                                        .Select(ex => ex.InnerException)
-                                                                        .OfType<Exception>()
-                                                                        .OrderBy(ex => ex.Message)
-                                                                        .SequenceEqual(handlerExceptions)));
+                () =>
+                    receiverHost.ReceiverExecutionHandle.CompletionTask.WaitAsync(
+                        host.AssertionTimeout,
+                        TimeProvider.System,
+                        cts.Token
+                    ),
+                Throws
+                    .InstanceOf<MessageReceiverExecutionFailedException>()
+                    .With.InnerException.SameAs(handlerExceptions[0])
+                    .And.Property(nameof(MessageReceiverExecutionFailedException.MessageTransportType))
+                    .EqualTo(messageTransportType)
+                    .Or.InstanceOf<AggregateException>()
+                    .With.Property("InnerExceptions")
+                    .Count.EqualTo(handlerExceptions.Count)
+                    .With.Property("InnerExceptions")
+                    .Matches<ReadOnlyCollection<Exception>>(exs =>
+                        exs.OfType<MessageReceiverExecutionFailedException>()
+                            .Select(ex => ex.InnerException)
+                            .OfType<Exception>()
+                            .OrderBy(ex => ex.Message, StringComparer.OrdinalIgnoreCase)
+                            .SequenceEqual(handlerExceptions)
+                    )
+            );
 
             AssertReceivedMessages(receivedMessages, testCase, host);
 
@@ -563,8 +722,12 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
         }
 
         await Assert.ThatAsync(
-            async () => returnedResponses.AddRange(await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)),
-            Throws.Nothing);
+            async () =>
+                returnedResponses.AddRange(
+                    await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)
+                ),
+            Throws.Nothing
+        );
 
         AssertReturnedResponses(returnedResponses, testCase, host);
 
@@ -581,8 +744,12 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
         returnedResponses.Clear();
 
         await Assert.ThatAsync(
-            async () => returnedResponses.AddRange(await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)),
-            Throws.Nothing);
+            async () =>
+                returnedResponses.AddRange(
+                    await testCase.SendMessages(senderHost.MessageSenders, host.TestTimeoutToken)
+                ),
+            Throws.Nothing
+        );
 
         AssertReceivedMessages(receivedMessages, testCase, host);
         AssertReturnedResponses(returnedResponses, testCase, host);
@@ -590,8 +757,14 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
         await cts.CancelAsync();
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken),
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle.CompletionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ),
+            Throws.Nothing
+        );
     }
 
     [Test]
@@ -599,31 +772,63 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
     {
         var testCases = TTestClass.CreateSuccessTestCases().ToList();
 
-        List<Expression<Func<IMessageTransportConformityExecutionSuccessTestCase<TTestHost>, bool>>> predicates =
-        [
+        var predicates = new List<
+            Expression<Func<IMessageTransportConformityExecutionSuccessTestCase<TTestHost>, bool>>
+        >
+        {
             testCase => testCase.ShouldCompleteImmediately,
             testCase => testCase.MessagesAreSentInParallel,
             testCase => !testCase.MessagesAreSentInParallel,
             testCase => testCase.ExpectedReceivedMessages.Count == 0,
             testCase => testCase.ExpectedReceivedMessages.Count > 0,
             testCase => testCase.ExpectedReceivedMessages.Count > 1,
-            testCase => testCase.ExpectedReceivedMessages.Any(s => s.GetType()
-                                                                    .GetProperties(BindingFlags.NonPublic | BindingFlags.Static)
-                                                                    .Any(p => p.Name.EndsWith(".JsonSerializerContext") && p.GetValue(s) != null)),
-            testCase => testCase.ExpectedReceivedMessages.Any(s => s.GetType()
-                                                                    .GetProperties(BindingFlags.NonPublic | BindingFlags.Static)
-                                                                    .Any(p => p.Name.EndsWith(".EmptyInstance") && p.GetValue(s) != null)),
-            testCase => testCase.ExpectedReceivedMessages.Any(s => s.GetType().Name.EndsWith("ForAssemblyScanning")),
-            testCase => testCase.ExpectedReceivedMessages.Any(s => s.GetType().Name.EndsWith("WithDelegateHandler")),
-            testCase => testCase.ExpectedReceivedMessages.Any(s => s.GetType().BaseType != null
-                                                                   && s.GetType().BaseType!.GetCustomAttributes()
-                                                                       .Any(a => a.GetType().Name.Contains("MessageAttribute")
-                                                                                 && !s.GetType().Name.Contains("WithoutResponse"))),
-            testCase => testCase.ExpectedReceivedMessages.Any(s => s.GetType().BaseType != null
-                                                                   && s.GetType().BaseType!.GetCustomAttributes()
-                                                                       .Any(a => a.GetType().Name.EndsWith("MessageAttribute")
-                                                                                 && s.GetType().Name.Contains("WithoutResponse"))),
-        ];
+            testCase =>
+                testCase.ExpectedReceivedMessages.Any(s =>
+                    s.GetType()
+                        .GetProperties(BindingFlags.NonPublic | BindingFlags.Static)
+                        .Any(p =>
+                            p.Name.EndsWith(".JsonSerializerContext", StringComparison.InvariantCulture)
+                            && p.GetValue(s) != null
+                        )
+                ),
+            testCase =>
+                testCase.ExpectedReceivedMessages.Any(s =>
+                    s.GetType()
+                        .GetProperties(BindingFlags.NonPublic | BindingFlags.Static)
+                        .Any(p =>
+                            p.Name.EndsWith(".EmptyInstance", StringComparison.InvariantCulture)
+                            && p.GetValue(s) != null
+                        )
+                ),
+            testCase =>
+                testCase.ExpectedReceivedMessages.Any(s =>
+                    s.GetType().Name.EndsWith("ForAssemblyScanning", StringComparison.InvariantCulture)
+                ),
+            testCase =>
+                testCase.ExpectedReceivedMessages.Any(s =>
+                    s.GetType().Name.EndsWith("WithDelegateHandler", StringComparison.InvariantCulture)
+                ),
+            testCase =>
+                testCase.ExpectedReceivedMessages.Any(s =>
+                    s.GetType().BaseType != null
+                    && s.GetType()
+                        .BaseType!.GetCustomAttributes()
+                        .Any(a =>
+                            a.GetType().Name.Contains("MessageAttribute", StringComparison.InvariantCulture)
+                            && !s.GetType().Name.Contains("WithoutResponse", StringComparison.InvariantCulture)
+                        )
+                ),
+            testCase =>
+                testCase.ExpectedReceivedMessages.Any(s =>
+                    s.GetType().BaseType != null
+                    && s.GetType()
+                        .BaseType!.GetCustomAttributes()
+                        .Any(a =>
+                            a.GetType().Name.EndsWith("MessageAttribute", StringComparison.InvariantCulture)
+                            && s.GetType().Name.Contains("WithoutResponse", StringComparison.InvariantCulture)
+                        )
+                ),
+        };
 
         Assert.Multiple(() =>
         {
@@ -631,8 +836,11 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
             {
                 Assert.That(
                     testCases,
-                    Has.Some.Matches<IMessageTransportConformityExecutionSuccessTestCase<TTestHost>>(tc => predicate.Compile().Invoke(tc)),
-                    $"missing expected test case: {predicate.Body}");
+                    Has.Some.Matches<IMessageTransportConformityExecutionSuccessTestCase<TTestHost>>(tc =>
+                        predicate.Compile().Invoke(tc)
+                    ),
+                    $"missing expected test case: {predicate.Body}"
+                );
             }
         });
     }
@@ -642,11 +850,13 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
     {
         var testCases = TTestClass.CreateSimpleSuccessTestCases().ToList();
 
-        List<Expression<Func<IMessageTransportConformityExecutionSuccessTestCase<TTestHost>, bool>>> predicates =
-        [
+        var predicates = new List<
+            Expression<Func<IMessageTransportConformityExecutionSuccessTestCase<TTestHost>, bool>>
+        >
+        {
             testCase => testCase.NumOfReceivers == 1,
             testCase => testCase.NumOfReceivers > 1,
-        ];
+        };
 
         Assert.Multiple(() =>
         {
@@ -654,8 +864,11 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
             {
                 Assert.That(
                     testCases,
-                    Has.Some.Matches<IMessageTransportConformityExecutionSuccessTestCase<TTestHost>>(tc => predicate.Compile().Invoke(tc)),
-                    $"missing expected test case: {predicate.Body}");
+                    Has.Some.Matches<IMessageTransportConformityExecutionSuccessTestCase<TTestHost>>(tc =>
+                        predicate.Compile().Invoke(tc)
+                    ),
+                    $"missing expected test case: {predicate.Body}"
+                );
             }
         });
     }
@@ -665,23 +878,24 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
     {
         var testCases = TTestClass.CreateErrorTestCases().ToList();
 
-        List<Expression<Func<IMessageTransportConformityExecutionErrorTestCase<TTestHost>, bool>>> predicates =
-        [
+        var predicates = new List<Expression<Func<IMessageTransportConformityExecutionErrorTestCase<TTestHost>, bool>>>
+        {
             testCase => testCase.ReceiverConfigurationException != null,
             testCase => testCase.SendException != null,
-        ];
+        };
 
         if (TTestClass.TransportRequiresReceiverConnection)
         {
             predicates.AddRange(
-            [
-                testCase => !testCase.HandlerExceptions.OfType<Exception>().Any(),
-                testCase => testCase.HandlerExceptions.OfType<Exception>().Count() == 1,
-                testCase => testCase.HandlerExceptions.OfType<Exception>().Count() > 1,
-                testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors == 0,
-                testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors == 1,
-                testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors > 1,
-            ]);
+                [
+                    testCase => !testCase.HandlerExceptions.OfType<Exception>().Any(),
+                    testCase => testCase.HandlerExceptions.OfType<Exception>().Take(2).Count() == 1,
+                    testCase => testCase.HandlerExceptions.OfType<Exception>().Skip(1).Any(),
+                    testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors == 0,
+                    testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors == 1,
+                    testCase => testCase.NumOfExpectedUnrecoverableConnectionErrors > 1,
+                ]
+            );
         }
 
         Assert.Multiple(() =>
@@ -690,8 +904,11 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
             {
                 Assert.That(
                     testCases,
-                    Has.Some.Matches<IMessageTransportConformityExecutionErrorTestCase<TTestHost>>(tc => predicate.Compile().Invoke(tc)),
-                    $"missing expected test case: {predicate.Body}");
+                    Has.Some.Matches<IMessageTransportConformityExecutionErrorTestCase<TTestHost>>(tc =>
+                        predicate.Compile().Invoke(tc)
+                    ),
+                    $"missing expected test case: {predicate.Body}"
+                );
             }
         });
     }
@@ -700,7 +917,8 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
         IReadOnlyCollection<object> receivedMessages,
         IMessageTransportConformityExecutionTestCase<TTestHost> testCase,
         IMessageTransportConformityTestHost host,
-        bool allowOutOfOrder = false)
+        bool allowOutOfOrder = false
+    )
     {
         if (testCase.NumOfReceivers > 1 || testCase.MessagesAreSentInParallel || allowOutOfOrder)
         {
@@ -709,66 +927,70 @@ public abstract class MessageTransportExecutionConformityTests<TTestClass, TTest
             Assert.That(
                 () => receivedMessages,
                 Is.EquivalentTo(testCase.ExpectedReceivedMessages)
-                  .After(host.AssertionTimeoutInMs)
-                  .MilliSeconds
-                  .PollEvery(10)
-                  .MilliSeconds);
+                    .After(host.AssertionTimeoutInMs)
+                    .MilliSeconds.PollEvery(milliSeconds: 10)
+                    .MilliSeconds
+            );
         }
         else
         {
             Assert.That(
                 () => receivedMessages,
                 Is.EqualTo(testCase.ExpectedReceivedMessages)
-                  .After(host.AssertionTimeoutInMs)
-                  .MilliSeconds
-                  .PollEvery(10)
-                  .MilliSeconds);
+                    .After(host.AssertionTimeoutInMs)
+                    .MilliSeconds.PollEvery(milliSeconds: 10)
+                    .MilliSeconds
+            );
         }
     }
 
     private static void AssertReturnedResponses(
         IReadOnlyCollection<object> returnedResponses,
         IMessageTransportConformityExecutionTestCase<TTestHost> testCase,
-        IMessageTransportConformityTestHost host)
+        IMessageTransportConformityTestHost host
+    )
     {
         if (testCase.MessagesAreSentInParallel)
         {
             // when sending messages in parallel, the order of responses is not guaranteed, so we use EquivalentTo instead of EqualTo
             Assert.That(
                 () => returnedResponses,
-                Is.EqualTo(testCase.ExpectedResponses)
-                  .After(host.AssertionTimeoutInMs)
-                  .MilliSeconds
-                  .PollEvery(10)
-                  .MilliSeconds);
+                Is.EquivalentTo(testCase.ExpectedResponses)
+                    .After(host.AssertionTimeoutInMs)
+                    .MilliSeconds.PollEvery(milliSeconds: 10)
+                    .MilliSeconds
+            );
         }
         else
         {
             Assert.That(
                 () => returnedResponses,
                 Is.EqualTo(testCase.ExpectedResponses)
-                  .After(host.AssertionTimeoutInMs)
-                  .MilliSeconds
-                  .PollEvery(10)
-                  .MilliSeconds);
+                    .After(host.AssertionTimeoutInMs)
+                    .MilliSeconds.PollEvery(milliSeconds: 10)
+                    .MilliSeconds
+            );
         }
     }
 
-    private static IEnumerable<TestCaseData> CreateSuccessTestCasesPrivate()
-        => TTestClass.CreateSuccessTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name));
+    private static IEnumerable<TestCaseData> CreateSuccessTestCasesPrivate() =>
+        TTestClass.CreateSuccessTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name));
 
-    private static IEnumerable<TestCaseData> CreateTestCasesForConcurrentExecution()
-        => TTestClass.TransportSupportsConcurrentReceivers
+    private static IEnumerable<TestCaseData> CreateTestCasesForConcurrentExecution() =>
+        TTestClass.TransportSupportsConcurrentReceivers
             ? TTestClass.CreateSimpleSuccessTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name))
             : [];
 
-    private static IEnumerable<TestCaseData> CreateSimpleSuccessTestCasesPrivate()
-        => TTestClass.CreateSimpleSuccessTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name));
+    private static IEnumerable<TestCaseData> CreateSimpleSuccessTestCasesPrivate() =>
+        TTestClass.CreateSimpleSuccessTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name));
 
-    private static IEnumerable<TestCaseData> CreateShutdownTestCasesPrivate()
-        => new[] { true, false }.SelectMany(b => TTestClass.CreateSimpleSuccessTestCases()
-                                                           .Select(tc => new TestCaseData(tc, b).SetName($"{tc.Name} with useCancel={b}")));
+    private static IEnumerable<TestCaseData> CreateShutdownTestCasesPrivate() =>
+        new[] { true, false }.SelectMany(b =>
+            TTestClass
+                .CreateSimpleSuccessTestCases()
+                .Select(tc => new TestCaseData(tc, b).SetName($"{tc.Name} with useCancel={b}"))
+        );
 
-    private static IEnumerable<TestCaseData> CreateErrorTestCasesPrivate()
-        => TTestClass.CreateErrorTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name));
+    private static IEnumerable<TestCaseData> CreateErrorTestCasesPrivate() =>
+        TTestClass.CreateErrorTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name));
 }

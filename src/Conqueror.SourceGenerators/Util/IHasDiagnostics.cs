@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.SourceGenerators.Util;
 
-public interface IHasDiagnostics
+internal interface IHasDiagnostics
 {
     EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics { get; }
 }

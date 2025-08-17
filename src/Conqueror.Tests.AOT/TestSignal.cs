@@ -1,9 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿namespace Conqueror.Tests.AOT;
 
-namespace Conqueror.Tests.AOT;
+using System.Text.Json.Serialization;
 
 [Signal]
-public sealed partial record TestSignal
+internal sealed partial record TestSignal
 {
     public required int Payload { get; init; }
 }
@@ -13,11 +13,11 @@ internal sealed partial class TestSignalHandler : TestSignal.IHandler
     public Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
     {
         Console.WriteLine($"handled signal: {signal}");
+
         return Task.CompletedTask;
     }
 
-    static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
-        => pipeline.UseLogging();
+    static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) => pipeline.UseLogging();
 
     static void ISignalHandler.ConfigureInProcessReceiver(IInProcessSignalReceiver receiver)
     {

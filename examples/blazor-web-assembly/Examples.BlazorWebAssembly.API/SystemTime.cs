@@ -4,7 +4,7 @@ public static class SystemTime
 {
     private static readonly AsyncLocal<DateTimeOffset?> CurrentTimeAsyncLocal = new();
 
-    public static DateTimeOffset Now => CurrentTimeAsyncLocal.Value ?? DateTimeOffset.UtcNow;
+    public static DateTimeOffset Now => CurrentTimeAsyncLocal.Value ?? TimeProvider.System.GetUtcNow();
 
     public static IDisposable WithCurrentTime(DateTimeOffset time)
     {

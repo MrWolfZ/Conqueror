@@ -1,6 +1,6 @@
-﻿using Conqueror;
+﻿namespace Quickstart.Enhanced;
 
-namespace Quickstart.Enhanced;
+using Conqueror;
 
 public static class LoggingPipelineExtensions
 {

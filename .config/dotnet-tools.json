@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "roslynator.dotnet.cli": {
+      "version": "0.10.2",
+      "commands": [
+        "roslynator"
+      ],
+      "rollForward": false
+    },
+    "csharpier": {
+      "version": "1.1.1",
+      "commands": [
+        "csharpier"
+      ],
+      "rollForward": false
+    }
+  }
+}

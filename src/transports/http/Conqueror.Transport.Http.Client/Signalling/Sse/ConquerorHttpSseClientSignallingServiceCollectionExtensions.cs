@@ -1,8 +1,5 @@
-using System;
-using System.Threading.Tasks;
-using Conqueror;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
 
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpSseClientSignallingServiceCollectionExtensions
@@ -11,24 +8,22 @@ public static class ConquerorHttpSseClientSignallingServiceCollectionExtensions
         this IServiceCollection services,
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerFn<TSignal> fn,
-        Action<IHttpSseSignalReceiver> configureReceiver)
+        Action<IHttpSseSignalReceiver> configureReceiver
+    )
         where TSignal : class, IHttpSseSignal<TSignal>
         where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>
     {
         var typesInjector = new HttpSseSignalHandlerTypesInjector<TSignal, TIHandler>(configureReceiver);
 
-        return services.AddSignalHandlerDelegate(
-            messageTypes,
-            fn,
-            null,
-            typesInjector);
+        return services.AddSignalHandlerDelegate(messageTypes, fn, configurePipeline: null, typesInjector);
     }
 
     public static IServiceCollection AddHttpSseSignalHandlerDelegate<TSignal, TIHandler>(
         this IServiceCollection services,
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerSyncFn<TSignal> fn,
-        Action<IHttpSseSignalReceiver> configureReceiver)
+        Action<IHttpSseSignalReceiver> configureReceiver
+    )
         where TSignal : class, IHttpSseSignal<TSignal>
         where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>
     {
@@ -42,8 +37,9 @@ public static class ConquerorHttpSseClientSignallingServiceCollectionExtensions
 
                 return Task.CompletedTask;
             },
-            null,
-            typesInjector);
+            configurePipeline: null,
+            typesInjector
+        );
     }
 
     public static IServiceCollection AddHttpSseSignalHandlerDelegate<TSignal, TIHandler>(
@@ -51,17 +47,14 @@ public static class ConquerorHttpSseClientSignallingServiceCollectionExtensions
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerFn<TSignal> fn,
         Action<ISignalPipeline<TSignal>> configurePipeline,
-        Action<IHttpSseSignalReceiver> configureReceiver)
+        Action<IHttpSseSignalReceiver> configureReceiver
+    )
         where TSignal : class, IHttpSseSignal<TSignal>
         where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>
     {
         var typesInjector = new HttpSseSignalHandlerTypesInjector<TSignal, TIHandler>(configureReceiver);
 
-        return services.AddSignalHandlerDelegate(
-            messageTypes,
-            fn,
-            configurePipeline,
-            typesInjector);
+        return services.AddSignalHandlerDelegate(messageTypes, fn, configurePipeline, typesInjector);
     }
 
     public static IServiceCollection AddHttpSseSignalHandlerDelegate<TSignal, TIHandler>(
@@ -69,7 +62,8 @@ public static class ConquerorHttpSseClientSignallingServiceCollectionExtensions
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerSyncFn<TSignal> fn,
         Action<ISignalPipeline<TSignal>> configurePipeline,
-        Action<IHttpSseSignalReceiver> configureReceiver)
+        Action<IHttpSseSignalReceiver> configureReceiver
+    )
         where TSignal : class, IHttpSseSignal<TSignal>
         where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>
     {
@@ -84,6 +78,7 @@ public static class ConquerorHttpSseClientSignallingServiceCollectionExtensions
                 return Task.CompletedTask;
             },
             configurePipeline,
-            typesInjector);
+            typesInjector
+        );
     }
 }

@@ -1,14 +1,12 @@
-﻿using System;
+﻿namespace Conqueror.Middleware.Logging.Signalling;
+
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
-namespace Conqueror.Middleware.Logging.Signalling;
 
 /// <summary>
 ///     An signal middleware which adds logging functionality to a pipeline. By default, the following entries are logged:
@@ -42,46 +40,26 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
 
         try
         {
-            PreExecution(
-                logger,
-                signalId,
-                traceId,
-                ctx);
+            PreExecution(logger, signalId, traceId, ctx);
 
             if (!Configuration.StackTraceCaptureIsDisabled)
             {
-                executionStackTrace = new(skipFrames: 1, fNeedFileInfo: true);
+                executionStackTrace = new StackTrace(skipFrames: 1, fNeedFileInfo: true);
             }
 
             await ctx.Next(ctx.Signal, ctx.CancellationToken).ConfigureAwait(false);
 
-            PostExecution(
-                logger,
-                signalId,
-                traceId,
-                sw.Elapsed,
-                ctx);
+            PostExecution(logger, signalId, traceId, sw.Elapsed, ctx);
         }
         catch (Exception e)
         {
-            OnException(
-                logger,
-                signalId,
-                traceId,
-                e,
-                executionStackTrace,
-                sw.Elapsed,
-                ctx);
+            OnException(logger, signalId, traceId, e, executionStackTrace, sw.Elapsed, ctx);
 
             throw;
         }
     }
 
-    private void PreExecution(
-        ILogger logger,
-        string signalId,
-        string traceId,
-        SignalMiddlewareContext<TSignal> ctx)
+    private void PreExecution(ILogger logger, string signalId, string traceId, SignalMiddlewareContext<TSignal> ctx)
     {
         if (Configuration.PreExecutionHook is { } preExecutionHook)
         {
@@ -115,12 +93,13 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             return;
         }
 
-        var payloadLoggingStrategy = Configuration.PayloadLoggingStrategyFactory?.Invoke(ctx.Signal) ?? Configuration.PayloadLoggingStrategy;
+        var payloadLoggingStrategy =
+            Configuration.PayloadLoggingStrategyFactory?.Invoke(ctx.Signal) ?? Configuration.PayloadLoggingStrategy;
 
         var hasPayload = TSignal.EmptyInstance is null;
-        var shouldOmitPayload = payloadLoggingStrategy == PayloadLoggingStrategy.Omit;
+        var shouldOmitPayload = payloadLoggingStrategy is PayloadLoggingStrategy.Omit;
 
-        if (ctx.TransportType.Role == SignalTransportRole.Publisher)
+        if (ctx.TransportType.Role is SignalTransportRole.Publisher)
         {
             if (shouldOmitPayload || !hasPayload)
             {
@@ -130,7 +109,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                         Configuration.PreExecutionLogLevel,
                         ctx.Signal.GetType().Name,
                         signalId,
-                        traceId);
+                        traceId
+                    );
 
                     return;
                 }
@@ -140,21 +120,23 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                     ctx.TransportType.Name,
                     ctx.Signal.GetType().Name,
                     signalId,
-                    traceId);
+                    traceId
+                );
 
                 return;
             }
 
             if (ctx.TransportType.IsInProcess())
             {
-                if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+                if (payloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
                 {
                     logger.LogSignalWithPayloadAsIndentedJsonOnPublisher(
                         Configuration.PreExecutionLogLevel,
                         ctx.Signal.GetType().Name,
                         Serialize(ctx.Signal, payloadLoggingStrategy),
                         signalId,
-                        traceId);
+                        traceId
+                    );
 
                     return;
                 }
@@ -164,12 +146,13 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                     ctx.Signal.GetType().Name,
                     Serialize(ctx.Signal, payloadLoggingStrategy),
                     signalId,
-                    traceId);
+                    traceId
+                );
 
                 return;
             }
 
-            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            if (payloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
             {
                 logger.LogSignalWithPayloadAsIndentedJsonForTransportOnPublisher(
                     Configuration.PreExecutionLogLevel,
@@ -177,7 +160,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                     ctx.Signal.GetType().Name,
                     Serialize(ctx.Signal, payloadLoggingStrategy),
                     signalId,
-                    traceId);
+                    traceId
+                );
 
                 return;
             }
@@ -188,7 +172,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                 ctx.Signal.GetType().Name,
                 Serialize(ctx.Signal, payloadLoggingStrategy),
                 signalId,
-                traceId);
+                traceId
+            );
 
             return;
         }
@@ -201,7 +186,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                     Configuration.PreExecutionLogLevel,
                     ctx.Signal.GetType().Name,
                     signalId,
-                    traceId);
+                    traceId
+                );
 
                 return;
             }
@@ -211,21 +197,23 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                 ctx.TransportType.Name,
                 ctx.Signal.GetType().Name,
                 signalId,
-                traceId);
+                traceId
+            );
 
             return;
         }
 
         if (ctx.TransportType.IsInProcess())
         {
-            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            if (payloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
             {
                 logger.LogSignalWithPayloadAsIndentedJsonOnReceiver(
                     Configuration.PreExecutionLogLevel,
                     ctx.Signal.GetType().Name,
                     Serialize(ctx.Signal, payloadLoggingStrategy),
                     signalId,
-                    traceId);
+                    traceId
+                );
 
                 return;
             }
@@ -235,12 +223,13 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                 ctx.Signal.GetType().Name,
                 Serialize(ctx.Signal, payloadLoggingStrategy),
                 signalId,
-                traceId);
+                traceId
+            );
 
             return;
         }
 
-        if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+        if (payloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
         {
             logger.LogSignalWithPayloadAsIndentedJsonForTransportOnReceiver(
                 Configuration.PreExecutionLogLevel,
@@ -248,7 +237,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                 ctx.Signal.GetType().Name,
                 Serialize(ctx.Signal, payloadLoggingStrategy),
                 signalId,
-                traceId);
+                traceId
+            );
 
             return;
         }
@@ -259,7 +249,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             ctx.Signal.GetType().Name,
             Serialize(ctx.Signal, payloadLoggingStrategy),
             signalId,
-            traceId);
+            traceId
+        );
     }
 
     private void PostExecution(
@@ -267,7 +258,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
         string signalId,
         string traceId,
         TimeSpan elapsedTime,
-        SignalMiddlewareContext<TSignal> ctx)
+        SignalMiddlewareContext<TSignal> ctx
+    )
     {
         if (Configuration.PostExecutionHook is { } postExecutionHook)
         {
@@ -302,7 +294,7 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             return;
         }
 
-        if (ctx.TransportType.Role == SignalTransportRole.Publisher)
+        if (ctx.TransportType.Role is SignalTransportRole.Publisher)
         {
             if (ctx.TransportType.IsInProcess())
             {
@@ -311,7 +303,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                     ctx.Signal.GetType().Name,
                     elapsedTime.TotalMilliseconds,
                     signalId,
-                    traceId);
+                    traceId
+                );
 
                 return;
             }
@@ -322,7 +315,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                 ctx.Signal.GetType().Name,
                 elapsedTime.TotalMilliseconds,
                 signalId,
-                traceId);
+                traceId
+            );
 
             return;
         }
@@ -334,7 +328,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                 ctx.Signal.GetType().Name,
                 elapsedTime.TotalMilliseconds,
                 signalId,
-                traceId);
+                traceId
+            );
 
             return;
         }
@@ -345,7 +340,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             ctx.Signal.GetType().Name,
             elapsedTime.TotalMilliseconds,
             signalId,
-            traceId);
+            traceId
+        );
     }
 
     private void OnException(
@@ -355,7 +351,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
         Exception exception,
         StackTrace? executionStackTrace,
         TimeSpan elapsedTime,
-        SignalMiddlewareContext<TSignal> ctx)
+        SignalMiddlewareContext<TSignal> ctx
+    )
     {
         if (Configuration.ExceptionHook is { } exceptionHook)
         {
@@ -398,9 +395,11 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
         // exception that contains the stack trace from the invocation of the middleware; an alternative might be
         // to do the logging asynchronously so that the unwind of the exception has finished, and it contains the
         // full stack trace, but that could introduce subtle race conditions, so we prefer the former approach
-        var exceptionToLog = executionStackTrace is null ? exception : new WrappingException(exception, executionStackTrace.ToString());
+        var exceptionToLog = executionStackTrace is null
+            ? exception
+            : new WrappingException(exception, executionStackTrace.ToString());
 
-        if (ctx.TransportType.Role == SignalTransportRole.Publisher)
+        if (ctx.TransportType.Role is SignalTransportRole.Publisher)
         {
             if (ctx.TransportType.IsInProcess())
             {
@@ -410,7 +409,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                     ctx.Signal.GetType().Name,
                     elapsedTime.TotalMilliseconds,
                     signalId,
-                    traceId);
+                    traceId
+                );
 
                 return;
             }
@@ -422,7 +422,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                 ctx.Signal.GetType().Name,
                 elapsedTime.TotalMilliseconds,
                 signalId,
-                traceId);
+                traceId
+            );
 
             return;
         }
@@ -435,7 +436,8 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
                 ctx.Signal.GetType().Name,
                 elapsedTime.TotalMilliseconds,
                 signalId,
-                traceId);
+                traceId
+            );
 
             return;
         }
@@ -447,21 +449,21 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             ctx.Signal.GetType().Name,
             elapsedTime.TotalMilliseconds,
             signalId,
-            traceId);
+            traceId
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [UnconditionalSuppressMessage(
         "AOT",
         "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
-        Justification = "we explicitly check for support")]
+        Justification = "we explicitly check for support"
+    )]
     private ILogger GetLogger(SignalMiddlewareContext<TSignal> ctx)
     {
         if (Configuration.LoggerCategoryFactory?.Invoke(ctx.Signal) is { } loggerName)
         {
-            return ctx.ServiceProvider
-                      .GetRequiredService<ILoggerFactory>()
-                      .CreateLogger(loggerName);
+            return ctx.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(loggerName);
         }
 
         var loggerCategoryType = Configuration.HandlerType ?? ctx.Signal.GetType();
@@ -477,19 +479,19 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             return (ILogger)ctx.ServiceProvider.GetRequiredService(loggerType);
         }
 
-        return ctx.ServiceProvider
-                  .GetRequiredService<ILoggerFactory>()
-                  .CreateLogger(loggerCategoryType);
+        return ctx.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(loggerCategoryType);
     }
 
     [UnconditionalSuppressMessage(
         "AOT",
         "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
-        Justification = "we explicitly fail in AOT scenarios without a serializer context on the signal type")]
+        Justification = "we explicitly fail in AOT scenarios without a serializer context on the signal type"
+    )]
     [UnconditionalSuppressMessage(
         "Trimming",
         "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
-        Justification = "we explicitly fail in AOT scenarios without a serializer context on the signal type")]
+        Justification = "we explicitly fail in AOT scenarios without a serializer context on the signal type"
+    )]
     private static object? Serialize<T>(T value, PayloadLoggingStrategy payloadLoggingStrategy)
     {
         if (payloadLoggingStrategy is PayloadLoggingStrategy.Omit or PayloadLoggingStrategy.Raw)
@@ -499,7 +501,9 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
 
         if (!JsonSerializer.IsReflectionEnabledByDefault && TSignal.JsonSerializerContext is null)
         {
-            throw new InvalidOperationException($"when running with AOT the '{typeof(TSignal)}.{nameof(TSignal.JsonSerializerContext)}' property cannot be null");
+            throw new InvalidOperationException(
+                $"when running with AOT the '{typeof(TSignal)}.{nameof(TSignal.JsonSerializerContext)}' property cannot be null"
+            );
         }
 
         var jsonSerializerOptions = TSignal.JsonSerializerContext switch
@@ -508,11 +512,11 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             var ctx => ctx.Options,
         };
 
-        if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+        if (payloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
         {
             if (jsonSerializerOptions.IsReadOnly)
             {
-                jsonSerializerOptions = new(jsonSerializerOptions);
+                jsonSerializerOptions = new JsonSerializerOptions(jsonSerializerOptions);
             }
 
             jsonSerializerOptions.WriteIndented = true;
@@ -523,14 +527,12 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
 
     [LoggerMessage(
         EventName = "conqueror-signal-logging-hook-exception",
-        Message = "An exception occurred while executing logging hook")]
-    private static partial void LogHookException(
-        ILogger logger,
-        LogLevel logLevel,
-        Exception exception);
+        Message = "An exception occurred while executing logging hook"
+    )]
+    private static partial void LogHookException(ILogger logger, LogLevel logLevel, Exception exception);
 }
 
 file static class Cache
 {
-    public static readonly ConcurrentDictionary<Type, Type> LoggerTypeCache = new();
+    public static readonly ConcurrentDictionary<Type, Type> LoggerTypeCache = [];
 }

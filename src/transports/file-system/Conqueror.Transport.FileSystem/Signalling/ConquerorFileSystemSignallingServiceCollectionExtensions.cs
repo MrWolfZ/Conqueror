@@ -1,6 +1,5 @@
-using Conqueror;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
 
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorFileSystemSignallingServiceCollectionExtensions
@@ -9,24 +8,22 @@ public static class ConquerorFileSystemSignallingServiceCollectionExtensions
         this IServiceCollection services,
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerFn<TSignal> fn,
-        Action<IFileSystemSignalReceiver> configureReceiver)
+        Action<IFileSystemSignalReceiver> configureReceiver
+    )
         where TSignal : class, IFileSystemSignal<TSignal>
         where TIHandler : class, IFileSystemSignalHandler<TSignal, TIHandler>
     {
         var typesInjector = new FileSystemSignalHandlerTypesInjector<TSignal, TIHandler>(configureReceiver);
 
-        return services.AddSignalHandlerDelegate(
-            messageTypes,
-            fn,
-            null,
-            typesInjector);
+        return services.AddSignalHandlerDelegate(messageTypes, fn, configurePipeline: null, typesInjector);
     }
 
     public static IServiceCollection AddFileSystemSignalHandlerDelegate<TSignal, TIHandler>(
         this IServiceCollection services,
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerSyncFn<TSignal> fn,
-        Action<IFileSystemSignalReceiver> configureReceiver)
+        Action<IFileSystemSignalReceiver> configureReceiver
+    )
         where TSignal : class, IFileSystemSignal<TSignal>
         where TIHandler : class, IFileSystemSignalHandler<TSignal, TIHandler>
     {
@@ -40,8 +37,9 @@ public static class ConquerorFileSystemSignallingServiceCollectionExtensions
 
                 return Task.CompletedTask;
             },
-            null,
-            typesInjector);
+            configurePipeline: null,
+            typesInjector
+        );
     }
 
     public static IServiceCollection AddFileSystemSignalHandlerDelegate<TSignal, TIHandler>(
@@ -49,17 +47,14 @@ public static class ConquerorFileSystemSignallingServiceCollectionExtensions
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerFn<TSignal> fn,
         Action<ISignalPipeline<TSignal>> configurePipeline,
-        Action<IFileSystemSignalReceiver> configureReceiver)
+        Action<IFileSystemSignalReceiver> configureReceiver
+    )
         where TSignal : class, IFileSystemSignal<TSignal>
         where TIHandler : class, IFileSystemSignalHandler<TSignal, TIHandler>
     {
         var typesInjector = new FileSystemSignalHandlerTypesInjector<TSignal, TIHandler>(configureReceiver);
 
-        return services.AddSignalHandlerDelegate(
-            messageTypes,
-            fn,
-            configurePipeline,
-            typesInjector);
+        return services.AddSignalHandlerDelegate(messageTypes, fn, configurePipeline, typesInjector);
     }
 
     public static IServiceCollection AddFileSystemSignalHandlerDelegate<TSignal, TIHandler>(
@@ -67,7 +62,8 @@ public static class ConquerorFileSystemSignallingServiceCollectionExtensions
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerSyncFn<TSignal> fn,
         Action<ISignalPipeline<TSignal>> configurePipeline,
-        Action<IFileSystemSignalReceiver> configureReceiver)
+        Action<IFileSystemSignalReceiver> configureReceiver
+    )
         where TSignal : class, IFileSystemSignal<TSignal>
         where TIHandler : class, IFileSystemSignalHandler<TSignal, TIHandler>
     {
@@ -82,6 +78,7 @@ public static class ConquerorFileSystemSignallingServiceCollectionExtensions
                 return Task.CompletedTask;
             },
             configurePipeline,
-            typesInjector);
+            typesInjector
+        );
     }
 }

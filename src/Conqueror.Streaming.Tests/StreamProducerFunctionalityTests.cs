@@ -1,6 +1,6 @@
-using System.Runtime.CompilerServices;
-
 namespace Conqueror.Streaming.Tests;
+
+using System.Runtime.CompilerServices;
 
 public sealed class StreamProducerFunctionalityTests
 {
@@ -10,16 +10,15 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        var request = new TestStreamingRequest(10);
+        var request = new TestStreamingRequest(Payload: 10);
 
-        _ = await producer.ExecuteRequest(request, CancellationToken.None).Drain();
+        _ = await producer.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.Requests, Is.EquivalentTo(new[] { request }));
     }
@@ -30,22 +29,26 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>((request, p, cancellationToken) =>
-                    {
-                        var obs = p.GetRequiredService<TestObservations>();
-                        obs.Requests.Add(request);
-                        obs.CancellationTokens.Add(cancellationToken);
-                        return AsyncEnumerableHelper.Of(new TestItem(request.Payload + 1));
-                    })
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+                (request, p, cancellationToken) =>
+                {
+                    var obs = p.GetRequiredService<TestObservations>();
+                    obs.Requests.Add(request);
+                    obs.CancellationTokens.Add(cancellationToken);
+
+                    return AsyncEnumerableHelper.Of(new TestItem(request.Payload + 1));
+                }
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        var request = new TestStreamingRequest(10);
+        var request = new TestStreamingRequest(Payload: 10);
 
-        _ = await producer.ExecuteRequest(request, CancellationToken.None).Drain();
+        _ = await producer.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.Requests, Is.EquivalentTo(new[] { request }));
     }
@@ -56,16 +59,17 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<GenericTestStreamProducer<string>>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamProducer<GenericTestStreamProducer<string>>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        var producer = provider.GetRequiredService<IStreamProducer<GenericTestStreamingRequest<string>, GenericTestItem<string>>>();
+        var producer = provider.GetRequiredService<
+            IStreamProducer<GenericTestStreamingRequest<string>, GenericTestItem<string>>
+        >();
 
         var request = new GenericTestStreamingRequest<string>("test string");
 
-        _ = await producer.ExecuteRequest(request, CancellationToken.None).Drain();
+        _ = await producer.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.Requests, Is.EquivalentTo(new[] { request }));
     }
@@ -76,15 +80,14 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await producer.ExecuteRequest(new(10), tokenSource.Token).Drain();
+        _ = await producer.ExecuteRequest(new(Payload: 10), tokenSource.Token).Drain(CancellationToken.None);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -95,15 +98,17 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await producer.ExecuteRequest(new(10)).WithCancellation(tokenSource.Token).Drain();
+        _ = await producer
+            .ExecuteRequest(new(Payload: 10), CancellationToken.None)
+            .WithCancellation(tokenSource.Token)
+            .Drain(tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -114,21 +119,25 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>((request, p, cancellationToken) =>
-                    {
-                        var obs = p.GetRequiredService<TestObservations>();
-                        obs.Requests.Add(request);
-                        obs.CancellationTokens.Add(cancellationToken);
-                        return AsyncEnumerableHelper.Of(new TestItem(request.Payload + 1));
-                    })
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+                (request, p, cancellationToken) =>
+                {
+                    var obs = p.GetRequiredService<TestObservations>();
+                    obs.Requests.Add(request);
+                    obs.CancellationTokens.Add(cancellationToken);
+
+                    return AsyncEnumerableHelper.Of(new TestItem(request.Payload + 1));
+                }
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await producer.ExecuteRequest(new(10), tokenSource.Token).Drain();
+        _ = await producer.ExecuteRequest(new(Payload: 10), tokenSource.Token).Drain(CancellationToken.None);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -139,21 +148,28 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>((request, p, cancellationToken) =>
-                    {
-                        var obs = p.GetRequiredService<TestObservations>();
-                        obs.Requests.Add(request);
-                        obs.CancellationTokens.Add(cancellationToken);
-                        return AsyncEnumerableHelper.Of(new TestItem(request.Payload + 1));
-                    })
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+                (request, p, cancellationToken) =>
+                {
+                    var obs = p.GetRequiredService<TestObservations>();
+                    obs.Requests.Add(request);
+                    obs.CancellationTokens.Add(cancellationToken);
+
+                    return AsyncEnumerableHelper.Of(new TestItem(request.Payload + 1));
+                }
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await producer.ExecuteRequest(new(10)).WithCancellation(tokenSource.Token).Drain();
+        _ = await producer
+            .ExecuteRequest(new(Payload: 10), CancellationToken.None)
+            .WithCancellation(tokenSource.Token)
+            .Drain(tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -164,16 +180,15 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await producer.ExecuteRequest(new(10)).Drain();
+        _ = await producer.ExecuteRequest(new(Payload: 10), CancellationToken.None).Drain(CancellationToken.None);
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { CancellationToken.None }));
     }
 
     [Test]
@@ -182,22 +197,26 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>((request, p, cancellationToken) =>
-                    {
-                        var obs = p.GetRequiredService<TestObservations>();
-                        obs.Requests.Add(request);
-                        obs.CancellationTokens.Add(cancellationToken);
-                        return AsyncEnumerableHelper.Of(new TestItem(request.Payload + 1));
-                    })
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+                (request, p, cancellationToken) =>
+                {
+                    var obs = p.GetRequiredService<TestObservations>();
+                    obs.Requests.Add(request);
+                    obs.CancellationTokens.Add(cancellationToken);
+
+                    return AsyncEnumerableHelper.Of(new TestItem(request.Payload + 1));
+                }
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await producer.ExecuteRequest(new(10)).Drain();
+        _ = await producer.ExecuteRequest(new(Payload: 10), CancellationToken.None).Drain(CancellationToken.None);
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { CancellationToken.None }));
     }
 
     [Test]
@@ -206,18 +225,27 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        var request = new TestStreamingRequest(10);
+        var request = new TestStreamingRequest(Payload: 10);
 
-        var response = await producer.ExecuteRequest(request, CancellationToken.None).Drain();
+        var response = await producer.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
-        Assert.That(response, Is.EquivalentTo(new[] { new TestItem(request.Payload + 1), new TestItem(request.Payload + 2), new TestItem(request.Payload + 3) }));
+        Assert.That(
+            response,
+            Is.EquivalentTo(
+                new[]
+                {
+                    new TestItem(request.Payload + 1),
+                    new TestItem(request.Payload + 2),
+                    new TestItem(request.Payload + 3),
+                }
+            )
+        );
     }
 
     [Test]
@@ -226,20 +254,36 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>((request, _, _) => AsyncEnumerableHelper.Of(new TestItem(request.Payload + 1),
-                                                                                                                                    new TestItem(request.Payload + 2),
-                                                                                                                                    new TestItem(request.Payload + 3)))
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+                (request, _, _) =>
+                    AsyncEnumerableHelper.Of(
+                        new TestItem(request.Payload + 1),
+                        new TestItem(request.Payload + 2),
+                        new TestItem(request.Payload + 3)
+                    )
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        var request = new TestStreamingRequest(10);
+        var request = new TestStreamingRequest(Payload: 10);
 
-        var response = await producer.ExecuteRequest(request, CancellationToken.None).Drain();
+        var response = await producer.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
-        Assert.That(response, Is.EquivalentTo(new[] { new TestItem(request.Payload + 1), new TestItem(request.Payload + 2), new TestItem(request.Payload + 3) }));
+        Assert.That(
+            response,
+            Is.EquivalentTo(
+                new[]
+                {
+                    new TestItem(request.Payload + 1),
+                    new TestItem(request.Payload + 2),
+                    new TestItem(request.Payload + 3),
+                }
+            )
+        );
     }
 
     [Test]
@@ -248,14 +292,15 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var exception = new Exception();
 
-        _ = services.AddConquerorStreamProducer<ThrowingStreamProducer>()
-                    .AddSingleton(exception);
+        _ = services.AddConquerorStreamProducer<ThrowingStreamProducer>().AddSingleton(exception);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => producer.ExecuteRequest(new(10), CancellationToken.None).Drain());
+        var thrownException = Assert.ThrowsAsync<Exception>(() =>
+            producer.ExecuteRequest(new(Payload: 10), CancellationToken.None).Drain(CancellationToken.None)
+        );
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -266,14 +311,13 @@ public sealed class StreamProducerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<DisposableStreamProducer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamProducer<DisposableStreamProducer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await handler.ExecuteRequest(new(10), CancellationToken.None).Drain();
+        _ = await handler.ExecuteRequest(new(Payload: 10), CancellationToken.None).Drain(CancellationToken.None);
 
         await provider.DisposeAsync();
 
@@ -283,9 +327,15 @@ public sealed class StreamProducerFunctionalityTests
     [Test]
     public void GivenProducerWithInvalidInterface_RegisteringProducerThrowsArgumentException()
     {
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorStreamProducer<TestStreamProducerWithoutValidInterfaces>());
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorStreamProducer<TestStreamProducerWithoutValidInterfaces>(_ => new()));
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorStreamProducer(new TestStreamProducerWithoutValidInterfaces()));
+        _ = Assert.Throws<ArgumentException>(() =>
+            new ServiceCollection().AddConquerorStreamProducer<TestStreamProducerWithoutValidInterfaces>()
+        );
+        _ = Assert.Throws<ArgumentException>(() =>
+            new ServiceCollection().AddConquerorStreamProducer<TestStreamProducerWithoutValidInterfaces>(_ => new())
+        );
+        _ = Assert.Throws<ArgumentException>(() =>
+            new ServiceCollection().AddConquerorStreamProducer(new TestStreamProducerWithoutValidInterfaces())
+        );
     }
 
     private sealed record TestStreamingRequest(int Payload);
@@ -296,26 +346,36 @@ public sealed class StreamProducerFunctionalityTests
 
     private sealed record GenericTestItem<T>(T Payload);
 
-    private sealed class TestStreamProducer(TestObservations observations) : IStreamProducer<TestStreamingRequest, TestItem>
+    private sealed class TestStreamProducer(TestObservations observations)
+        : IStreamProducer<TestStreamingRequest, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             observations.Requests.Add(request);
             observations.CancellationTokens.Add(cancellationToken);
+
             yield return new(request.Payload + 1);
             yield return new(request.Payload + 2);
             yield return new(request.Payload + 3);
         }
     }
 
-    private sealed class GenericTestStreamProducer<T>(TestObservations observations) : IStreamProducer<GenericTestStreamingRequest<T>, GenericTestItem<T>>
+    private sealed class GenericTestStreamProducer<T>(TestObservations observations)
+        : IStreamProducer<GenericTestStreamingRequest<T>, GenericTestItem<T>>
     {
-        public async IAsyncEnumerable<GenericTestItem<T>> ExecuteRequest(GenericTestStreamingRequest<T> request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<GenericTestItem<T>> ExecuteRequest(
+            GenericTestStreamingRequest<T> request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             observations.Requests.Add(request);
             observations.CancellationTokens.Add(cancellationToken);
+
             yield return new(request.Payload);
             yield return new(request.Payload);
             yield return new(request.Payload);
@@ -324,11 +384,14 @@ public sealed class StreamProducerFunctionalityTests
 
     private sealed class ThrowingStreamProducer(Exception exception) : IStreamProducer<TestStreamingRequest, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
 
-            if (request != null)
+            if (request is not null)
             {
                 throw exception;
             }
@@ -337,17 +400,20 @@ public sealed class StreamProducerFunctionalityTests
         }
     }
 
-    private sealed class DisposableStreamProducer(TestObservations observations) : IStreamProducer<TestStreamingRequest, TestItem>, IDisposable
+    private sealed class DisposableStreamProducer(TestObservations observations)
+        : IStreamProducer<TestStreamingRequest, TestItem>,
+            IDisposable
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest command, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public void Dispose() => observations.DisposedTypes.Add(GetType());
+
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
-            yield return new(command.Payload);
-        }
 
-        public void Dispose()
-        {
-            observations.DisposedTypes.Add(GetType());
+            yield return new(request.Payload);
         }
     }
 

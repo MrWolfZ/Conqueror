@@ -1,20 +1,18 @@
-﻿using Microsoft.CodeAnalysis;
+﻿namespace Conqueror.SourceGenerators.Util;
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Conqueror.SourceGenerators.Util;
-
 internal static class SemanticModelExtensions
 {
-    public static ISymbol? GetDeclaredSymbolSafe(this SemanticModel semanticModel, SyntaxNode node)
-    {
-        return semanticModel.GetSemanticModel(node).GetDeclaredSymbol(node);
-    }
+    public static ISymbol? GetDeclaredSymbolSafe(this SemanticModel semanticModel, SyntaxNode node) =>
+        semanticModel.GetSemanticModel(node).GetDeclaredSymbol(node, CancellationToken.None);
 
-    public static INamedTypeSymbol? GetDeclaredSymbolSafe(this SemanticModel semanticModel, TypeDeclarationSyntax node)
-    {
-        return semanticModel.GetSemanticModel(node).GetDeclaredSymbol(node);
-    }
+    public static INamedTypeSymbol? GetDeclaredSymbolSafe(
+        this SemanticModel semanticModel,
+        TypeDeclarationSyntax node
+    ) => semanticModel.GetSemanticModel(node).GetDeclaredSymbol(node, CancellationToken.None);
 
     private static SemanticModel GetSemanticModel(this SemanticModel semanticModel, SyntaxNode node)
     {

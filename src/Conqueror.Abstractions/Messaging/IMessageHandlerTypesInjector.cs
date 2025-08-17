@@ -1,8 +1,8 @@
-﻿using System;
-using System.ComponentModel;
+﻿#pragma warning disable SA1201 // ElementsMustAppearInTheCorrectOrder
 
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
+
+using System.ComponentModel;
 
 /// <summary>
 ///     Base interface for transports to be able to get an injector that works
@@ -32,9 +32,14 @@ internal interface ICoreMessageHandlerTypesInjector : IMessageHandlerTypesInject
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal sealed class CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(
-    Delegate? configurePipeline,
-    Action<IInProcessMessageReceiver>? configureInProcessReceiver)
+internal sealed class CoreMessageHandlerTypesInjector<
+    TMessage,
+    TResponse,
+    TIHandler,
+    TProxy,
+    TIPipeline,
+    TPipelineProxy
+>(Delegate? configurePipeline, Action<IInProcessMessageReceiver>? configureInProcessReceiver)
     : ICoreMessageHandlerTypesInjector
     where TMessage : class, IMessage<TMessage, TResponse>
     where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>
@@ -52,8 +57,8 @@ internal sealed class CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHan
         configureInProcessReceiver?.Invoke(receiver);
     }
 
-    public TResult Inject<TArg, TResult>(ICoreMessageHandlerTypesInjectable<TArg, TResult> injectable, TArg arg)
-        => injectable.WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(arg);
+    public TResult Inject<TArg, TResult>(ICoreMessageHandlerTypesInjectable<TArg, TResult> injectable, TArg arg) =>
+        injectable.WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(arg);
 }
 
 /// <summary>

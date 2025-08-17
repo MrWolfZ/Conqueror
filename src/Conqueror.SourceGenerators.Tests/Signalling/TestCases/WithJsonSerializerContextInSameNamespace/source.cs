@@ -1,11 +1,11 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithJsonSerializerContextInSameNamespace;
+
+using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithJsonSerializerContextInSameNamespace;
 
 [Signal]
 public sealed partial record TestSignal;
@@ -21,11 +21,11 @@ public partial class TestSignalHandler : TestSignal.IHandler
 [JsonSerializable(typeof(TestSignalResponse))]
 internal class TestSignalJsonSerializerContext(JsonSerializerOptions options) : JsonSerializerContext(options)
 {
-    public override JsonTypeInfo GetTypeInfo(Type type) => throw new NotSupportedException();
+    public static JsonSerializerContext Default => null!;
 
     protected override JsonSerializerOptions GeneratedSerializerOptions => null!;
 
-    public static JsonSerializerContext Default => null!;
+    public override JsonTypeInfo GetTypeInfo(Type type) => throw new NotSupportedException();
 }
 
 // make the compiler happy during design time

@@ -8,16 +8,15 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.Items, Is.EquivalentTo(new[] { item }));
     }
@@ -28,24 +27,25 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var factory = provider.GetRequiredService<IStreamConsumerFactory>();
 
-        var consumer = factory.Create<TestItem>(async (item, p, cancellationToken) =>
-        {
-            await Task.Yield();
-            var obs = p.GetRequiredService<TestObservations>();
-            obs.Items.Add(item);
-            obs.CancellationTokens.Add(cancellationToken);
-        });
+        var consumer = factory.Create<TestItem>(
+            async (item, p, cancellationToken) =>
+            {
+                await Task.Yield();
+                var obs = p.GetRequiredService<TestObservations>();
+                obs.Items.Add(item);
+                obs.CancellationTokens.Add(cancellationToken);
+            }
+        );
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.Items, Is.EquivalentTo(new[] { item }));
     }
@@ -56,8 +56,7 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<GenericTestStreamConsumer<string>>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<GenericTestStreamConsumer<string>>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -65,7 +64,7 @@ public sealed class StreamConsumerFunctionalityTests
 
         var item = new GenericTestItem<string>("test string");
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.Items, Is.EquivalentTo(new[] { item }));
     }
@@ -76,24 +75,25 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var factory = provider.GetRequiredService<IStreamConsumerFactory>();
 
-        var consumer = factory.Create<GenericTestItem<string>>(async (item, p, cancellationToken) =>
-        {
-            await Task.Yield();
-            var obs = p.GetRequiredService<TestObservations>();
-            obs.Items.Add(item);
-            obs.CancellationTokens.Add(cancellationToken);
-        });
+        var consumer = factory.Create<GenericTestItem<string>>(
+            async (item, p, cancellationToken) =>
+            {
+                await Task.Yield();
+                var obs = p.GetRequiredService<TestObservations>();
+                obs.Items.Add(item);
+                obs.CancellationTokens.Add(cancellationToken);
+            }
+        );
 
         var item = new GenericTestItem<string>("test string");
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.Items, Is.EquivalentTo(new[] { item }));
     }
@@ -104,15 +104,14 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
         using var tokenSource = new CancellationTokenSource();
 
-        await consumer.HandleItem(new(10), tokenSource.Token);
+        await consumer.HandleItem(new(Payload: 10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -123,24 +122,25 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var factory = provider.GetRequiredService<IStreamConsumerFactory>();
 
-        var consumer = factory.Create<TestItem>(async (item, p, cancellationToken) =>
-        {
-            await Task.Yield();
-            var obs = p.GetRequiredService<TestObservations>();
-            obs.Items.Add(item);
-            obs.CancellationTokens.Add(cancellationToken);
-        });
+        var consumer = factory.Create<TestItem>(
+            async (item, p, cancellationToken) =>
+            {
+                await Task.Yield();
+                var obs = p.GetRequiredService<TestObservations>();
+                obs.Items.Add(item);
+                obs.CancellationTokens.Add(cancellationToken);
+            }
+        );
 
         using var tokenSource = new CancellationTokenSource();
 
-        await consumer.HandleItem(new(10), tokenSource.Token);
+        await consumer.HandleItem(new(Payload: 10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -151,16 +151,15 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer.HandleItem(new(10));
+        await consumer.HandleItem(new(Payload: 10), CancellationToken.None);
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { CancellationToken.None }));
     }
 
     [Test]
@@ -169,24 +168,25 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var factory = provider.GetRequiredService<IStreamConsumerFactory>();
 
-        var consumer = factory.Create<TestItem>(async (item, p, cancellationToken) =>
-        {
-            await Task.Yield();
-            var obs = p.GetRequiredService<TestObservations>();
-            obs.Items.Add(item);
-            obs.CancellationTokens.Add(cancellationToken);
-        });
+        var consumer = factory.Create<TestItem>(
+            async (item, p, cancellationToken) =>
+            {
+                await Task.Yield();
+                var obs = p.GetRequiredService<TestObservations>();
+                obs.Items.Add(item);
+                obs.CancellationTokens.Add(cancellationToken);
+            }
+        );
 
-        await consumer.HandleItem(new(10));
+        await consumer.HandleItem(new(Payload: 10), CancellationToken.None);
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { CancellationToken.None }));
     }
 
     [Test]
@@ -196,15 +196,18 @@ public sealed class StreamConsumerFunctionalityTests
         var observations = new TestObservations();
         var exception = new Exception();
 
-        _ = services.AddConquerorStreamConsumer<ThrowingTestStreamConsumer>()
-                    .AddSingleton(observations)
-                    .AddSingleton(exception);
+        _ = services
+            .AddConquerorStreamConsumer<ThrowingTestStreamConsumer>()
+            .AddSingleton(observations)
+            .AddSingleton(exception);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => consumer.HandleItem(new(10)));
+        var thrownException = Assert.ThrowsAsync<Exception>(() =>
+            consumer.HandleItem(new(Payload: 10), CancellationToken.None)
+        );
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -216,21 +219,24 @@ public sealed class StreamConsumerFunctionalityTests
         var observations = new TestObservations();
         var exception = new Exception();
 
-        _ = services.AddConquerorStreaming()
-                    .AddSingleton(observations)
-                    .AddSingleton(exception);
+        _ = services.AddConquerorStreaming().AddSingleton(observations).AddSingleton(exception);
 
         var provider = services.BuildServiceProvider();
 
         var factory = provider.GetRequiredService<IStreamConsumerFactory>();
 
-        var consumer = factory.Create<TestItem>(async (_, _, _) =>
-        {
-            await Task.Yield();
-            throw exception;
-        });
+        var consumer = factory.Create<TestItem>(
+            async (_, _, _) =>
+            {
+                await Task.Yield();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => consumer.HandleItem(new(10)));
+                throw exception;
+            }
+        );
+
+        var thrownException = Assert.ThrowsAsync<Exception>(() =>
+            consumer.HandleItem(new(Payload: 10), CancellationToken.None)
+        );
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -241,22 +247,26 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer))
-                    .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(nameof(TestStreamConsumer2))
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer))
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(nameof(TestStreamConsumer2))
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer1 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
         var consumer2 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer1.HandleItem(item);
-        await consumer2.HandleItem(item);
+        await consumer1.HandleItem(item, CancellationToken.None);
+        await consumer2.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.Items, Is.EquivalentTo(new[] { item, item }));
-        Assert.That(observations.Instances.Select(i => i.GetType()), Is.EquivalentTo(new[] { typeof(TestStreamConsumer), typeof(TestStreamConsumer2) }));
+        Assert.That(
+            observations.Instances.Select(i => i.GetType()),
+            Is.EquivalentTo(new[] { typeof(TestStreamConsumer), typeof(TestStreamConsumer2) })
+        );
     }
 
     [Test]
@@ -265,14 +275,13 @@ public sealed class StreamConsumerFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<DisposableStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<DisposableStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await handler.HandleItem(new(10), CancellationToken.None);
+        await handler.HandleItem(new(Payload: 10), CancellationToken.None);
 
         await provider.DisposeAsync();
 
@@ -282,9 +291,21 @@ public sealed class StreamConsumerFunctionalityTests
     [Test]
     public void GivenStreamConsumerWithInvalidInterface_RegisteringConsumerThrowsArgumentException()
     {
-        Assert.That(() => new ServiceCollection().AddConquerorStreamConsumer<TestStreamConsumerWithoutValidInterfaces>(), Throws.ArgumentException);
-        Assert.That(() => new ServiceCollection().AddConquerorStreamConsumer<TestStreamConsumerWithoutValidInterfaces>(_ => new()), Throws.ArgumentException);
-        Assert.That(() => new ServiceCollection().AddConquerorStreamConsumer(new TestStreamConsumerWithoutValidInterfaces()), Throws.ArgumentException);
+        Assert.That(
+            () => new ServiceCollection().AddConquerorStreamConsumer<TestStreamConsumerWithoutValidInterfaces>(),
+            Throws.ArgumentException
+        );
+        Assert.That(
+            () =>
+                new ServiceCollection().AddConquerorStreamConsumer<TestStreamConsumerWithoutValidInterfaces>(_ =>
+                    new()
+                ),
+            Throws.ArgumentException
+        );
+        Assert.That(
+            () => new ServiceCollection().AddConquerorStreamConsumer(new TestStreamConsumerWithoutValidInterfaces()),
+            Throws.ArgumentException
+        );
     }
 
     private sealed record TestItem(int Payload);
@@ -313,7 +334,8 @@ public sealed class StreamConsumerFunctionalityTests
         }
     }
 
-    private sealed class GenericTestStreamConsumer<T>(TestObservations observations) : IStreamConsumer<GenericTestItem<T>>
+    private sealed class GenericTestStreamConsumer<T>(TestObservations observations)
+        : IStreamConsumer<GenericTestItem<T>>
     {
         public async Task HandleItem(GenericTestItem<T> item, CancellationToken cancellationToken = default)
         {
@@ -329,21 +351,19 @@ public sealed class StreamConsumerFunctionalityTests
         public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
+
             throw exception;
         }
     }
 
-    private sealed class DisposableStreamConsumer(TestObservations observations) : IStreamConsumer<TestItem>, IDisposable
+    private sealed class DisposableStreamConsumer(TestObservations observations)
+        : IStreamConsumer<TestItem>,
+            IDisposable
     {
-        public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-        }
+        public void Dispose() => observations.DisposedTypes.Add(GetType());
 
-        public void Dispose()
-        {
-            observations.DisposedTypes.Add(GetType());
-        }
+        public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default) =>
+            await Task.Yield();
     }
 
     private sealed class TestStreamConsumerWithoutValidInterfaces : IStreamConsumer;

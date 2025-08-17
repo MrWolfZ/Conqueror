@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IStreamConsumerPipelineBuilder
 {
@@ -21,9 +19,11 @@ public interface IStreamConsumerPipelineBuilder
     IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
         where TMiddleware : IStreamConsumerMiddleware<TConfiguration>;
 
-    IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configure)
+    IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configureFn)
         where TMiddleware : IStreamConsumerMiddleware<TConfiguration>;
 
-    IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(Func<TConfiguration, TConfiguration> configure)
+    IStreamConsumerPipelineBuilder Configure<TMiddleware, TConfiguration>(
+        Func<TConfiguration, TConfiguration> configureFn
+    )
         where TMiddleware : IStreamConsumerMiddleware<TConfiguration>;
 }

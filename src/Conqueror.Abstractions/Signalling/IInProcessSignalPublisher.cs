@@ -1,8 +1,6 @@
-﻿using System;
-using Conqueror.Signalling;
+﻿namespace Conqueror;
 
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+using Signalling;
 
 public interface IInProcessSignalPublisher<in TSignal> : ISignalPublisher<TSignal>
     where TSignal : class, ISignal<TSignal>
@@ -11,11 +9,15 @@ public interface IInProcessSignalPublisher<in TSignal> : ISignalPublisher<TSigna
 
     IInProcessSignalPublisher<TSignal> WithSequentialBroadcastingStrategy();
 
-    IInProcessSignalPublisher<TSignal> WithSequentialBroadcastingStrategy(Action<SequentialSignalBroadcastingStrategyConfiguration> configure);
+    IInProcessSignalPublisher<TSignal> WithSequentialBroadcastingStrategy(
+        Action<SequentialSignalBroadcastingStrategyConfiguration> configure
+    );
 
     IInProcessSignalPublisher<TSignal> WithParallelBroadcastingStrategy();
 
-    IInProcessSignalPublisher<TSignal> WithParallelBroadcastingStrategy(Action<ParallelSignalBroadcastingStrategyConfiguration> configure);
+    IInProcessSignalPublisher<TSignal> WithParallelBroadcastingStrategy(
+        Action<ParallelSignalBroadcastingStrategyConfiguration> configure
+    );
 
     // TODO: implement (and test)
     // IInProcessSignalPublisher<TSignal> WithFireAndForgetBroadcastingStrategy();

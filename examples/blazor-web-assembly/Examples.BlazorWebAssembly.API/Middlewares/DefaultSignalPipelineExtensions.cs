@@ -4,10 +4,8 @@ public static class DefaultSignalPipelineExtensions
 {
     public static ISignalPipeline<TSignal> UseDefault<TSignal>(
         this ISignalPipeline<TSignal> pipeline)
-        where TSignal : class, ISignal<TSignal>
-    {
-        return pipeline.UseLogging();
-    }
+        where TSignal : class, ISignal<TSignal> =>
+        pipeline.UseLogging();
 
     public static ISignalPipeline<TSignal> UseDefaultForPublisher<TSignal>(
         this ISignalPipeline<TSignal> pipeline,
@@ -15,21 +13,18 @@ public static class DefaultSignalPipelineExtensions
         where TSignal : class, ISignal<TSignal>
     {
         return pipeline.UseLogging(c =>
-                       {
-                           if (loggerCategoryType is not null)
-                           {
-                               c.LoggerCategoryFactory = _ => loggerCategoryType.FullName ??
-                                                              loggerCategoryType.Name;
-                           }
-                       });
+        {
+            if (loggerCategoryType is not null)
+            {
+                c.LoggerCategoryFactory = _ => loggerCategoryType.FullName ?? loggerCategoryType.Name;
+            }
+        });
     }
 
     public static TIHandler WithDefaultPublisherPipeline<TSignal, TIHandler>(
         this ISignalHandler<TSignal, TIHandler> handler,
         Type? loggerCategoryType = null)
         where TSignal : class, ISignal<TSignal>
-        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-    {
-        return handler.WithPipeline(p => p.UseDefaultForPublisher(loggerCategoryType));
-    }
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler> =>
+        handler.WithPipeline(p => p.UseDefaultForPublisher(loggerCategoryType));
 }

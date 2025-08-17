@@ -1,26 +1,22 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Conqueror.Signalling;
+
+using System.Collections;
 
 internal sealed class SignalPipeline<TSignal>(
     Type? handlerType,
     IServiceProvider serviceProvider,
     SignalTransportType transportType,
-    int initialCapacity)
-    : ISignalPipeline<TSignal>
+    int initialCapacity
+) : ISignalPipeline<TSignal>
     where TSignal : class, ISignal<TSignal>
 {
     private readonly List<ISignalMiddleware<TSignal>> middlewares = new(initialCapacity);
 
+    public SignalTransportType TransportType { get; } = transportType;
+
     public Type? HandlerType { get; } = handlerType;
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
-
-    public SignalTransportType TransportType { get; } = transportType;
 
     public int Count => middlewares.Count;
 
@@ -34,14 +30,13 @@ internal sealed class SignalPipeline<TSignal>(
         return this;
     }
 
-    public ISignalPipeline<TSignal> Use(SignalMiddlewareFn<TSignal> middlewareFn)
-    {
-        return Use(new DelegateSignalMiddleware(middlewareFn));
-    }
+    public ISignalPipeline<TSignal> Use(SignalMiddlewareFn<TSignal> middlewareFn) =>
+        Use(new DelegateSignalMiddleware(middlewareFn));
 
     public ISignalPipeline<TSignal> UseWhen(
         Predicate<SignalMiddlewareContext<TSignal>> predicate,
-        Action<ISignalPipeline<TSignal>> configureConditionalPipeline)
+        Action<ISignalPipeline<TSignal>> configureConditionalPipeline
+    )
     {
         var conditionalPipeline = new ConditionalPipeline(predicate, this);
         configureConditionalPipeline(conditionalPipeline);
@@ -57,7 +52,7 @@ internal sealed class SignalPipeline<TSignal>(
         return this;
     }
 
-    public ISignalPipeline<TSignal> Configure<TMiddleware>(Action<TMiddleware> configure)
+    public ISignalPipeline<TSignal> Configure<TMiddleware>(Action<TMiddleware> configureFn)
         where TMiddleware : ISignalMiddleware<TSignal>
     {
         var found = false;
@@ -65,38 +60,41 @@ internal sealed class SignalPipeline<TSignal>(
         {
             if (middleware is TMiddleware m)
             {
-                configure(m);
+                configureFn(m);
                 found = true;
             }
 
             if (middleware is ConditionalSignalMiddleware<TMiddleware> conditionalMiddleware)
             {
-                configure(conditionalMiddleware.Middleware);
+                configureFn(conditionalMiddleware.Middleware);
                 found = true;
             }
         }
 
         if (!found)
         {
-            throw new InvalidOperationException($"middleware '${typeof(TMiddleware)}' cannot be configured for this pipeline since it is not used");
+            throw new InvalidOperationException(
+                $"middleware '${typeof(TMiddleware)}' cannot be configured for this pipeline since it is not used"
+            );
         }
 
         return this;
     }
 
+    public IEnumerator<ISignalMiddleware<TSignal>> GetEnumerator() => middlewares.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
     public Task Execute(
         TSignal signal,
         ISignalPublisher<TSignal> publisher,
         ConquerorContext conquerorContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        if (middlewares.Count == 0)
+        if (middlewares.Count is 0)
         {
-            return publisher.Publish(
-                signal,
-                ServiceProvider,
-                conquerorContext,
-                cancellationToken);
+            return publisher.Publish(signal, ServiceProvider, conquerorContext, cancellationToken);
         }
 
         var ctx = new SignalMiddlewareContext<TSignal>(
@@ -104,7 +102,8 @@ internal sealed class SignalPipeline<TSignal>(
             publisher,
             ServiceProvider,
             conquerorContext,
-            TransportType)
+            TransportType
+        )
         {
             Signal = signal,
             CancellationToken = cancellationToken,
@@ -113,10 +112,6 @@ internal sealed class SignalPipeline<TSignal>(
         return middlewares[0].Execute(ctx);
     }
 
-    public IEnumerator<ISignalMiddleware<TSignal>> GetEnumerator() => middlewares.GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
     private sealed class DelegateSignalMiddleware(SignalMiddlewareFn<TSignal> middlewareFn) : ISignalMiddleware<TSignal>
     {
         public Task Execute(SignalMiddlewareContext<TSignal> ctx) => middlewareFn(ctx);
@@ -124,29 +119,29 @@ internal sealed class SignalPipeline<TSignal>(
 
     private sealed class ConditionalSignalMiddleware<TMiddleware>(
         Predicate<SignalMiddlewareContext<TSignal>> predicate,
-        TMiddleware middleware)
-        : ISignalMiddleware<TSignal>
+        TMiddleware middleware
+    ) : ISignalMiddleware<TSignal>
         where TMiddleware : ISignalMiddleware<TSignal>
     {
         public TMiddleware Middleware => middleware;
 
-        public Task Execute(SignalMiddlewareContext<TSignal> ctx)
-            => predicate(ctx) ? middleware.Execute(ctx) : ctx.Next(ctx.Signal, ctx.CancellationToken);
+        public Task Execute(SignalMiddlewareContext<TSignal> ctx) =>
+            predicate(ctx) ? middleware.Execute(ctx) : ctx.Next(ctx.Signal, ctx.CancellationToken);
     }
 
     private sealed class ConditionalDelegateSignalMiddleware(
         Predicate<SignalMiddlewareContext<TSignal>> predicate,
-        SignalMiddlewareFn<TSignal> middlewareFn)
-        : ISignalMiddleware<TSignal>
+        SignalMiddlewareFn<TSignal> middlewareFn
+    ) : ISignalMiddleware<TSignal>
     {
-        public Task Execute(SignalMiddlewareContext<TSignal> ctx)
-            => predicate(ctx) ? middlewareFn(ctx) : ctx.Next(ctx.Signal, ctx.CancellationToken);
+        public Task Execute(SignalMiddlewareContext<TSignal> ctx) =>
+            predicate(ctx) ? middlewareFn(ctx) : ctx.Next(ctx.Signal, ctx.CancellationToken);
     }
 
     private sealed class ConditionalPipeline(
         Predicate<SignalMiddlewareContext<TSignal>> outerPredicate,
-        ISignalPipeline<TSignal> pipeline)
-        : ISignalPipeline<TSignal>
+        ISignalPipeline<TSignal> pipeline
+    ) : ISignalPipeline<TSignal>
     {
         public Type? HandlerType => pipeline.HandlerType;
 
@@ -171,7 +166,8 @@ internal sealed class SignalPipeline<TSignal>(
 
         public ISignalPipeline<TSignal> UseWhen(
             Predicate<SignalMiddlewareContext<TSignal>> predicate,
-            Action<ISignalPipeline<TSignal>> configureConditionalPipeline)
+            Action<ISignalPipeline<TSignal>> configureConditionalPipeline
+        )
         {
             var conditionalPipeline = new ConditionalPipeline(predicate, this);
             configureConditionalPipeline(conditionalPipeline);
@@ -179,14 +175,13 @@ internal sealed class SignalPipeline<TSignal>(
             return this;
         }
 
-        ISignalPipeline<TSignal> ISignalPipeline<TSignal>.Without<TMiddleware>()
-            => pipeline.Without<TMiddleware>();
+        ISignalPipeline<TSignal> ISignalPipeline<TSignal>.Without<TMiddleware>() => pipeline.Without<TMiddleware>();
 
-        ISignalPipeline<TSignal> ISignalPipeline<TSignal>.Configure<TMiddleware>(Action<TMiddleware> configure)
-            => pipeline.Configure(configure);
+        ISignalPipeline<TSignal> ISignalPipeline<TSignal>.Configure<TMiddleware>(Action<TMiddleware> configureFn) =>
+            pipeline.Configure(configureFn);
 
-        IEnumerator<ISignalMiddleware<TSignal>> IEnumerable<ISignalMiddleware<TSignal>>.GetEnumerator()
-            => pipeline.GetEnumerator();
+        IEnumerator<ISignalMiddleware<TSignal>> IEnumerable<ISignalMiddleware<TSignal>>.GetEnumerator() =>
+            pipeline.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)pipeline).GetEnumerator();
     }

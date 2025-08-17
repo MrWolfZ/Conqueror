@@ -1,6 +1,4 @@
-﻿using System.Threading.Channels;
-
-namespace Conqueror.Transport.FileSystem;
+﻿namespace Conqueror.Transport.FileSystem;
 
 [SuppressMessage("Major Code Smell", "S6966:Awaitable method should be used", Justification = "for performance")]
 internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles tagIdFiles) : IDisposable
@@ -11,8 +9,16 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
     private const int EntryLength = EntryId.IdLength + 1 + TagIdLength + 1; // including separator and newline
     private const char Separator = '|';
 
-    private readonly ConcurrentDictionary<TimeSpan, Poller> pollerByPollingInterval = new();
+    private readonly ConcurrentDictionary<TimeSpan, Poller> pollerByPollingInterval = [];
     private readonly FilePath seqFilePath = baseDirectoryPath.File("seq-index.txt");
+
+    public void Dispose()
+    {
+        foreach (var poller in pollerByPollingInterval.Values)
+        {
+            poller.Dispose();
+        }
+    }
 
     public SeqNr Append(EntryId id, Tag tag, CancellationToken cancellationToken)
     {
@@ -28,7 +34,7 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
 
         if (handle.Stream.Length == 0)
         {
-            compactedSeqNr = new(0);
+            compactedSeqNr = new SeqNr(0);
             WriteCompactedSeqNr(handle.Writer, compactedSeqNr);
         }
         else
@@ -36,15 +42,18 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
             compactedSeqNr = GetCompactedSeqNr(handle.Reader);
         }
 
-        var nrOfEntries = (ulong)(handle.Stream.Length - HeaderLength) / EntryLength;
+        var numOfEntries = (ulong)(handle.Stream.Length - HeaderLength) / EntryLength;
 
-        var currentSeqNr = new SeqNr(compactedSeqNr + nrOfEntries + 1);
+        var currentSeqNr = new SeqNr(compactedSeqNr + numOfEntries + 1);
 
-        _ = handle.Stream.Seek(0, SeekOrigin.End);
+        _ = handle.Stream.Seek(offset: 0, SeekOrigin.End);
 
         var content = $"{id}{Separator}{tagId.ToPaddedString(TagIdLength)}\n";
 
-        Debug.Assert(content.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {content.Length}");
+        Debug.Assert(
+            content.Length == EntryLength,
+            $"expected entry length to be {EntryLength}, but it was {content.Length}"
+        );
 
         // we do not allow cancellation here to prevent corruption of the file
         handle.Writer.Write(content.AsMemory());
@@ -60,31 +69,35 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
     public async IAsyncEnumerable<IReadOnlyCollection<(EntryId EntryId, Tag Tag, SeqNr SeqNr)>> ReadChanges(
         SeqNr startFromSeqNr,
         TimeSpan pollingInterval,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken
+    )
     {
         baseDirectoryPath.AssertExists();
 
         var currentSeqNr = startFromSeqNr;
 
-        var poller = pollerByPollingInterval.GetOrAdd(pollingInterval, i => new(seqFilePath, i));
+        var poller = pollerByPollingInterval.GetOrAdd(
+            pollingInterval,
+            static (i, seqFilePath) => new(seqFilePath, i),
+            seqFilePath
+        );
 
         var channel = Channel.CreateBounded<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)>(
-            new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest });
+            new BoundedChannelOptions(capacity: 1) { FullMode = BoundedChannelFullMode.DropOldest }
+        );
 
         using var watchDisposable = poller.Watch(channel.Writer);
 
-        await foreach (var (compactedSeqNr, latestSeqNr) in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+        await foreach (
+            var (compactedSeqNr, latestSeqNr) in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false)
+        )
         {
             if (latestSeqNr <= currentSeqNr)
             {
                 continue;
             }
 
-            foreach (var batch in ReadBetween(
-                         currentSeqNr,
-                         latestSeqNr,
-                         compactedSeqNr,
-                         cancellationToken))
+            foreach (var batch in ReadBetween(currentSeqNr, latestSeqNr, compactedSeqNr, cancellationToken))
             {
                 yield return batch;
             }
@@ -93,19 +106,12 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
         }
     }
 
-    public void Dispose()
-    {
-        foreach (var poller in pollerByPollingInterval.Values)
-        {
-            poller.Dispose();
-        }
-    }
-
     private IEnumerable<IReadOnlyCollection<(EntryId EntryId, Tag Tag, SeqNr SeqNr)>> ReadBetween(
         SeqNr startAt,
         SeqNr endAt,
         SeqNr compactedSeqNr,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var handle = seqFilePath.OpenRead(cancellationToken);
 
@@ -121,12 +127,15 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
             var startAtOffset = (seqNrOffset * EntryLength) + HeaderLength;
 
             // TODO: read in batches from read-through cache
-            var nrOfEntries = (int)(endAt - startAt);
-            var nrOfCharsToRead = nrOfEntries * EntryLength;
+            var numOfEntries = (int)(endAt - startAt);
+            var numOfCharsToRead = numOfEntries * EntryLength;
 
-            Debug.Assert(nrOfCharsToRead > 0, $"expected nr of chars to read to be greater than 0, but was {nrOfCharsToRead}");
+            Debug.Assert(
+                numOfCharsToRead > 0,
+                $"expected nr of chars to read to be greater than 0, but was {numOfCharsToRead}"
+            );
 
-            var buffer = new CharBuffer(nrOfCharsToRead);
+            var buffer = new CharBuffer(numOfCharsToRead);
 
             var nowAt = handle.Stream.Seek((long)startAtOffset, SeekOrigin.Begin);
             handle.Reader.DiscardBufferedData();
@@ -135,11 +144,18 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
 
             var readCount = handle.Reader.Read(buffer.Span);
 
-            Debug.Assert(readCount == nrOfCharsToRead, $"expected to read {nrOfCharsToRead} bytes, but read {readCount}");
+            Debug.Assert(
+                readCount == numOfCharsToRead,
+                $"expected to read {numOfCharsToRead} bytes, but read {readCount}"
+            );
 
-            entries = new (EntryId EntryId, Tag Tag, SeqNr SeqNr)[nrOfEntries];
+            entries = new (EntryId EntryId, Tag Tag, SeqNr SeqNr)[numOfEntries];
 
-            for (int entryIndex = 0, bufferIndex = 0; bufferIndex < nrOfEntries * EntryLength; bufferIndex += EntryLength, entryIndex += 1)
+            for (
+                int entryIndex = 0, bufferIndex = 0;
+                bufferIndex < numOfEntries * EntryLength;
+                bufferIndex += EntryLength, entryIndex += 1
+            )
             {
                 var entryId = new EntryId(new(buffer.Span.Slice(bufferIndex, EntryId.IdLength)));
                 var tagId = new TagId(uint.Parse(buffer.Span.Slice(bufferIndex + EntryId.IdLength + 1, TagIdLength)));
@@ -155,8 +171,12 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
     [SuppressMessage(
         "Minor Code Smell",
         "S3398:\"private\" methods called only by inner classes should be moved to those classes",
-        Justification = "the poller should be simple and only contain code related to polling, not file access")]
-    private static (SeqNr CompactedSeqNr, SeqNr LatestSeqNr)? GetCurrentSeqNr(FilePath seqFilePath, CancellationToken cancellationToken)
+        Justification = "the poller should be simple and only contain code related to polling, not file access"
+    )]
+    private static (SeqNr CompactedSeqNr, SeqNr LatestSeqNr)? GetCurrentSeqNr(
+        FilePath seqFilePath,
+        CancellationToken cancellationToken
+    )
     {
         using var handle = seqFilePath.OpenRead(cancellationToken);
 
@@ -171,9 +191,9 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
         }
 
         var compactedSeqNr = GetCompactedSeqNr(handle.Reader);
-        var nrOfEntries = (handle.Stream.Length - HeaderLength) / EntryLength;
+        var numOfEntries = (handle.Stream.Length - HeaderLength) / EntryLength;
 
-        return (compactedSeqNr, new(compactedSeqNr + (ulong)nrOfEntries));
+        return (compactedSeqNr, new(compactedSeqNr + (ulong)numOfEntries));
     }
 
     private static SeqNr GetCompactedSeqNr(StreamReader reader)
@@ -183,12 +203,17 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
 
         Debug.Assert(readChars == SeqNrLength, $"expected to read {SeqNrLength} chars but read {readChars}");
 
-        return new(ulong.Parse(buffer));
+        return new SeqNr(ulong.Parse(buffer));
     }
 
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "we want this to be sync for performance reasons"
+    )]
     private static void WriteCompactedSeqNr(StreamWriter writer, SeqNr seqNr)
     {
-        _ = writer.BaseStream.Seek(0, SeekOrigin.Begin);
+        _ = writer.BaseStream.Seek(offset: 0, SeekOrigin.Begin);
 
         writer.Write($"{seqNr.ToPaddedString(SeqNrLength)}\n".AsMemory());
         writer.Flush();
@@ -204,7 +229,8 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
         if (handle.Stream.Length < SeqNrLength + 1)
         {
             throw new InvalidOperationException(
-                $"signal seq index file '{handle.FilePath}' is corrupted, expected it to be prefixed with {SeqNrLength + 1} chars, but it was {handle.Stream.Length} chars long");
+                $"signal seq index file '{handle.FilePath}' is corrupted, expected it to be prefixed with {SeqNrLength + 1} chars, but it was {handle.Stream.Length} chars long"
+            );
         }
 
         var entriesLength = handle.Stream.Length - SeqNrLength - 1;
@@ -212,19 +238,35 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
         if (entriesLength % EntryLength != 0)
         {
             throw new InvalidOperationException(
-                $"signal seq index file '{handle.FilePath}' is corrupted, expected length to be a multiple of {EntryLength}, but it was {entriesLength}");
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"signal seq index file '{handle.FilePath}' is corrupted, expected length to be a multiple of {EntryLength}, but it was {entriesLength}"
+                )
+            );
         }
     }
 
     private sealed class Poller(FilePath seqFilePath, TimeSpan pollingInterval) : IDisposable
     {
         private readonly CancellationTokenSource cancellationTokenSource = new();
-        private readonly ConcurrentDictionary<Guid, ChannelWriter<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)>> channelWriters = [];
+
+        private readonly ConcurrentDictionary<
+            Guid,
+            ChannelWriter<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)>
+        > channelWriters = [];
 
         private long latestFileLength = -1;
         private (SeqNr CompactedSeqNr, SeqNr LatestSeqNr)? latestResult;
         private Timer? timer;
         private int watchCount;
+
+        public void Dispose()
+        {
+            timer?.Dispose();
+
+            cancellationTokenSource.Cancel();
+            cancellationTokenSource.Dispose();
+        }
 
         public IDisposable Watch(ChannelWriter<(SeqNr CompactedSeqNr, SeqNr LatestSeqNr)> channelWriter)
         {
@@ -236,13 +278,9 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
                 _ = channelWriter.TryWrite(latestResult.Value);
             }
 
-            if (Interlocked.Increment(ref watchCount) == 1)
+            if (Interlocked.Increment(ref watchCount) is 1)
             {
-                timer = new(
-                    OnTimerElapsed,
-                    null,
-                    TimeSpan.Zero,
-                    pollingInterval);
+                timer = new Timer(OnTimerElapsed, state: null, TimeSpan.Zero, pollingInterval);
             }
 
             return new Disposable(this, channelWriterId);
@@ -258,14 +296,6 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
             }
 
             latestResult = res;
-        }
-
-        public void Dispose()
-        {
-            timer?.Dispose();
-
-            cancellationTokenSource.Cancel();
-            cancellationTokenSource.Dispose();
         }
 
         private void OnTimerElapsed(object? state)
@@ -306,7 +336,7 @@ internal sealed class SeqIndexFile(DirectoryPath baseDirectoryPath, TagIdFiles t
             {
                 _ = poller.channelWriters.Remove(channelWriterId, out _);
 
-                if (Interlocked.Decrement(ref poller.watchCount) == 0)
+                if (Interlocked.Decrement(ref poller.watchCount) is 0)
                 {
                     poller.timer?.Dispose();
                     poller.timer = null;

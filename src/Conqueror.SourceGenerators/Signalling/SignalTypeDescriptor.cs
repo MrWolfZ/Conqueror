@@ -1,22 +1,26 @@
-﻿using Conqueror.SourceGenerators.Util;
+﻿namespace Conqueror.SourceGenerators.Signalling;
 
-namespace Conqueror.SourceGenerators.Signalling;
+using System.Runtime.InteropServices;
 
-public readonly record struct SignalTypeDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct SignalTypeDescriptor(
     TypeDescriptor SignalDescriptor,
     EquatableArray<SignalAttributeDescriptor> Attributes,
-    bool HasJsonSerializerContext)
+    bool HasJsonSerializerContext
+)
 {
     public readonly EquatableArray<SignalAttributeDescriptor> Attributes = Attributes;
     public readonly bool HasJsonSerializerContext = HasJsonSerializerContext;
     public readonly TypeDescriptor SignalDescriptor = SignalDescriptor;
 }
 
-public readonly record struct SignalAttributeDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct SignalAttributeDescriptor(
     string Prefix,
     string Namespace,
     string? FullyQualifiedSignalTypeName,
-    EquatableArray<AttributeParameterDescriptor> Properties)
+    EquatableArray<AttributeParameterDescriptor> Properties
+)
 {
     public readonly string? FullyQualifiedSignalTypeName = FullyQualifiedSignalTypeName;
     public readonly string Namespace = Namespace;

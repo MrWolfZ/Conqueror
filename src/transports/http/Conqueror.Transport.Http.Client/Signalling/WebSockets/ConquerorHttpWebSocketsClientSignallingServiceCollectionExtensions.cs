@@ -1,8 +1,5 @@
-using System;
-using System.Threading.Tasks;
-using Conqueror;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
 
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpWebSocketsClientSignallingServiceCollectionExtensions
@@ -11,24 +8,22 @@ public static class ConquerorHttpWebSocketsClientSignallingServiceCollectionExte
         this IServiceCollection services,
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerFn<TSignal> fn,
-        Action<IHttpWebSocketsSignalReceiver> configureReceiver)
+        Action<IHttpWebSocketsSignalReceiver> configureReceiver
+    )
         where TSignal : class, IHttpWebSocketsSignal<TSignal>
         where TIHandler : class, IHttpWebSocketsSignalHandler<TSignal, TIHandler>
     {
         var typesInjector = new HttpWebSocketsSignalHandlerTypesInjector<TSignal, TIHandler>(configureReceiver);
 
-        return services.AddSignalHandlerDelegate(
-            messageTypes,
-            fn,
-            null,
-            typesInjector);
+        return services.AddSignalHandlerDelegate(messageTypes, fn, configurePipeline: null, typesInjector);
     }
 
     public static IServiceCollection AddHttpWebSocketsSignalHandlerDelegate<TSignal, TIHandler>(
         this IServiceCollection services,
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerSyncFn<TSignal> fn,
-        Action<IHttpWebSocketsSignalReceiver> configureReceiver)
+        Action<IHttpWebSocketsSignalReceiver> configureReceiver
+    )
         where TSignal : class, IHttpWebSocketsSignal<TSignal>
         where TIHandler : class, IHttpWebSocketsSignalHandler<TSignal, TIHandler>
     {
@@ -42,8 +37,9 @@ public static class ConquerorHttpWebSocketsClientSignallingServiceCollectionExte
 
                 return Task.CompletedTask;
             },
-            null,
-            typesInjector);
+            configurePipeline: null,
+            typesInjector
+        );
     }
 
     public static IServiceCollection AddHttpWebSocketsSignalHandlerDelegate<TSignal, TIHandler>(
@@ -51,17 +47,14 @@ public static class ConquerorHttpWebSocketsClientSignallingServiceCollectionExte
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerFn<TSignal> fn,
         Action<ISignalPipeline<TSignal>> configurePipeline,
-        Action<IHttpWebSocketsSignalReceiver> configureReceiver)
+        Action<IHttpWebSocketsSignalReceiver> configureReceiver
+    )
         where TSignal : class, IHttpWebSocketsSignal<TSignal>
         where TIHandler : class, IHttpWebSocketsSignalHandler<TSignal, TIHandler>
     {
         var typesInjector = new HttpWebSocketsSignalHandlerTypesInjector<TSignal, TIHandler>(configureReceiver);
 
-        return services.AddSignalHandlerDelegate(
-            messageTypes,
-            fn,
-            configurePipeline,
-            typesInjector);
+        return services.AddSignalHandlerDelegate(messageTypes, fn, configurePipeline, typesInjector);
     }
 
     public static IServiceCollection AddHttpWebSocketsSignalHandlerDelegate<TSignal, TIHandler>(
@@ -69,7 +62,8 @@ public static class ConquerorHttpWebSocketsClientSignallingServiceCollectionExte
         SignalTypes<TSignal, TIHandler> messageTypes,
         SignalHandlerSyncFn<TSignal> fn,
         Action<ISignalPipeline<TSignal>> configurePipeline,
-        Action<IHttpWebSocketsSignalReceiver> configureReceiver)
+        Action<IHttpWebSocketsSignalReceiver> configureReceiver
+    )
         where TSignal : class, IHttpWebSocketsSignal<TSignal>
         where TIHandler : class, IHttpWebSocketsSignalHandler<TSignal, TIHandler>
     {
@@ -84,6 +78,7 @@ public static class ConquerorHttpWebSocketsClientSignallingServiceCollectionExte
                 return Task.CompletedTask;
             },
             configurePipeline,
-            typesInjector);
+            typesInjector
+        );
     }
 }

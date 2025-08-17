@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading;
+﻿namespace Conqueror.Middleware.Authorization;
 
-namespace Conqueror.Middleware.Authorization;
+using System.Security.Claims;
 
 public abstract class AuthorizationContext
 {
@@ -18,33 +15,38 @@ public abstract class AuthorizationContext
     /// <summary>
     ///     Create an authorization result that represents a successful authorization check.
     /// </summary>
+    /// <returns>The authorization result</returns>
     public AuthorizationResult Success() => AuthorizationSuccessResult.Instance;
 
     /// <summary>
     ///     Create an authorization result that represents a failed authentication check.
     /// </summary>
     /// <param name="details">The details for the authorization failure</param>
-    public AuthorizationResult Unauthenticated(string details)
-        => new AuthorizationFailureResult([details], MessageFailedException.WellKnownReasons.Unauthenticated);
+    /// <returns>The authorization result</returns>
+    public AuthorizationResult Unauthenticated(string details) =>
+        new AuthorizationFailureResult([details], MessageFailedException.WellKnownReasons.Unauthenticated);
 
     /// <summary>
     ///     Create an authorization result that represents a failed authentication check.
     /// </summary>
     /// <param name="details">The details for the authorization failure</param>
-    public AuthorizationResult Unauthenticated(IReadOnlyCollection<string> details)
-        => new AuthorizationFailureResult(details, MessageFailedException.WellKnownReasons.Unauthenticated);
+    /// <returns>The authorization result</returns>
+    public AuthorizationResult Unauthenticated(IReadOnlyCollection<string> details) =>
+        new AuthorizationFailureResult(details, MessageFailedException.WellKnownReasons.Unauthenticated);
 
     /// <summary>
     ///     Create an authorization result that represents a failed authorization check.
     /// </summary>
     /// <param name="details">The details for the authorization failure</param>
-    public AuthorizationResult Unauthorized(string details)
-        => new AuthorizationFailureResult([details], MessageFailedException.WellKnownReasons.Unauthorized);
+    /// <returns>The authorization result</returns>
+    public AuthorizationResult Unauthorized(string details) =>
+        new AuthorizationFailureResult([details], MessageFailedException.WellKnownReasons.Unauthorized);
 
     /// <summary>
     ///     Create an authorization result that represents a failed authorization check.
     /// </summary>
     /// <param name="details">The details for the authorization failure</param>
-    public AuthorizationResult Unauthorized(IReadOnlyCollection<string> details)
-        => new AuthorizationFailureResult(details, MessageFailedException.WellKnownReasons.Unauthorized);
+    /// <returns>The authorization result</returns>
+    public AuthorizationResult Unauthorized(IReadOnlyCollection<string> details) =>
+        new AuthorizationFailureResult(details, MessageFailedException.WellKnownReasons.Unauthorized);
 }

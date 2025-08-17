@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace Conqueror.Middleware.Polly.Signalling;
 
 internal sealed class PollySignalMiddleware<TSignal> : ISignalMiddleware<TSignal>
@@ -17,9 +15,9 @@ internal sealed class PollySignalMiddleware<TSignal> : ISignalMiddleware<TSignal
             return;
         }
 
-        await Configuration.ResiliencePipelineBuilder
-                           .Build()
-                           .ExecuteAsync(async ct => await ctx.Next(ctx.Signal, ct).ConfigureAwait(false), ctx.CancellationToken)
-                           .ConfigureAwait(false);
+        await Configuration
+            .ResiliencePipelineBuilder.Build()
+            .ExecuteAsync(async ct => await ctx.Next(ctx.Signal, ct).ConfigureAwait(false), ctx.CancellationToken)
+            .ConfigureAwait(false);
     }
 }

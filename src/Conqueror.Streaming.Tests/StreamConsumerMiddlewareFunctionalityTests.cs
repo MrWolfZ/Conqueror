@@ -8,18 +8,19 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.Empty);
         Assert.That(observations.MiddlewareTypes, Is.Empty);
@@ -31,18 +32,19 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithSingleMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithSingleMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware) }));
@@ -54,18 +56,22 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithSingleMiddlewareWithParameter>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithSingleMiddlewareWithParameter>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer.HandleItem(new(10));
+        await consumer.HandleItem(new(Payload: 10), CancellationToken.None);
 
-        Assert.That(observations.ConfigurationFromMiddlewares, Is.EquivalentTo(new[] { new TestStreamConsumerMiddlewareConfiguration { Parameter = 10 } }));
+        Assert.That(
+            observations.ConfigurationFromMiddlewares,
+            Is.EquivalentTo(new[] { new TestStreamConsumerMiddlewareConfiguration { Parameter = 10 } })
+        );
     }
 
     [Test]
@@ -74,21 +80,25 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithMultipleMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithMultipleMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item, item }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware), typeof(TestStreamConsumerMiddleware2) }));
+        Assert.That(
+            observations.MiddlewareTypes,
+            Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware), typeof(TestStreamConsumerMiddleware2) })
+        );
     }
 
     [Test]
@@ -97,25 +107,28 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations)
-                    .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
-                    {
-                        _ = pipeline.Use<TestStreamConsumerMiddleware2>()
-                                    .Use<TestStreamConsumerMiddleware2>();
-                    });
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations)
+            .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            {
+                _ = pipeline.Use<TestStreamConsumerMiddleware2>().Use<TestStreamConsumerMiddleware2>();
+            });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item, item }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware2), typeof(TestStreamConsumerMiddleware2) }));
+        Assert.That(
+            observations.MiddlewareTypes,
+            Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware2), typeof(TestStreamConsumerMiddleware2) })
+        );
     }
 
     [Test]
@@ -124,28 +137,33 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations)
-                    .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
-                    {
-                        _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                                    .Use<TestStreamConsumerMiddleware2>()
-                                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                                    .Without<TestStreamConsumerMiddleware2>();
-                    });
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations)
+            .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            {
+                _ = pipeline
+                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                    .Use<TestStreamConsumerMiddleware2>()
+                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                    .Without<TestStreamConsumerMiddleware2>();
+            });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item, item }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware), typeof(TestStreamConsumerMiddleware) }));
+        Assert.That(
+            observations.MiddlewareTypes,
+            Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware), typeof(TestStreamConsumerMiddleware) })
+        );
     }
 
     [Test]
@@ -154,28 +172,33 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations)
-                    .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
-                    {
-                        _ = pipeline.Use<TestStreamConsumerMiddleware2>()
-                                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                                    .Use<TestStreamConsumerMiddleware2>()
-                                    .Without<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>();
-                    });
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations)
+            .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            {
+                _ = pipeline
+                    .Use<TestStreamConsumerMiddleware2>()
+                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                    .Use<TestStreamConsumerMiddleware2>()
+                    .Without<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>();
+            });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item, item }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware2), typeof(TestStreamConsumerMiddleware2) }));
+        Assert.That(
+            observations.MiddlewareTypes,
+            Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware2), typeof(TestStreamConsumerMiddleware2) })
+        );
     }
 
     [Test]
@@ -184,29 +207,34 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations)
-                    .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
-                    {
-                        _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                                    .Use<TestStreamConsumerMiddleware2>()
-                                    .Use<TestStreamConsumerMiddleware2>()
-                                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                                    .Without<TestStreamConsumerMiddleware2>();
-                    });
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations)
+            .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            {
+                _ = pipeline
+                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                    .Use<TestStreamConsumerMiddleware2>()
+                    .Use<TestStreamConsumerMiddleware2>()
+                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                    .Without<TestStreamConsumerMiddleware2>();
+            });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item, item }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware), typeof(TestStreamConsumerMiddleware) }));
+        Assert.That(
+            observations.MiddlewareTypes,
+            Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware), typeof(TestStreamConsumerMiddleware) })
+        );
     }
 
     [Test]
@@ -215,29 +243,34 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations)
-                    .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
-                    {
-                        _ = pipeline.Use<TestStreamConsumerMiddleware2>()
-                                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                                    .Use<TestStreamConsumerMiddleware2>()
-                                    .Without<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>();
-                    });
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations)
+            .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            {
+                _ = pipeline
+                    .Use<TestStreamConsumerMiddleware2>()
+                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                    .Use<TestStreamConsumerMiddleware2>()
+                    .Without<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>();
+            });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item, item }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware2), typeof(TestStreamConsumerMiddleware2) }));
+        Assert.That(
+            observations.MiddlewareTypes,
+            Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware2), typeof(TestStreamConsumerMiddleware2) })
+        );
     }
 
     [Test]
@@ -246,24 +279,26 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations)
-                    .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
-                    {
-                        _ = pipeline.Use<TestStreamConsumerMiddleware2>()
-                                    .Without<TestStreamConsumerMiddleware2>()
-                                    .Use<TestStreamConsumerMiddleware2>();
-                    });
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations)
+            .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            {
+                _ = pipeline
+                    .Use<TestStreamConsumerMiddleware2>()
+                    .Without<TestStreamConsumerMiddleware2>()
+                    .Use<TestStreamConsumerMiddleware2>();
+            });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware2) }));
@@ -275,24 +310,26 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations)
-                    .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
-                    {
-                        _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                                    .Without<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>()
-                                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new());
-                    });
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations)
+            .AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            {
+                _ = pipeline
+                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                    .Without<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>()
+                    .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new());
+            });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware) }));
@@ -304,26 +341,35 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithRetryMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerRetryMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithRetryMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerRetryMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item, item, item, item, item }));
-        Assert.That(observations.MiddlewareTypes,
-                    Is.EquivalentTo(new[]
-                    {
-                        typeof(TestStreamConsumerRetryMiddleware), typeof(TestStreamConsumerMiddleware), typeof(TestStreamConsumerMiddleware2), typeof(TestStreamConsumerMiddleware), typeof(TestStreamConsumerMiddleware2),
-                    }));
+        Assert.That(
+            observations.MiddlewareTypes,
+            Is.EquivalentTo(
+                new[]
+                {
+                    typeof(TestStreamConsumerRetryMiddleware),
+                    typeof(TestStreamConsumerMiddleware),
+                    typeof(TestStreamConsumerMiddleware2),
+                    typeof(TestStreamConsumerMiddleware),
+                    typeof(TestStreamConsumerMiddleware2),
+                }
+            )
+        );
     }
 
     [Test]
@@ -332,19 +378,23 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithMultipleMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithMultipleMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
         using var tokenSource = new CancellationTokenSource();
 
-        await consumer.HandleItem(new(10), tokenSource.Token);
+        await consumer.HandleItem(new(Payload: 10), tokenSource.Token);
 
-        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(new[] { tokenSource.Token, tokenSource.Token }));
+        Assert.That(
+            observations.CancellationTokensFromMiddlewares,
+            Is.EquivalentTo(new[] { tokenSource.Token, tokenSource.Token })
+        );
     }
 
     [Test]
@@ -352,23 +402,34 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
-        var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
+        var tokens = new CancellationTokensToUse
+        {
+            CancellationTokens =
+            {
+                new(canceled: false),
+                new(canceled: false),
+                new(canceled: false),
+                new(canceled: false),
+                new(canceled: false),
+            },
+        };
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithMultipleMutatingMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<MutatingTestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<MutatingTestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations)
-                    .AddSingleton(tokens);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithMultipleMutatingMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<MutatingTestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<MutatingTestStreamConsumerMiddleware2>()
+            .AddSingleton(observations)
+            .AddSingleton(tokens);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer.HandleItem(new(0));
+        await consumer.HandleItem(new(Payload: 0), CancellationToken.None);
 
-        var item1 = new TestItem(0);
-        var item2 = new TestItem(1);
-        var item3 = new TestItem(3);
+        var item1 = new TestItem(Payload: 0);
+        var item2 = new TestItem(Payload: 1);
+        var item3 = new TestItem(Payload: 3);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item1, item2 }));
         Assert.That(observations.ItemsFromConsumers, Is.EquivalentTo(new[] { item3 }));
@@ -379,22 +440,32 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
-        var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false) } };
+        var tokens = new CancellationTokensToUse
+        {
+            CancellationTokens = { new(canceled: false), new(canceled: false), new(canceled: false) },
+        };
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithMultipleMutatingMiddlewares>()
-                    .AddConquerorStreamConsumerMiddleware<MutatingTestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<MutatingTestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations)
-                    .AddSingleton(tokens);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithMultipleMutatingMiddlewares>()
+            .AddConquerorStreamConsumerMiddleware<MutatingTestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<MutatingTestStreamConsumerMiddleware2>()
+            .AddSingleton(observations)
+            .AddSingleton(tokens);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer.HandleItem(new(0), tokens.CancellationTokens[0]);
+        await consumer.HandleItem(new(Payload: 0), tokens.CancellationTokens[0]);
 
-        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(tokens.CancellationTokens.Take(2)));
-        Assert.That(observations.CancellationTokensFromConsumers, Is.EquivalentTo(new[] { tokens.CancellationTokens[2] }));
+        Assert.That(
+            observations.CancellationTokensFromMiddlewares,
+            Is.EquivalentTo(tokens.CancellationTokens.Take(count: 2))
+        );
+        Assert.That(
+            observations.CancellationTokensFromConsumers,
+            Is.EquivalentTo(new[] { tokens.CancellationTokens[2] })
+        );
     }
 
     [Test]
@@ -404,26 +475,29 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var observedInstances = new List<TestService>();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddScoped<TestService>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
+            .AddScoped<TestService>()
+            .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
+        _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>())
+        );
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var consumer1 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer2 = scope2.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer3 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer1.HandleItem(new(10));
-        await consumer2.HandleItem(new(10));
-        await consumer3.HandleItem(new(10));
+        await consumer1.HandleItem(new(Payload: 10), CancellationToken.None);
+        await consumer2.HandleItem(new(Payload: 10), CancellationToken.None);
+        await consumer3.HandleItem(new(Payload: 10), CancellationToken.None);
 
-        Assert.That(observedInstances, Has.Count.EqualTo(3));
+        Assert.That(observedInstances, Has.Count.EqualTo(expected: 3));
         Assert.That(observedInstances[1], Is.Not.SameAs(observedInstances[0]));
         Assert.That(observedInstances[2], Is.SameAs(observedInstances[0]));
     }
@@ -434,16 +508,19 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>().AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline => pipeline.Use<TestStreamConsumerMiddleware2>());
+        _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            pipeline.Use<TestStreamConsumerMiddleware2>()
+        );
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => consumer.HandleItem(new(10)));
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(() =>
+            consumer.HandleItem(new(Payload: 10), CancellationToken.None)
+        );
 
         Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
         Assert.That(exception?.Message, Contains.Substring(nameof(TestStreamConsumerMiddleware2)));
@@ -455,16 +532,19 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithoutMiddlewares>().AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline => pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new()));
+        _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+            pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+        );
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => consumer.HandleItem(new(10)));
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(() =>
+            consumer.HandleItem(new(Payload: 10), CancellationToken.None)
+        );
 
         Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
         Assert.That(exception?.Message, Contains.Substring(nameof(TestStreamConsumerMiddleware)));
@@ -476,15 +556,18 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var exception = new Exception();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithThrowingMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<ThrowingTestStreamConsumerMiddleware>()
-                    .AddSingleton(exception);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithThrowingMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<ThrowingTestStreamConsumerMiddleware>()
+            .AddSingleton(exception);
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => consumer.HandleItem(new(10)));
+        var thrownException = Assert.ThrowsAsync<Exception>(() =>
+            consumer.HandleItem(new(Payload: 10), CancellationToken.None)
+        );
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -495,24 +578,29 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        var consumer = provider.GetRequiredService<IStreamConsumerFactory>().Create<TestItem>(async (item, p, cancellationToken) =>
-                                                                                                      {
-                                                                                                          await Task.Yield();
-                                                                                                          var obs = p.GetRequiredService<TestObservations>();
-                                                                                                          obs.ItemsFromConsumers.Add(item);
-                                                                                                          obs.CancellationTokensFromConsumers.Add(cancellationToken);
-                                                                                                      },
-                                                                                                      pipeline => pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new()));
+        var consumer = provider
+            .GetRequiredService<IStreamConsumerFactory>()
+            .Create<TestItem>(
+                async (item, p, cancellationToken) =>
+                {
+                    await Task.Yield();
+                    var obs = p.GetRequiredService<TestObservations>();
+                    obs.ItemsFromConsumers.Add(item);
+                    obs.CancellationTokensFromConsumers.Add(cancellationToken);
+                },
+                pipeline => pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+            );
 
-        var item = new TestItem(10);
+        var item = new TestItem(Payload: 10);
 
-        await consumer.HandleItem(item);
+        await consumer.HandleItem(item, CancellationToken.None);
 
         Assert.That(observations.ItemsFromMiddlewares, Is.EquivalentTo(new[] { item }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamConsumerMiddleware) }));
@@ -521,14 +609,31 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
     [Test]
     public void InvalidMiddlewares()
     {
-        Assert.That(() => new ServiceCollection().AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddlewareWithMultipleInterfaces>(), Throws.ArgumentException);
-        Assert.That(() => new ServiceCollection().AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddlewareWithMultipleInterfaces>(_ => new()), Throws.ArgumentException);
-        Assert.That(() => new ServiceCollection().AddConquerorStreamConsumerMiddleware(new TestStreamConsumerMiddlewareWithMultipleInterfaces()), Throws.ArgumentException);
+        Assert.That(
+            () =>
+                new ServiceCollection().AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddlewareWithMultipleInterfaces>(),
+            Throws.ArgumentException
+        );
+        Assert.That(
+            () =>
+                new ServiceCollection().AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddlewareWithMultipleInterfaces>(
+                    _ => new()
+                ),
+            Throws.ArgumentException
+        );
+        Assert.That(
+            () =>
+                new ServiceCollection().AddConquerorStreamConsumerMiddleware(
+                    new TestStreamConsumerMiddlewareWithMultipleInterfaces()
+                ),
+            Throws.ArgumentException
+        );
     }
 
     private sealed record TestItem(int Payload);
 
-    private sealed class TestStreamConsumerWithSingleMiddleware(TestObservations observations) : IStreamConsumer<TestItem>
+    private sealed class TestStreamConsumerWithSingleMiddleware(TestObservations observations)
+        : IStreamConsumer<TestItem>
     {
         public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
         {
@@ -537,13 +642,12 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
             observations.CancellationTokensFromConsumers.Add(cancellationToken);
         }
 
-        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline)
-        {
+        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline) =>
             _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new());
-        }
     }
 
-    private sealed class TestStreamConsumerWithSingleMiddlewareWithParameter(TestObservations observations) : IStreamConsumer<TestItem>
+    private sealed class TestStreamConsumerWithSingleMiddlewareWithParameter(TestObservations observations)
+        : IStreamConsumer<TestItem>
     {
         public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
         {
@@ -554,11 +658,14 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
 
         public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline)
         {
-            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new() { Parameter = 10 });
+            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(
+                new() { Parameter = 10 }
+            );
         }
     }
 
-    private sealed class TestStreamConsumerWithMultipleMiddlewares(TestObservations observations) : IStreamConsumer<TestItem>
+    private sealed class TestStreamConsumerWithMultipleMiddlewares(TestObservations observations)
+        : IStreamConsumer<TestItem>
     {
         public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
         {
@@ -569,8 +676,9 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
 
         public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline)
         {
-            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                        .Use<TestStreamConsumerMiddleware2>();
+            _ = pipeline
+                .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                .Use<TestStreamConsumerMiddleware2>();
         }
     }
 
@@ -583,13 +691,12 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
             observations.CancellationTokensFromConsumers.Add(cancellationToken);
         }
 
-        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline)
-        {
+        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline) =>
             pipeline.ServiceProvider.GetService<Action<IStreamConsumerPipelineBuilder>>()?.Invoke(pipeline);
-        }
     }
 
-    private sealed class TestStreamConsumerWithRetryMiddleware(TestObservations observations) : IStreamConsumer<TestItem>
+    private sealed class TestStreamConsumerWithRetryMiddleware(TestObservations observations)
+        : IStreamConsumer<TestItem>
     {
         public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
         {
@@ -600,13 +707,15 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
 
         public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline)
         {
-            _ = pipeline.Use<TestStreamConsumerRetryMiddleware>()
-                        .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
-                        .Use<TestStreamConsumerMiddleware2>();
+            _ = pipeline
+                .Use<TestStreamConsumerRetryMiddleware>()
+                .Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new())
+                .Use<TestStreamConsumerMiddleware2>();
         }
     }
 
-    private sealed class TestStreamConsumerWithMultipleMutatingMiddlewares(TestObservations observations) : IStreamConsumer<TestItem>
+    private sealed class TestStreamConsumerWithMultipleMutatingMiddlewares(TestObservations observations)
+        : IStreamConsumer<TestItem>
     {
         public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
         {
@@ -615,24 +724,17 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
             observations.CancellationTokensFromConsumers.Add(cancellationToken);
         }
 
-        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline)
-        {
-            _ = pipeline.Use<MutatingTestStreamConsumerMiddleware>()
-                        .Use<MutatingTestStreamConsumerMiddleware2>();
-        }
+        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline) =>
+            _ = pipeline.Use<MutatingTestStreamConsumerMiddleware>().Use<MutatingTestStreamConsumerMiddleware2>();
     }
 
     private sealed class TestStreamConsumerWithThrowingMiddleware : IStreamConsumer<TestItem>
     {
-        public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
-        {
+        public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default) =>
             await Task.Yield();
-        }
 
-        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline)
-        {
+        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline) =>
             _ = pipeline.Use<ThrowingTestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new());
-        }
     }
 
     private sealed record TestStreamConsumerMiddlewareConfiguration
@@ -640,9 +742,12 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         public int Parameter { get; set; }
     }
 
-    private sealed class TestStreamConsumerMiddleware(TestObservations observations) : IStreamConsumerMiddleware<TestStreamConsumerMiddlewareConfiguration>
+    private sealed class TestStreamConsumerMiddleware(TestObservations observations)
+        : IStreamConsumerMiddleware<TestStreamConsumerMiddlewareConfiguration>
     {
-        public async Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem, TestStreamConsumerMiddlewareConfiguration> ctx)
+        public async Task Execute<TItem>(
+            StreamConsumerMiddlewareContext<TItem, TestStreamConsumerMiddlewareConfiguration> ctx
+        )
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -683,7 +788,8 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
 
     private sealed class MutatingTestStreamConsumerMiddleware(
         TestObservations observations,
-        CancellationTokensToUse cancellationTokensToUse) : IStreamConsumerMiddleware
+        CancellationTokensToUse cancellationTokensToUse
+    ) : IStreamConsumerMiddleware
     {
         public async Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem> ctx)
         {
@@ -705,7 +811,8 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
 
     private sealed class MutatingTestStreamConsumerMiddleware2(
         TestObservations observations,
-        CancellationTokensToUse cancellationTokensToUse) : IStreamConsumerMiddleware
+        CancellationTokensToUse cancellationTokensToUse
+    ) : IStreamConsumerMiddleware
     {
         public async Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem> ctx)
         {
@@ -725,25 +832,29 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestStreamConsumerMiddleware(Exception exception) : IStreamConsumerMiddleware<TestStreamConsumerMiddlewareConfiguration>
+    private sealed class ThrowingTestStreamConsumerMiddleware(Exception exception)
+        : IStreamConsumerMiddleware<TestStreamConsumerMiddlewareConfiguration>
     {
-        public async Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem, TestStreamConsumerMiddlewareConfiguration> ctx)
+        public async Task Execute<TItem>(
+            StreamConsumerMiddlewareContext<TItem, TestStreamConsumerMiddlewareConfiguration> ctx
+        )
         {
             await Task.Yield();
+
             throw exception;
         }
     }
 
-    private sealed class TestStreamConsumerMiddlewareWithMultipleInterfaces : IStreamConsumerMiddleware<TestStreamConsumerMiddlewareConfiguration>,
-                                                                              IStreamConsumerMiddleware
+    private sealed class TestStreamConsumerMiddlewareWithMultipleInterfaces
+        : IStreamConsumerMiddleware<TestStreamConsumerMiddlewareConfiguration>,
+            IStreamConsumerMiddleware
     {
-        public Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem> ctx)
-            =>
-                throw new InvalidOperationException("this middleware should never be called");
+        public Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem> ctx) =>
+            throw new InvalidOperationException("this middleware should never be called");
 
-        public Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem, TestStreamConsumerMiddlewareConfiguration> ctx)
-            =>
-                throw new InvalidOperationException("this middleware should never be called");
+        public Task Execute<TItem>(
+            StreamConsumerMiddlewareContext<TItem, TestStreamConsumerMiddlewareConfiguration> ctx
+        ) => throw new InvalidOperationException("this middleware should never be called");
     }
 
     private sealed class TestObservations

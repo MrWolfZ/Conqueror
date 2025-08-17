@@ -1,11 +1,13 @@
 ﻿namespace Conqueror.SourceGenerators.Util;
 
-public readonly record struct BaseTypeDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct BaseTypeDescriptor(
     string Name,
     string Namespace,
     string FullyQualifiedName,
     EquatableArray<AttributeDescriptor> Attributes,
-    EquatableArray<PropertyDescriptor> Properties)
+    EquatableArray<PropertyDescriptor> Properties
+)
 {
     public readonly EquatableArray<AttributeDescriptor> Attributes = Attributes;
     public readonly string FullyQualifiedName = FullyQualifiedName;

@@ -12,9 +12,8 @@ public sealed class MessageMetricsMiddleware<TMessage, TResponse> : IMessageMidd
 
 public static class MetricsMessagePipelineExtensions
 {
-    public static IMessagePipeline<TMessage, TResponse> UseMetrics<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline)
-        where TMessage : class, IMessage<TMessage, TResponse>
-    {
-        return pipeline.Use(new MessageMetricsMiddleware<TMessage, TResponse>());
-    }
+    public static IMessagePipeline<TMessage, TResponse> UseMetrics<TMessage, TResponse>(
+        this IMessagePipeline<TMessage, TResponse> pipeline)
+        where TMessage : class, IMessage<TMessage, TResponse> =>
+        pipeline.Use(new MessageMetricsMiddleware<TMessage, TResponse>());
 }

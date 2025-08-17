@@ -1,11 +1,8 @@
-﻿using System.Net.Mime;
-using System.Reflection;
-using Conqueror.Transport.ConformityTests.Messaging;
+﻿namespace Conqueror.Transport.Http.Tests.Messaging;
 
-namespace Conqueror.Transport.Http.Tests.Messaging;
-
-public sealed class HttpMessageConformityExecutionSuccessTestCase : HttpMessageConformityExecutionTestCase,
-                                                                    IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>
+public sealed class HttpMessageConformityExecutionSuccessTestCase
+    : HttpMessageConformityExecutionTestCase,
+        IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>
 {
     private readonly string? messageContentType;
     private readonly bool messageContentTypeWasSet;
@@ -15,8 +12,6 @@ public sealed class HttpMessageConformityExecutionSuccessTestCase : HttpMessageC
     private readonly string? responseContentType;
     private readonly bool responseContentTypeWasSet;
     private readonly IReadOnlyCollection<string>? responsePayloads;
-
-    public bool ShouldCompleteImmediately => !HandlerIsEnabled;
 
     public bool IsOmittedFromApiDescriptions { get; init; }
 
@@ -36,7 +31,13 @@ public sealed class HttpMessageConformityExecutionSuccessTestCase : HttpMessageC
 
     public int ParameterCount
     {
-        get => parameterCount ?? (HttpMethod == MethodNames.Post ? 1 : throw new InvalidOperationException("Parameter count is not set for this test case."));
+        get =>
+            parameterCount
+            ?? (
+                string.Equals(HttpMethod, MethodNames.Post, StringComparison.Ordinal)
+                    ? 1
+                    : throw new InvalidOperationException("Parameter count is not set for this test case.")
+            );
         init => parameterCount = value;
     }
 
@@ -84,19 +85,25 @@ public sealed class HttpMessageConformityExecutionSuccessTestCase : HttpMessageC
 
     public IReadOnlyCollection<string?> MessagePayloads
     {
-        get => messagePayloads
-               ?? ExpectedReceivedMessages
-                  .Select(m => $"{{\"payload\":{m.GetType().GetProperty("Payload", BindingFlags.Public | BindingFlags.Instance)?.GetValue(m)}}}")
-                  .ToArray();
+        get =>
+            messagePayloads
+            ?? ExpectedReceivedMessages
+                .Select(m =>
+                    $"{{\"payload\":{m.GetType().GetProperty("Payload", BindingFlags.Public | BindingFlags.Instance)?.GetValue(m)}}}"
+                )
+                .ToArray();
         init => messagePayloads = value;
     }
 
     public IReadOnlyCollection<string> ResponsePayloads
     {
-        get => responsePayloads
-               ?? ExpectedResponses
-                  .Select(r => $"{{\"payload\":{r.GetType().GetProperty("Payload", BindingFlags.Public | BindingFlags.Instance)?.GetValue(r)}}}")
-                  .ToArray();
+        get =>
+            responsePayloads
+            ?? ExpectedResponses
+                .Select(r =>
+                    $"{{\"payload\":{r.GetType().GetProperty("Payload", BindingFlags.Public | BindingFlags.Instance)?.GetValue(r)}}}"
+                )
+                .ToArray();
         init => responsePayloads = value;
     }
 
@@ -106,19 +113,25 @@ public sealed class HttpMessageConformityExecutionSuccessTestCase : HttpMessageC
 
     public Action<HttpMessageTransportConformityTestHost, IHttpMessageReceiver>? ConfigureReceiverFn { get; init; }
 
-    Task IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>.BeforeSend(HttpMessageTransportConformityTestHost host)
-        => BeforeSend?.Invoke(host) ?? Task.CompletedTask;
+    public bool ShouldCompleteImmediately => !HandlerIsEnabled;
+
+    Task IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>.BeforeSend(
+        HttpMessageTransportConformityTestHost host
+    ) => BeforeSend?.Invoke(host) ?? Task.CompletedTask;
 
     async Task IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>.AfterMessagesAreReceived(
-        HttpMessageTransportConformityTestHost testHost)
+        HttpMessageTransportConformityTestHost host
+    )
     {
         if (AfterMessagesAreReceived is not null)
         {
-            await AfterMessagesAreReceived.Invoke(testHost);
+            await AfterMessagesAreReceived.Invoke(host);
         }
 
-        Assert.That(testHost.ReceiverHost.ReceivedQueryStringsOnServer.Select(s => string.IsNullOrWhiteSpace(s) ? null : s),
-                    Is.EquivalentTo(QueryStrings.Select(s => string.IsNullOrWhiteSpace(s) ? null : s)));
+        Assert.That(
+            host.ReceiverHost.ReceivedQueryStringsOnServer.Select(s => string.IsNullOrWhiteSpace(s) ? null : s),
+            Is.EquivalentTo(QueryStrings.Select(s => string.IsNullOrWhiteSpace(s) ? null : s))
+        );
     }
 
     public override void ConfigureReceiver(HttpMessageTransportConformityTestHost host, IHttpMessageReceiver receiver)

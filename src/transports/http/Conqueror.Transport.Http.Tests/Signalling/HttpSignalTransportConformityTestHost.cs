@@ -7,22 +7,25 @@ public sealed class HttpSignalTransportConformityTestHost : ISignalTransportConf
 
     private readonly List<HttpSignalTransportConformityReceiverTestHost> receiverHosts = [];
 
-    private readonly ServiceProvider serviceProvider = new ServiceCollection().AddLogging(l => l.AddTestLogger().SetMinimumLevel(LogLevel.Trace))
-                                                                              .BuildServiceProvider();
+    private readonly ServiceProvider serviceProvider = new ServiceCollection()
+        .AddLogging(l => l.AddTestLogger().SetMinimumLevel(LogLevel.Trace))
+        .BuildServiceProvider();
 
     private readonly HttpTransportTestTimeouts timeouts = HttpTransportTestTimeouts.Create();
     private HttpSignalTransportConformityPublisherTestHost? publisherHost;
 
-    private HttpSignalTransportConformityTestHost(HttpSignalConformityTestCase testCase)
-    {
-        TestCase = testCase;
-    }
+    private HttpSignalTransportConformityTestHost(HttpSignalConformityTestCase testCase) => TestCase = testCase;
 
     private HttpSignalConformityTestCase TestCase { get; }
 
-    public HttpSignalTransportConformityPublisherTestHost PublisherHost => publisherHost ?? throw new InvalidOperationException("publisher host not created");
+    public HttpSignalTransportConformityPublisherTestHost PublisherHost =>
+        publisherHost ?? throw new InvalidOperationException("publisher host not created");
 
     public IReadOnlyCollection<HttpSignalTransportConformityReceiverTestHost> ReceiverHosts => receiverHosts;
+
+    public List<(int StatusCode, string ContentType, bool KeepAlive)?> ServerConnectionResponses { get; } = [];
+
+    public ConcurrentQueue<Exception?> ReceiverConfigurationExceptions { get; } = [];
 
     public CancellationToken TestTimeoutToken => timeouts.TestTimeoutToken;
 
@@ -34,63 +37,15 @@ public sealed class HttpSignalTransportConformityTestHost : ISignalTransportConf
 
     public ILogger Logger => serviceProvider.GetRequiredService<ILogger<HttpSignalTransportConformityTestHost>>();
 
-    public List<(int StatusCode, string ContentType, bool KeepAlive)?> ServerConnectionResponses { get; } = [];
-
-    public ConcurrentQueue<Exception?> ReceiverConfigurationExceptions { get; } = new();
-
-    public static HttpSignalTransportConformityTestHost Create(HttpSignalConformityTestCase testCase) => new(testCase);
-
-    public Task<WebSocket> ConnectToWebSocket(Uri address, Action<IHeaderDictionary>? configureHeaders = null)
-        => PublisherHost.ConnectToWebSocket(address, configureHeaders);
-
-    public Task TriggerReconnect() => PublisherHost.TriggerReconnect();
-
-    public Task<HttpSignalTransportConformityReceiverTestHost> CreateReceiverTestHost(
-        CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? signalCallback = null,
-        Func<CancellationToken, Task>? reconnectDelayCallback = null)
-    {
-        var receiverHost = HttpSignalTransportConformityReceiverTestHost.CreateReceiverHost(
-            this,
-            TestCase,
-            signalCallback,
-            reconnectDelayCallback,
-            h => receiverHosts.Remove(h),
-            cancellationToken);
-
-        receiverHosts.Add(receiverHost);
-
-        return Task.FromResult(receiverHost);
-    }
-
-    public async Task<HttpSignalTransportConformityPublisherTestHost> CreatePublisherTestHost(
-        CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback = null)
-    {
-        if (publisherHost is not null)
-        {
-            throw new InvalidOperationException("publisher host already created");
-        }
-
-        publisherHost = await HttpSignalTransportConformityPublisherTestHost.CreatePublisherHost(TestCase, publishCallback);
-
-        foreach (var response in ServerConnectionResponses)
-        {
-            publisherHost.ServerConnectionResponses.Enqueue(response);
-        }
-
-        return publisherHost;
-    }
-
     async Task<ISignalTransportConformityReceiverTestHost> ISignalTransportConformityTestHost.CreateReceiverTestHost(
         CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? signalCallback)
-        => await CreateReceiverTestHost(cancellationToken, signalCallback);
+        Func<object, ConquerorContext, CancellationToken, Task>? signalCallback
+    ) => await CreateReceiverTestHost(cancellationToken, signalCallback);
 
     async Task<ISignalTransportConformityPublisherTestHost> ISignalTransportConformityTestHost.CreatePublisherTestHost(
         CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback)
-        => await CreatePublisherTestHost(cancellationToken, publishCallback);
+        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback
+    ) => await CreatePublisherTestHost(cancellationToken, publishCallback);
 
     public async ValueTask DisposeAsync()
     {
@@ -103,9 +58,59 @@ public sealed class HttpSignalTransportConformityTestHost : ISignalTransportConf
             await receiverHost.DisposeAsync();
         }
 
-        if (publisherHost != null)
+        if (publisherHost is not null)
         {
             await publisherHost.DisposeAsync();
         }
+    }
+
+    public static HttpSignalTransportConformityTestHost Create(HttpSignalConformityTestCase testCase) => new(testCase);
+
+    public Task<WebSocket> ConnectToWebSocket(Uri address, Action<IHeaderDictionary>? configureHeaders = null) =>
+        PublisherHost.ConnectToWebSocket(address, configureHeaders);
+
+    public Task TriggerReconnect() => PublisherHost.TriggerReconnect();
+
+    public Task<HttpSignalTransportConformityReceiverTestHost> CreateReceiverTestHost(
+        CancellationToken cancellationToken,
+        Func<object, ConquerorContext, CancellationToken, Task>? signalCallback = null,
+        Func<CancellationToken, Task>? reconnectDelayCallback = null
+    )
+    {
+        var receiverHost = HttpSignalTransportConformityReceiverTestHost.CreateReceiverHost(
+            this,
+            TestCase,
+            signalCallback,
+            reconnectDelayCallback,
+            h => receiverHosts.Remove(h),
+            cancellationToken
+        );
+
+        receiverHosts.Add(receiverHost);
+
+        return Task.FromResult(receiverHost);
+    }
+
+    public async Task<HttpSignalTransportConformityPublisherTestHost> CreatePublisherTestHost(
+        CancellationToken _,
+        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback = null
+    )
+    {
+        if (publisherHost is not null)
+        {
+            throw new InvalidOperationException("publisher host already created");
+        }
+
+        publisherHost = await HttpSignalTransportConformityPublisherTestHost.CreatePublisherHost(
+            TestCase,
+            publishCallback
+        );
+
+        foreach (var response in ServerConnectionResponses)
+        {
+            publisherHost.ServerConnectionResponses.Enqueue(response);
+        }
+
+        return publisherHost;
     }
 }

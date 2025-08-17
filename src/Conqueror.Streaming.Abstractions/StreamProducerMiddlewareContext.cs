@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-
 namespace Conqueror;
 
 public abstract class StreamProducerMiddlewareContext<TRequest, TItem>
@@ -18,7 +14,8 @@ public abstract class StreamProducerMiddlewareContext<TRequest, TItem>
     public abstract IAsyncEnumerable<TItem> Next(TRequest request, CancellationToken cancellationToken);
 }
 
-public abstract class StreamProducerMiddlewareContext<TRequest, TItem, TConfiguration> : StreamProducerMiddlewareContext<TRequest, TItem>
+public abstract class StreamProducerMiddlewareContext<TRequest, TItem, TConfiguration>
+    : StreamProducerMiddlewareContext<TRequest, TItem>
     where TRequest : class
 {
     public abstract TConfiguration Configuration { get; }

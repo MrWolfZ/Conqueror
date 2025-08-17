@@ -1,23 +1,32 @@
-﻿using System.Collections.Generic;
+﻿namespace Conqueror.SourceGenerators.Util;
+
 using System.Collections.Immutable;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Conqueror.SourceGenerators.Util;
-
-public static class GeneratorHelper
+[SuppressMessage(
+    "Design",
+    "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+    Justification = "we want the code to be sync"
+)]
+internal static class GeneratorHelper
 {
     public static TypeDescriptor GenerateTypeDescriptor(ITypeSymbol symbol, SemanticModel semanticModel)
     {
-        var typeArguments = (symbol as INamedTypeSymbol)?.TypeArguments ?? [];
+        var typeArguments = (symbol as INamedTypeSymbol)?.TypeArguments ?? ImmutableArray<ITypeSymbol>.Empty;
 
         // TODO: improve the logic for finding own properties to account for fields, etc.
-        return new(
+        return new TypeDescriptor(
             symbol.Name,
-            symbol.Name + (typeArguments.Length > 0 ? "<" + string.Join(", ", typeArguments.Select(t => t.ToString())) + ">" : string.Empty),
-            symbol.ContainingNamespace?.IsGlobalNamespace ?? false ? string.Empty : symbol.ContainingNamespace?.ToString() ?? string.Empty,
+            symbol.Name
+                + (
+                    typeArguments.Length > 0
+                        ? "<" + string.Join(", ", typeArguments.Select(t => t.ToString())) + ">"
+                        : ""
+                ),
+            symbol.ContainingNamespace?.IsGlobalNamespace ?? false ? "" : symbol.ContainingNamespace?.ToString() ?? "",
             symbol.ToString(),
             symbol.DeclaredAccessibility,
             symbol.IsRecord,
@@ -32,7 +41,8 @@ public static class GeneratorHelper
             GetInterfaces(symbol),
             GetParentClasses(symbol, semanticModel),
             GenerateEnumerableDescriptor(symbol, semanticModel),
-            GetTupleDescriptor(symbol, semanticModel));
+            GetTupleDescriptor(symbol, semanticModel)
+        );
     }
 
     public static EquatableArray<AttributeParameterDescriptor> GetAttributeProperties(AttributeData attributeData)
@@ -42,38 +52,52 @@ public static class GeneratorHelper
         for (var i = 0; i < attributeData.NamedArguments.Length; i += 1)
         {
             var namedArgument = attributeData.NamedArguments[i];
-            result[i] = new(namedArgument.Key,
-                            namedArgument.Value.Type?.ToString() ?? "object?",
-                            namedArgument.Value.Kind == TypedConstantKind.Array,
-                            namedArgument.Value.Kind == TypedConstantKind.Primitive,
-                            GetValue(namedArgument.Value));
+            result[i] = new AttributeParameterDescriptor(
+                namedArgument.Key,
+                namedArgument.Value.Type?.ToString() ?? "object?",
+                namedArgument.Value.Kind is TypedConstantKind.Array,
+                namedArgument.Value.Kind is TypedConstantKind.Primitive,
+                GetValue(namedArgument.Value)
+            );
         }
 
-        return new(result);
+        return new EquatableArray<AttributeParameterDescriptor>(result);
 
         AttributeParameterValueDescriptor GetValue(TypedConstant value)
-            => value.Kind == TypedConstantKind.Array ? GetArrayValue(value.Values) : new(value.Value, null, value.IsNull);
+        {
+            return value.Kind is TypedConstantKind.Array
+                ? GetArrayValue(value.Values)
+                : new(value.Value, Values: null, value.IsNull);
+        }
 
         AttributeParameterValueDescriptor GetArrayValue(ImmutableArray<TypedConstant> values)
-            => new(null, new(values.Select(GetValue).ToArray()), false);
+        {
+            return new AttributeParameterValueDescriptor(
+                Value: null,
+                new(values.Select(GetValue).ToArray()),
+                IsNull: false
+            );
+        }
     }
 
     private static EnumerableDescriptor? GenerateEnumerableDescriptor(ITypeSymbol symbol, SemanticModel semanticModel)
     {
-        if (symbol.SpecialType == SpecialType.System_String)
+        if (symbol.SpecialType is SpecialType.System_String)
         {
             return null;
         }
 
         foreach (var interfaceType in symbol.AllInterfaces)
         {
-            if (interfaceType.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)
+            if (interfaceType.OriginalDefinition.SpecialType is SpecialType.System_Collections_Generic_IEnumerable_T)
             {
-                var typeArgument = interfaceType.TypeArguments[0];
+                var typeArgument = interfaceType.TypeArguments[index: 0];
 
-                return new(symbol.ToString(),
-                           symbol is IArrayTypeSymbol,
-                           GenerateTypeDescriptor(typeArgument, semanticModel).ToWrapper());
+                return new EnumerableDescriptor(
+                    symbol.ToString(),
+                    symbol is IArrayTypeSymbol,
+                    GenerateTypeDescriptor(typeArgument, semanticModel).ToWrapper()
+                );
             }
         }
 
@@ -88,7 +112,8 @@ public static class GeneratorHelper
         }
 
         var items = s.TypeArguments.Select(a => GenerateTypeDescriptor(a, semanticModel).ToWrapper()).ToArray();
-        return new(new(items));
+
+        return new TupleDescriptor(new(items));
     }
 
     private static EquatableArray<BaseTypeDescriptor> GetBaseTypes(ITypeSymbol symbol, SemanticModel semanticModel)
@@ -97,30 +122,37 @@ public static class GeneratorHelper
 
         var result = new List<BaseTypeDescriptor>();
 
-        while (baseType != null && baseType.ToString() != "object")
+        while (
+            baseType is not null && !string.Equals(baseType.ToString(), "object", StringComparison.OrdinalIgnoreCase)
+        )
         {
-            result.Add(new(baseType.Name,
-                           baseType.ContainingNamespace?.ToString() ?? string.Empty,
-                           baseType.ToString(),
-                           GetAttributes(baseType),
-                           GetProperties(baseType, semanticModel)));
+            result.Add(
+                new(
+                    baseType.Name,
+                    baseType.ContainingNamespace?.ToString() ?? "",
+                    baseType.ToString(),
+                    GetAttributes(baseType),
+                    GetProperties(baseType, semanticModel)
+                )
+            );
 
             baseType = baseType.BaseType;
         }
 
-        return new([..result]);
+        return new EquatableArray<BaseTypeDescriptor>([.. result]);
     }
 
     private static EquatableArray<InterfaceDescriptor> GetInterfaces(ITypeSymbol symbol)
     {
-        return new(GetInterfacesInner(symbol).Distinct(SymbolEqualityComparer.Default)
-                                             .OfType<INamedTypeSymbol>()
-                                             .Select(i => new InterfaceDescriptor(i.Name,
-                                                                                  i.ContainingNamespace?.ToString() ?? string.Empty,
-                                                                                  i.ToString()))
-                                             .ToArray());
+        return new EquatableArray<InterfaceDescriptor>(
+            GetInterfacesInner(symbol)
+                .Distinct(SymbolEqualityComparer.Default)
+                .OfType<INamedTypeSymbol>()
+                .Select(i => new InterfaceDescriptor(i.Name, i.ContainingNamespace?.ToString() ?? "", i.ToString()))
+                .ToArray()
+        );
 
-        IEnumerable<INamedTypeSymbol> GetInterfacesInner(ITypeSymbol s)
+        static IEnumerable<INamedTypeSymbol> GetInterfacesInner(ITypeSymbol s)
         {
             foreach (var i in s.Interfaces)
             {
@@ -144,84 +176,103 @@ public static class GeneratorHelper
 
     private static EquatableArray<ParentClass> GetParentClasses(ITypeSymbol symbol, SemanticModel semanticModel)
     {
-        if (symbol.DeclaringSyntaxReferences.Length == 0)
+        if (symbol.DeclaringSyntaxReferences.Length is 0)
         {
-            return [];
+            return EquatableArray<ParentClass>.Empty;
         }
 
-        var syntaxNode = symbol.DeclaringSyntaxReferences[0].GetSyntax();
+        var syntaxNode = symbol.DeclaringSyntaxReferences[index: 0].GetSyntax(CancellationToken.None);
 
         var parentSyntax = syntaxNode.Parent as TypeDeclarationSyntax;
 
         var result = new List<ParentClass>();
 
-        while (parentSyntax != null && IsAllowedKind(parentSyntax.Kind()))
+        while (parentSyntax is not null && IsAllowedKind(parentSyntax.Kind()))
         {
             var parentSymbol = semanticModel.GetDeclaredSymbolSafe(parentSyntax);
 
             var parentClassInfo = new ParentClass(
                 parentSyntax.Keyword.ValueText,
-                parentSyntax.Identifier.ToString() + parentSyntax.TypeParameterList,
-                parentSymbol?.DeclaredAccessibility ?? Accessibility.NotApplicable);
+                string.Concat(parentSyntax.Identifier.ToString(), parentSyntax.TypeParameterList),
+                parentSymbol?.DeclaredAccessibility ?? Accessibility.NotApplicable
+            );
 
-            result.Insert(0, parentClassInfo);
+            result.Insert(index: 0, parentClassInfo);
 
             parentSyntax = parentSyntax.Parent as TypeDeclarationSyntax;
         }
 
-        return new([..result]);
+        return new EquatableArray<ParentClass>([.. result]);
 
-        static bool IsAllowedKind(SyntaxKind kind) =>
-            kind is SyntaxKind.ClassDeclaration
-                or SyntaxKind.StructDeclaration
-                or SyntaxKind.RecordDeclaration;
+        static bool IsAllowedKind(SyntaxKind kind)
+        {
+            return kind is SyntaxKind.ClassDeclaration or SyntaxKind.StructDeclaration or SyntaxKind.RecordDeclaration;
+        }
     }
 
     private static EquatableArray<AttributeDescriptor> GetAttributes(ITypeSymbol symbol)
     {
-        return new(symbol.GetAttributes()
-
-                         // filter out system attributes (specifically `AttributeUsageAttribute`) to prevent issues like infinite loops
-                         .Where(a => !(a.AttributeClass?.ContainingNamespace.ToString() ?? string.Empty).StartsWith("System"))
-                         .Select(a => new AttributeDescriptor(a.AttributeClass!.Name,
-                                                              a.AttributeClass.ContainingNamespace?.ToString() ?? string.Empty,
-                                                              a.AttributeClass.ToString(),
-                                                              GetAttributes(a.AttributeClass)))
-                         .ToArray());
+        return new(
+            symbol
+                .GetAttributes()
+                // filter out system attributes (specifically `AttributeUsageAttribute`) to prevent issues like infinite loops
+                .Where(a =>
+                    !(a.AttributeClass?.ContainingNamespace.ToString() ?? "").StartsWith(
+                        "System",
+                        StringComparison.Ordinal
+                    )
+                )
+                .Select(a => new AttributeDescriptor(
+                    a.AttributeClass!.Name,
+                    a.AttributeClass.ContainingNamespace?.ToString() ?? "",
+                    a.AttributeClass.ToString(),
+                    GetAttributes(a.AttributeClass)
+                ))
+                .ToArray()
+        );
     }
 
     private static EquatableArray<PropertyDescriptor> GetProperties(ITypeSymbol symbol, SemanticModel semanticModel)
     {
-        var properties = symbol.GetMembers()
-                               .OfType<IPropertySymbol>()
-                               .Where(m => m is { DeclaredAccessibility: Accessibility.Public, IsStatic: false })
-                               .Where(m => m.Name != "EqualityContract")
-                               .Select(p => new PropertyDescriptor(p.Name,
-                                                                   p.Type.ToString(),
-                                                                   IsPrimitive(p.Type),
-                                                                   IsNullable(p.Type),
-                                                                   p.Type.SpecialType == SpecialType.System_String,
-                                                                   GenerateEnumerableDescriptor(p.Type, semanticModel)))
-                               .ToArray();
+        var properties = symbol
+            .GetMembers()
+            .OfType<IPropertySymbol>()
+            .Where(m =>
+                m is { DeclaredAccessibility: Accessibility.Public, IsStatic: false }
+                && !string.Equals(m.Name, "EqualityContract", StringComparison.Ordinal)
+            )
+            .Select(p => new PropertyDescriptor(
+                p.Name,
+                p.Type.ToString(),
+                IsPrimitive(p.Type),
+                IsNullable(p.Type),
+                p.Type.SpecialType is SpecialType.System_String,
+                GenerateEnumerableDescriptor(p.Type, semanticModel)
+            ))
+            .ToArray();
 
-        return new(properties);
+        return new EquatableArray<PropertyDescriptor>(properties);
     }
 
     private static EquatableArray<MethodDescriptor> GetMethods(ITypeSymbol symbol)
     {
-        var methods = symbol.GetMembers()
-                            .OfType<IMethodSymbol>()
-                            .Select(m => new MethodDescriptor(m.Name, m.ReturnType.ToString()))
-                            .ToArray();
+        var methods = symbol
+            .GetMembers()
+            .OfType<IMethodSymbol>()
+            .Select(m => new MethodDescriptor(m.Name, m.ReturnType.ToString()))
+            .ToArray();
 
-        return new(methods);
+        return new EquatableArray<MethodDescriptor>(methods);
     }
 
     private static string? GetTypeConstraints(INamedTypeSymbol? symbol)
     {
-        if (symbol?.DeclaringSyntaxReferences.Length == 0
-            || symbol?.DeclaringSyntaxReferences[0].GetSyntax() is not TypeDeclarationSyntax s
-            || s.ConstraintClauses.Count == 0)
+        if (
+            symbol?.DeclaringSyntaxReferences.Length is 0
+            || symbol?.DeclaringSyntaxReferences[index: 0].GetSyntax(CancellationToken.None)
+                is not TypeDeclarationSyntax s
+            || s.ConstraintClauses.Count is 0
+        )
         {
             return null;
         }
@@ -232,15 +283,14 @@ public static class GeneratorHelper
     private static bool IsPrimitive(ITypeSymbol symbol) =>
         symbol.SpecialType
             is SpecialType.System_String
-            or SpecialType.System_Boolean
-            or SpecialType.System_Byte
-            or SpecialType.System_Int16
-            or SpecialType.System_Int32
-            or SpecialType.System_Int64
-            or SpecialType.System_Single
-            or SpecialType.System_Double
-            or SpecialType.System_Decimal;
+                or SpecialType.System_Boolean
+                or SpecialType.System_Byte
+                or SpecialType.System_Int16
+                or SpecialType.System_Int32
+                or SpecialType.System_Int64
+                or SpecialType.System_Single
+                or SpecialType.System_Double
+                or SpecialType.System_Decimal;
 
-    private static bool IsNullable(ITypeSymbol symbol) =>
-        symbol.IsReferenceType;
+    private static bool IsNullable(ITypeSymbol symbol) => symbol.IsReferenceType;
 }

@@ -8,7 +8,7 @@
         <h1>Chat Room</h1>
     </div>
 
-    @if (currentEntries == null)
+    @if (currentEntries  is null)
     {
         <div class="loading-container">
             <div class="spinner-border text-primary"
@@ -51,7 +51,7 @@
                        class="form-control"
                        id="userName"
                        placeholder="Enter your name"
-                       @bind="user" />
+                       @bind="user"/>
             </div>
 
             <div class="input-group mb-3">
@@ -78,26 +78,22 @@
     private string content = "";
     private ReceiverExecutionHandle? signalReceiverExecutionHandle;
 
-    [Inject]
-    public required IMessageSenders MessageSenders { get; init; }
+    [Inject] public required IMessageSenders MessageSenders { get; init; }
 
-    [Inject]
-    public required ISignalReceivers SignalReceivers { get; init; }
+    [Inject] public required ISignalReceivers SignalReceivers { get; init; }
 
-    [Inject]
-    public required ILogger<Index> Logger { get; init; }
+    [Inject] public required ILogger<Index> Logger { get; init; }
 
-    [Inject]
-    public required ChatEntryBroadcastedHandler ChatEntryBroadcastedHandler { get; init; }
+    [Inject] public required ChatEntryBroadcastedHandler ChatEntryBroadcastedHandler { get; init; }
 
     private async Task BroadcastEntry()
     {
         if (!string.IsNullOrWhiteSpace(user) && !string.IsNullOrWhiteSpace(content))
         {
             await MessageSenders.For(BroadcastChatEntry.T)
-                                .WithDefaultClientPipeline()
-                                .WithHttpApiTransport()
-                                .Handle(new() { User = user, Content = content });
+                .WithDefaultClientPipeline()
+                .WithHttpApiTransport()
+                .Handle(new BroadcastChatEntry {User = user, Content = content});
 
             content = "";
         }
@@ -105,7 +101,7 @@
 
     private async Task HandleKeyUp(KeyboardEventArgs e)
     {
-        if (e is { Key: "Enter", ShiftKey: false }) // Allow shift+enter for new lines
+        if (e is {Key: "Enter", ShiftKey: false}) // Allow shift+enter for new lines
         {
             await BroadcastEntry();
         }
@@ -114,23 +110,23 @@
     private async Task RefreshChat()
     {
         var response = await MessageSenders.For(GetChat.T)
-                                           .WithDefaultClientPipeline()
-                                           .WithPipeline(p => p.Use(async ctx =>
-                                           {
-                                               try
-                                               {
-                                                   return await ctx.Next(ctx.Message, ctx.CancellationToken);
-                                               }
-                                               catch (Exception ex)
-                                               {
-                                                   Console.Error.WriteLine(ex);
+            .WithDefaultClientPipeline()
+            .WithPipeline(p => p.Use(async ctx =>
+            {
+                try
+                {
+                    return await ctx.Next(ctx.Message, ctx.CancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex);
 
-                                                   // return a fallback value
-                                                   return [];
-                                               }
-                                           }))
-                                           .WithHttpApiTransport()
-                                           .Handle(new());
+                    // return a fallback value
+                    return [];
+                }
+            }))
+            .WithHttpApiTransport()
+            .Handle(new GetChat());
 
         currentEntries = response.ToList();
 
@@ -139,7 +135,7 @@
 
     private void OnChatEntryBroadcasted(object? sender, ChatEntryBroadcasted signal)
     {
-        currentEntries!.Add(new() { Content = signal.Content, User = signal.User, Timestamp = signal.Timestamp });
+        currentEntries!.Add(new ChatEntry {Content = signal.Content, User = signal.User, Timestamp = signal.Timestamp});
 
         Logger.LogInformation("received chat entry");
 

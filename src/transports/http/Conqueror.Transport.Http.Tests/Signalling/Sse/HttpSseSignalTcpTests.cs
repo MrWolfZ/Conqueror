@@ -1,27 +1,12 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-
-namespace Conqueror.Transport.Http.Tests.Signalling.Sse;
+﻿namespace Conqueror.Transport.Http.Tests.Signalling.Sse;
 
 [TestFixture]
 public sealed partial class HttpSseSignalTcpTests
 {
     private static readonly object[] HttpVersionTestCases =
     [
-        new object[]
-        {
-            HttpProtocols.Http1,
-            HttpVersion.Version11,
-            HttpVersionPolicy.RequestVersionExact,
-        },
-        new object[]
-        {
-            HttpProtocols.Http2,
-            HttpVersion.Version20,
-            HttpVersionPolicy.RequestVersionExact,
-        },
+        new object[] { HttpProtocols.Http1, HttpVersion.Version11, HttpVersionPolicy.RequestVersionExact },
+        new object[] { HttpProtocols.Http2, HttpVersion.Version20, HttpVersionPolicy.RequestVersionExact },
         new object[]
         {
             HttpProtocols.Http1AndHttp2,
@@ -35,28 +20,27 @@ public sealed partial class HttpSseSignalTcpTests
     public async Task GivenWebAppListeningOnTcp_WhenConnectingToSseSignalEndpoint_ReturnsItems(
         HttpProtocols serverProtocols,
         Version clientHttpVersion,
-        HttpVersionPolicy clientVersionPolicy)
+        HttpVersionPolicy clientVersionPolicy
+    )
     {
-        var testTimeout = TimeSpan.FromSeconds(2);
+        var testTimeout = TimeSpan.FromSeconds(value: 2);
         using var testTimeoutCts = new CancellationTokenSource(testTimeout);
         var testTimeoutToken = testTimeoutCts.Token;
 
         var builder = WebApplication.CreateBuilder();
 
-        _ = builder.Logging
-                   .ClearProviders()
-                   .AddTestLogger()
-                   .SetMinimumLevel(LogLevel.Trace);
+        _ = builder.Logging.ClearProviders().AddTestLogger().SetMinimumLevel(LogLevel.Trace);
 
         _ = builder.WebHost.ConfigureKestrel(options =>
         {
             options.Listen(
                 IPAddress.Loopback,
-                0,
+                port: 0,
                 listenOptions =>
                 {
                     listenOptions.Protocols = serverProtocols;
-                });
+                }
+            );
         });
 
         _ = builder.Services.AddConquerorHttpServerAspNetCore();
@@ -72,43 +56,44 @@ public sealed partial class HttpSseSignalTcpTests
 
         if (app.Services.GetService<IServer>()?.Features.Get<IServerAddressesFeature>() is { } saf)
         {
-            listenAddress = new(saf.Addresses.First());
+            listenAddress = new Uri(saf.Addresses.First());
         }
 
         Assert.That(listenAddress, Is.Not.Null);
 
         var receivedSignals = new Queue<TestSignal>();
 
-        var clientServices = new ServiceCollection().AddConquerorHttpClient()
-                                                    .AddSignalHandler(new TestSignalHandler(receivedSignals))
-                                                    .AddSingleton<Action<IHttpSseSignalReceiver>>(r => r.Enable(new(listenAddress, "signals"))
-                                                                                                        .WithHttpVersion(
-                                                                                                            clientHttpVersion,
-                                                                                                            clientVersionPolicy))
-                                                    .BuildServiceProvider();
+        var clientServices = new ServiceCollection()
+            .AddConquerorHttpClient()
+            .AddSignalHandler(new TestSignalHandler(receivedSignals))
+            .AddSingleton<Action<IHttpSseSignalReceiver>>(r =>
+                r.Enable(new(listenAddress, "signals")).WithHttpVersion(clientHttpVersion, clientVersionPolicy)
+            )
+            .BuildServiceProvider();
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(testTimeoutToken);
 
-        await using var handle = clientServices.GetRequiredService<ISignalReceivers>()
-                                            .RunHttpSseSignalReceiver<TestSignalHandler>(cts.Token);
+        await using var handle = clientServices
+            .GetRequiredService<ISignalReceivers>()
+            .RunHttpSseSignalReceiver<TestSignalHandler>(cts.Token);
 
         await handle.InitialConnectionTask;
 
-        var signal1 = new TestSignal(1);
-        var signal2 = new TestSignal(2);
+        var signal1 = new TestSignal(Payload: 1);
+        var signal2 = new TestSignal(Payload: 2);
 
-        var publisher = app.Services
-                           .GetRequiredService<ISignalPublishers>()
-                           .For(TestSignal.T)
-                           .WithTransport(b => b.UseHttpServerSentEvents());
+        var publisher = app
+            .Services.GetRequiredService<ISignalPublishers>()
+            .For(TestSignal.T)
+            .WithTransport(b => b.UseHttpServerSentEvents());
 
         await publisher.Handle(signal1, testTimeoutToken);
         await publisher.Handle(signal2, testTimeoutToken);
 
         // give receiver time to receive the signals
-        await Task.Delay(TimeSpan.FromMilliseconds(100), cts.Token);
+        await Task.Delay(TimeSpan.FromMilliseconds(value: 100), TimeProvider.System, cts.Token);
 
-        Assert.That(receivedSignals, Is.EqualTo(new[] { signal1, signal2 }));
+        Assert.That(receivedSignals, Is.EqualTo([signal1, signal2]));
 
         await cts.CancelAsync();
 
@@ -126,7 +111,7 @@ public sealed partial class HttpSseSignalTcpTests
             receivedSignals.Enqueue(signal);
         }
 
-        public static void ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        public static void ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
     }
 }

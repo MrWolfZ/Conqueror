@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace Conqueror;
 
 public interface IStreamConsumerMiddleware : IStreamConsumerMiddlewareMarker

@@ -1,31 +1,88 @@
-﻿using System;
-using System.Buffers;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Conqueror.Signalling.WebSockets;
+﻿namespace Conqueror.Signalling.WebSockets;
 
 internal static class HttpWebSocketsSignalProtocolV1
 {
     private const int Version = 1;
 
-    public static async Task Write(
+    public static Task Write(
         Stream stream,
         string tag,
         string? contextData,
         Func<Stream, CancellationToken, ValueTask> writeSignal,
-        CancellationToken cancellationToken)
+        in CancellationToken cancellationToken
+    )
     {
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentNullException.ThrowIfNull(tag);
         ArgumentNullException.ThrowIfNull(writeSignal);
 
+        return WriteInner(stream, tag, contextData, writeSignal, cancellationToken);
+    }
+
+    public static async Task<(object Signal, string? ContextData)> Read(
+        Stream stream,
+        Func<string, Stream, CancellationToken, ValueTask<object>> readSignalByTag,
+        CancellationToken cancellationToken
+    )
+    {
+        var byteBuffer = new byte[4];
+
+        await stream.ReadExactlyAsync(byteBuffer, offset: 0, count: 1, cancellationToken).ConfigureAwait(false);
+
+        var versionAndFlags = byteBuffer[0];
+
+        var version = (versionAndFlags & 0xF0) >> 4;
+
+        // int flags = versionAndFlags & 0x0F; // not used yet
+
+        if (version != Version)
+        {
+            throw new InvalidOperationException(
+                string.Create(CultureInfo.InvariantCulture, $"Unsupported protocol version: {version}")
+            );
+        }
+
+        var remainingHeaderLength = await ReadUInt24(stream, byteBuffer, cancellationToken).ConfigureAwait(false);
+
+        // expect at least 2 bytes for tag length
+        if (remainingHeaderLength < 2)
+        {
+            throw new InvalidOperationException("Invalid header length");
+        }
+
+        using var headerBuffer = MemoryPool<byte>.Shared.Rent(remainingHeaderLength);
+        var headerMemory = headerBuffer.Memory[..remainingHeaderLength];
+
+        await stream.ReadExactlyAsync(headerMemory, cancellationToken).ConfigureAwait(false);
+
+        var tagLength = (ushort)((headerMemory.Span[0] << 8) | headerMemory.Span[1]);
+        var tag = Encoding.UTF8.GetString(headerMemory.Slice(start: 2, tagLength).Span);
+
+        var contextMemory = headerMemory[(2 + tagLength)..];
+
+        string? contextData = null;
+        if (contextMemory.Length > 0)
+        {
+            contextData = Encoding.UTF8.GetString(contextMemory.Span);
+        }
+
+        var signal = await readSignalByTag(tag, stream, cancellationToken).ConfigureAwait(false);
+
+        return (signal, contextData);
+    }
+
+    private static async Task WriteInner(
+        Stream stream,
+        string tag,
+        string? contextData,
+        Func<Stream, CancellationToken, ValueTask> writeSignal,
+        CancellationToken cancellationToken
+    )
+    {
         var tagBytes = Encoding.UTF8.GetBytes(tag);
         var tagLength = tagBytes.Length;
 
-        var contextBytes = contextData != null ? Encoding.UTF8.GetBytes(contextData) : [];
+        var contextBytes = contextData is not null ? Encoding.UTF8.GetBytes(contextData) : [];
         var contextLength = contextBytes.Length;
 
         var byteBuffer = new byte[4];
@@ -55,60 +112,13 @@ internal static class HttpWebSocketsSignalProtocolV1
         await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public static async Task<(object Signal, string? ContextData)> Read(
-        Stream stream,
-        Func<string, Stream, CancellationToken, ValueTask<object>> readSignalByTag,
-        CancellationToken cancellationToken)
-    {
-        var byteBuffer = new byte[4];
-
-        await stream.ReadExactlyAsync(byteBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
-
-        var versionAndFlags = byteBuffer[0];
-
-        var version = (versionAndFlags & 0xF0) >> 4;
-
-        // int flags = versionAndFlags & 0x0F; // not used yet
-
-        if (version != Version)
-        {
-            throw new InvalidOperationException($"Unsupported protocol version: {version}");
-        }
-
-        var remainingHeaderLength = await ReadUInt24(stream, byteBuffer, cancellationToken).ConfigureAwait(false);
-
-        // expect at least 2 bytes for tag length
-        if (remainingHeaderLength < 2)
-        {
-            throw new InvalidOperationException("Invalid header length");
-        }
-
-        using var headerBuffer = MemoryPool<byte>.Shared.Rent(remainingHeaderLength);
-        var headerMemory = headerBuffer.Memory[..remainingHeaderLength];
-
-        await stream.ReadExactlyAsync(headerMemory, cancellationToken).ConfigureAwait(false);
-
-        var tagLength = (ushort)((headerMemory.Span[0] << 8) | headerMemory.Span[1]);
-        var tag = Encoding.UTF8.GetString(headerMemory.Slice(2, tagLength).Span);
-
-        var contextMemory = headerMemory[(2 + tagLength)..];
-
-        string? contextData = null;
-        if (contextMemory.Length > 0)
-        {
-            contextData = Encoding.UTF8.GetString(contextMemory.Span);
-        }
-
-        var signal = await readSignalByTag(tag, stream, cancellationToken).ConfigureAwait(false);
-
-        return (signal, contextData);
-    }
-
     private static async Task WriteUInt16(Stream stream, byte[] buffer, int value, CancellationToken cancellationToken)
     {
         if (value > 0xFFFF)
         {
-            throw new InvalidOperationException($"value too large (max {0xFFFF}, got {value})");
+            throw new InvalidOperationException(
+                string.Create(CultureInfo.InvariantCulture, $"value too large (max {0xFFFF}, got {value})")
+            );
         }
 
         buffer[0] = (byte)((value >> 8) & 0xFF);
@@ -120,7 +130,9 @@ internal static class HttpWebSocketsSignalProtocolV1
     {
         if (value > 0xFFFFFF)
         {
-            throw new InvalidOperationException($"value too large (max {0xFFFFFF}, got {value})");
+            throw new InvalidOperationException(
+                string.Create(CultureInfo.InvariantCulture, $"value too large (max {0xFFFFFF}, got {value})")
+            );
         }
 
         buffer[0] = (byte)((value >> 16) & 0xFF);
@@ -131,7 +143,7 @@ internal static class HttpWebSocketsSignalProtocolV1
 
     private static async Task<int> ReadUInt24(Stream stream, byte[] buffer, CancellationToken cancellationToken)
     {
-        await stream.ReadExactlyAsync(buffer, 0, 3, cancellationToken).ConfigureAwait(false);
+        await stream.ReadExactlyAsync(buffer, offset: 0, count: 3, cancellationToken).ConfigureAwait(false);
 
         return (buffer[0] << 16) | (buffer[1] << 8) | buffer[2];
     }

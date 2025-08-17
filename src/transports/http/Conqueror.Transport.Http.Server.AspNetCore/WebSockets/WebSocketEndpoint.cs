@@ -1,38 +1,34 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror.Transport.Http.Client.WebSockets;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Extensions.Logging;
-
-namespace Conqueror.Transport.Http.Server.AspNetCore.WebSockets;
+﻿namespace Conqueror.Transport.Http.Server.AspNetCore.WebSockets;
 
 internal static class WebSocketEndpoint
 {
     [SuppressMessage(
         "Minor Code Smell",
         "S6667:Logging in a catch clause should pass the caught exception as a parameter.",
-        Justification = "not necessary for cancellation exceptions")]
+        Justification = "not necessary for cancellation exceptions"
+    )]
     public static async Task Run(
         HttpContext context,
         ILogger logger,
         TimeSpan heartbeatInterval,
         TimeSpan heartbeatTimeout,
         Action<WebSocketWriteStream> setStream,
-        Func<Stream, CancellationToken, Task>? onMessage = null)
+        Func<Stream, CancellationToken, Task>? onMessage = null
+    )
     {
         try
         {
             if (context.Features.Get<IHttpWebSocketFeature>() is null)
             {
-                logger.LogWarning("web sockets feature is not available; did you forget to call UseWebSockets() first?");
+                logger.LogWarning(
+                    "web sockets feature is not available; did you forget to call UseWebSockets() first?"
+                );
 
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 context.Response.Headers.Append(HeaderNames.ContentType, ContentTypes.TextPlain);
-                await context.Response.WriteAsync("the web socket middleware is not used", context.RequestAborted).ConfigureAwait(false);
+                await context
+                    .Response.WriteAsync("the web socket middleware is not used", context.RequestAborted)
+                    .ConfigureAwait(false);
 
                 return;
             }
@@ -41,7 +37,9 @@ internal static class WebSocketEndpoint
             {
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 context.Response.Headers.Append(HeaderNames.ContentType, ContentTypes.TextPlain);
-                await context.Response.WriteAsync("not a web socket request", context.RequestAborted).ConfigureAwait(false);
+                await context
+                    .Response.WriteAsync("not a web socket request", context.RequestAborted)
+                    .ConfigureAwait(false);
 
                 return;
             }
@@ -81,11 +79,14 @@ internal static class WebSocketEndpoint
         HttpContext context,
         out TimeSpan heartbeatInterval,
         out TimeSpan heartbeatTimeout,
-        out string message)
+        out string message
+    )
     {
-        if (!context.Request.Query.TryGetValue(QueryParameterNames.HeartbeatInterval, out var heartbeatIntervalValues)
-            || !int.TryParse(heartbeatIntervalValues, out var heartbeatIntervalSeconds)
-            || heartbeatIntervalSeconds is < 0 or > 600)
+        if (
+            !context.Request.Query.TryGetValue(QueryParameterNames.HeartbeatInterval, out var heartbeatIntervalValues)
+            || !int.TryParse(heartbeatIntervalValues, CultureInfo.InvariantCulture, out var heartbeatIntervalSeconds)
+            || heartbeatIntervalSeconds is < 0 or > 600
+        )
         {
             heartbeatInterval = Timeout.InfiniteTimeSpan;
             heartbeatTimeout = Timeout.InfiniteTimeSpan;
@@ -94,21 +95,24 @@ internal static class WebSocketEndpoint
             return false;
         }
 
-        if (!context.Request.Query.TryGetValue(QueryParameterNames.HeartbeatTimeout, out var heartbeatTimeoutValues)
-            || !int.TryParse(heartbeatTimeoutValues, out var heartbeatTimeoutSeconds)
+        if (
+            !context.Request.Query.TryGetValue(QueryParameterNames.HeartbeatTimeout, out var heartbeatTimeoutValues)
+            || !int.TryParse(heartbeatTimeoutValues, CultureInfo.InvariantCulture, out var heartbeatTimeoutSeconds)
             || heartbeatTimeoutSeconds is < 0 or > 600
-            || (heartbeatIntervalSeconds > 0 && heartbeatTimeoutSeconds <= heartbeatIntervalSeconds))
+            || (heartbeatIntervalSeconds > 0 && heartbeatTimeoutSeconds <= heartbeatIntervalSeconds)
+        )
         {
             heartbeatInterval = Timeout.InfiniteTimeSpan;
             heartbeatTimeout = Timeout.InfiniteTimeSpan;
-            message = "must provide heartbeat timeout in seconds between 0 and 600 and it must be greater than heartbeat interval";
+            message =
+                "must provide heartbeat timeout in seconds between 0 and 600 and it must be greater than heartbeat interval";
 
             return false;
         }
 
         heartbeatInterval = TimeSpan.FromSeconds(heartbeatIntervalSeconds);
         heartbeatTimeout = TimeSpan.FromSeconds(heartbeatTimeoutSeconds);
-        message = string.Empty;
+        message = "";
 
         return true;
     }
@@ -116,7 +120,8 @@ internal static class WebSocketEndpoint
     private static async Task Read(
         ConquerorWebSocket ws,
         Func<Stream, CancellationToken, Task>? onMessage,
-        CancellationToken token)
+        CancellationToken token
+    )
     {
         await foreach (var stream in ws.Read(token).ConfigureAwait(false))
         {

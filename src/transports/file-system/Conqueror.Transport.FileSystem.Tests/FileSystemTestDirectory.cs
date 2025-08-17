@@ -4,7 +4,11 @@ internal static class FileSystemTestDirectory
 {
     public static DirectoryInfo Create()
     {
-        var testCaseDataDir = Path.Join(TestContext.CurrentContext.TestDirectory, ".test-data", Guid.NewGuid().ToString());
+        var testCaseDataDir = Path.Join(
+            TestContext.CurrentContext.TestDirectory,
+            ".test-data",
+            Guid.NewGuid().ToString()
+        );
         var dirInfo = new DirectoryInfo(testCaseDataDir);
 
         dirInfo.Create();

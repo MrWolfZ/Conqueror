@@ -1,5 +1,4 @@
-﻿// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IFileSystemMessageSender<in TMessage, TResponse> : IMessageSender<TMessage, TResponse>
     where TMessage : class, IFileSystemMessage<TMessage, TResponse>

@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
+﻿namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 
-namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
+using System.Diagnostics;
 
 public static class ConquerorServerTransportHelper
 {
@@ -8,14 +8,12 @@ public static class ConquerorServerTransportHelper
     {
         if (Activity.Current is null && traceParent is not null)
         {
-            using var a = new Activity(string.Empty);
+            using var a = new Activity("");
             var traceId = a.SetParentId(traceParent).TraceId.ToString();
             conquerorContext.TraceId = traceId;
         }
     }
 
-    public static void SignalExecution(ConquerorContext conquerorContext, string transportTypeName)
-    {
+    public static void SignalExecution(ConquerorContext conquerorContext, string transportTypeName) =>
         conquerorContext.SignalExecutionFromTransport(transportTypeName);
-    }
 }

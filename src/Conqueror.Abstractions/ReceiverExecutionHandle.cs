@@ -1,24 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Conqueror;
 
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+using System.Runtime.ExceptionServices;
 
 public sealed class ReceiverExecutionHandle : IAsyncDisposable
 {
-    private Action? onDispose;
     private CancellationTokenSource? cancellationTokenSource;
     private IReadOnlyCollection<ReceiverExecutionHandle>? innerHandles;
+    private Action? onDispose;
 
     public ReceiverExecutionHandle(
         Task initialConnectionTask,
         Task completionTask,
         CancellationTokenSource? cancellationTokenSource,
-        Action? onDispose)
+        Action? onDispose
+    )
     {
         InitialConnectionTask = initialConnectionTask;
         CompletionTask = completionTask;
@@ -41,7 +36,7 @@ public sealed class ReceiverExecutionHandle : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        var cts = Interlocked.Exchange(ref cancellationTokenSource, null);
+        var cts = Interlocked.Exchange(ref cancellationTokenSource, value: null);
 
         if (cts is not null)
         {
@@ -49,14 +44,14 @@ public sealed class ReceiverExecutionHandle : IAsyncDisposable
             cts.Dispose();
         }
 
-        var handles = Interlocked.Exchange(ref innerHandles, null);
+        var handles = Interlocked.Exchange(ref innerHandles, value: null);
 
         if (handles is not null)
         {
             await Task.WhenAll(handles.Select(DisposeSingle)).ConfigureAwait(false);
         }
 
-        var onD = Interlocked.Exchange(ref onDispose, null);
+        var onD = Interlocked.Exchange(ref onDispose, value: null);
         onD?.Invoke();
     }
 

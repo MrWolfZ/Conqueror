@@ -1,20 +1,22 @@
-﻿using Conqueror.Transport.ConformityTests.Messaging;
-
-namespace Conqueror.Transport.FileSystem.Tests.Messaging;
+﻿namespace Conqueror.Transport.FileSystem.Tests.Messaging;
 
 public sealed class FileSystemMessageTransportConformityTestHost : IMessageTransportConformityTestHost
 {
     private readonly DirectoryInfo baseDirectory;
     private readonly List<FileSystemMessageTransportConformityReceiverTestHost> receiverHosts = [];
 
-    private readonly ServiceProvider serviceProvider = new ServiceCollection().AddLogging(l => l.AddTestLogger().SetMinimumLevel(LogLevel.Trace))
-                                                                              .BuildServiceProvider();
+    private readonly ServiceProvider serviceProvider = new ServiceCollection()
+        .AddLogging(l => l.AddTestLogger().SetMinimumLevel(LogLevel.Trace))
+        .BuildServiceProvider();
 
     private readonly FileSystemTransportTestTimeouts timeouts = FileSystemTransportTestTimeouts.Create();
 
     private FileSystemMessageTransportConformitySenderTestHost? senderHost;
 
-    private FileSystemMessageTransportConformityTestHost(FileSystemMessageConformityTestCase testCase, DirectoryInfo baseDirectory)
+    private FileSystemMessageTransportConformityTestHost(
+        FileSystemMessageConformityTestCase testCase,
+        DirectoryInfo baseDirectory
+    )
     {
         TestCase = testCase;
 
@@ -23,9 +25,12 @@ public sealed class FileSystemMessageTransportConformityTestHost : IMessageTrans
 
     private FileSystemMessageConformityTestCase TestCase { get; }
 
-    public FileSystemMessageTransportConformitySenderTestHost SenderHost => senderHost ?? throw new InvalidOperationException("publisher host not created");
+    public FileSystemMessageTransportConformitySenderTestHost SenderHost =>
+        senderHost ?? throw new InvalidOperationException("publisher host not created");
 
     public IReadOnlyCollection<FileSystemMessageTransportConformityReceiverTestHost> ReceiverHosts => receiverHosts;
+
+    public ConcurrentQueue<Exception?> ReceiverConfigurationExceptions { get; } = [];
 
     public CancellationToken TestTimeoutToken => timeouts.TestTimeoutToken;
 
@@ -35,62 +40,18 @@ public sealed class FileSystemMessageTransportConformityTestHost : IMessageTrans
 
     public int AssertionTimeoutInMs => timeouts.AssertionTimeoutInMs;
 
-    public ILogger Logger => serviceProvider.GetRequiredService<ILogger<FileSystemMessageTransportConformityTestHost>>();
-
-    public ConcurrentQueue<Exception?> ReceiverConfigurationExceptions { get; } = new();
-
-    public static FileSystemMessageTransportConformityTestHost Create(FileSystemMessageConformityTestCase testCase)
-    {
-        var baseDirectory = FileSystemTestDirectory.Create();
-
-        return new(testCase, baseDirectory);
-    }
-
-    private async Task<FileSystemMessageTransportConformityReceiverTestHost> CreateReceiverTestHost(
-        CancellationToken cancellationToken,
-        Action<IServiceCollection>? configureServices = null,
-        Func<object, ConquerorContext, CancellationToken, Task>? messageCallback = null)
-    {
-        var receiverHost = await FileSystemMessageTransportConformityReceiverTestHost.CreateReceiverHost(
-            this,
-            TestCase,
-            configureServices,
-            baseDirectory,
-            messageCallback,
-            h => receiverHosts.Remove(h),
-            cancellationToken);
-
-        receiverHosts.Add(receiverHost);
-
-        return receiverHost;
-    }
-
-    private Task<FileSystemMessageTransportConformitySenderTestHost> CreateSenderTestHost(
-        Func<object, ConquerorContext, CancellationToken, Task>? sendCallback = null)
-    {
-        if (senderHost is not null)
-        {
-            throw new InvalidOperationException("sender host already created");
-        }
-
-        senderHost = FileSystemMessageTransportConformitySenderTestHost.CreateSenderHost(
-            this,
-            TestCase,
-            baseDirectory,
-            sendCallback);
-
-        return Task.FromResult(senderHost);
-    }
+    public ILogger Logger =>
+        serviceProvider.GetRequiredService<ILogger<FileSystemMessageTransportConformityTestHost>>();
 
     async Task<IMessageTransportConformityReceiverTestHost> IMessageTransportConformityTestHost.CreateReceiverTestHost(
         CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? messageCallback)
-        => await CreateReceiverTestHost(cancellationToken, messageCallback: messageCallback);
+        Func<object, ConquerorContext, CancellationToken, Task>? messageCallback
+    ) => await CreateReceiverTestHost(cancellationToken, messageCallback: messageCallback);
 
     async Task<IMessageTransportConformitySenderTestHost> IMessageTransportConformityTestHost.CreateSenderTestHost(
         CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? sendCallback)
-        => await CreateSenderTestHost(sendCallback);
+        Func<object, ConquerorContext, CancellationToken, Task>? sendCallback
+    ) => await CreateSenderTestHost(sendCallback);
 
     public async ValueTask DisposeAsync()
     {
@@ -98,7 +59,7 @@ public sealed class FileSystemMessageTransportConformityTestHost : IMessageTrans
 
         await serviceProvider.DisposeAsync();
 
-        if (senderHost != null)
+        if (senderHost is not null)
         {
             await senderHost.DisposeAsync();
         }
@@ -119,21 +80,60 @@ public sealed class FileSystemMessageTransportConformityTestHost : IMessageTrans
                 // the test data dir a few times
                 try
                 {
-                    baseDirectory.Delete(true);
+                    baseDirectory.Delete(recursive: true);
+
                     return;
                 }
-                catch
+                catch when (attempts <= 10)
                 {
-                    if (attempts > 10)
-                    {
-                        throw;
-                    }
-
                     attempts += 1;
 
-                    await Task.Delay(1, CancellationToken.None);
+                    await Task.Delay(millisecondsDelay: 1, CancellationToken.None);
                 }
             }
         }
+    }
+
+    public static FileSystemMessageTransportConformityTestHost Create(FileSystemMessageConformityTestCase testCase) =>
+        new(testCase, FileSystemTestDirectory.Create());
+
+    private async Task<FileSystemMessageTransportConformityReceiverTestHost> CreateReceiverTestHost(
+        CancellationToken cancellationToken,
+        Action<IServiceCollection>? configureServices = null,
+        Func<object, ConquerorContext, CancellationToken, Task>? messageCallback = null
+    )
+    {
+        var receiverHost = await FileSystemMessageTransportConformityReceiverTestHost.CreateReceiverHost(
+            this,
+            TestCase,
+            configureServices,
+            baseDirectory,
+            messageCallback,
+            h => receiverHosts.Remove(h),
+            cancellationToken
+        );
+
+        receiverHosts.Add(receiverHost);
+
+        return receiverHost;
+    }
+
+    private Task<FileSystemMessageTransportConformitySenderTestHost> CreateSenderTestHost(
+        Func<object, ConquerorContext, CancellationToken, Task>? sendCallback = null
+    )
+    {
+        if (senderHost is not null)
+        {
+            throw new InvalidOperationException("sender host already created");
+        }
+
+        senderHost = FileSystemMessageTransportConformitySenderTestHost.CreateSenderHost(
+            this,
+            TestCase,
+            baseDirectory,
+            sendCallback
+        );
+
+        return Task.FromResult(senderHost);
     }
 }

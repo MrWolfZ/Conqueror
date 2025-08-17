@@ -1,9 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface ISignalReceiverHandlerInvoker
 {
@@ -11,14 +6,12 @@ public interface ISignalReceiverHandlerInvoker
 
     Type? HandlerType { get; }
 
-    /// <summary>
-    ///     Will throw if the signal is not assignable to the type <see cref="SignalType" />.
-    /// </summary>
     Task Invoke(
         object signal,
         IServiceProvider serviceProvider,
         string transportTypeName,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 }
 
 public interface ISignalReceiverHandlerInvoker<out TTypesInjector> : ISignalReceiverHandlerInvoker

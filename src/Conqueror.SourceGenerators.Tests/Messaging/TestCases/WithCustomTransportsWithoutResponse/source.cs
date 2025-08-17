@@ -1,15 +1,13 @@
 ﻿#nullable enable
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Messaging;
-using Messaging.WithCustomTransportsWithoutResponse.Transport1;
-using Messaging.WithCustomTransportsWithoutResponse.Transport2;
-
 namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportsWithoutResponse
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using global::Messaging.WithCustomTransportsWithoutResponse.Transport1;
+    using global::Messaging.WithCustomTransportsWithoutResponse.Transport2;
+
     [Message]
     [TestTransportMessage(StringProperty = "Test")]
     [TestTransport2Message(StringProperty = "Test2")]
@@ -17,12 +15,17 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
 
     public partial class TestMessageHandler : TestMessage.IHandler
     {
-        public Task Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task Handle(TestMessage message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 
 namespace Messaging.WithCustomTransportsWithoutResponse.Transport1
 {
+    using System;
+    using Conqueror;
+    using Conqueror.Messaging;
+
     [MessageTransport(Prefix = "TestTransport", Namespace = "Messaging.WithCustomTransportsWithoutResponse.Transport1")]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TestTransportMessageAttribute : Attribute
@@ -47,21 +50,30 @@ namespace Messaging.WithCustomTransportsWithoutResponse.Transport1
         where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
     {
         static IMessageHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 
 namespace Messaging.WithCustomTransportsWithoutResponse.Transport2
 {
-    [MessageTransport(Prefix = "TestTransport2", Namespace = "Messaging.WithCustomTransportsWithoutResponse.Transport2")]
+    using System;
+    using Conqueror;
+    using Conqueror.Messaging;
+
+    [MessageTransport(
+        Prefix = "TestTransport2",
+        Namespace = "Messaging.WithCustomTransportsWithoutResponse.Transport2"
+    )]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TestTransport2MessageAttribute : Attribute
     {
         public string? StringProperty { get; init; }
     }
 
-    [MessageTransport(Prefix = "TestTransport2", Namespace = "Messaging.WithCustomTransportsWithoutResponse.Transport2")]
+    [MessageTransport(
+        Prefix = "TestTransport2",
+        Namespace = "Messaging.WithCustomTransportsWithoutResponse.Transport2"
+    )]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransport2MessageAttribute<TResponse> : TestTransport2MessageAttribute;
 
@@ -78,8 +90,7 @@ namespace Messaging.WithCustomTransportsWithoutResponse.Transport2
         where TIHandler : class, ITestTransport2MessageHandler<TMessage, TResponse, TIHandler>
     {
         static IMessageHandlerTypesInjector CreateTestTransport2TypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 

@@ -1,37 +1,43 @@
 ﻿#nullable enable
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Messaging;
-using WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse;
-
 namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithMessageTypeOverrideWithoutResponse
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
     using WithCustomTransportWithMessageTypeOverrideCustomTransportWithoutResponse;
 
     [CustomTestTransportMessage(ExtraProperty = "Test")]
-
     [Message]
     public partial record TestMessage;
 
     public partial class TestMessageHandler : TestMessage.IHandler
     {
-        public Task Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task Handle(TestMessage message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 
 namespace WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse
 {
-    [MessageTransport(Prefix = "TestTransport", Namespace = "WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse")]
+    using System;
+    using Conqueror;
+    using Conqueror.Messaging;
+
+    [MessageTransport(
+        Prefix = "TestTransport",
+        Namespace = "WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse"
+    )]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TestTransportMessageAttribute : Attribute
     {
         public string? StringProperty { get; init; }
     }
 
-    [MessageTransport(Prefix = "TestTransport", Namespace = "WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse")]
+    [MessageTransport(
+        Prefix = "TestTransport",
+        Namespace = "WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse"
+    )]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransportMessageAttribute<TResponse> : TestTransportMessageAttribute;
 
@@ -48,32 +54,42 @@ namespace WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResp
         where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
     {
         static IMessageHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 
 namespace WithCustomTransportWithMessageTypeOverrideCustomTransportWithoutResponse
 {
-    [MessageTransport(Prefix = "TestTransport", Namespace = "WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse",
-                      FullyQualifiedMessageTypeName = "WithCustomTransportWithMessageTypeOverrideCustomTransportWithoutResponse.ICustomTestTransportMessage")]
+    using System;
+    using Conqueror.Messaging;
+    using WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse;
+
+    [MessageTransport(
+        Prefix = "TestTransport",
+        Namespace = "WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse",
+        FullyQualifiedMessageTypeName = "WithCustomTransportWithMessageTypeOverrideCustomTransportWithoutResponse.ICustomTestTransportMessage"
+    )]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class CustomTestTransportMessageAttribute : Attribute
     {
         public string? ExtraProperty { get; init; }
     }
 
-    [MessageTransport(Prefix = "TestTransport", Namespace = "WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse",
-                      FullyQualifiedMessageTypeName = "WithCustomTransportWithMessageTypeOverrideCustomTransportWithoutResponse.ICustomTestTransportMessage")]
+    [MessageTransport(
+        Prefix = "TestTransport",
+        Namespace = "WithCustomTransportWithMessageTypeOverrideOriginalTransportWithoutResponse",
+        FullyQualifiedMessageTypeName = "WithCustomTransportWithMessageTypeOverrideCustomTransportWithoutResponse.ICustomTestTransportMessage"
+    )]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class CustomTestTransportMessageAttribute<TResponse> : CustomTestTransportMessageAttribute;
 
     public interface ICustomTestTransportMessage<TMessage, TResponse> : ITestTransportMessage<TMessage, TResponse>
         where TMessage : class, ICustomTestTransportMessage<TMessage, TResponse>
     {
-        static string ITestTransportMessage<TMessage, TResponse>.StringProperty { get; } = TMessage.ExtraProperty ?? "Default";
-
         static virtual string? ExtraProperty { get; }
+
+        static string ITestTransportMessage<TMessage, TResponse>.StringProperty { get; } =
+            TMessage.ExtraProperty ?? "Default";
     }
 }
 

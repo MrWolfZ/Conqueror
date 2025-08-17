@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public readonly record struct SignalMiddlewareContext<TSignal>
@@ -17,11 +10,12 @@ public readonly record struct SignalMiddlewareContext<TSignal>
         ISignalPublisher<TSignal> publisher,
         IServiceProvider serviceProvider,
         ConquerorContext conquerorContext,
-        SignalTransportType transportType)
+        SignalTransportType transportType
+    )
     {
         Debug.Assert(middlewares.Count > 0, "this should only be called if there are middlewares to execute");
 
-        state = new()
+        state = new State
         {
             Middlewares = middlewares,
             Publisher = publisher,
@@ -58,11 +52,7 @@ public readonly record struct SignalMiddlewareContext<TSignal>
             return state.Middlewares[nextIndex].Execute(updatedContext);
         }
 
-        return state.Publisher.Publish(
-            signal,
-            ServiceProvider,
-            ConquerorContext,
-            cancellationToken);
+        return state.Publisher.Publish(signal, ServiceProvider, ConquerorContext, cancellationToken);
     }
 
     // performance optimization: we capture the immutable parts of the context in a separate

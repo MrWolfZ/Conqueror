@@ -1,3 +1,5 @@
+namespace Conqueror.Streaming.Transport.Http.Client.Tests;
+
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
@@ -7,9 +9,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 
-namespace Conqueror.Streaming.Transport.Http.Client.Tests;
-
-[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "resources are disposed in test teardown")]
+[SuppressMessage(
+    "Design",
+    "CA1001:Types that own disposable fields should be disposable",
+    Justification = "resources are disposed in test teardown"
+)]
+[SuppressMessage(
+    "Blocker Bug",
+    "S2931:Classes with \"IDisposable\" members should implement \"IDisposable\"",
+    Justification = "resources are disposed in test teardown"
+)]
 public abstract class TestBase
 {
     private HttpClient? client;
@@ -22,7 +31,7 @@ public abstract class TestBase
     {
         get
         {
-            if (client == null)
+            if (client is null)
             {
                 throw new InvalidOperationException("test fixture must be initialized before using http client");
             }
@@ -35,7 +44,7 @@ public abstract class TestBase
     {
         get
         {
-            if (webSocketClient == null)
+            if (webSocketClient is null)
             {
                 throw new InvalidOperationException("test fixture must be initialized before using web socket client");
             }
@@ -48,7 +57,7 @@ public abstract class TestBase
     {
         get
         {
-            if (host == null)
+            if (host is null)
             {
                 throw new InvalidOperationException("test fixture must be initialized before using host");
             }
@@ -61,9 +70,11 @@ public abstract class TestBase
     {
         get
         {
-            if (clientServiceProvider == null)
+            if (clientServiceProvider is null)
             {
-                throw new InvalidOperationException("test fixture must be initialized before using client service provider");
+                throw new InvalidOperationException(
+                    "test fixture must be initialized before using client service provider"
+                );
             }
 
             return clientServiceProvider;
@@ -78,21 +89,24 @@ public abstract class TestBase
     {
         get
         {
-            if (timeoutCancellationTokenSource == null)
+            if (timeoutCancellationTokenSource is null)
             {
-                throw new InvalidOperationException("test fixture must be initialized before timeout cancellation token source");
+                throw new InvalidOperationException(
+                    "test fixture must be initialized before timeout cancellation token source"
+                );
             }
 
             return timeoutCancellationTokenSource;
         }
     }
 
-    private static bool IsRunningInContinuousIntegration => Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
+    private static bool IsRunningInContinuousIntegration =>
+        string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
 
     [SetUp]
     public async Task SetUp()
     {
-        timeoutCancellationTokenSource = new();
+        timeoutCancellationTokenSource = new CancellationTokenSource();
 
         var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
         {
@@ -136,10 +150,7 @@ public abstract class TestBase
         where T : notnull => Host.Services.GetRequiredService<T>();
 
     protected T ResolveOnClient<T>()
-        where T : notnull
-    {
-        return ClientServiceProvider.GetRequiredService<T>();
-    }
+        where T : notnull => ClientServiceProvider.GetRequiredService<T>();
 
     protected async Task<WebSocket> ConnectToWebSocket(string path, HttpHeaders headers)
     {
@@ -153,7 +164,10 @@ public abstract class TestBase
 
         try
         {
-            return await WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path }.Uri, TestTimeoutToken);
+            return await WebSocketClient.ConnectAsync(
+                new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path }.Uri,
+                TestTimeoutToken
+            );
         }
         finally
         {

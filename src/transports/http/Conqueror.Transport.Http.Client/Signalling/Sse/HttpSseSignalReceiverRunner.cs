@@ -1,49 +1,48 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.ServerSentEvents;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 
-namespace Conqueror.Transport.Http.Client.Signalling.Sse;
-
-internal sealed class HttpSseSignalReceiverRunner(
-    IConquerorContextAccessor conquerorContextAccessor)
+internal sealed class HttpSseSignalReceiverRunner(IConquerorContextAccessor conquerorContextAccessor)
     : ISignalReceiverRunner<HttpSseSignalReceiver>
 {
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
-        Justification = "false positive, the source is returned to the caller")]
+        Justification = "false positive, the source is returned to the caller"
+    )]
     public ReceiverExecutionHandle RunReceiver(HttpSseSignalReceiver receiver, CancellationToken cancellationToken)
     {
         var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var connectionTaskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var connectionTaskCompletionSource = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
 
-        Lazy<HttpClient> defaultHttpClientLazy = new(() => new());
+        var defaultHttpClientLazy = new Lazy<HttpClient>(() => new());
 
-        return new(
+        return new ReceiverExecutionHandle(
             connectionTaskCompletionSource.Task,
             Run(receiver, defaultHttpClientLazy, connectionTaskCompletionSource, linkedSource.Token),
             linkedSource,
-            onDispose: () =>
+            () =>
             {
                 if (defaultHttpClientLazy.IsValueCreated)
                 {
                     defaultHttpClientLazy.Value.Dispose();
                 }
-            });
+            }
+        );
     }
 
     private async Task Run(
         HttpSseSignalReceiver receiver,
         Lazy<HttpClient> defaultHttpClientLazy,
         TaskCompletionSource connectionTaskCompletionSource,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var config = receiver.Configuration ?? throw new InvalidOperationException($"the receiver for handler type '{receiver.HandlerType}' is not enabled");
+        var config =
+            receiver.Configuration
+            ?? throw new InvalidOperationException(
+                $"the receiver for handler type '{receiver.HandlerType}' is not enabled"
+            );
 
         try
         {
@@ -53,15 +52,20 @@ internal sealed class HttpSseSignalReceiverRunner(
 
                 try
                 {
-                    response = await Connect(receiver, defaultHttpClientLazy, config, cancellationToken).ConfigureAwait(false);
+                    response = await Connect(receiver, defaultHttpClientLazy, config, cancellationToken)
+                        .ConfigureAwait(false);
 
                     if ((int)response.StatusCode is >= 400 and < 500)
                     {
                         throw new SignalReceiverExecutionFailedException(
-                            $"failed to connect signal receiver for handler type '{receiver.HandlerType}' to address '{config.Address}'; got status code {response.StatusCode}")
+                            $"failed to connect signal {nameof(receiver)} for handler type '{receiver.HandlerType}' to address '{config.Address}'; got status code {response.StatusCode}"
+                        )
                         {
                             HandlerType = receiver.HandlerType,
-                            SignalTransportType = new(ServersSentEventsTransportName, SignalTransportRole.Receiver),
+                            SignalTransportType = new SignalTransportType(
+                                ServersSentEventsTransportName,
+                                SignalTransportRole.Receiver
+                            ),
                         };
                     }
 
@@ -71,7 +75,9 @@ internal sealed class HttpSseSignalReceiverRunner(
 
                         if (config.ReconnectDelayFn is not null)
                         {
-                            await config.ReconnectDelayFn((int)response.StatusCode, cancellationToken).ConfigureAwait(false);
+                            await config
+                                .ReconnectDelayFn((int)response.StatusCode, cancellationToken)
+                                .ConfigureAwait(false);
                         }
 
                         continue;
@@ -79,7 +85,9 @@ internal sealed class HttpSseSignalReceiverRunner(
 
                     _ = connectionTaskCompletionSource.TrySetResult();
 
-                    var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+                    var responseStream = await response
+                        .Content.ReadAsStreamAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
                     var parser = SseParser.Create(responseStream, receiver.ParseItem);
 
@@ -108,7 +116,9 @@ internal sealed class HttpSseSignalReceiverRunner(
 
                     if (config.ReconnectDelayFn is not null)
                     {
-                        await config.ReconnectDelayFn((int)response.StatusCode, cancellationToken).ConfigureAwait(false);
+                        await config
+                            .ReconnectDelayFn((int)response.StatusCode, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)
@@ -127,11 +137,15 @@ internal sealed class HttpSseSignalReceiverRunner(
                 catch (Exception ex)
                 {
                     throw new SignalReceiverExecutionFailedException(
-                        $"an exception occured while running receiver for signal handler type '{receiver.HandlerType}'",
-                        ex)
+                        $"an exception occured while running {nameof(receiver)} for signal handler type '{receiver.HandlerType}'",
+                        ex
+                    )
                     {
                         HandlerType = receiver.HandlerType,
-                        SignalTransportType = new(ServersSentEventsTransportName, SignalTransportRole.Receiver),
+                        SignalTransportType = new SignalTransportType(
+                            ServersSentEventsTransportName,
+                            SignalTransportRole.Receiver
+                        ),
                     };
                 }
                 finally
@@ -158,7 +172,8 @@ internal sealed class HttpSseSignalReceiverRunner(
         HttpSseSignalReceiver receiver,
         Lazy<HttpClient> defaultHttpClientLazy,
         HttpSseSignalReceiverConfiguration config,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var defaultHttpClient = config.HttpClient is null ? defaultHttpClientLazy.Value : null;
 
@@ -175,10 +190,7 @@ internal sealed class HttpSseSignalReceiverRunner(
                 queryString = queryString.Add(QueryParameterNames.SignalSseEventType, eventType);
             }
 
-            var targetUriBuilder = new UriBuilder(config.Address)
-            {
-                Query = queryString.Build(),
-            };
+            var targetUriBuilder = new UriBuilder(config.Address) { Query = queryString.Build() };
 
             using var request = new HttpRequestMessage(new("GET"), targetUriBuilder.Uri);
 
@@ -186,14 +198,23 @@ internal sealed class HttpSseSignalReceiverRunner(
             request.VersionPolicy = config.HttpVersionPolicy;
             config.ConfigureHeaders?.Invoke(request.Headers);
 
-            response = await httpClient!.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
-                                        .ConfigureAwait(false);
+            response = await httpClient!
+                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
 
-            var contentType = response.Content.Headers.TryGetValues("Content-Type", out var ct) && ct.FirstOrDefault() is { } cs ? cs : null;
+            var contentType =
+                response.Content.Headers.TryGetValues("Content-Type", out var ct) && ct.FirstOrDefault() is { } cs
+                    ? cs
+                    : null;
 
-            if (response.IsSuccessStatusCode && contentType != "text/event-stream")
+            if (
+                response.IsSuccessStatusCode
+                && !string.Equals(contentType, "text/event-stream", StringComparison.Ordinal)
+            )
             {
-                throw new InvalidOperationException($"the server at '{config.Address}' did not return a valid SSE response");
+                throw new InvalidOperationException(
+                    $"the server at '{config.Address}' did not return a valid SSE response"
+                );
             }
 
             return response;

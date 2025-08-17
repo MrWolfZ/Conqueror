@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 /// <summary>
 ///     This interface does not need to be added manually to user code. It is
@@ -37,10 +29,10 @@ public interface IMessage<TMessage, TResponse>
     /// <summary>
     ///     The <see cref="System.Text.Json.Serialization.JsonSerializerContext" />
     ///     to use by default for any operation that needs to JSON-serialize or
-    ///     deserialize a message of type <see cref="TMessage" /> or a response of
-    ///     type <see cref="TResponse" />.<br />
+    ///     deserialize a message of type <typeparamref name="TMessage" /> or a response of
+    ///     type <typeparamref name="TResponse" />.<br />
     ///     <br />
-    ///     When this is <c>null</c> and dynamic code generation is enabled (i.e.
+    ///     When this is <see langword="null" /> and dynamic code generation is enabled (i.e.
     ///     the app is not running with AOT) then the serialization will use a default
     ///     context depending on where it is being used.
     /// </summary>
@@ -50,7 +42,11 @@ public interface IMessage<TMessage, TResponse>
 
     static abstract IEnumerable<PropertyInfo> PublicProperties { get; }
 
-    static abstract Task<TResponse> InvokeHandler<TIHandler>(TIHandler handler, TMessage message, CancellationToken cancellationToken)
+    static abstract Task<TResponse> InvokeHandler<TIHandler>(
+        TIHandler handler,
+        TMessage message,
+        CancellationToken cancellationToken
+    )
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>;
 }
 
@@ -64,11 +60,22 @@ public sealed class MessageTypes<TMessage, TResponse, TIHandler>
     where TMessage : class, IMessage<TMessage, TResponse>
     where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
 {
+    [SuppressMessage(
+        "Usage",
+        "MA0015:Specify the parameter name in ArgumentException",
+        Justification = $"false positive, {nameof(TIHandler)} is a generic type parameter"
+    )]
     public MessageTypes()
     {
-        if (!typeof(TIHandler).IsInterface || typeof(TIHandler).Name != "IHandler")
+        if (
+            !typeof(TIHandler).IsInterface
+            || !string.Equals(typeof(TIHandler).Name, "IHandler", StringComparison.Ordinal)
+        )
         {
-            throw new ArgumentException($"expected message handler interface for message type '{typeof(TMessage)}', but got '{typeof(TIHandler)}'", nameof(TIHandler));
+            throw new ArgumentException(
+                $"expected message handler interface for message type '{typeof(TMessage)}', but got '{typeof(TIHandler)}'",
+                nameof(TIHandler)
+            );
         }
     }
 }

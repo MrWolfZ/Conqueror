@@ -1,25 +1,30 @@
-﻿using System.Linq;
-using System.Threading;
-using Conqueror.SourceGenerators.Util;
-using Microsoft.CodeAnalysis;
-
-#pragma warning disable S3267 // for performance reasons we do not want to use LINQ
+﻿#pragma warning disable S3267 // for performance reasons we do not want to use LINQ
 
 namespace Conqueror.SourceGenerators.Signalling;
+
+using Microsoft.CodeAnalysis;
 
 [Generator]
 public sealed class SignalTypeGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.InitializeGeneratorForAttribute("Signal", GetSignalTypesDescriptor, SignalTypeSources.GenerateSignalTypeFile);
+        context.InitializeGeneratorForAttribute(
+            "Signal",
+            GetSignalTypesDescriptor,
+            SignalTypeSources.GenerateSignalTypeFile
+        );
     }
 
-    public static SignalTypeDescriptor? GetSignalTypesDescriptor(INamedTypeSymbol signalTypeSymbol, SemanticModel semanticModel)
+    internal static SignalTypeDescriptor? GetSignalTypesDescriptor(
+        INamedTypeSymbol signalTypeSymbol,
+        SemanticModel semanticModel
+    )
     {
-        var attribute = signalTypeSymbol.GetAttributes()
-                                        .FirstOrDefault(a => a.AttributeClass?.IsSignalTransportAttribute() ?? false)
-                                        ?.AttributeClass;
+        var attribute = signalTypeSymbol
+            .GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.IsSignalTransportAttribute() ?? false)
+            ?.AttributeClass;
 
         // we did not find a message attribute (e.g. a false positive from "[SomeOtherSignal(...)]")
         if (attribute is null)
@@ -28,17 +33,26 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
         }
 
         var signalTypeDescriptor = GeneratorHelper.GenerateTypeDescriptor(signalTypeSymbol, semanticModel);
-        var attributeDescriptors = signalTypeSymbol.GetAttributes()
-                                                   .Where(a => a.AttributeClass?.IsSignalTransportAttribute() ?? false)
-                                                   .Select(a => GenerateSignalAttributeDescriptor(a, a.AttributeClass!))
-                                                   .ToArray();
+        var attributeDescriptors = signalTypeSymbol
+            .GetAttributes()
+            .Where(a => a.AttributeClass?.IsSignalTransportAttribute() ?? false)
+            .Select(a => GenerateSignalAttributeDescriptor(a, a.AttributeClass!))
+            .ToArray();
 
-        var serializerContextTypeFromGlobalLookup = semanticModel.Compilation.GetTypeByMetadataName($"{signalTypeDescriptor.FullyQualifiedName}JsonSerializerContext");
-        var serializerContextTypeFromSiblingLookup = signalTypeSymbol.ContainingType?.GetTypeMembers().FirstOrDefault(m => m.Name == $"{signalTypeDescriptor.Name}JsonSerializerContext");
+        var serializerContextTypeFromGlobalLookup = semanticModel.Compilation.GetTypeByMetadataName(
+            $"{signalTypeDescriptor.FullyQualifiedName}JsonSerializerContext"
+        );
+        var serializerContextTypeFromSiblingLookup = signalTypeSymbol
+            .ContainingType?.GetTypeMembers()
+            .FirstOrDefault(m =>
+                string.Equals(m.Name, $"{signalTypeDescriptor.Name}JsonSerializerContext", StringComparison.Ordinal)
+            );
 
-        return new(signalTypeDescriptor,
-                   new(attributeDescriptors),
-                   serializerContextTypeFromGlobalLookup is not null || serializerContextTypeFromSiblingLookup is not null);
+        return new SignalTypeDescriptor(
+            signalTypeDescriptor,
+            new(attributeDescriptors),
+            serializerContextTypeFromGlobalLookup is not null || serializerContextTypeFromSiblingLookup is not null
+        );
     }
 
     private static SignalTypeDescriptor? GetSignalTypesDescriptor(GeneratorSyntaxContext context, CancellationToken ct)
@@ -51,7 +65,14 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
 
         // skip signal types in our special test class
         // TODO: improve the generator by lazily generating all properties that have not been defined yet
-        if (signalTypeSymbol.ContainingAssembly?.Name == "Conqueror.Tests" && signalTypeSymbol.ContainingType?.Name == "SignalTypeGenerationTests")
+        if (
+            string.Equals(signalTypeSymbol.ContainingAssembly?.Name, "Conqueror.Tests", StringComparison.Ordinal)
+            && string.Equals(
+                signalTypeSymbol.ContainingType?.Name,
+                "SignalTypeGenerationTests",
+                StringComparison.Ordinal
+            )
+        )
         {
             return null;
         }
@@ -61,9 +82,18 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
         return GetSignalTypesDescriptor(signalTypeSymbol, context.SemanticModel);
     }
 
-    private static SignalAttributeDescriptor GenerateSignalAttributeDescriptor(AttributeData attributeData, INamedTypeSymbol attributeSymbol)
+    private static SignalAttributeDescriptor GenerateSignalAttributeDescriptor(
+        AttributeData attributeData,
+        INamedTypeSymbol attributeSymbol
+    )
     {
         var (prefix, ns, signalTypeName) = attributeSymbol.GetPrefixAndNamespaceFromSignalTransportAttribute();
-        return new(prefix, ns, signalTypeName, GeneratorHelper.GetAttributeProperties(attributeData));
+
+        return new SignalAttributeDescriptor(
+            prefix,
+            ns,
+            signalTypeName,
+            GeneratorHelper.GetAttributeProperties(attributeData)
+        );
     }
 }

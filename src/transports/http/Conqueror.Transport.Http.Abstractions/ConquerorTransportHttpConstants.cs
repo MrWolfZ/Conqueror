@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Conqueror;
 
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "this API makes sense")]

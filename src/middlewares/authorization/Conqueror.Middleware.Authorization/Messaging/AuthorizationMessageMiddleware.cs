@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace Conqueror.Middleware.Authorization.Messaging;
 
 internal sealed class AuthorizationMessageMiddleware<TMessage, TResponse> : IMessageMiddleware<TMessage, TResponse>
@@ -10,11 +8,13 @@ internal sealed class AuthorizationMessageMiddleware<TMessage, TResponse> : IMes
     /// <inheritdoc />
     public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
     {
-        var authContext = new MessageAuthorizationContext<TMessage, TResponse>(ctx.Message,
-                                                                               ctx.ServiceProvider,
-                                                                               ctx.ConquerorContext,
-                                                                               ctx.ConquerorContext.CurrentPrincipal,
-                                                                               ctx.CancellationToken);
+        var authContext = new MessageAuthorizationContext<TMessage, TResponse>(
+            ctx.Message,
+            ctx.ServiceProvider,
+            ctx.ConquerorContext,
+            ctx.ConquerorContext.CurrentPrincipal,
+            ctx.CancellationToken
+        );
 
         foreach (var (_, authorizationCheck) in Configuration.AuthorizationChecks)
         {

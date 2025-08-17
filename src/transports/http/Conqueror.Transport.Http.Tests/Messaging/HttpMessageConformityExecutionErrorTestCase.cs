@@ -1,13 +1,11 @@
-﻿using Conqueror.Transport.ConformityTests.Messaging;
+﻿namespace Conqueror.Transport.Http.Tests.Messaging;
 
-namespace Conqueror.Transport.Http.Tests.Messaging;
-
-public sealed class HttpMessageConformityExecutionErrorTestCase : HttpMessageConformityExecutionTestCase,
-                                                                  IMessageTransportConformityExecutionErrorTestCase<HttpMessageTransportConformityTestHost>
+public sealed class HttpMessageConformityExecutionErrorTestCase
+    : HttpMessageConformityExecutionTestCase,
+        IMessageTransportConformityExecutionErrorTestCase<HttpMessageTransportConformityTestHost>
 {
-    public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
-
     public required IReadOnlyCollection<Exception?> ConfigurationExceptions { get; init; }
+    public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
 
     public required Exception? SendException { get; init; }
 

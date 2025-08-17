@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Conqueror.Messaging;
+﻿namespace Conqueror.Messaging;
 
 internal sealed class DefaultMessageIdFactory : IMessageIdFactory
 {

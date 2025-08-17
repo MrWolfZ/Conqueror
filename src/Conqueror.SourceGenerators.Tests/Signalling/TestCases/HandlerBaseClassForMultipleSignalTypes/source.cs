@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.HandlerBaseClassForMultipleSignalTypes;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.HandlerBaseClassForMultipleSignalTypes;
 
 [Signal]
 public partial record TestSignal;
@@ -17,10 +17,7 @@ public partial record FakeSignal
 
 public abstract class BaseHandler;
 
-public partial class TestSignalHandler : BaseHandler,
-                                         TestSignal.IHandler,
-                                         TestSignal2.IHandler,
-                                         FakeSignal.IHandler
+public partial class TestSignalHandler : BaseHandler, TestSignal.IHandler, TestSignal2.IHandler, FakeSignal.IHandler
 {
     public Task Handle(TestSignal signal, CancellationToken cancellationToken) => throw new NotSupportedException();
 

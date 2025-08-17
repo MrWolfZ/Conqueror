@@ -1,7 +1,7 @@
 ﻿namespace Conqueror.Transport.FileSystem.Signalling;
 
-internal sealed class FileSystemSignalPublisher<TSignal>(
-    SignalFileSystemStore fileSystemStore) : IFileSystemSignalPublisher<TSignal>
+internal sealed class FileSystemSignalPublisher<TSignal>(SignalFileSystemStore fileSystemStore)
+    : IFileSystemSignalPublisher<TSignal>
     where TSignal : class, IFileSystemSignal<TSignal>
 {
     public string TransportTypeName => TransportName;
@@ -10,7 +10,8 @@ internal sealed class FileSystemSignalPublisher<TSignal>(
         TSignal signal,
         IServiceProvider serviceProvider,
         ConquerorContext conquerorContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         try
         {
@@ -20,42 +21,48 @@ internal sealed class FileSystemSignalPublisher<TSignal>(
             var signalTag = new Tag(TSignal.Tag);
             var fileExtension = TSignal.FileSystemSignalSerializer.FileExtension;
 
-            await fileSystemStore.ContentFiles.WritePayload(
-                                     signalTag,
-                                     signalId,
-                                     fileExtension,
-                                     static (state, stream, ct) => TSignal.FileSystemSignalSerializer.SerializeSignal(
-                                         state.serviceProvider,
-                                         state.signal,
-                                         stream,
-                                         ct),
-                                     (serviceProvider, signal),
-                                     cancellationToken)
-                                 .ConfigureAwait(false);
+            await fileSystemStore
+                .ContentFiles.WritePayload(
+                    signalTag,
+                    signalId,
+                    fileExtension,
+                    static (state, stream, ct) =>
+                        TSignal.FileSystemSignalSerializer.SerializeSignal(
+                            state.serviceProvider,
+                            state.signal,
+                            stream,
+                            ct
+                        ),
+                    (serviceProvider, signal),
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
 
             var encodedContextData = conquerorContext.EncodeDownstreamContextData(
-                traceId: conquerorContext.TraceId,
-                signalId: conquerorContext.SignalId);
+                conquerorContext.TraceId,
+                signalId: conquerorContext.SignalId
+            );
 
             fileSystemStore.ContentFiles.WriteMetadata(
                 signalTag,
                 signalId,
-                new(
-                    signalId,
-                    encodedContextData,
-                    PublishedAtUtc: DateTimeOffset.UtcNow),
+                new(signalId, encodedContextData, TimeProvider.System.GetUtcNow()),
                 fileNameSuffix: null,
                 SignalMetadataJsonSerializerContext.Default.SignalMetadata,
-                cancellationToken);
+                cancellationToken
+            );
 
             _ = fileSystemStore.SeqIndexFile.Append(signalId, signalTag, cancellationToken);
         }
         catch (Exception ex) when (ex is not FileSystemSignalFailedOnPublisherException)
         {
-            throw new FileSystemSignalFailedOnPublisherException($"file system signal of type '{typeof(TSignal)}' failed", ex)
+            throw new FileSystemSignalFailedOnPublisherException(
+                $"file system {nameof(signal)} of type '{typeof(TSignal)}' failed",
+                ex
+            )
             {
                 SignalPayload = signal,
-                TransportType = new(TransportTypeName, SignalTransportRole.Publisher),
+                TransportType = new SignalTransportType(TransportTypeName, SignalTransportRole.Publisher),
             };
         }
     }

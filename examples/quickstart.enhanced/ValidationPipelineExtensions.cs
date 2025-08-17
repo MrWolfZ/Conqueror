@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Conqueror;
+﻿namespace Quickstart.Enhanced;
 
-namespace Quickstart.Enhanced;
+using System.ComponentModel.DataAnnotations;
+using Conqueror;
 
 public static class ValidationPipelineExtensions
 {
@@ -12,7 +12,8 @@ public static class ValidationPipelineExtensions
     {
         return pipeline.Use(ctx =>
         {
-            Validator.ValidateObject(ctx.Message, new(ctx.Message), true);
+            Validator.ValidateObject(ctx.Message, new(ctx.Message), validateAllProperties: true);
+
             return ctx.Next(ctx.Message, ctx.CancellationToken);
         });
     }

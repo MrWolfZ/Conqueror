@@ -1,7 +1,4 @@
-﻿using Conqueror.Transport.FileSystem.Messaging;
-using Conqueror.Transport.FileSystem.Signalling;
-
-namespace Conqueror.Transport.FileSystem;
+﻿namespace Conqueror.Transport.FileSystem;
 
 internal sealed class FileSystemStores : IDisposable
 {
@@ -9,6 +6,26 @@ internal sealed class FileSystemStores : IDisposable
     private readonly ConcurrentDictionary<DirectoryPath, SignalFileSystemStore> signalStoreByBaseDirectory = [];
 
     private int disposedFlag;
+
+    public void Dispose()
+    {
+        var prevValue = Interlocked.Exchange(ref disposedFlag, value: 1);
+
+        if (prevValue is not 0)
+        {
+            return;
+        }
+
+        foreach (var store in messageStoreByBaseDirectory.Values)
+        {
+            store.Dispose();
+        }
+
+        foreach (var store in signalStoreByBaseDirectory.Values)
+        {
+            store.Dispose();
+        }
+    }
 
     public MessageFileSystemStore GetMessageStore(DirectoryPath baseDirectoryPath)
     {
@@ -60,25 +77,5 @@ internal sealed class FileSystemStores : IDisposable
         return store;
     }
 
-    public void Dispose()
-    {
-        var prevValue = Interlocked.Exchange(ref disposedFlag, 1);
-
-        if (prevValue != 0)
-        {
-            return;
-        }
-
-        foreach (var store in messageStoreByBaseDirectory.Values)
-        {
-            store.Dispose();
-        }
-
-        foreach (var store in signalStoreByBaseDirectory.Values)
-        {
-            store.Dispose();
-        }
-    }
-
-    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(disposedFlag != 0, typeof(FileSystemStores));
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(disposedFlag is not 0, typeof(FileSystemStores));
 }

@@ -1,22 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-    <Import Project="../../../.targets/test.targets" />
-
-    <ItemGroup>
-        <ProjectReference Include="../../../Conqueror/Conqueror.csproj" />
-        <ProjectReference Include="../../../Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-        <ProjectReference Include="../Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Hosting" />
-        <PackageReference Include="Microsoft.Extensions.Logging" />
-        <PackageReference Include="Serilog" />
-        <PackageReference Include="Serilog.Extensions.Logging" />
-        <PackageReference Include="Serilog.Formatting.Compact" />
-        <PackageReference Include="Serilog.Sinks.Console" />
-        <PackageReference Include="Serilog.Sinks.TextWriter" />
-        <PackageReference Include="Verify.NUnit" />
-    </ItemGroup>
-
+  <Import Project="../../../.targets/test.targets" />
+  <ItemGroup>
+    <ProjectReference Include="../../../Conqueror/Conqueror.csproj" />
+    <ProjectReference
+      Include="../../../Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+    <ProjectReference Include="../Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Formatting.Compact" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.TextWriter" />
+    <PackageReference Include="Verify.NUnit" />
+  </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
-﻿// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public static class InProcessSignalTransportTypeExtensions
 {
-    public static bool IsInProcess(this SignalTransportType transportType) => transportType.Name == ConquerorConstants.InProcessTransportName;
+    public static bool IsInProcess(this SignalTransportType transportType) =>
+        string.Equals(transportType.Name, ConquerorConstants.InProcessTransportName, StringComparison.Ordinal);
 }

@@ -2,8 +2,8 @@ namespace Conqueror.Transport.FileSystem.Messaging;
 
 internal sealed class FileSystemMessageSender<TMessage, TResponse>(
     MessageFileSystemStore fileSystemStore,
-    TimeSpan pollingInterval)
-    : IFileSystemMessageSender<TMessage, TResponse>
+    TimeSpan pollingInterval
+) : IFileSystemMessageSender<TMessage, TResponse>
     where TMessage : class, IFileSystemMessage<TMessage, TResponse>
 {
     private TimeSpan? configuredTimeToLive;
@@ -14,7 +14,8 @@ internal sealed class FileSystemMessageSender<TMessage, TResponse>(
         TMessage message,
         IServiceProvider serviceProvider,
         ConquerorContext conquerorContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         try
         {
@@ -25,22 +26,27 @@ internal sealed class FileSystemMessageSender<TMessage, TResponse>(
             var fileExtension = TMessage.FileSystemMessageSerializer.FileExtension;
             var responseFileExtension = $".response{TMessage.FileSystemMessageResponseSerializer.FileExtension}";
 
-            await fileSystemStore.ContentFiles.WritePayload(
-                                     messageTag,
-                                     messageId,
-                                     fileExtension,
-                                     static (state, stream, ct) => TMessage.FileSystemMessageSerializer.SerializeMessage(
-                                         state.serviceProvider,
-                                         state.message,
-                                         stream,
-                                         ct),
-                                     (serviceProvider, message),
-                                     cancellationToken)
-                                 .ConfigureAwait(false);
+            await fileSystemStore
+                .ContentFiles.WritePayload(
+                    messageTag,
+                    messageId,
+                    fileExtension,
+                    static (state, stream, ct) =>
+                        TMessage.FileSystemMessageSerializer.SerializeMessage(
+                            state.serviceProvider,
+                            state.message,
+                            stream,
+                            ct
+                        ),
+                    (serviceProvider, message),
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
 
             var encodedContextData = conquerorContext.EncodeDownstreamContextData(
-                traceId: conquerorContext.TraceId,
-                messageId: conquerorContext.MessageId);
+                conquerorContext.TraceId,
+                conquerorContext.MessageId
+            );
 
             fileSystemStore.ContentFiles.WriteMetadata(
                 messageTag,
@@ -48,12 +54,14 @@ internal sealed class FileSystemMessageSender<TMessage, TResponse>(
                 new(
                     messageId,
                     encodedContextData,
-                    SentAtUtc: DateTimeOffset.UtcNow,
+                    TimeProvider.System.GetUtcNow(),
                     configuredTimeToLive,
-                    NrOfFailedProcessingAttempts: 0),
+                    NrOfFailedProcessingAttempts: 0
+                ),
                 fileNameSuffix: null,
                 MessageMetadataJsonSerializerContext.Default.MessageMetadata,
-                cancellationToken);
+                cancellationToken
+            );
 
             _ = fileSystemStore.SeqIndexFile.Append(messageId, messageTag, cancellationToken);
 
@@ -62,26 +70,28 @@ internal sealed class FileSystemMessageSender<TMessage, TResponse>(
                 return (TResponse)(object)UnitMessageResponse.Instance;
             }
 
-            var response = await fileSystemStore.ContentFiles.WaitForPayload(
-                                                    messageTag,
-                                                    messageId,
-                                                    responseFileExtension,
-                                                    static async (p, stream, ct) => await TMessage.FileSystemMessageResponseSerializer.DeserializeResponse(
-                                                                                                      p,
-                                                                                                      stream,
-                                                                                                      ct)
-                                                                                                  .ConfigureAwait(false),
-                                                    serviceProvider,
-                                                    pollingInterval,
-                                                    cancellationToken)
-                                                .ConfigureAwait(false);
+            var response = await fileSystemStore
+                .ContentFiles.WaitForPayload(
+                    messageTag,
+                    messageId,
+                    responseFileExtension,
+                    static async (p, stream, ct) =>
+                        await TMessage
+                            .FileSystemMessageResponseSerializer.DeserializeResponse(p, stream, ct)
+                            .ConfigureAwait(false),
+                    serviceProvider,
+                    pollingInterval,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
 
             var responseMetadata = fileSystemStore.ContentFiles.ReadMetadata(
                 messageTag,
                 messageId,
-                fileNameSuffix: ".response",
+                ".response",
                 MessageMetadataJsonSerializerContext.Default.MessageResponseMetadata,
-                cancellationToken);
+                cancellationToken
+            );
 
             if (responseMetadata.EncodedContextData is not null)
             {
@@ -92,10 +102,13 @@ internal sealed class FileSystemMessageSender<TMessage, TResponse>(
         }
         catch (Exception ex) when (ex is not FileSystemMessageFailedOnSenderException)
         {
-            throw new FileSystemMessageFailedOnSenderException($"file system message of type '{typeof(TMessage)}' failed", ex)
+            throw new FileSystemMessageFailedOnSenderException(
+                $"file system {nameof(message)} of type '{typeof(TMessage)}' failed",
+                ex
+            )
             {
                 MessagePayload = message,
-                TransportType = new(TransportTypeName, MessageTransportRole.Sender),
+                TransportType = new MessageTransportType(TransportTypeName, MessageTransportRole.Sender),
             };
         }
     }

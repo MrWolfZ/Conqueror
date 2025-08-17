@@ -5,11 +5,13 @@ public sealed class HttpWebSocketsSignalContextConformityTests
     : SignalTransportContextConformityTests<
           HttpWebSocketsSignalContextConformityTests,
           HttpSignalTransportConformityTestHost,
-          HttpSignalConformityContextTestCase>,
+          HttpSignalConformityContextTestCase
+      >,
       ISignalTransportContextConformityTests<
           HttpSignalTransportConformityTestHost,
-          HttpSignalConformityContextTestCase>
+          HttpSignalConformityContextTestCase
+      >
 {
-    public static IEnumerable<HttpSignalConformityContextTestCase> CreateTestCases()
-        => HttpSignalTestCases.CreateContextTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
+    public static IEnumerable<HttpSignalConformityContextTestCase> CreateTestCases() =>
+        HttpSignalTestCases.CreateContextTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
 }

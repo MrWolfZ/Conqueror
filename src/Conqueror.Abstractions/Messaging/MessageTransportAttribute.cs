@@ -1,5 +1,3 @@
-using System;
-
 namespace Conqueror.Messaging;
 
 /// <summary>

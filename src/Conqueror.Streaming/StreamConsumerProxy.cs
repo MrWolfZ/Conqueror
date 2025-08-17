@@ -1,8 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Conqueror.Streaming;
 
 internal sealed class StreamConsumerProxy<TItem>(
@@ -11,10 +6,10 @@ internal sealed class StreamConsumerProxy<TItem>(
     Type? consumerType,
     object? key,
     IStreamConsumer<TItem>? consumerInstance,
-    StreamConsumerMiddlewareRegistry middlewareRegistry)
-    : IStreamConsumer<TItem>
+    StreamConsumerMiddlewareRegistry middlewareRegistry
+) : IStreamConsumer<TItem>
 {
-    public Task HandleItem(TItem item, CancellationToken cancellationToken = default)
+    public async Task HandleItem(TItem item, CancellationToken cancellationToken = default)
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
@@ -24,6 +19,6 @@ internal sealed class StreamConsumerProxy<TItem>(
 
         var pipeline = pipelineBuilder.Build(conquerorContext);
 
-        return pipeline.Execute(serviceProvider, item, consumerType, key, consumerInstance, cancellationToken);
+        await pipeline.Execute(serviceProvider, item, consumerType, key, consumerInstance, cancellationToken);
     }
 }

@@ -4,11 +4,9 @@ internal sealed partial class GetChatHandler(ChatRepository repository) : GetCha
 {
     public static void ConfigurePipeline(GetChat.IPipeline pipeline)
         => pipeline.UseDefault()
-                   .ConfigureTimeout(TimeSpan.FromSeconds(10))
-                   .RequirePermission(nameof(GetChat));
+            .ConfigureTimeout(TimeSpan.FromSeconds(value: 10))
+            .RequirePermission(nameof(GetChat));
 
-    public async Task<ChatEntry[]> Handle(GetChat message, CancellationToken cancellationToken = default)
-    {
-        return (await repository.GetEntries()).ToArray();
-    }
+    public async Task<ChatEntry[]> Handle(GetChat message, CancellationToken cancellationToken = default) =>
+        (await repository.GetEntries()).ToArray();
 }

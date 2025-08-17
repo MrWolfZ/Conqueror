@@ -1,14 +1,8 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Conqueror.Messaging;
 
-internal sealed class MessagePipeline<TMessage, TResponse>(
-    Type? handlerType,
-    IServiceProvider serviceProvider)
+using System.Collections;
+
+internal sealed class MessagePipeline<TMessage, TResponse>(Type? handlerType, IServiceProvider serviceProvider)
     : IMessagePipeline<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -20,8 +14,6 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
 
     public int Count => middlewares.Count;
 
-    internal int Capacity => middlewares.Capacity;
-
     public IMessagePipeline<TMessage, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>
     {
@@ -30,14 +22,13 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
         return this;
     }
 
-    public IMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn)
-    {
-        return Use(new DelegateMessageMiddleware(middlewareFn));
-    }
+    public IMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn) =>
+        Use(new DelegateMessageMiddleware(middlewareFn));
 
     public IMessagePipeline<TMessage, TResponse> UseWhen(
         Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate,
-        Action<IMessagePipeline<TMessage, TResponse>> configureConditionalPipeline)
+        Action<IMessagePipeline<TMessage, TResponse>> configureConditionalPipeline
+    )
     {
         configureConditionalPipeline(new ConditionalPipeline(predicate, this));
 
@@ -52,7 +43,7 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
         return this;
     }
 
-    public IMessagePipeline<TMessage, TResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
+    public IMessagePipeline<TMessage, TResponse> Configure<TMiddleware>(Action<TMiddleware> configureFn)
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>
     {
         var found = false;
@@ -60,24 +51,30 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
         {
             if (middleware is TMiddleware m)
             {
-                configure(m);
+                configureFn(m);
                 found = true;
             }
 
             if (middleware is ConditionalMessageMiddleware<TMiddleware> conditionalMiddleware)
             {
-                configure(conditionalMiddleware.Middleware);
+                configureFn(conditionalMiddleware.Middleware);
                 found = true;
             }
         }
 
         if (!found)
         {
-            throw new InvalidOperationException($"middleware '${typeof(TMiddleware)}' cannot be configured for this pipeline since it is not used");
+            throw new InvalidOperationException(
+                $"middleware '${typeof(TMiddleware)}' cannot be configured for this pipeline since it is not used"
+            );
         }
 
         return this;
     }
+
+    public IEnumerator<IMessageMiddleware<TMessage, TResponse>> GetEnumerator() => middlewares.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public Task<TResponse> Execute(
         IServiceProvider serviceProvider,
@@ -85,15 +82,12 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
         IMessageSender<TMessage, TResponse> sender,
         MessageTransportType transportType,
         ConquerorContext conquerorContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        if (middlewares.Count == 0)
+        if (middlewares.Count is 0)
         {
-            return sender.Send(
-                message,
-                serviceProvider,
-                conquerorContext,
-                cancellationToken);
+            return sender.Send(message, serviceProvider, conquerorContext, cancellationToken);
         }
 
         var ctx = new MessageMiddlewareContext<TMessage, TResponse>(
@@ -101,7 +95,8 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
             sender,
             serviceProvider,
             conquerorContext,
-            transportType)
+            transportType
+        )
         {
             Message = message,
             CancellationToken = cancellationToken,
@@ -110,40 +105,37 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
         return middlewares[0].Execute(ctx);
     }
 
-    public IEnumerator<IMessageMiddleware<TMessage, TResponse>> GetEnumerator() => middlewares.GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    private sealed class DelegateMessageMiddleware(MessageMiddlewareFn<TMessage, TResponse> middlewareFn) : IMessageMiddleware<TMessage, TResponse>
+    private sealed class DelegateMessageMiddleware(MessageMiddlewareFn<TMessage, TResponse> middlewareFn)
+        : IMessageMiddleware<TMessage, TResponse>
     {
         public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx) => middlewareFn(ctx);
     }
 
     private sealed class ConditionalMessageMiddleware<TMiddleware>(
         Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate,
-        TMiddleware middleware)
-        : IMessageMiddleware<TMessage, TResponse>
+        TMiddleware middleware
+    ) : IMessageMiddleware<TMessage, TResponse>
         where TMiddleware : IMessageMiddleware<TMessage, TResponse>
     {
         public TMiddleware Middleware => middleware;
 
-        public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
-            => predicate(ctx) ? middleware.Execute(ctx) : ctx.Next(ctx.Message, ctx.CancellationToken);
+        public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx) =>
+            predicate(ctx) ? middleware.Execute(ctx) : ctx.Next(ctx.Message, ctx.CancellationToken);
     }
 
     private sealed class ConditionalDelegateMessageMiddleware(
         Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate,
-        MessageMiddlewareFn<TMessage, TResponse> middlewareFn)
-        : IMessageMiddleware<TMessage, TResponse>
+        MessageMiddlewareFn<TMessage, TResponse> middlewareFn
+    ) : IMessageMiddleware<TMessage, TResponse>
     {
-        public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
-            => predicate(ctx) ? middlewareFn(ctx) : ctx.Next(ctx.Message, ctx.CancellationToken);
+        public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx) =>
+            predicate(ctx) ? middlewareFn(ctx) : ctx.Next(ctx.Message, ctx.CancellationToken);
     }
 
     private sealed class ConditionalPipeline(
         Predicate<MessageMiddlewareContext<TMessage, TResponse>> outerPredicate,
-        IMessagePipeline<TMessage, TResponse> pipeline)
-        : IMessagePipeline<TMessage, TResponse>
+        IMessagePipeline<TMessage, TResponse> pipeline
+    ) : IMessagePipeline<TMessage, TResponse>
     {
         public Type? HandlerType => pipeline.HandlerType;
 
@@ -168,21 +160,18 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
 
         public IMessagePipeline<TMessage, TResponse> UseWhen(
             Predicate<MessageMiddlewareContext<TMessage, TResponse>> predicate,
-            Action<IMessagePipeline<TMessage, TResponse>> configureConditionalPipeline)
-            => pipeline.UseWhen(
-                ctx => outerPredicate(ctx) && predicate(ctx),
-                configureConditionalPipeline);
+            Action<IMessagePipeline<TMessage, TResponse>> configureConditionalPipeline
+        ) => pipeline.UseWhen(ctx => outerPredicate(ctx) && predicate(ctx), configureConditionalPipeline);
 
         public IMessagePipeline<TMessage, TResponse> Without<TMiddleware>()
-            where TMiddleware : IMessageMiddleware<TMessage, TResponse>
-            => pipeline.Without<TMiddleware>();
+            where TMiddleware : IMessageMiddleware<TMessage, TResponse> => pipeline.Without<TMiddleware>();
 
-        public IMessagePipeline<TMessage, TResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
-            where TMiddleware : IMessageMiddleware<TMessage, TResponse>
-            => pipeline.Configure(configure);
+        public IMessagePipeline<TMessage, TResponse> Configure<TMiddleware>(Action<TMiddleware> configureFn)
+            where TMiddleware : IMessageMiddleware<TMessage, TResponse> => pipeline.Configure(configureFn);
 
-        IEnumerator<IMessageMiddleware<TMessage, TResponse>> IEnumerable<IMessageMiddleware<TMessage, TResponse>>.GetEnumerator()
-            => pipeline.GetEnumerator();
+        IEnumerator<IMessageMiddleware<TMessage, TResponse>> IEnumerable<
+            IMessageMiddleware<TMessage, TResponse>
+        >.GetEnumerator() => pipeline.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)pipeline).GetEnumerator();
     }

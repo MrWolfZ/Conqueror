@@ -7,7 +7,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services
-       .AddConquerorHttpClient()
-       .AddSignalHandler<ChatEntryBroadcastedHandler>(ServiceLifetime.Singleton);
+    .AddConquerorHttpClient()
+    .AddSignalHandler<ChatEntryBroadcastedHandler>(ServiceLifetime.Singleton);
 
 await builder.Build().RunAsync();

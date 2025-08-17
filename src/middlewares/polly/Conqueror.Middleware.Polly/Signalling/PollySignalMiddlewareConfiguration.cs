@@ -1,10 +1,11 @@
-using Polly;
-
 namespace Conqueror.Middleware.Polly.Signalling;
+
+using global::Polly;
 
 /// <summary>
 ///     The configuration options for <see cref="PollySignalMiddleware{TSignal}" />.
 /// </summary>
+/// <typeparam name="TSignal">The signal type</typeparam>
 public sealed class PollySignalMiddlewareConfiguration<TSignal>
     where TSignal : class, ISignal<TSignal>
 {

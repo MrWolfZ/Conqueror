@@ -1,14 +1,11 @@
-﻿using Conqueror.Transport.ConformityTests.Messaging;
-
-namespace Conqueror.Transport.FileSystem.Tests.Messaging;
+﻿namespace Conqueror.Transport.FileSystem.Tests.Messaging;
 
 public sealed class FileSystemMessageConformityExecutionErrorTestCase
     : FileSystemMessageConformityExecutionTestCase,
-      IMessageTransportConformityExecutionErrorTestCase<FileSystemMessageTransportConformityTestHost>
+        IMessageTransportConformityExecutionErrorTestCase<FileSystemMessageTransportConformityTestHost>
 {
-    public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
-
     public required IReadOnlyCollection<Exception?> ConfigurationExceptions { get; init; }
+    public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
 
     public required Exception? SendException { get; init; }
 
@@ -45,7 +42,10 @@ public sealed class FileSystemMessageConformityExecutionErrorTestCase
         base.RegisterClientServices(services);
     }
 
-    public override void ConfigureReceiver(FileSystemMessageTransportConformityTestHost host, IFileSystemMessageReceiver receiver)
+    public override void ConfigureReceiver(
+        FileSystemMessageTransportConformityTestHost host,
+        IFileSystemMessageReceiver receiver
+    )
     {
         if (host.ReceiverConfigurationExceptions.TryDequeue(out var ex) && ex is not null)
         {

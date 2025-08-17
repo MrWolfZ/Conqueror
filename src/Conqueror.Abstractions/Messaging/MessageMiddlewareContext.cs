@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public readonly record struct MessageMiddlewareContext<TMessage, TResponse>
@@ -17,11 +10,12 @@ public readonly record struct MessageMiddlewareContext<TMessage, TResponse>
         IMessageSender<TMessage, TResponse> sender,
         IServiceProvider serviceProvider,
         ConquerorContext conquerorContext,
-        MessageTransportType transportType)
+        MessageTransportType transportType
+    )
     {
         Debug.Assert(middlewares.Count > 0, "this should only be called if there are middlewares to execute");
 
-        state = new()
+        state = new State
         {
             Middlewares = middlewares,
             Sender = sender,
@@ -60,11 +54,7 @@ public readonly record struct MessageMiddlewareContext<TMessage, TResponse>
             return state.Middlewares[nextIndex].Execute(updatedContext);
         }
 
-        return state.Sender.Send(
-            message,
-            ServiceProvider,
-            ConquerorContext,
-            cancellationToken);
+        return state.Sender.Send(message, ServiceProvider, ConquerorContext, cancellationToken);
     }
 
     // performance optimization: we capture the immutable parts of the context in a separate

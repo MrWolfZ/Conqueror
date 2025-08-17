@@ -1,15 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Conqueror.Streaming.Transport.Http.Server.AspNetCore;
+﻿#pragma warning disable IDE0130 // Namespaces don't match folder structure - we want these extensions to be accessible from client code without an extra import
+
+namespace Conqueror;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Net.Http.Headers;
-
-// ReSharper disable once CheckNamespace (we want these extensions to be accessible from client code without an extra import)
-namespace Conqueror;
+using Streaming.Transport.Http.Server.AspNetCore;
 
 public static class ConquerorCommonAspNetApplicationBuilderExtensions
 {
@@ -21,43 +19,54 @@ public static class ConquerorCommonAspNetApplicationBuilderExtensions
     ///     before adding endpoints) and MUST be placed after <see cref="AuthAppBuilderExtensions.UseAuthentication" />
     ///     (if you are using that middleware).
     /// </summary>
-    public static IApplicationBuilder UseConqueror(this IApplicationBuilder app)
-    {
-        return app.UseConquerorContextDataPropagation();
-    }
+    /// <param name="app">The app to configure</param>
+    /// <returns>The application builder</returns>
+    public static IApplicationBuilder UseConqueror(this IApplicationBuilder app) =>
+        app.UseConquerorContextDataPropagation();
 
     /// <summary>
     ///     Add support for Conqueror context data propagation to the application.
     /// </summary>
+    /// <param name="app">The app to configure</param>
     private static IApplicationBuilder UseConquerorContextDataPropagation(this IApplicationBuilder app)
     {
-        return app.Use(async (httpContext, next) =>
-        {
-            try
+        return app.Use(
+            async (httpContext, next) =>
             {
-                var conquerorContextAccessor = httpContext.RequestServices.GetRequiredService<IConquerorContextAccessor>();
-                using var conquerorContext = conquerorContextAccessor.GetOrCreate();
+                try
+                {
+                    var conquerorContextAccessor =
+                        httpContext.RequestServices.GetRequiredService<IConquerorContextAccessor>();
+                    using var conquerorContext = conquerorContextAccessor.GetOrCreate();
 
-                ReadContextDataFromRequest(conquerorContext, httpContext);
+                    ReadContextDataFromRequest(conquerorContext, httpContext);
 
-                ConquerorServerTransportHelper.SignalExecution(conquerorContext, HttpConstants.TransportName);
+                    ConquerorServerTransportHelper.SignalExecution(conquerorContext, HttpConstants.TransportName);
 
-                ConquerorServerTransportHelper.HandleTraceParent(conquerorContext, GetTraceParent(httpContext));
+                    ConquerorServerTransportHelper.HandleTraceParent(conquerorContext, GetTraceParent(httpContext));
 
-                // ReSharper disable once AccessToDisposedClosure (accessing the disposed context is fine, since disposing it only clears it from the async local)
-                httpContext.Response.OnStarting(state => SetResponseHeaders((HttpContext)state, conquerorContext), httpContext);
+                    // ReSharper disable once AccessToDisposedClosure (accessing the disposed context is fine, since disposing it only clears it from the async local)
+                    httpContext.Response.OnStarting(
+                        state => SetResponseHeaders((HttpContext)state, conquerorContext),
+                        httpContext
+                    );
 
-                await next().ConfigureAwait(false);
+                    await next().ConfigureAwait(false);
+                }
+                catch (FormattedConquerorContextDataInvalidException)
+                {
+                    await new BadRequestResult()
+                        .ExecuteResultAsync(new() { HttpContext = httpContext })
+                        .ConfigureAwait(false);
+
+                    // an invalid context could be a sign of malicious calls; therefore we don't
+                    // leak any details about what went wrong except that the context data was invalid
+                    await httpContext
+                        .Response.WriteAsync("invalid conqueror context data", CancellationToken.None)
+                        .ConfigureAwait(false);
+                }
             }
-            catch (FormattedConquerorContextDataInvalidException)
-            {
-                await new BadRequestResult().ExecuteResultAsync(new() { HttpContext = httpContext }).ConfigureAwait(false);
-
-                // an invalid context could be a sign of malicious calls; therefore we don't
-                // leak any details about what went wrong except that the context data was invalid
-                await httpContext.Response.WriteAsync("invalid conqueror context data").ConfigureAwait(false);
-            }
-        });
+        );
 
         static void ReadContextDataFromRequest(ConquerorContext ctx, HttpContext httpContext)
         {

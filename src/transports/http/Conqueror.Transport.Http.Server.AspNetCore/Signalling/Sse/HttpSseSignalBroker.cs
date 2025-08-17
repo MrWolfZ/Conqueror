@@ -1,22 +1,11 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Net.ServerSentEvents;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+﻿namespace Conqueror.Transport.Http.Server.AspNetCore.Signalling.Sse;
 
-namespace Conqueror.Transport.Http.Server.AspNetCore.Signalling.Sse;
-
-internal sealed partial class HttpSseSignalBroker(
-    IServiceProvider serviceProvider,
-    ILogger<HttpSseSignalBroker> logger)
+internal sealed partial class HttpSseSignalBroker(IServiceProvider serviceProvider, ILogger<HttpSseSignalBroker> logger)
 {
-    private readonly ConcurrentDictionary<string, ImmutableList<ChannelWriter<ChannelMessage>>> channelWritersByEventType = new();
+    private readonly ConcurrentDictionary<
+        string,
+        ImmutableList<ChannelWriter<ChannelMessage>>
+    > channelWritersByEventType = [];
 
     public IAsyncEnumerable<SseItem<string>> Subscribe(IEnumerable<string> eventTypes)
     {
@@ -33,38 +22,43 @@ internal sealed partial class HttpSseSignalBroker(
         // before the subscription is fully established
         foreach (var eventType in eventTypesList)
         {
-            _ = channelWritersByEventType.AddOrUpdate(eventType, _ => [channel.Writer], (_, list) => list.Add(channel.Writer));
+            _ = channelWritersByEventType.AddOrUpdate(
+                eventType,
+                static (_, channel) => [channel.Writer],
+                static (_, list, channel) => list.Add(channel.Writer),
+                channel
+            );
         }
 
-        return SubscribeInternal(eventTypesList, channel);
+        return SubscribeInternal(eventTypesList, channel, CancellationToken.None);
     }
 
     public async Task Publish<TSignal>(
         TSignal signal,
         ConquerorContext conquerorContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         where TSignal : class, IHttpSseSignal<TSignal>
     {
         try
         {
             LogPublishStart(logger);
 
-            if (!channelWritersByEventType.TryGetValue(TSignal.EventType, out var writers) || writers.Count == 0)
+            if (!channelWritersByEventType.TryGetValue(TSignal.EventType, out var writers) || writers.Count is 0)
             {
                 return;
             }
 
-            var content = await TSignal.HttpSseSignalSerializer.SerializeSignal(serviceProvider, signal).ConfigureAwait(false);
+            var content = await TSignal
+                .HttpSseSignalSerializer.SerializeSignal(serviceProvider, signal)
+                .ConfigureAwait(false);
 
-            if (conquerorContext.EncodeDownstreamContextData(traceId: conquerorContext.TraceId) is { } s)
+            if (conquerorContext.EncodeDownstreamContextData(conquerorContext.TraceId) is { } s)
             {
                 content += "\n" + s;
             }
 
-            var item = new SseItem<string>(content, TSignal.EventType)
-            {
-                EventId = conquerorContext.SignalId,
-            };
+            var item = new SseItem<string>(content, TSignal.EventType) { EventId = conquerorContext.SignalId };
 
             cancellationToken.ThrowIfCancellationRequested();
             await Task.WhenAll(writers.Select(WriteToChannel)).ConfigureAwait(false);
@@ -74,15 +68,21 @@ internal sealed partial class HttpSseSignalBroker(
                 try
                 {
                     // run continuation async to ensure we are not blocking the reader when it notifies us of the completion
-                    var taskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    var taskCompletionSource = new TaskCompletionSource(
+                        TaskCreationOptions.RunContinuationsAsynchronously
+                    );
                     var channelMessage = new ChannelMessage(item, taskCompletionSource);
 
                     LogWriteToChannel(logger, TSignal.EventType);
 
                     await writer.WriteAsync(channelMessage, cancellationToken).ConfigureAwait(false);
 
-                    await using var d = cancellationToken.Register(static tcs => ((TaskCompletionSource)tcs!).TrySetCanceled(), taskCompletionSource)
-                                                         .ConfigureAwait(false);
+                    await using var d = cancellationToken
+                        .Register(
+                            static tcs => ((TaskCompletionSource)tcs!).TrySetCanceled(CancellationToken.None),
+                            taskCompletionSource
+                        )
+                        .ConfigureAwait(false);
 
                     LogWroteToChannel(logger, TSignal.EventType);
 
@@ -96,16 +96,23 @@ internal sealed partial class HttpSseSignalBroker(
                 }
                 catch (Exception ex) when (cancellationToken.IsCancellationRequested)
                 {
-                    throw new OperationCanceledException($"publish of signal of type '{signal.GetType()}' was cancelled", ex, cancellationToken);
+                    throw new OperationCanceledException(
+                        $"publish of {nameof(signal)} of type '{signal.GetType()}' was cancelled",
+                        ex,
+                        cancellationToken
+                    );
                 }
             }
         }
         catch (Exception ex) when (ex is not HttpSseSignalFailedOnPublisherException)
         {
-            throw new HttpSseSignalFailedOnPublisherException($"server-sent events signal of type '{typeof(TSignal)}' failed", ex)
+            throw new HttpSseSignalFailedOnPublisherException(
+                $"server-sent events {nameof(signal)} of type '{typeof(TSignal)}' failed",
+                ex
+            )
             {
                 SignalPayload = signal,
-                TransportType = new(ServersSentEventsTransportName, SignalTransportRole.Publisher),
+                TransportType = new SignalTransportType(ServersSentEventsTransportName, SignalTransportRole.Publisher),
             };
         }
     }
@@ -113,7 +120,8 @@ internal sealed partial class HttpSseSignalBroker(
     private async IAsyncEnumerable<SseItem<string>> SubscribeInternal(
         IReadOnlyCollection<string> eventTypes,
         Channel<ChannelMessage> channel,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
     {
         TaskCompletionSource? latestTaskCompletionSource = null;
 
@@ -123,7 +131,9 @@ internal sealed partial class HttpSseSignalBroker(
             {
                 LogWaitForChannel(logger);
 
-                (var item, latestTaskCompletionSource) = await channel.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                (var item, latestTaskCompletionSource) = await channel
+                    .Reader.ReadAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
                 LogGotMessageFromChannel(logger, item.EventType);
 
@@ -154,8 +164,10 @@ internal sealed partial class HttpSseSignalBroker(
             {
                 _ = channelWritersByEventType.AddOrUpdate(
                     eventType,
-                    _ => [],
-                    (_, list) => list.Remove(channel.Writer));
+                    static (_, _) => [],
+                    static (_, list, channel) => list.Remove(channel.Writer),
+                    channel
+                );
             }
         }
     }
@@ -187,7 +199,5 @@ internal sealed partial class HttpSseSignalBroker(
     [LoggerMessage(LogLevel.Trace, "yielded item with event type '{EventType}'")]
     private static partial void LogYieldedItem(ILogger logger, string eventType);
 
-    private sealed record ChannelMessage(
-        SseItem<string> Item,
-        TaskCompletionSource TaskCompletionSource);
+    private sealed record ChannelMessage(SseItem<string> Item, TaskCompletionSource TaskCompletionSource);
 }

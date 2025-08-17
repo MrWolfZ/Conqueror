@@ -1,33 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-    <Import Project="../.targets/test.targets" />
-
-    <PropertyGroup>
-        <ImplicitUsings>false</ImplicitUsings>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Update="NUnit" />
-        <PackageReference Include="Verify.NUnit" />
-        <PackageReference Include="Verify.SourceGenerators" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Content Include="*/TestCases/*/snapshot.received.txt" />
-        <Content Include="*/TestCases/*/snapshot.verified.txt" />
-        <EmbeddedResource Include="*/TestCases/*/source.cs" Condition="'$(DesignTimeBuild)' != 'true'" />
-
-        <!--
+  <Import Project="../.targets/test.targets" />
+  <PropertyGroup>
+    <ImplicitUsings>false</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
+    <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="NUnit" />
+    <PackageReference Include="Verify.NUnit" />
+    <PackageReference Include="Verify.SourceGenerators" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="*/TestCases/*/snapshot.received.txt" />
+    <Content Include="*/TestCases/*/snapshot.verified.txt" />
+    <EmbeddedResource Include="*/TestCases/*/source.cs" Condition="'$(DesignTimeBuild)' != 'true'" />
+    <!--
             make sure the code is compiled while editing it in the IDE so that
             we get syntax highlighting and type checking, but exclude the files
             when running tests to prevent conflicts
          -->
-        <Compile Remove="*/TestCases/*/*.cs" Condition="'$(DesignTimeBuild)' != 'true'" />
-    </ItemGroup>
-
+    <Compile Remove="*/TestCases/*/*.cs" Condition="'$(DesignTimeBuild)' != 'true'" />
+  </ItemGroup>
 </Project>

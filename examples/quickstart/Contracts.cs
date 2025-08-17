@@ -1,7 +1,7 @@
+namespace Quickstart;
+
 using System.ComponentModel.DataAnnotations;
 using Conqueror;
-
-namespace Quickstart;
 
 // In Conqueror, everything revolves around contracts of different kinds: messages, signals, and
 // iterators (the latter is still experimental and therefore not yet included in the Quickstart).
@@ -22,7 +22,7 @@ public sealed partial record IncrementCounterByAmount(string CounterName)
     // We use simple data annotation validation as an example, but more powerful validation
     // tools like FluentValidation are also supported. Note that the built-in .NET data annotation
     // validation is only supported for properties, not constructor parameters
-    [Range(1, long.MaxValue)]
+    [Range(minimum: 1, long.MaxValue)]
     public required long IncrementBy { get; init; }
 }
 

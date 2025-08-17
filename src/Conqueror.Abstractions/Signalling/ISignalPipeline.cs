@@ -1,20 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 #pragma warning disable CA1034
 
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public delegate Task SignalMiddlewareFn<TSignal>(SignalMiddlewareContext<TSignal> context)
     where TSignal : class, ISignal<TSignal>;
 
+[SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "naming is intentional")]
 public interface ISignalPipeline<TSignal> : IReadOnlyCollection<ISignalMiddleware<TSignal>>
     where TSignal : class, ISignal<TSignal>
 {
     /// <summary>
-    ///     The type of the handler this pipeline is being built for. Is <c>null</c> for
+    ///     The type of the handler this pipeline is being built for. Is <see langword="null" /> for
     ///     delegate handlers or when the pipeline is being built for a publisher.
     /// </summary>
     Type? HandlerType { get; }
@@ -28,11 +24,12 @@ public interface ISignalPipeline<TSignal> : IReadOnlyCollection<ISignalMiddlewar
 
     ISignalPipeline<TSignal> UseWhen(
         Predicate<SignalMiddlewareContext<TSignal>> predicate,
-        Action<ISignalPipeline<TSignal>> configureConditionalPipeline);
+        Action<ISignalPipeline<TSignal>> configureConditionalPipeline
+    );
 
     ISignalPipeline<TSignal> Without<TMiddleware>()
         where TMiddleware : ISignalMiddleware<TSignal>;
 
-    ISignalPipeline<TSignal> Configure<TMiddleware>(Action<TMiddleware> configure)
+    ISignalPipeline<TSignal> Configure<TMiddleware>(Action<TMiddleware> configureFn)
         where TMiddleware : ISignalMiddleware<TSignal>;
 }

@@ -1,10 +1,5 @@
 namespace Examples.BlazorWebAssembly.API.Middlewares;
 
-public sealed record MessageTransactionMiddlewareConfiguration
-{
-    public required bool EnlistInAmbientTransaction { get; set; }
-}
-
 public sealed class MessageTransactionMiddleware<TMessage, TResponse> : IMessageMiddleware<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -17,19 +12,37 @@ public sealed class MessageTransactionMiddleware<TMessage, TResponse> : IMessage
     }
 }
 
+public sealed record MessageTransactionMiddlewareConfiguration
+{
+    public required bool EnlistInAmbientTransaction { get; set; }
+}
+
 public static class TransactionMessagePipelineExtensions
 {
     public static IMessagePipeline<TMessage, TResponse> UseTransaction<TMessage, TResponse>(
         this IMessagePipeline<TMessage, TResponse> pipeline,
-        bool enlistInAmbientTransaction = true)
+        bool enlistInAmbientTransaction = true
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        return pipeline.Use(new MessageTransactionMiddleware<TMessage, TResponse> { Configuration = new() { EnlistInAmbientTransaction = enlistInAmbientTransaction } });
+        return pipeline.Use(
+            new MessageTransactionMiddleware<TMessage, TResponse>
+            {
+                Configuration = new MessageTransactionMiddlewareConfiguration
+                {
+                    EnlistInAmbientTransaction = enlistInAmbientTransaction,
+                },
+            }
+        );
     }
 
-    public static IMessagePipeline<TMessage, TResponse> OutsideOfAmbientTransaction<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline)
+    public static IMessagePipeline<TMessage, TResponse> OutsideOfAmbientTransaction<TMessage, TResponse>(
+        this IMessagePipeline<TMessage, TResponse> pipeline
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        return pipeline.Configure<MessageTransactionMiddleware<TMessage, TResponse>>(m => m.Configuration.EnlistInAmbientTransaction = false);
+        return pipeline.Configure<MessageTransactionMiddleware<TMessage, TResponse>>(m =>
+            m.Configuration.EnlistInAmbientTransaction = false
+        );
     }
 }

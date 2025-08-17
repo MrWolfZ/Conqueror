@@ -1,9 +1,9 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.HandlerWithModuleInitializerMethod;
+
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.HandlerWithModuleInitializerMethod;
 
 [Signal]
 public partial record TestSignal;
@@ -15,6 +15,7 @@ public partial class TestSignalHandler : TestSignal.IHandler
     [ModuleInitializer]
     public static void ModuleInitializer()
     {
+        // Method intentionally left empty.
     }
 }
 

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Conqueror.Transport.Http.Client.Signalling.Sse;
+﻿namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 
 internal sealed class HttpSseSignalReceiverFactory(IServiceProvider serviceProvider)
     : ISignalReceiverFactory<IHttpSseSignalHandlerTypesInjector, HttpSseSignalReceiver>
@@ -14,9 +10,14 @@ internal sealed class HttpSseSignalReceiverFactory(IServiceProvider serviceProvi
     public HttpSseSignalReceiver? CreateReceiverForHandlerType(
         Type? handlerType,
         IReadOnlyCollection<ISignalReceiverHandlerInvoker<IHttpSseSignalHandlerTypesInjector>> invokers,
-        IHttpSseSignalHandlerTypesInjector typesInjector)
+        IHttpSseSignalHandlerTypesInjector typesInjector
+    )
     {
-        var receiver = new HttpSseSignalReceiver(serviceProvider, invokers.Select(i => i.SignalType).ToArray(), handlerType);
+        var receiver = new HttpSseSignalReceiver(
+            serviceProvider,
+            invokers.Select(i => i.SignalType).ToArray(),
+            handlerType
+        );
         typesInjector.ConfigureHttpSseReceiver(receiver);
 
         if (!receiver.IsEnabled)
@@ -32,12 +33,17 @@ internal sealed class HttpSseSignalReceiverFactory(IServiceProvider serviceProvi
         return receiver;
     }
 
-    private readonly record struct ConfigurationInjectableArg(ISignalReceiverHandlerInvoker Invoker, HttpSseSignalReceiver Receiver);
+    private readonly record struct ConfigurationInjectableArg(
+        ISignalReceiverHandlerInvoker Invoker,
+        HttpSseSignalReceiver Receiver
+    );
 
     private sealed class ConfigurationInjectable : IHttpSseSignalTypesInjectable<ConfigurationInjectableArg, object?>
     {
-        object? IHttpSseSignalTypesInjectable<ConfigurationInjectableArg, object?>
-            .WithInjectedTypes<TSignal, TIHandler>(ConfigurationInjectableArg arg)
+        object? IHttpSseSignalTypesInjectable<ConfigurationInjectableArg, object?>.WithInjectedTypes<
+            TSignal,
+            TIHandler
+        >(ConfigurationInjectableArg arg)
         {
             arg.Receiver.AddSignalType<TSignal>(arg.Invoker);
 

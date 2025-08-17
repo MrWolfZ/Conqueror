@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace Conqueror.Transport.ConformityTests;
+﻿namespace Conqueror.Transport.ConformityTests;
 
 public interface ITransportConformityTestHost : IAsyncDisposable
 {

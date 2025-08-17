@@ -1,18 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading;
-
 namespace Conqueror.Context;
 
-internal sealed class DefaultConquerorContext : ConquerorContext,
+using System.Security.Claims;
 
-                                                // performance: we implement these interfaces directly here instead of always delegating to
-                                                // DefaultConquerorContextData to prevent unnecessary allocations of the context data
-                                                // objects when users have added no data (i.e. we can shortcut the `GetAll` calls in that
-                                                // case)
-                                                ITransportableConquerorContextData,
-                                                IInProcessConquerorContextData
+internal sealed class DefaultConquerorContext
+    : ConquerorContext,
+        // performance: we implement these interfaces directly here instead of always delegating to
+        // DefaultConquerorContextData to prevent unnecessary allocations of the context data
+        // objects when users have added no data (i.e. we can shortcut the `GetAll` calls in that
+        // case)
+        ITransportableConquerorContextData,
+        IInProcessConquerorContextData
 {
     private readonly Action<DefaultConquerorContext> onDispose;
     private readonly DefaultConquerorContext? parent;
@@ -39,7 +36,7 @@ internal sealed class DefaultConquerorContext : ConquerorContext,
 
         if (parent.contextData is not null)
         {
-            contextData = new(parent.contextData);
+            contextData = new DefaultConquerorContextData(parent.contextData);
         }
     }
 
@@ -55,16 +52,15 @@ internal sealed class DefaultConquerorContext : ConquerorContext,
 
     public override IInProcessConquerorContextData InProcessData => this;
 
-    private DefaultConquerorContextData ContextData => LazyInitializer.EnsureInitialized(ref contextData, static () => new());
+    private DefaultConquerorContextData ContextData =>
+        LazyInitializer.EnsureInitialized(ref contextData, static () => new());
 
     private ITransportableConquerorContextData TransportableContextData => ContextData;
 
     private IInProcessConquerorContextData InProcessContextData => ContextData;
 
-    public static DefaultConquerorContext CreateRootContext(string traceId, Action<ConquerorContext> onRootDispose)
-    {
-        return new(traceId, onRootDispose);
-    }
+    public static DefaultConquerorContext CreateRootContext(string traceId, Action<ConquerorContext> onRootDispose) =>
+        new(traceId, onRootDispose);
 
     public DefaultConquerorContext CreateChildContext(Action onChildDispose)
     {
@@ -74,7 +70,8 @@ internal sealed class DefaultConquerorContext : ConquerorContext,
             {
                 PropagateUpstreamData(ctx);
                 onChildDispose();
-            });
+            }
+        );
     }
 
     protected override void Dispose(bool isDisposing)
@@ -95,18 +92,22 @@ internal sealed class DefaultConquerorContext : ConquerorContext,
         }
     }
 
-    #region data interface members
-
 #pragma warning disable SA1202 // Elements must be ordered by access
 
-    bool ITransportableConquerorContextData.Add(string key, string value, ConquerorContextDataFlowDirection flowDirection)
-        => TransportableContextData.Add(key, value, flowDirection);
+    bool ITransportableConquerorContextData.Add(
+        string key,
+        string value,
+        ConquerorContextDataFlowDirection flowDirection
+    ) => TransportableContextData.Add(key, value, flowDirection);
 
-    void ITransportableConquerorContextData.Set(string key, string value, ConquerorContextDataFlowDirection flowDirection)
-        => TransportableContextData.Set(key, value, flowDirection);
+    void ITransportableConquerorContextData.Set(
+        string key,
+        string value,
+        ConquerorContextDataFlowDirection flowDirection
+    ) => TransportableContextData.Set(key, value, flowDirection);
 
-    bool ITransportableConquerorContextData.Remove(string key, ConquerorContextDataFlowDirection flowDirection)
-        => contextData is not null && TransportableContextData.Remove(key, flowDirection);
+    bool ITransportableConquerorContextData.Remove(string key, ConquerorContextDataFlowDirection flowDirection) =>
+        contextData is not null && TransportableContextData.Remove(key, flowDirection);
 
     void ITransportableConquerorContextData.Clear(ConquerorContextDataFlowDirection flowDirection)
     {
@@ -118,20 +119,27 @@ internal sealed class DefaultConquerorContext : ConquerorContext,
         TransportableContextData.Clear(flowDirection);
     }
 
-    IEnumerable<(string Key, string Value)> ITransportableConquerorContextData.GetAll(ConquerorContextDataFlowDirection flowDirection)
-        => contextData is null ? [] : TransportableContextData.GetAll(flowDirection);
+    IEnumerable<(string Key, string Value)> ITransportableConquerorContextData.GetAll(
+        ConquerorContextDataFlowDirection flowDirection
+    ) => contextData is null ? [] : TransportableContextData.GetAll(flowDirection);
 
-    string? ITransportableConquerorContextData.Get(string key, ConquerorContextDataFlowDirection flowDirection)
-        => contextData is null ? null : TransportableContextData.Get(key, flowDirection);
+    string? ITransportableConquerorContextData.Get(string key, ConquerorContextDataFlowDirection flowDirection) =>
+        contextData is null ? null : TransportableContextData.Get(key, flowDirection);
 
-    bool IInProcessConquerorContextData.Add(string key, object value, ConquerorContextDataFlowDirection flowDirection)
-        => InProcessContextData.Add(key, value, flowDirection);
+    bool IInProcessConquerorContextData.Add(
+        string key,
+        object value,
+        ConquerorContextDataFlowDirection flowDirection
+    ) => InProcessContextData.Add(key, value, flowDirection);
 
-    void IInProcessConquerorContextData.Set(string key, object value, ConquerorContextDataFlowDirection flowDirection)
-        => InProcessContextData.Set(key, value, flowDirection);
+    void IInProcessConquerorContextData.Set(
+        string key,
+        object value,
+        ConquerorContextDataFlowDirection flowDirection
+    ) => InProcessContextData.Set(key, value, flowDirection);
 
-    bool IInProcessConquerorContextData.Remove(string key, ConquerorContextDataFlowDirection flowDirection)
-        => contextData is not null && InProcessContextData.Remove(key, flowDirection);
+    bool IInProcessConquerorContextData.Remove(string key, ConquerorContextDataFlowDirection flowDirection) =>
+        contextData is not null && InProcessContextData.Remove(key, flowDirection);
 
     void IInProcessConquerorContextData.Clear(ConquerorContextDataFlowDirection flowDirection)
     {
@@ -143,12 +151,10 @@ internal sealed class DefaultConquerorContext : ConquerorContext,
         InProcessContextData.Clear(flowDirection);
     }
 
-    IEnumerable<(string Key, object Value)> IInProcessConquerorContextData.GetAll(ConquerorContextDataFlowDirection flowDirection)
-        => contextData is null ? [] : InProcessContextData.GetAll(flowDirection);
+    IEnumerable<(string Key, object Value)> IInProcessConquerorContextData.GetAll(
+        ConquerorContextDataFlowDirection flowDirection
+    ) => contextData is null ? [] : InProcessContextData.GetAll(flowDirection);
 
     T? IInProcessConquerorContextData.Get<T>(string key, ConquerorContextDataFlowDirection flowDirection)
-        where T : default
-        => contextData is null ? default : InProcessContextData.Get<T>(key, flowDirection);
-
-    #endregion
+        where T : default => contextData is null ? default : InProcessContextData.Get<T>(key, flowDirection);
 }

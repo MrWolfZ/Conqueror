@@ -1,12 +1,12 @@
 ﻿namespace Conqueror.Transport.FileSystem;
 
+using System.Buffers;
+
 internal sealed class AggregateAsyncDisposable(int capacity) : IAsyncDisposable
 {
     private readonly IAsyncDisposable?[] asyncDisposables = ArrayPool<IAsyncDisposable?>.Shared.Rent(capacity);
 
     private int count;
-
-    public void Add(IAsyncDisposable disposable) => asyncDisposables[count++] = disposable;
 
     public async ValueTask DisposeAsync()
     {
@@ -15,4 +15,6 @@ internal sealed class AggregateAsyncDisposable(int capacity) : IAsyncDisposable
             await asyncDisposable.DisposeAsync().ConfigureAwait(false);
         }
     }
+
+    public void Add(IAsyncDisposable disposable) => asyncDisposables[count++] = disposable;
 }

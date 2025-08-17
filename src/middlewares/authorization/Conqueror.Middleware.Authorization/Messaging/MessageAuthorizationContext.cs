@@ -1,16 +1,14 @@
-﻿using System;
-using System.Security.Claims;
-using System.Threading;
+﻿namespace Conqueror.Middleware.Authorization.Messaging;
 
-namespace Conqueror.Middleware.Authorization.Messaging;
+using System.Security.Claims;
 
 public sealed class MessageAuthorizationContext<TMessage, TResponse>(
     TMessage message,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
     ClaimsPrincipal? currentPrincipal,
-    CancellationToken cancellationToken)
-    : AuthorizationContext
+    CancellationToken cancellationToken
+) : AuthorizationContext
     where TMessage : class, IMessage<TMessage, TResponse>
 {
     public TMessage Message { get; } = message;

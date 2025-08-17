@@ -1,12 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿namespace Conqueror.Messaging;
 
-namespace Conqueror.Messaging;
-
-internal sealed class MessageSenders(
-    IServiceProvider serviceProvider,
-    IMessageDispatcher dispatcher)
-    : IMessageSenders
+internal sealed class MessageSenders(IServiceProvider serviceProvider, IMessageDispatcher dispatcher) : IMessageSenders
 {
     private static readonly Injectable HandlerCreationInjectable = new();
 
@@ -16,21 +10,29 @@ internal sealed class MessageSenders(
     {
         var proxy = ((ICoreMessageHandlerTypesInjector)TMessage.CoreTypesInjector).Inject(
             HandlerCreationInjectable,
-            new(serviceProvider, dispatcher));
+            new(serviceProvider, dispatcher)
+        );
 
-        Debug.Assert(proxy is TIHandler, $"handler proxy was not of correct type; expected handler type '{typeof(TIHandler)}', actual '{proxy.GetType()}'");
+        Debug.Assert(
+            proxy is TIHandler,
+            $"handler proxy was not of correct type; expected handler type '{typeof(TIHandler)}', actual '{proxy.GetType()}'"
+        );
 
         return (TIHandler)proxy;
     }
 
-    private readonly record struct InjectableArg(
-        IServiceProvider ServiceProvider,
-        IMessageDispatcher Dispatcher);
+    private readonly record struct InjectableArg(IServiceProvider ServiceProvider, IMessageDispatcher Dispatcher);
 
     private sealed class Injectable : ICoreMessageHandlerTypesInjectable<InjectableArg, object>
     {
-        object ICoreMessageHandlerTypesInjectable<InjectableArg, object>
-            .WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>(InjectableArg arg)
+        object ICoreMessageHandlerTypesInjectable<InjectableArg, object>.WithInjectedTypes<
+            TMessage,
+            TResponse,
+            TIHandler,
+            TProxy,
+            TIPipeline,
+            TPipelineProxy
+        >(InjectableArg arg)
         {
             return new TProxy
             {

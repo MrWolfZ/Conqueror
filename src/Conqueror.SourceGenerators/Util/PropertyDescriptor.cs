@@ -1,12 +1,14 @@
 ﻿namespace Conqueror.SourceGenerators.Util;
 
-public readonly record struct PropertyDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct PropertyDescriptor(
     string Name,
     string FullyQualifiedTypeName,
     bool IsPrimitive,
     bool IsNullable,
     bool IsString,
-    EnumerableDescriptor? Enumerable)
+    EnumerableDescriptor? Enumerable
+)
 {
     public readonly EnumerableDescriptor? Enumerable = Enumerable;
     public readonly string FullyQualifiedTypeName = FullyQualifiedTypeName;

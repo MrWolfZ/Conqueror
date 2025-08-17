@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.InSameNestedTypeWithoutResponse;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.InSameNestedTypeWithoutResponse;
 
 public partial class Container
 {
@@ -16,7 +16,8 @@ public partial class Container
 
     public partial class TestMessageHandler : TestMessage.IHandler
     {
-        public Task Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task Handle(TestMessage message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 

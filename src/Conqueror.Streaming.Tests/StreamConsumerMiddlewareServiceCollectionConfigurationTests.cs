@@ -14,10 +14,12 @@ public sealed class StreamConsumerMiddlewareServiceCollectionConfigurationTests
     [Test]
     public void GivenRegisteredMiddlewareType_AddingIdenticalMiddlewareOnlyKeepsOneRegistration()
     {
-        var services = new ServiceCollection().AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                                              .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>();
+        var services = new ServiceCollection()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>();
 
-        Assert.That(services.Count(s => s.ServiceType == typeof(TestStreamConsumerMiddleware)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestStreamConsumerMiddleware)),
+            Is.EqualTo(expected: 1));
     }
 
     [Test]
@@ -33,9 +35,7 @@ public sealed class StreamConsumerMiddlewareServiceCollectionConfigurationTests
 
     private sealed class TestStreamConsumerMiddleware : IStreamConsumerMiddleware
     {
-        public Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem> ctx)
-        {
-            return ctx.Next(ctx.Item, ctx.CancellationToken);
-        }
+        public Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem> ctx) =>
+            ctx.Next(ctx.Item, ctx.CancellationToken);
     }
 }

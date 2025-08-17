@@ -1,17 +1,14 @@
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
+
+namespace Microsoft.Extensions.DependencyInjection;
+
 using Conqueror;
 using Conqueror.Context;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
-namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorServiceCollectionExtensions
 {
-    public static IServiceCollection AddConqueror(this IServiceCollection services)
-    {
-        return services.AddConquerorMessaging()
-                       .AddConquerorSignalling();
-    }
+    public static IServiceCollection AddConqueror(this IServiceCollection services) =>
+        services.AddConquerorMessaging().AddConquerorSignalling();
 
     /// <summary>
     ///     Adds the services required for interacting with the Conqueror context. This method does typically not need to be

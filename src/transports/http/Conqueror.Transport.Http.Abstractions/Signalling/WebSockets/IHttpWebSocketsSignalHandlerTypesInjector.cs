@@ -1,8 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal interface IHttpWebSocketsSignalHandlerTypesInjector : ISignalHandlerTypesInjector
@@ -23,8 +19,8 @@ internal interface IHttpWebSocketsSignalHandlerTypesInjector : ISignalHandlerTyp
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal sealed class HttpWebSocketsSignalHandlerTypesInjector<TSignal, TIHandler>(
-    Action<IHttpWebSocketsSignalReceiver> configureReceiver)
-    : IHttpWebSocketsSignalHandlerTypesInjector
+    Action<IHttpWebSocketsSignalReceiver> configureReceiver
+) : IHttpWebSocketsSignalHandlerTypesInjector
     where TSignal : class, IHttpWebSocketsSignal<TSignal>
     where TIHandler : class, IHttpWebSocketsSignalHandler<TSignal, TIHandler>
 {
@@ -32,8 +28,8 @@ internal sealed class HttpWebSocketsSignalHandlerTypesInjector<TSignal, TIHandle
 
     public void ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver) => configureReceiver(receiver);
 
-    public TResult Inject<TArg, TResult>(IHttpWebSocketsSignalTypesInjectable<TArg, TResult> injectable, TArg arg)
-        => injectable.WithInjectedTypes<TSignal, TIHandler>(arg);
+    public TResult Inject<TArg, TResult>(IHttpWebSocketsSignalTypesInjectable<TArg, TResult> injectable, TArg arg) =>
+        injectable.WithInjectedTypes<TSignal, TIHandler>(arg);
 }
 
 /// <summary>
@@ -43,6 +39,11 @@ internal sealed class HttpWebSocketsSignalHandlerTypesInjector<TSignal, TIHandle
 /// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
+[SuppressMessage(
+    "StyleCop.CSharp.OrderingRules",
+    "SA1201:Elements should appear in the correct order",
+    Justification = "order makes sense here"
+)]
 internal interface IHttpWebSocketsSignalTypesInjectable<in TArg, out TResult>
 {
     TResult WithInjectedTypes<TSignal, TIHandler>(TArg arg)

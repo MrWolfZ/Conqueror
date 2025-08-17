@@ -1,11 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror.Transport.Http.Client.WebSockets;
-
-namespace Conqueror.Transport.Http.Server.AspNetCore.Signalling.WebSockets;
+﻿namespace Conqueror.Transport.Http.Server.AspNetCore.Signalling.WebSockets;
 
 // helper class to deal with the fact that we want to subscribe streams to
 // brokers before the web socket connection is accepted, but we can only get
@@ -23,8 +16,8 @@ internal sealed class HttpWebSocketsSignalBrokerStream(Task<WebSocketWriteStream
         set => throw new NotSupportedException();
     }
 
-    public override void Flush()
-        => throw new NotSupportedException("This stream does not support synchronous flushing");
+    public override void Flush() =>
+        throw new NotSupportedException("This stream does not support synchronous flushing");
 
     public override async Task FlushAsync(CancellationToken cancellationToken)
     {
@@ -44,7 +37,7 @@ internal sealed class HttpWebSocketsSignalBrokerStream(Task<WebSocketWriteStream
         {
             await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+        catch (WebSocketException e) when (e.WebSocketErrorCode is WebSocketError.ConnectionClosedPrematurely)
         {
             // nothing to do here, the client disconnected in the middle of sending a signal
         }
@@ -58,33 +51,28 @@ internal sealed class HttpWebSocketsSignalBrokerStream(Task<WebSocketWriteStream
         }
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-        => throw new NotSupportedException("This stream does not support reading");
+    public override int Read(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException("This stream does not support reading");
 
-    public override long Seek(long offset, SeekOrigin origin)
-        => throw new NotSupportedException("This stream does not support seeking");
+    public override long Seek(long offset, SeekOrigin origin) =>
+        throw new NotSupportedException("This stream does not support seeking");
 
-    public override void SetLength(long value)
-        => throw new NotSupportedException("This stream does not support setting length");
+    public override void SetLength(long value) =>
+        throw new NotSupportedException("This stream does not support setting length");
 
-    public override void Write(byte[] buffer, int offset, int count)
-        => throw new NotSupportedException("This stream does not support synchronous writing");
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException("This stream does not support synchronous writing");
 
-    public override void Write(ReadOnlySpan<byte> buffer)
-        => throw new NotSupportedException("This stream does not support synchronous writing");
+    public override void Write(ReadOnlySpan<byte> buffer) =>
+        throw new NotSupportedException("This stream does not support synchronous writing");
 
-    public override Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken)
-    {
-        return WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
-    }
+    public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+        WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
 
     public override async ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         Stream? stream;
 
@@ -102,7 +90,7 @@ internal sealed class HttpWebSocketsSignalBrokerStream(Task<WebSocketWriteStream
         {
             await stream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
-        catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+        catch (WebSocketException e) when (e.WebSocketErrorCode is WebSocketError.ConnectionClosedPrematurely)
         {
             // nothing to do here, the client disconnected in the middle of sending a signal
         }

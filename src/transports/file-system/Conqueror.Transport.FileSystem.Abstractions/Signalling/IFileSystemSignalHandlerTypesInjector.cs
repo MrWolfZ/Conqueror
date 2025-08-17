@@ -1,7 +1,4 @@
-﻿using System.ComponentModel;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal interface IFileSystemSignalHandlerTypesInjector : ISignalHandlerTypesInjector
@@ -22,8 +19,8 @@ internal interface IFileSystemSignalHandlerTypesInjector : ISignalHandlerTypesIn
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal sealed class FileSystemSignalHandlerTypesInjector<TSignal, TIHandler>(
-    Action<IFileSystemSignalReceiver> configureReceiver)
-    : IFileSystemSignalHandlerTypesInjector
+    Action<IFileSystemSignalReceiver> configureReceiver
+) : IFileSystemSignalHandlerTypesInjector
     where TSignal : class, IFileSystemSignal<TSignal>
     where TIHandler : class, IFileSystemSignalHandler<TSignal, TIHandler>
 {
@@ -31,8 +28,8 @@ internal sealed class FileSystemSignalHandlerTypesInjector<TSignal, TIHandler>(
 
     public void ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) => configureReceiver(receiver);
 
-    public TResult Inject<TArg, TResult>(IFileSystemSignalTypesInjectable<TArg, TResult> injectable, TArg arg)
-        => injectable.WithInjectedTypes<TSignal, TIHandler>(arg);
+    public TResult Inject<TArg, TResult>(IFileSystemSignalTypesInjectable<TArg, TResult> injectable, TArg arg) =>
+        injectable.WithInjectedTypes<TSignal, TIHandler>(arg);
 }
 
 /// <summary>
@@ -42,6 +39,11 @@ internal sealed class FileSystemSignalHandlerTypesInjector<TSignal, TIHandler>(
 /// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
+[SuppressMessage(
+    "StyleCop.CSharp.OrderingRules",
+    "SA1201:Elements should appear in the correct order",
+    Justification = "order makes sense here"
+)]
 internal interface IFileSystemSignalTypesInjectable<in TArg, out TResult>
 {
     TResult WithInjectedTypes<TSignal, TIHandler>(TArg arg)

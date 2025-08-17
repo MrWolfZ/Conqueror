@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithUnrelatedAttributeWithSignalSuffix;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithUnrelatedAttributeWithSignalSuffix;
 
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class MySignalAttribute : Attribute;

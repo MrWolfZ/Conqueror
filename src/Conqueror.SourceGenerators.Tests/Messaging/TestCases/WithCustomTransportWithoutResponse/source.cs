@@ -1,25 +1,28 @@
 ﻿#nullable enable
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Messaging;
-using Messaging.WithCustomTransportWithoutResponse;
-
 namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithoutResponse
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using global::Messaging.WithCustomTransportWithoutResponse;
+
     [TestTransportMessage(StringProperty = "Test", IntProperty = 1, IntArrayProperty = [1, 2, 3], NullProperty = null)]
     public partial record TestMessage;
 
     public partial class TestMessageHandler : TestMessage.IHandler
     {
-        public Task Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task Handle(TestMessage message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 
 namespace Messaging.WithCustomTransportWithoutResponse
 {
+    using System;
+    using Conqueror;
+    using Conqueror.Messaging;
+
     [MessageTransport(Prefix = "TestTransport", Namespace = "Messaging.WithCustomTransportWithoutResponse")]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TestTransportMessageAttribute : Attribute
@@ -35,7 +38,10 @@ namespace Messaging.WithCustomTransportWithoutResponse
         public string? UnsetProperty { get; init; }
     }
 
-    [MessageTransport(Prefix = "TestTransport", Namespace = "Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithoutResponse")]
+    [MessageTransport(
+        Prefix = "TestTransport",
+        Namespace = "Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithoutResponse"
+    )]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransportMessageAttribute<TResponse> : TestTransportMessageAttribute;
 
@@ -60,8 +66,7 @@ namespace Messaging.WithCustomTransportWithoutResponse
         where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
     {
         static IMessageHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 

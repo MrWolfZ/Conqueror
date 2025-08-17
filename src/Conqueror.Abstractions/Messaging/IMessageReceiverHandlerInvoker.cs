@@ -1,9 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IMessageReceiverHandlerInvoker
 {
@@ -13,10 +8,12 @@ public interface IMessageReceiverHandlerInvoker
 
     Type? HandlerType { get; }
 
-    Task<TResponse> Invoke<TMessage, TResponse>(TMessage message,
-                                                IServiceProvider serviceProvider,
-                                                string transportTypeName,
-                                                CancellationToken cancellationToken)
+    Task<TResponse> Invoke<TMessage, TResponse>(
+        TMessage message,
+        IServiceProvider serviceProvider,
+        string transportTypeName,
+        CancellationToken cancellationToken
+    )
         where TMessage : class, IMessage<TMessage, TResponse>;
 }
 

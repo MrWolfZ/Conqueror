@@ -1,17 +1,17 @@
+namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests;
+
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Conqueror.Streaming.Transport.Http.Common;
+using Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
-
-namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests;
 
 [TestFixture]
 public sealed class StreamHttpEndpointTests : TestBase
@@ -21,25 +21,31 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/streams/test");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequest, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequest, TestItem>(
+            jsonWebSocket
+        );
 
         using var observedItems = new BlockingCollection<TestItem>();
 
         var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
-        _ = await streamingClientWebSocket.SendInitialRequest(new(10), TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(11));
+        _ = await streamingClientWebSocket.SendInitialRequest(new(Payload: 10), TestTimeoutToken);
+        observedItems.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(12));
+        observedItems.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(13));
+        observedItems.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask;
     }
@@ -49,13 +55,19 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/streams/test");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequest, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequest, TestItem>(
+            jsonWebSocket
+        );
 
-        var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
+        var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator(TestTimeoutToken);
 
-        _ = await streamingClientWebSocket.SendInitialRequest(new(10), TestTimeoutToken);
+        _ = await streamingClientWebSocket.SendInitialRequest(new(Payload: 10), TestTimeoutToken);
         _ = await enumerator.MoveNextAsync();
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
@@ -69,13 +81,19 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/streams/test");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequest, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequest, TestItem>(
+            jsonWebSocket
+        );
 
         using var cts = new CancellationTokenSource();
 
-        _ = await streamingClientWebSocket.SendInitialRequest(new(10), TestTimeoutToken);
+        _ = await streamingClientWebSocket.SendInitialRequest(new(Payload: 10), TestTimeoutToken);
         var readTask = streamingClientWebSocket.Read(cts.Token).GetAsyncEnumerator(cts.Token).MoveNextAsync();
 
         await cts.CancelAsync();
@@ -88,25 +106,31 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/streams/testStreamingRequestWithoutPayload");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithoutPayload, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithoutPayload, TestItem>(
+            jsonWebSocket
+        );
 
         using var observedItems = new BlockingCollection<TestItem>();
 
         var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
         _ = await streamingClientWebSocket.SendInitialRequest(new(), TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(11));
+        observedItems.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(12));
+        observedItems.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(13));
+        observedItems.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask;
     }
@@ -116,25 +140,32 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/streams/testStreamingRequestWithComplexPayload");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithComplexPayload, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<
+            TestStreamingRequestWithComplexPayload,
+            TestItem
+        >(jsonWebSocket);
 
         using var observedItems = new BlockingCollection<TestItem>();
 
         var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
-        _ = await streamingClientWebSocket.SendInitialRequest(new(new(10)), TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(11));
+        _ = await streamingClientWebSocket.SendInitialRequest(new(new(Payload: 10)), TestTimeoutToken);
+        observedItems.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(12));
+        observedItems.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(13));
+        observedItems.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask;
     }
@@ -144,25 +175,32 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/streams/testStreamingRequestWithCustomSerializedPayloadType");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithCustomSerializedPayloadType, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<
+            TestStreamingRequestWithCustomSerializedPayloadType,
+            TestItem
+        >(jsonWebSocket);
 
         using var observedItems = new BlockingCollection<TestItem>();
 
         var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
-        _ = await streamingClientWebSocket.SendInitialRequest(new(new(10)), TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(11));
+        _ = await streamingClientWebSocket.SendInitialRequest(new(new(Payload: 10)), TestTimeoutToken);
+        observedItems.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(12));
+        observedItems.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(13));
+        observedItems.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask;
     }
@@ -174,12 +212,24 @@ public sealed class StreamHttpEndpointTests : TestBase
         var webSocket2 = await ConnectToWebSocket("/api/streams/testStreamingRequest4FromConvention");
         using var socket1 = new TextWebSocket(webSocket1);
         using var socket2 = new TextWebSocket(webSocket2);
-        using var textWebSocket1 = new TextWebSocketWithHeartbeat(socket1, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
-        using var textWebSocket2 = new TextWebSocketWithHeartbeat(socket2, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket1 = new TextWebSocketWithHeartbeat(
+            socket1,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
+        using var textWebSocket2 = new TextWebSocketWithHeartbeat(
+            socket2,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket1 = new JsonWebSocket(textWebSocket1, JsonSerializerOptions);
         using var jsonWebSocket2 = new JsonWebSocket(textWebSocket2, JsonSerializerOptions);
-        using var streamingClientWebSocket1 = new StreamingClientWebSocket<TestStreamingRequest3, TestItem>(jsonWebSocket1);
-        using var streamingClientWebSocket2 = new StreamingClientWebSocket<TestStreamingRequest4, TestItem>(jsonWebSocket2);
+        using var streamingClientWebSocket1 = new StreamingClientWebSocket<TestStreamingRequest3, TestItem>(
+            jsonWebSocket1
+        );
+        using var streamingClientWebSocket2 = new StreamingClientWebSocket<TestStreamingRequest4, TestItem>(
+            jsonWebSocket2
+        );
 
         using var observedItems1 = new BlockingCollection<TestItem>();
         using var observedItems2 = new BlockingCollection<TestItem>();
@@ -187,29 +237,29 @@ public sealed class StreamHttpEndpointTests : TestBase
         var receiveLoopTask1 = ReadFromSocket(streamingClientWebSocket1, observedItems1);
         var receiveLoopTask2 = ReadFromSocket(streamingClientWebSocket2, observedItems2);
 
-        _ = await streamingClientWebSocket1.SendInitialRequest(new(10), TestTimeoutToken);
-        observedItems1.ShouldReceiveItem(new(11));
+        _ = await streamingClientWebSocket1.SendInitialRequest(new(Payload: 10), TestTimeoutToken);
+        observedItems1.ShouldReceiveItem(new(Payload: 11));
 
-        _ = await streamingClientWebSocket2.SendInitialRequest(new(10), TestTimeoutToken);
-        observedItems2.ShouldReceiveItem(new(11));
-
-        _ = await streamingClientWebSocket1.RequestNextItem(TestTimeoutToken);
-        observedItems1.ShouldReceiveItem(new(12));
-
-        _ = await streamingClientWebSocket2.RequestNextItem(TestTimeoutToken);
-        observedItems2.ShouldReceiveItem(new(12));
+        _ = await streamingClientWebSocket2.SendInitialRequest(new(Payload: 10), TestTimeoutToken);
+        observedItems2.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket1.RequestNextItem(TestTimeoutToken);
-        observedItems1.ShouldReceiveItem(new(13));
+        observedItems1.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket2.RequestNextItem(TestTimeoutToken);
-        observedItems2.ShouldReceiveItem(new(13));
+        observedItems2.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket1.RequestNextItem(TestTimeoutToken);
-        observedItems1.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems1.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket2.RequestNextItem(TestTimeoutToken);
-        observedItems2.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems2.ShouldReceiveItem(new(Payload: 13));
+
+        _ = await streamingClientWebSocket1.RequestNextItem(TestTimeoutToken);
+        observedItems1.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
+
+        _ = await streamingClientWebSocket2.RequestNextItem(TestTimeoutToken);
+        observedItems2.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask1;
         await receiveLoopTask2;
@@ -220,25 +270,31 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/custom/streams/test");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequest, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequest, TestItem>(
+            jsonWebSocket
+        );
 
         using var observedItems = new BlockingCollection<TestItem>();
 
         var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
-        _ = await streamingClientWebSocket.SendInitialRequest(new(10), TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(11));
+        _ = await streamingClientWebSocket.SendInitialRequest(new(Payload: 10), TestTimeoutToken);
+        observedItems.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(12));
+        observedItems.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(13));
+        observedItems.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask;
     }
@@ -248,25 +304,31 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/custom/streams/testStreamingRequestWithoutPayload");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithoutPayload, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithoutPayload, TestItem>(
+            jsonWebSocket
+        );
 
         using var observedItems = new BlockingCollection<TestItem>();
 
         var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
         _ = await streamingClientWebSocket.SendInitialRequest(new(), TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(11));
+        observedItems.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(12));
+        observedItems.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(13));
+        observedItems.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask;
     }
@@ -276,25 +338,31 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/testStreamingRequestWithCustomPath");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithCustomPath, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithCustomPath, TestItem>(
+            jsonWebSocket
+        );
 
         using var observedItems = new BlockingCollection<TestItem>();
 
         var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
-        _ = await streamingClientWebSocket.SendInitialRequest(new(10), TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(11));
+        _ = await streamingClientWebSocket.SendInitialRequest(new(Payload: 10), TestTimeoutToken);
+        observedItems.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(12));
+        observedItems.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(13));
+        observedItems.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask;
     }
@@ -304,25 +372,31 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/v2/streams/testStreamingRequestWithVersion");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithVersion, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestStreamingRequestWithVersion, TestItem>(
+            jsonWebSocket
+        );
 
         using var observedItems = new BlockingCollection<TestItem>();
 
         var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
-        _ = await streamingClientWebSocket.SendInitialRequest(new(10), TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(11));
+        _ = await streamingClientWebSocket.SendInitialRequest(new(Payload: 10), TestTimeoutToken);
+        observedItems.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(12));
+        observedItems.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(13));
+        observedItems.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask;
     }
@@ -332,25 +406,31 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/streams/testDelegate");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestDelegateStreamingRequest, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestDelegateStreamingRequest, TestItem>(
+            jsonWebSocket
+        );
 
         using var observedItems = new BlockingCollection<TestItem>();
 
         var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
-        _ = await streamingClientWebSocket.SendInitialRequest(new(10), TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(11));
+        _ = await streamingClientWebSocket.SendInitialRequest(new(Payload: 10), TestTimeoutToken);
+        observedItems.ShouldReceiveItem(new(Payload: 11));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(12));
+        observedItems.ShouldReceiveItem(new(Payload: 12));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldReceiveItem(new(13));
+        observedItems.ShouldReceiveItem(new(Payload: 13));
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
+        observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(value: 10));
 
         await receiveLoopTask;
     }
@@ -360,13 +440,19 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/streams/testRequestWithError");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestRequestWithError, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestRequestWithError, TestItem>(
+            jsonWebSocket
+        );
 
         _ = await streamingClientWebSocket.SendInitialRequest(new(), TestTimeoutToken);
 
-        var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
+        var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator(TestTimeoutToken);
 
         // successful invocation
         Assert.That(await enumerator.MoveNextAsync(), Is.True);
@@ -387,13 +473,19 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         var webSocket = await ConnectToWebSocket("/api/streams/testRequestWithOneItem");
         using var socket = new TextWebSocket(webSocket);
-        using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var textWebSocket = new TextWebSocketWithHeartbeat(
+            socket,
+            TimeSpan.FromSeconds(value: 30),
+            TimeSpan.FromSeconds(value: 60)
+        );
         using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-        using var streamingClientWebSocket = new StreamingClientWebSocket<TestRequestWithOneItem, TestItem>(jsonWebSocket);
+        using var streamingClientWebSocket = new StreamingClientWebSocket<TestRequestWithOneItem, TestItem>(
+            jsonWebSocket
+        );
 
         _ = await streamingClientWebSocket.SendInitialRequest(new(), TestTimeoutToken);
 
-        var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
+        var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator(TestTimeoutToken);
 
         // successful invocation
         Assert.That(await enumerator.MoveNextAsync(), Is.True);
@@ -403,9 +495,9 @@ public sealed class StreamHttpEndpointTests : TestBase
 
         // give socket the time to close
         var attempts = 0;
-        while (socket.State != WebSocketState.Closed && attempts++ < 20)
+        while (socket.State is not WebSocketState.Closed && attempts++ < 20)
         {
-            await Task.Delay(10);
+            await Task.Delay(millisecondsDelay: 10, TestTimeoutToken);
         }
 
         Assert.That(socket.State, Is.EqualTo(WebSocketState.Closed));
@@ -419,25 +511,40 @@ public sealed class StreamHttpEndpointTests : TestBase
 
         _ = services.AddSingleton(applicationPartManager);
 
-        _ = services.AddMvc().AddConquerorStreamingHttpControllers(o => o.PathConvention = new TestHttpStreamPathConvention());
-        _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestStreamingRequestWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
+        _ = services
+            .AddMvc()
+            .AddConquerorStreamingHttpControllers(o => o.PathConvention = new TestHttpStreamPathConvention());
+        _ = services.PostConfigure<JsonOptions>(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(
+                new TestStreamingRequestWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()
+            );
+        });
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamingRequestHandler2>()
-                    .AddConquerorStreamProducer<TestStreamingRequestHandler3>()
-                    .AddConquerorStreamProducer<TestStreamingRequestHandler4>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithoutPayload>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithComplexPayload>()
-                    .AddConquerorStreamProducer<TestStreamingRequestWithCustomSerializedPayloadTypeHandler>()
-                    .AddConquerorStreamProducer<TestStreamingRequestWithCustomPathHandler>()
-                    .AddConquerorStreamProducer<TestStreamingRequestWithVersionHandler>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithError>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithOneItem>()
-                    .AddConquerorStreamProducerDelegate<TestDelegateStreamingRequest, TestDelegateItem>((command, _, cancellationToken) =>
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        return AsyncEnumerableHelper.Of(new TestDelegateItem(command.Payload + 1), new TestDelegateItem(command.Payload + 2), new TestDelegateItem(command.Payload + 3));
-                    });
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamingRequestHandler2>()
+            .AddConquerorStreamProducer<TestStreamingRequestHandler3>()
+            .AddConquerorStreamProducer<TestStreamingRequestHandler4>()
+            .AddConquerorStreamProducer<TestStreamProducerWithoutPayload>()
+            .AddConquerorStreamProducer<TestStreamProducerWithComplexPayload>()
+            .AddConquerorStreamProducer<TestStreamingRequestWithCustomSerializedPayloadTypeHandler>()
+            .AddConquerorStreamProducer<TestStreamingRequestWithCustomPathHandler>()
+            .AddConquerorStreamProducer<TestStreamingRequestWithVersionHandler>()
+            .AddConquerorStreamProducer<TestStreamProducerWithError>()
+            .AddConquerorStreamProducer<TestStreamProducerWithOneItem>()
+            .AddConquerorStreamProducerDelegate<TestDelegateStreamingRequest, TestDelegateItem>(
+                (command, _, cancellationToken) =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    return AsyncEnumerableHelper.Of(
+                        new TestDelegateItem(command.Payload + 1),
+                        new TestDelegateItem(command.Payload + 2),
+                        new TestDelegateItem(command.Payload + 3)
+                    );
+                }
+            );
     }
 
     private JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
@@ -449,12 +556,15 @@ public sealed class StreamHttpEndpointTests : TestBase
         _ = app.UseEndpoints(b => b.MapControllers());
     }
 
-    private async Task ReadFromSocket<TRequest, TItem>(StreamingClientWebSocket<TRequest, TItem> socket, BlockingCollection<TItem> receivedItems)
+    private async Task ReadFromSocket<TRequest, TItem>(
+        StreamingClientWebSocket<TRequest, TItem> socket,
+        BlockingCollection<TItem> receivedItems
+    )
         where TRequest : class
     {
         await foreach (var msg in socket.Read(TestTimeoutToken))
         {
-            if (msg is StreamingMessageEnvelope<TItem> { Message: { } } env)
+            if (msg is StreamingMessageEnvelope<TItem> { Message: not null } env)
             {
                 receivedItems.Add(env.Message, TestTimeoutToken);
             }
@@ -486,9 +596,13 @@ public sealed class StreamHttpEndpointTests : TestBase
     public sealed record TestStreamingRequestWithComplexPayloadPayload(int Payload);
 
     [HttpStream]
-    public sealed record TestStreamingRequestWithCustomSerializedPayloadType(TestStreamingRequestWithCustomSerializedPayloadTypePayload Payload);
+    public sealed record TestStreamingRequestWithCustomSerializedPayloadType(
+        TestStreamingRequestWithCustomSerializedPayloadTypePayload Payload
+    );
 
-    public sealed record TestStreamingRequestWithCustomSerializedPayloadTypeResponse(TestStreamingRequestWithCustomSerializedPayloadTypePayload Payload);
+    public sealed record TestStreamingRequestWithCustomSerializedPayloadTypeResponse(
+        TestStreamingRequestWithCustomSerializedPayloadTypePayload Payload
+    );
 
     public sealed record TestStreamingRequestWithCustomSerializedPayloadTypePayload(int Payload);
 
@@ -511,14 +625,22 @@ public sealed class StreamHttpEndpointTests : TestBase
 
     public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>;
 
-    public interface ITestStreamingRequestWithCustomSerializedPayloadTypeHandler : IStreamProducer<TestStreamingRequestWithCustomSerializedPayloadType, TestStreamingRequestWithCustomSerializedPayloadTypeResponse>;
+    public interface ITestStreamingRequestWithCustomSerializedPayloadTypeHandler
+        : IStreamProducer<
+            TestStreamingRequestWithCustomSerializedPayloadType,
+            TestStreamingRequestWithCustomSerializedPayloadTypeResponse
+        >;
 
     public sealed class TestStreamProducer : ITestStreamProducer
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return new(request.Payload + 1);
             yield return new(request.Payload + 2);
             yield return new(request.Payload + 3);
@@ -527,18 +649,22 @@ public sealed class StreamHttpEndpointTests : TestBase
 
     public sealed class TestStreamingRequestHandler2 : IStreamProducer<TestStreamingRequest2, TestItem2>
     {
-        public IAsyncEnumerable<TestItem2> ExecuteRequest(TestStreamingRequest2 request, CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
+        public IAsyncEnumerable<TestItem2> ExecuteRequest(
+            TestStreamingRequest2 request,
+            CancellationToken cancellationToken = default
+        ) => throw new NotSupportedException();
     }
 
     public sealed class TestStreamingRequestHandler3 : IStreamProducer<TestStreamingRequest3, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest3 request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest3 request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return new(request.Payload + 1);
             yield return new(request.Payload + 2);
             yield return new(request.Payload + 3);
@@ -547,10 +673,14 @@ public sealed class StreamHttpEndpointTests : TestBase
 
     public sealed class TestStreamingRequestHandler4 : IStreamProducer<TestStreamingRequest4, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest4 request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest4 request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return new(request.Payload + 1);
             yield return new(request.Payload + 2);
             yield return new(request.Payload + 3);
@@ -559,34 +689,48 @@ public sealed class StreamHttpEndpointTests : TestBase
 
     public sealed class TestStreamProducerWithoutPayload : IStreamProducer<TestStreamingRequestWithoutPayload, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithoutPayload request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequestWithoutPayload request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            yield return new(11);
-            yield return new(12);
-            yield return new(13);
+
+            yield return new(Payload: 11);
+            yield return new(Payload: 12);
+            yield return new(Payload: 13);
         }
     }
 
-    public sealed class TestStreamProducerWithComplexPayload : IStreamProducer<TestStreamingRequestWithComplexPayload, TestItem>
+    public sealed class TestStreamProducerWithComplexPayload
+        : IStreamProducer<TestStreamingRequestWithComplexPayload, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithComplexPayload request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequestWithComplexPayload request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return new(request.Payload.Payload + 1);
             yield return new(request.Payload.Payload + 2);
             yield return new(request.Payload.Payload + 3);
         }
     }
 
-    public sealed class TestStreamingRequestWithCustomSerializedPayloadTypeHandler : ITestStreamingRequestWithCustomSerializedPayloadTypeHandler
+    public sealed class TestStreamingRequestWithCustomSerializedPayloadTypeHandler
+        : ITestStreamingRequestWithCustomSerializedPayloadTypeHandler
     {
-        public async IAsyncEnumerable<TestStreamingRequestWithCustomSerializedPayloadTypeResponse> ExecuteRequest(TestStreamingRequestWithCustomSerializedPayloadType request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestStreamingRequestWithCustomSerializedPayloadTypeResponse> ExecuteRequest(
+            TestStreamingRequestWithCustomSerializedPayloadType request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return new(new(request.Payload.Payload + 1));
             yield return new(new(request.Payload.Payload + 2));
             yield return new(new(request.Payload.Payload + 3));
@@ -594,46 +738,58 @@ public sealed class StreamHttpEndpointTests : TestBase
 
         internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
         {
-            public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestStreamingRequestWithCustomSerializedPayloadTypePayload);
+            public override bool CanConvert(Type typeToConvert) =>
+                typeToConvert == typeof(TestStreamingRequestWithCustomSerializedPayloadTypePayload);
 
-            public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
-            {
-                return Activator.CreateInstance(typeof(PayloadJsonConverter)) as JsonConverter;
-            }
+            public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
+                Activator.CreateInstance<PayloadJsonConverter>();
         }
 
-        internal sealed class PayloadJsonConverter : JsonConverter<TestStreamingRequestWithCustomSerializedPayloadTypePayload>
+        internal sealed class PayloadJsonConverter
+            : JsonConverter<TestStreamingRequestWithCustomSerializedPayloadTypePayload>
         {
-            public override TestStreamingRequestWithCustomSerializedPayloadTypePayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                return new(reader.GetInt32());
-            }
+            public override TestStreamingRequestWithCustomSerializedPayloadTypePayload Read(
+                ref Utf8JsonReader reader,
+                Type typeToConvert,
+                JsonSerializerOptions options
+            ) => new(reader.GetInt32());
 
-            public override void Write(Utf8JsonWriter writer, TestStreamingRequestWithCustomSerializedPayloadTypePayload value, JsonSerializerOptions options)
-            {
-                writer.WriteNumberValue(value.Payload);
-            }
+            public override void Write(
+                Utf8JsonWriter writer,
+                TestStreamingRequestWithCustomSerializedPayloadTypePayload value,
+                JsonSerializerOptions options
+            ) => writer.WriteNumberValue(value.Payload);
         }
     }
 
-    public sealed class TestStreamingRequestWithCustomPathHandler : IStreamProducer<TestStreamingRequestWithCustomPath, TestItem>
+    public sealed class TestStreamingRequestWithCustomPathHandler
+        : IStreamProducer<TestStreamingRequestWithCustomPath, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithCustomPath request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequestWithCustomPath request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return new(request.Payload + 1);
             yield return new(request.Payload + 2);
             yield return new(request.Payload + 3);
         }
     }
 
-    public sealed class TestStreamingRequestWithVersionHandler : IStreamProducer<TestStreamingRequestWithVersion, TestItem>
+    public sealed class TestStreamingRequestWithVersionHandler
+        : IStreamProducer<TestStreamingRequestWithVersion, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithVersion request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequestWithVersion request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return new(request.Payload + 1);
             yield return new(request.Payload + 2);
             yield return new(request.Payload + 3);
@@ -642,20 +798,29 @@ public sealed class StreamHttpEndpointTests : TestBase
 
     private sealed class TestStreamProducerWithError : IStreamProducer<TestRequestWithError, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithError request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestRequestWithError request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
-            yield return new(1);
+
+            yield return new(Payload: 1);
+
             throw new InvalidOperationException("test");
         }
     }
 
     private sealed class TestStreamProducerWithOneItem : IStreamProducer<TestRequestWithOneItem, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithOneItem request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestRequestWithOneItem request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
-            yield return new(1);
+
+            yield return new(Payload: 1);
         }
     }
 
@@ -663,7 +828,11 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         public string? GetStreamPath(Type requestType, HttpStreamAttribute attribute)
         {
-            if (requestType != typeof(TestStreamingRequest3) && requestType != typeof(TestStreamingRequest4) && requestType != typeof(TestStreamingRequest2))
+            if (
+                requestType != typeof(TestStreamingRequest3)
+                && requestType != typeof(TestStreamingRequest4)
+                && requestType != typeof(TestStreamingRequest2)
+            )
             {
                 return null;
             }
@@ -678,13 +847,19 @@ public sealed class StreamHttpEndpointTests : TestBase
         [HttpGet("/api/custom/streams/test")]
         public Task ExecuteTestStreamingRequest(CancellationToken cancellationToken)
         {
-            return HttpStreamExecutor.ExecuteStreamingRequest<TestStreamingRequest, TestItem>(HttpContext, cancellationToken);
+            return HttpStreamExecutor.ExecuteStreamingRequest<TestStreamingRequest, TestItem>(
+                HttpContext,
+                cancellationToken
+            );
         }
 
         [HttpGet("/api/custom/streams/testStreamingRequestWithoutPayload")]
         public Task ExecuteTestStreamingRequestWithoutPayload(CancellationToken cancellationToken)
         {
-            return HttpStreamExecutor.ExecuteStreamingRequest<TestStreamingRequestWithoutPayload, TestItem>(HttpContext, cancellationToken);
+            return HttpStreamExecutor.ExecuteStreamingRequest<TestStreamingRequestWithoutPayload, TestItem>(
+                HttpContext,
+                cancellationToken
+            );
         }
     }
 
@@ -697,6 +872,7 @@ public sealed class StreamHttpEndpointTests : TestBase
 
     private sealed class TestControllerFeatureProvider : ControllerFeatureProvider
     {
-        protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpStreamController);
+        protected override bool IsController(TypeInfo typeInfo) =>
+            typeInfo.AsType() == typeof(TestHttpStreamController);
     }
 }

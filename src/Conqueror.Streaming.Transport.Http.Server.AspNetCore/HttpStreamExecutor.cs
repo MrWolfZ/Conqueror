@@ -1,42 +1,56 @@
-using System;
-using System.Collections.Generic;
+namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
+
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-using Conqueror.Streaming.Transport.Http.Common;
+using Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
-
 internal static class HttpStreamExecutor
 {
-    public static async Task ExecuteStreamingRequest<TRequest, TItem>(HttpContext httpContext, CancellationToken cancellationToken)
+    public static async Task ExecuteStreamingRequest<TRequest, TItem>(
+        HttpContext httpContext,
+        CancellationToken cancellationToken
+    )
         where TRequest : class
     {
         var producer = httpContext.RequestServices.GetRequiredService<IStreamProducer<TRequest, TItem>>();
         await HandleWebSocketConnection(httpContext, producer, cancellationToken).ConfigureAwait(false);
     }
 
-    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "all sockets are disposed in a chain when the server socket is disposed")]
-    private static async Task HandleWebSocketConnection<TRequest, TItem>(HttpContext httpContext,
-                                                                         IStreamProducer<TRequest, TItem> producer,
-                                                                         CancellationToken cancellationToken)
+    [SuppressMessage(
+        "Reliability",
+        "CA2000:Dispose objects before losing scope",
+        Justification = "all sockets are disposed in a chain when the server socket is disposed"
+    )]
+    private static async Task HandleWebSocketConnection<TRequest, TItem>(
+        HttpContext httpContext,
+        IStreamProducer<TRequest, TItem> producer,
+        CancellationToken cancellationToken
+    )
         where TRequest : class
     {
         if (httpContext.WebSockets.IsWebSocketRequest)
         {
-            var logger = httpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(HttpStreamExecutor));
+            var logger = httpContext
+                .RequestServices.GetRequiredService<ILoggerFactory>()
+                .CreateLogger(typeof(HttpStreamExecutor));
             var webSocket = await httpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
-            var jsonSerializerOptions = httpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
-            var textWebSocket = new TextWebSocketWithHeartbeat(new(webSocket), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+            var jsonSerializerOptions = httpContext
+                .RequestServices.GetRequiredService<IOptions<JsonOptions>>()
+                .Value.JsonSerializerOptions;
+            var textWebSocket = new TextWebSocketWithHeartbeat(
+                new(webSocket),
+                TimeSpan.FromSeconds(value: 30),
+                TimeSpan.FromSeconds(value: 60)
+            );
             var jsonWebSocket = new JsonWebSocket(textWebSocket, jsonSerializerOptions);
             using var streamingServerWebsocket = new StreamingServerWebSocket<TRequest, TItem>(jsonWebSocket);
-            await HandleWebSocketConnection(streamingServerWebsocket, producer, logger, cancellationToken).ConfigureAwait(false);
+            await HandleWebSocketConnection(streamingServerWebsocket, producer, logger, cancellationToken)
+                .ConfigureAwait(false);
         }
         else
         {
@@ -45,13 +59,15 @@ internal static class HttpStreamExecutor
     }
 
     [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "disposal works correctly")]
-    private static async Task HandleWebSocketConnection<TRequest, TItem>(StreamingServerWebSocket<TRequest, TItem> socket,
-                                                                         IStreamProducer<TRequest, TItem> producer,
-                                                                         ILogger logger,
-                                                                         CancellationToken cancellationToken)
+    private static async Task HandleWebSocketConnection<TRequest, TItem>(
+        StreamingServerWebSocket<TRequest, TItem> socket,
+        IStreamProducer<TRequest, TItem> producer,
+        ILogger logger,
+        CancellationToken cancellationToken
+    )
         where TRequest : class
     {
-        var channel = Channel.CreateBounded<object?>(new BoundedChannelOptions(8));
+        var channel = Channel.CreateBounded<object?>(new BoundedChannelOptions(capacity: 8));
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -101,11 +117,19 @@ internal static class HttpStreamExecutor
                     {
                         if (msg is InitialRequestMessage<TRequest> requestMessage)
                         {
-                            sourceEnumerator = producer.ExecuteRequest(requestMessage.Payload, cts.Token).GetAsyncEnumerator(cts.Token);
+                            sourceEnumerator = producer
+                                .ExecuteRequest(requestMessage.Payload, cts.Token)
+                                .GetAsyncEnumerator(cts.Token);
                         }
-                        else if (sourceEnumerator == null)
+                        else if (sourceEnumerator is null)
                         {
-                            throw new InvalidOperationException("received request for next item before initial request");
+                            throw new InvalidOperationException(
+                                "received request for next item before initial request"
+                            );
+                        }
+                        else
+                        {
+                            // nothing to do
                         }
 
                         if (!await sourceEnumerator.MoveNextAsync().ConfigureAwait(false))

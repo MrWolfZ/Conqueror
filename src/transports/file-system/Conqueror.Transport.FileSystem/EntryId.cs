@@ -10,7 +10,10 @@ internal readonly record struct EntryId
     {
         if (value.Length != IdLength)
         {
-            throw new ArgumentException($"expected ID to be of length {IdLength}, but it was '{value}' with length {value.Length}", nameof(value));
+            throw new ArgumentException(
+                $"expected ID to be of length {IdLength}, but it was '{value}' with length {value.Length}",
+                nameof(value)
+            );
         }
 
         this.value = value;

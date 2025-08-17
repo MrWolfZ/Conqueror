@@ -8,7 +8,10 @@ internal readonly record struct InboxName
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new ArgumentException($"expected inbox name to be non-null, non-whitespace string, but it was '{value}'", nameof(value));
+            throw new ArgumentException(
+                $"expected inbox name to be non-null, non-whitespace string, but it was '{value}'",
+                nameof(value)
+            );
         }
 
         this.value = value;

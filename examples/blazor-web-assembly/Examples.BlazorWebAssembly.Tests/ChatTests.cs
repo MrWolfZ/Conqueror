@@ -6,7 +6,7 @@ internal sealed class ChatTests
     [Test]
     public async Task GivenEmptyChat_WhenGettingChat_ReturnsEmptyChat()
     {
-        await using var host = TestHost.Create();
+        await using var host = AppTestHost.Create();
 
         var handler = host.CreateMessageHttpSender(GetChat.T);
 
@@ -18,7 +18,7 @@ internal sealed class ChatTests
     [Test]
     public async Task GivenEmptyChat_WhenBroadcastingChatEntryAndGettingChat_ReturnsBroadcastedChatEntry()
     {
-        await using var host = TestHost.Create();
+        await using var host = AppTestHost.Create();
 
         var broadcastHandler = host.CreateMessageHttpSender(BroadcastChatEntry.T);
         var getHandler = host.CreateMessageHttpSender(GetChat.T);
@@ -27,6 +27,18 @@ internal sealed class ChatTests
 
         var entries = await getHandler.Handle(new(), host.TimeoutToken);
 
-        Assert.That(entries, Is.EqualTo(new[] { new ChatEntry { User = "User", Content = "Content", Timestamp = host.CurrentTime } }));
+        Assert.That(
+            entries,
+            Is.EqualTo(
+                [
+                    new ChatEntry
+                    {
+                        User = "User",
+                        Content = "Content",
+                        Timestamp = host.CurrentTime,
+                    },
+                ]
+            )
+        );
     }
 }

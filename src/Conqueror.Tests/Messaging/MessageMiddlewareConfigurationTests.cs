@@ -8,26 +8,25 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandler<TestMessageHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddMessageHandler<TestMessageHandler>().AddSingleton(observations);
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
         {
+            var testObservations = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
             _ = pipeline.Use(
-                new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
-                    { Parameter = 10 });
+                new TestMessageMiddleware<TestMessage, TestMessageResponse>(testObservations) { Parameter = 10 }
+            );
 
             _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageSenders>()
-                              .For(TestMessage.T);
+        var handler = provider.GetRequiredService<IMessageSenders>().For(TestMessage.T);
 
-        _ = await handler.Handle(new());
+        _ = await handler.Handle(new(), CancellationToken.None);
 
-        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
+        Assert.That(observations.Parameters, Is.EqualTo([20]));
     }
 
     [Test]
@@ -36,32 +35,26 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandler<TestMessageHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddMessageHandler<TestMessageHandler>().AddSingleton(observations);
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
         {
-            _ = pipeline.Use(
-                new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
-                    { Parameter = 10 });
-            _ = pipeline.Use(
-                new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
-                    { Parameter = 30 });
-            _ = pipeline.Use(
-                new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
-                    { Parameter = 50 });
+            var testObservations = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+            _ = pipeline
+                .Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(testObservations) { Parameter = 10 })
+                .Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(testObservations) { Parameter = 30 })
+                .Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(testObservations) { Parameter = 50 });
 
             _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageSenders>()
-                              .For(TestMessage.T);
+        var handler = provider.GetRequiredService<IMessageSenders>().For(TestMessage.T);
 
-        _ = await handler.Handle(new());
+        _ = await handler.Handle(new(), CancellationToken.None);
 
-        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20, 40, 60 }));
+        Assert.That(observations.Parameters, Is.EqualTo([20, 40, 60]));
     }
 
     [Test]
@@ -70,26 +63,25 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandler<TestMessageHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddMessageHandler<TestMessageHandler>().AddSingleton(observations);
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
         {
+            var testObservations = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
             _ = pipeline.Use(
-                new TestMessageMiddlewareSub<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
-                    { Parameter = 10 });
+                new TestMessageMiddlewareSub<TestMessage, TestMessageResponse>(testObservations) { Parameter = 10 }
+            );
 
             _ = pipeline.Configure<TestMessageMiddlewareBase<TestMessage, TestMessageResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageSenders>()
-                              .For(TestMessage.T);
+        var handler = provider.GetRequiredService<IMessageSenders>().For(TestMessage.T);
 
-        _ = await handler.Handle(new());
+        _ = await handler.Handle(new(), CancellationToken.None);
 
-        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
+        Assert.That(observations.Parameters, Is.EqualTo([20]));
     }
 
     [Test]
@@ -98,19 +90,18 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandler<TestMessageHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddMessageHandler<TestMessageHandler>().AddSingleton(observations);
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
         {
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter +=
-                                                                 10));
+            _ = Assert.Throws<InvalidOperationException>(() =>
+                pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10)
+            );
         });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageSenders>()
-                              .For(TestMessage.T);
+        var handler = provider.GetRequiredService<IMessageSenders>().For(TestMessage.T);
 
         _ = await handler.Handle(new(), CancellationToken.None);
     }
@@ -121,28 +112,31 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandler<TestMessageHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddMessageHandler<TestMessageHandler>().AddSingleton(observations);
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
         {
             _ = pipeline.UseWhen(
                 _ => true,
-                p => p.Use(
-                    new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())
-                        { Parameter = 10 }));
+                p =>
+                {
+                    var testObservations = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                    _ = p.Use(
+                        new TestMessageMiddleware<TestMessage, TestMessageResponse>(testObservations) { Parameter = 10 }
+                    );
+                }
+            );
 
             _ = pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageSenders>()
-                              .For(TestMessage.T);
+        var handler = provider.GetRequiredService<IMessageSenders>().For(TestMessage.T);
 
-        _ = await handler.Handle(new());
+        _ = await handler.Handle(new(), CancellationToken.None);
 
-        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
+        Assert.That(observations.Parameters, Is.EqualTo([20]));
     }
 
     [Message<TestMessageResponse>]
@@ -152,20 +146,22 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
     private sealed partial class TestMessageHandler : TestMessage.IHandler
     {
-        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessage message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
 
-            return new();
+            return new TestMessageResponse();
         }
 
-        public static void ConfigurePipeline(TestMessage.IPipeline pipeline)
-        {
+        public static void ConfigurePipeline(TestMessage.IPipeline pipeline) =>
             pipeline.ServiceProvider.GetService<Action<TestMessage.IPipeline>>()?.Invoke(pipeline);
-        }
     }
 
-    private sealed class TestMessageMiddleware<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
+    private sealed class TestMessageMiddleware<TMessage, TResponse>(TestObservations observations)
+        : IMessageMiddleware<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         public int Parameter { get; set; }
@@ -183,7 +179,8 @@ public sealed partial class MessageMiddlewareConfigurationTests
         : TestMessageMiddlewareBase<TMessage, TResponse>(observations)
         where TMessage : class, IMessage<TMessage, TResponse>;
 
-    private abstract class TestMessageMiddlewareBase<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
+    private abstract class TestMessageMiddlewareBase<TMessage, TResponse>(TestObservations observations)
+        : IMessageMiddleware<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         public int Parameter { get; set; }

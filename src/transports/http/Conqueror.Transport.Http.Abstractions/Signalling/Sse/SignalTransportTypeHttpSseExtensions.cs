@@ -1,11 +1,12 @@
-﻿using System.ComponentModel;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SignalTransportTypeHttpSseExtensions
 {
-    public static bool IsHttpServerSentEvents(this SignalTransportType transportType)
-        => transportType.Name == ConquerorTransportHttpConstants.ServersSentEventsTransportName;
+    public static bool IsHttpServerSentEvents(this SignalTransportType transportType) =>
+        string.Equals(
+            transportType.Name,
+            ConquerorTransportHttpConstants.ServersSentEventsTransportName,
+            StringComparison.Ordinal
+        );
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 internal interface IMessageDispatcher
 {
@@ -13,6 +8,7 @@ internal interface IMessageDispatcher
         IMessagePipeline<TMessage, TResponse> pipeline,
         IMessageSender<TMessage, TResponse>? sender,
         ConfigureMessageSenderAsync<TMessage, TResponse>? configureSenderAsync,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         where TMessage : class, IMessage<TMessage, TResponse>;
 }

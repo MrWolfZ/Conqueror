@@ -27,20 +27,18 @@ public sealed partial class ChatEntryBroadcastedHandler : ChatEntryBroadcasted.I
 
         var attempt = 0;
 
-        _ = receiver.Enable(uri)
+        _ = receiver
+            .Enable(uri)
+            // exponential back-off
+            .WithReconnectDelayFunction(
+                async (_, _, _, token) =>
+                {
+                    var delay = TimeSpan.FromSeconds(Math.Min(val1: 60, 2 ^ attempt));
 
-                    // exponential back-off
-                    .WithReconnectDelayFunction(async (
-                                                    _,
-                                                    _,
-                                                    _,
-                                                    token) =>
-                                                {
-                                                    var delay = TimeSpan.FromSeconds(Math.Min(60, 2 ^ attempt));
+                    await Task.Delay(delay, token);
 
-                                                    await Task.Delay(delay, token);
-
-                                                    attempt += 1;
-                                                });
+                    attempt += 1;
+                }
+            );
     }
 }

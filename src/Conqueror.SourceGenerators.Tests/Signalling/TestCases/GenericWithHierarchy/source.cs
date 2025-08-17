@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.GenericWithHierarchy;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.GenericWithHierarchy;
 
 [Signal]
 public abstract partial record TestSignal<TFirst, TSecond>;
@@ -12,7 +12,8 @@ public partial record TestSignal : TestSignal<string, int>;
 
 public partial class TestSignalHandler<TFirst, TSecond> : TestSignal<TFirst, TSecond>.IHandler
 {
-    public Task Handle(TestSignal<TFirst, TSecond> message, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task Handle(TestSignal<TFirst, TSecond> message, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 }
 
 public partial class TestSignalHandler2 : TestSignal.IHandler

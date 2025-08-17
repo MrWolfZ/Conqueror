@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#pragma warning disable IDE0130 // Namespaces don't match folder structure - part of the public API
 
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 /// <summary>
@@ -13,10 +12,7 @@ public sealed class AuthorizationSuccessResult : AuthorizationResult
     public static readonly AuthorizationSuccessResult Instance = new();
 }
 
-public sealed class AuthorizationFailureResult(
-    IReadOnlyCollection<string> details,
-    string reason)
-    : AuthorizationResult
+public sealed class AuthorizationFailureResult(IReadOnlyCollection<string> details, string reason) : AuthorizationResult
 {
     /// <summary>
     ///     The details for an authorization failure.

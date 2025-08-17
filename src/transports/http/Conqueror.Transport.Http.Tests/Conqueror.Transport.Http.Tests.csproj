@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-    <Import Project="../../../.targets/test.targets" />
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-        <PackageReference Include="Microsoft.AspNetCore.TestHost" />
-        <PackageReference Include="Swashbuckle.AspNetCore" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="../Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" />
-        <ProjectReference Include="../Conqueror.Transport.Http.Server.AspNetCore/Conqueror.Transport.Http.Server.AspNetCore.csproj" />
-        <ProjectReference Include="../../Conqueror.Transport.ConformityTests/Conqueror.Transport.ConformityTests.csproj" />
-        <ProjectReference Include="../../../Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    </ItemGroup>
-
+  <Import Project="../../../.targets/test.targets" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" />
+    <ProjectReference Include="../Conqueror.Transport.Http.Server.AspNetCore/Conqueror.Transport.Http.Server.AspNetCore.csproj" />
+    <ProjectReference Include="../../Conqueror.Transport.ConformityTests/Conqueror.Transport.ConformityTests.csproj" />
+    <ProjectReference
+      Include="../../../Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+  </ItemGroup>
 </Project>

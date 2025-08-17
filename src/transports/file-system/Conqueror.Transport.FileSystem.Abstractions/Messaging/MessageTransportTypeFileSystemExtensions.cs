@@ -1,10 +1,12 @@
-﻿using System.ComponentModel;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class MessageTransportTypeFileSystemExtensions
 {
-    public static bool IsFileSystem(this MessageTransportType transportType) => transportType.Name == ConquerorTransportFileSystemConstants.TransportName;
+    public static bool IsFileSystem(this MessageTransportType transportType) =>
+        string.Equals(
+            transportType.Name,
+            ConquerorTransportFileSystemConstants.TransportName,
+            StringComparison.Ordinal
+        );
 }

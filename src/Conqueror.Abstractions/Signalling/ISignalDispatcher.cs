@@ -1,9 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 internal interface ISignalDispatcher
 {
@@ -13,6 +8,7 @@ internal interface ISignalDispatcher
         Action<ISignalPipeline<TSignal>>? configurePipeline,
         ISignalPublisher<TSignal>? publisher,
         ConfigureSignalPublisherAsync<TSignal>? configurePublisherAsync,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         where TSignal : class, ISignal<TSignal>;
 }

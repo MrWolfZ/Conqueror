@@ -1,10 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 internal sealed class FileSystemMessageResponseJsonSerializer<TMessage, TResponse>
     : IFileSystemMessageResponseSerializer<TMessage, TResponse>
@@ -18,42 +12,40 @@ internal sealed class FileSystemMessageResponseJsonSerializer<TMessage, TRespons
         IServiceProvider serviceProvider,
         TResponse response,
         Stream fileStream,
-        CancellationToken cancellationToken)
-    {
-        return JsonSerializer.SerializeAsync(
-            fileStream,
-            response,
-            GetJsonTypeInfo(serviceProvider),
-            cancellationToken);
-    }
+        CancellationToken cancellationToken
+    ) => JsonSerializer.SerializeAsync(fileStream, response, GetJsonTypeInfo(serviceProvider), cancellationToken);
 
     public async Task<TResponse> DeserializeResponse(
         IServiceProvider serviceProvider,
         Stream fileStream,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         if (typeof(TResponse) == typeof(UnitMessageResponse))
         {
             return (TResponse)(object)UnitMessageResponse.Instance;
         }
 
-        var result = await JsonSerializer.DeserializeAsync(
-                                             fileStream,
-                                             GetJsonTypeInfo(serviceProvider),
-                                             cancellationToken)
-                                         .ConfigureAwait(false);
+        var result = await JsonSerializer
+            .DeserializeAsync(fileStream, GetJsonTypeInfo(serviceProvider), cancellationToken)
+            .ConfigureAwait(false);
 
-        return result ?? throw new IOException($"failed to deserialize file stream to message response of type '{typeof(TResponse)}' (for message type '{typeof(TMessage)}')");
+        return result
+            ?? throw new IOException(
+                $"failed to deserialize file stream to message response of type '{typeof(TResponse)}' (for message type '{typeof(TMessage)}')"
+            );
     }
 
     private static JsonTypeInfo<TResponse> GetJsonTypeInfo(IServiceProvider serviceProvider)
     {
-        var jsonTypeInfo = (JsonTypeInfo<TResponse>?)TMessage.FileSystemJsonSerializerContext?.GetTypeInfo(typeof(TResponse));
+        var jsonTypeInfo = (JsonTypeInfo<TResponse>?)
+            TMessage.FileSystemJsonSerializerContext?.GetTypeInfo(typeof(TResponse));
 
-        if (jsonTypeInfo == null)
+        if (jsonTypeInfo is null)
         {
-            var jsonSerializerSettings = (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
-                                         ?? FileSystemJsonSerializerOptions.DefaultJsonSerializerOptions;
+            var jsonSerializerSettings =
+                (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
+                ?? FileSystemJsonSerializerOptions.DefaultJsonSerializerOptions;
             jsonTypeInfo = (JsonTypeInfo<TResponse>)jsonSerializerSettings.GetTypeInfo(typeof(TResponse));
         }
 

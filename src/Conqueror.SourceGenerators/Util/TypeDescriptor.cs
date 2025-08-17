@@ -1,8 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿namespace Conqueror.SourceGenerators.Util;
 
-namespace Conqueror.SourceGenerators.Util;
+using Microsoft.CodeAnalysis;
 
-public readonly record struct TypeDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct TypeDescriptor(
     string SimpleName, // name without generic arguments
     string Name,
     string Namespace,
@@ -20,7 +21,8 @@ public readonly record struct TypeDescriptor(
     EquatableArray<InterfaceDescriptor> Interfaces,
     EquatableArray<ParentClass> ParentClasses,
     EnumerableDescriptor? Enumerable,
-    TupleDescriptor? Tuple)
+    TupleDescriptor? Tuple
+)
 {
     public readonly Accessibility Accessibility = Accessibility;
     public readonly EquatableArray<AttributeDescriptor> Attributes = Attributes;
@@ -45,17 +47,7 @@ public readonly record struct TypeDescriptor(
 }
 
 // reference type to break cycle that would otherwise cause the generator to fail to initialize
-public sealed record TypeDescriptorWrapper(TypeDescriptor Descriptor)
+internal sealed record TypeDescriptorWrapper(TypeDescriptor Descriptor)
 {
     public TypeDescriptor Descriptor { get; } = Descriptor;
-}
-
-public readonly record struct ParentClass(
-    string Keyword,
-    string Name,
-    Accessibility Accessibility)
-{
-    public readonly Accessibility Accessibility = Accessibility;
-    public readonly string Keyword = Keyword;
-    public readonly string Name = Name;
 }

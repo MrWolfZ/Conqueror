@@ -1,6 +1,6 @@
-using System.ComponentModel;
-
 namespace Conqueror;
+
+using System.ComponentModel;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ConquerorConstants

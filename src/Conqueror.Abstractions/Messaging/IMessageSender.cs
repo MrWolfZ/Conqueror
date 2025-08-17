@@ -1,8 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public interface IMessageSender<in TMessage, TResponse>
@@ -10,8 +5,10 @@ public interface IMessageSender<in TMessage, TResponse>
 {
     string TransportTypeName { get; }
 
-    Task<TResponse> Send(TMessage message,
-                         IServiceProvider serviceProvider,
-                         ConquerorContext conquerorContext,
-                         CancellationToken cancellationToken);
+    Task<TResponse> Send(
+        TMessage message,
+        IServiceProvider serviceProvider,
+        ConquerorContext conquerorContext,
+        CancellationToken cancellationToken
+    );
 }

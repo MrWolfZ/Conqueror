@@ -1,6 +1,6 @@
-using System.Runtime.CompilerServices;
-
 namespace Conqueror.Streaming.Tests;
+
+using System.Runtime.CompilerServices;
 
 public abstract class StreamProducerClientFactoryTests
 {
@@ -10,19 +10,20 @@ public abstract class StreamProducerClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddTransient<TestStreamProducerTransport>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddTransient<TestStreamProducerTransport>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IStreamProducerClientFactory>();
 
-        var client = CreateStreamingRequestClient<IStreamProducer<TestStreamingRequest, TestItem>>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>());
+        var client = CreateStreamingRequestClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            clientFactory,
+            b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()
+        );
 
         var request = new TestStreamingRequest();
 
-        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain();
+        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.Requests, Is.EquivalentTo(new[] { request }));
     }
@@ -33,19 +34,20 @@ public abstract class StreamProducerClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddTransient<TestStreamProducerTransport>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddTransient<TestStreamProducerTransport>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IStreamProducerClientFactory>();
 
-        var client = CreateStreamingRequestClient<ITestStreamProducer>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>());
+        var client = CreateStreamingRequestClient<ITestStreamProducer>(
+            clientFactory,
+            b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()
+        );
 
         var request = new TestStreamingRequest();
 
-        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain();
+        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.Requests, Is.EquivalentTo(new[] { request }));
     }
@@ -56,21 +58,24 @@ public abstract class StreamProducerClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddTransient<TestStreamProducerTransport>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddTransient<TestStreamProducerTransport>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IStreamProducerClientFactory>();
 
-        var client = CreateStreamingRequestClient<IStreamProducer<TestStreamingRequest, TestItem>>(clientFactory,
-                                                                                                   b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>(),
-                                                                                                   p => p.Use<TestStreamProducerMiddleware, TestStreamProducerMiddlewareConfiguration>(new()));
+        var client = CreateStreamingRequestClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            clientFactory,
+            b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>(),
+            p => p.Use<TestStreamProducerMiddleware, TestStreamProducerMiddlewareConfiguration>(new())
+        );
 
         var request = new TestStreamingRequest();
 
-        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain();
+        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamProducerMiddleware) }));
     }
@@ -81,21 +86,24 @@ public abstract class StreamProducerClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddTransient<TestStreamProducerTransport>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddTransient<TestStreamProducerTransport>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IStreamProducerClientFactory>();
 
-        var client = CreateStreamingRequestClient<ITestStreamProducer>(clientFactory,
-                                                                       b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>(),
-                                                                       p => p.Use<TestStreamProducerMiddleware, TestStreamProducerMiddlewareConfiguration>(new()));
+        var client = CreateStreamingRequestClient<ITestStreamProducer>(
+            clientFactory,
+            b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>(),
+            p => p.Use<TestStreamProducerMiddleware, TestStreamProducerMiddlewareConfiguration>(new())
+        );
 
         var request = new TestStreamingRequest();
 
-        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain();
+        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestStreamProducerMiddleware) }));
     }
@@ -106,15 +114,18 @@ public abstract class StreamProducerClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddTransient<TestStreamProducerTransport>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddTransient<TestStreamProducerTransport>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IStreamProducerClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateStreamingRequestClient<ITestStreamProducerWithExtraMethod>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()));
+        _ = Assert.Throws<ArgumentException>(() =>
+            CreateStreamingRequestClient<ITestStreamProducerWithExtraMethod>(
+                clientFactory,
+                b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()
+            )
+        );
     }
 
     [Test]
@@ -123,15 +134,18 @@ public abstract class StreamProducerClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddTransient<TestStreamProducerTransport>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddTransient<TestStreamProducerTransport>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IStreamProducerClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateStreamingRequestClient<INonGenericStreamProducer>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()));
+        _ = Assert.Throws<ArgumentException>(() =>
+            CreateStreamingRequestClient<INonGenericStreamProducer>(
+                clientFactory,
+                b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()
+            )
+        );
     }
 
     [Test]
@@ -140,15 +154,18 @@ public abstract class StreamProducerClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddTransient<TestStreamProducerTransport>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddTransient<TestStreamProducerTransport>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IStreamProducerClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateStreamingRequestClient<TestStreamProducer>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()));
+        _ = Assert.Throws<ArgumentException>(() =>
+            CreateStreamingRequestClient<TestStreamProducer>(
+                clientFactory,
+                b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()
+            )
+        );
     }
 
     [Test]
@@ -157,15 +174,18 @@ public abstract class StreamProducerClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddTransient<TestStreamProducerTransport>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddTransient<TestStreamProducerTransport>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IStreamProducerClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateStreamingRequestClient<ICombinedStreamProducer>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()));
+        _ = Assert.Throws<ArgumentException>(() =>
+            CreateStreamingRequestClient<ICombinedStreamProducer>(
+                clientFactory,
+                b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()
+            )
+        );
     }
 
     [Test]
@@ -174,20 +194,25 @@ public abstract class StreamProducerClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreaming()
-                    .AddTransient<TestStreamProducerTransport>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreaming().AddTransient<TestStreamProducerTransport>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IStreamProducerClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateStreamingRequestClient<ICombinedCustomStreamProducer>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()));
+        _ = Assert.Throws<ArgumentException>(() =>
+            CreateStreamingRequestClient<ICombinedCustomStreamProducer>(
+                clientFactory,
+                b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()
+            )
+        );
     }
 
-    protected abstract TProducer CreateStreamingRequestClient<TProducer>(IStreamProducerClientFactory clientFactory,
-                                                                         Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
-                                                                         Action<IStreamProducerPipelineBuilder>? configurePipeline = null)
+    protected abstract TProducer CreateStreamingRequestClient<TProducer>(
+        IStreamProducerClientFactory clientFactory,
+        Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
+        Action<IStreamProducerPipelineBuilder>? configurePipeline = null
+    )
         where TProducer : class, IStreamProducer;
 
     public sealed record TestStreamingRequest;
@@ -205,7 +230,9 @@ public abstract class StreamProducerClientFactoryTests
         void ExtraMethod();
     }
 
-    public interface ICombinedStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>, IStreamProducer<TestStreamingRequest2, TestItem>;
+    public interface ICombinedStreamProducer
+        : IStreamProducer<TestStreamingRequest, TestItem>,
+            IStreamProducer<TestStreamingRequest2, TestItem>;
 
     public interface ICombinedCustomStreamProducer : ITestStreamProducer, ITestStreamProducer2;
 
@@ -216,14 +243,20 @@ public abstract class StreamProducerClientFactoryTests
 
     private sealed class TestStreamProducer : ITestStreamProducer
     {
-        public IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            CancellationToken cancellationToken = default
+        ) => throw new NotSupportedException();
     }
 
     private sealed record TestStreamProducerMiddlewareConfiguration;
 
-    private sealed class TestStreamProducerMiddleware(TestObservations observations) : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
+    private sealed class TestStreamProducerMiddleware(TestObservations observations)
+        : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
     {
-        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem, TestStreamProducerMiddlewareConfiguration> ctx)
+        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(
+            StreamProducerMiddlewareContext<TRequest, TItem, TestStreamProducerMiddlewareConfiguration> ctx
+        )
             where TRequest : class
         {
             await Task.Yield();
@@ -238,9 +271,11 @@ public abstract class StreamProducerClientFactoryTests
 
     private sealed class TestStreamProducerTransport(TestObservations observations) : IStreamProducerTransportClient
     {
-        public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
-                                                                             IServiceProvider serviceProvider,
-                                                                             [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(
+            TRequest request,
+            IServiceProvider serviceProvider,
+            [EnumeratorCancellation] CancellationToken cancellationToken
+        )
             where TRequest : class
         {
             await Task.Yield();
@@ -261,26 +296,30 @@ public abstract class StreamProducerClientFactoryTests
 [TestFixture]
 public sealed class StreamProducerClientFactoryWithSyncFactoryTests : StreamProducerClientFactoryTests
 {
-    protected override TProducer CreateStreamingRequestClient<TProducer>(IStreamProducerClientFactory clientFactory,
-                                                                         Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
-                                                                         Action<IStreamProducerPipelineBuilder>? configurePipeline = null)
-    {
-        return clientFactory.CreateStreamProducerClient<TProducer>(transportClientFactory, configurePipeline);
-    }
+    protected override TProducer CreateStreamingRequestClient<TProducer>(
+        IStreamProducerClientFactory clientFactory,
+        Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
+        Action<IStreamProducerPipelineBuilder>? configurePipeline = null
+    ) => clientFactory.CreateStreamProducerClient<TProducer>(transportClientFactory, configurePipeline);
 }
 
 [TestFixture]
 public sealed class StreamProducerClientFactoryWithAsyncFactoryTests : StreamProducerClientFactoryTests
 {
-    protected override TProducer CreateStreamingRequestClient<TProducer>(IStreamProducerClientFactory clientFactory,
-                                                                         Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
-                                                                         Action<IStreamProducerPipelineBuilder>? configurePipeline = null)
+    protected override TProducer CreateStreamingRequestClient<TProducer>(
+        IStreamProducerClientFactory clientFactory,
+        Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
+        Action<IStreamProducerPipelineBuilder>? configurePipeline = null
+    )
     {
-        return clientFactory.CreateStreamProducerClient<TProducer>(async b =>
-                                                                   {
-                                                                       await Task.Delay(1);
-                                                                       return transportClientFactory(b);
-                                                                   },
-                                                                   configurePipeline);
+        return clientFactory.CreateStreamProducerClient<TProducer>(
+            async b =>
+            {
+                await Task.Delay(millisecondsDelay: 1);
+
+                return transportClientFactory(b);
+            },
+            configurePipeline
+        );
     }
 }

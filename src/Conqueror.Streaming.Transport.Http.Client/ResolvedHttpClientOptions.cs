@@ -1,15 +1,15 @@
-using System;
+namespace Conqueror.Streaming.Transport.Http.Client;
+
 using System.Net.Http.Headers;
 using System.Text.Json;
-
-namespace Conqueror.Streaming.Transport.Http.Client;
 
 internal sealed class ResolvedHttpClientOptions(
     ConquerorStreamingWebSocketFactory socketFactory,
     Uri baseAddress,
     JsonSerializerOptions? jsonSerializerOptions,
     IHttpStreamPathConvention? pathConvention,
-    HttpRequestHeaders? headers)
+    HttpRequestHeaders? headers
+)
 {
     public ConquerorStreamingWebSocketFactory SocketFactory { get; } = socketFactory;
 

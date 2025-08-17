@@ -13,6 +13,11 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
 
     public int ServerCallCount => serverCallCount;
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1085:Use auto-implemented property",
+        Justification = "false positive, we need the field as a `ref` parameter"
+    )]
     public int ServerResponseHasBegunCount
     {
         get => serverResponseHasBegunCount;
@@ -23,17 +28,27 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
 
     public IHeaderDictionary? ReceivedHeadersOnServer { get; private set; }
 
-    public ConcurrentQueue<(int StatusCode, string ContentType, bool KeepAlive)?> ServerConnectionResponses { get; } = [];
-
-    public ISignalPublishers SignalPublishers => HttpTransportTestHost.Resolve<ISignalPublishers>();
-
-    public IConquerorContextAccessor ConquerorContextAccessor => HttpTransportTestHost.Resolve<IConquerorContextAccessor>();
+    public ConcurrentQueue<(int StatusCode, string ContentType, bool KeepAlive)?> ServerConnectionResponses { get; } =
+    [];
 
     public HttpClient HttpClient => HttpTransportTestHost.HttpClient;
 
+    public ISignalPublishers SignalPublishers => HttpTransportTestHost.Resolve<ISignalPublishers>();
+
+    public IConquerorContextAccessor ConquerorContextAccessor =>
+        HttpTransportTestHost.Resolve<IConquerorContextAccessor>();
+
+    public async ValueTask DisposeAsync()
+    {
+        serverCts.Dispose();
+
+        await HttpTransportTestHost.DisposeAsync();
+    }
+
     public static async Task<HttpSignalTransportConformityPublisherTestHost> CreatePublisherHost(
         HttpSignalConformityTestCase testCase,
-        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback)
+        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback
+    )
     {
         var host = new HttpSignalTransportConformityPublisherTestHost();
 
@@ -42,9 +57,12 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
             {
                 testCase.RegisterOnServer?.Invoke(services);
 
-                _ = services.AddConquerorHttpServerAspNetCore()
-                            .AddRouting()
-                            .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<HttpSignalTransportConformityTestHost>>());
+                _ = services
+                    .AddConquerorHttpServerAspNetCore()
+                    .AddRouting()
+                    .AddSingleton(
+                        ILogger (p) => p.GetRequiredService<ILogger<HttpSignalTransportConformityTestHost>>()
+                    );
 
                 if (publishCallback is not null)
                 {
@@ -55,122 +73,142 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
             },
             app =>
             {
-                _ = app.Use(async (ctx, next) =>
-                       {
-                           _ = Interlocked.Increment(ref host.serverCallCount);
-                           host.ReceivedHeadersOnServer = ctx.Request.Headers;
+                _ = app.Use(
+                        async (ctx, next) =>
+                        {
+                            _ = Interlocked.Increment(ref host.serverCallCount);
+                            host.ReceivedHeadersOnServer = ctx.Request.Headers;
 
-                           ctx.Response.OnStarting(() =>
-                           {
-                               ctx.RequestServices
-                                  .GetRequiredService<ILogger>()
-                                  .LogTrace("server response has begun");
+                            ctx.Response.OnStarting(() =>
+                            {
+                                ctx.RequestServices.GetRequiredService<ILogger>().LogTrace("server response has begun");
 
-                               _ = Interlocked.Increment(ref host.serverResponseHasBegunCount);
+                                _ = Interlocked.Increment(ref host.serverResponseHasBegunCount);
 
-                               return Task.CompletedTask;
-                           });
+                                return Task.CompletedTask;
+                            });
 
-                           try
-                           {
-                               await next();
-                           }
-                           finally
-                           {
-                               _ = Interlocked.Increment(ref host.serverResponseHasFinishedCount);
-                           }
-                       })
-                       .Use(async (ctx, next) =>
-                       {
-                           try
-                           {
-                               await next();
-                           }
-                           catch (Exception ex)
-                           {
-                               ctx.RequestServices.GetRequiredService<ILogger>()
-                                  .LogError(ex, "exception in request pipeline");
+                            try
+                            {
+                                await next();
+                            }
+                            finally
+                            {
+                                _ = Interlocked.Increment(ref host.serverResponseHasFinishedCount);
+                            }
+                        }
+                    )
+                    .Use(
+                        async (ctx, next) =>
+                        {
+                            try
+                            {
+                                await next();
+                            }
+                            catch (Exception ex)
+                            {
+                                ctx.RequestServices.GetRequiredService<ILogger>()
+                                    .LogError(ex, "exception in request pipeline");
 
-                               if (ctx.Response.HasStarted)
-                               {
-                                   return;
-                               }
+                                if (ctx.Response.HasStarted)
+                                {
+                                    return;
+                                }
 
-                               ctx.Response.StatusCode = 500;
-                               await ctx.Response.WriteAsync($"internal server error\n{ex}");
-                           }
-                       })
-                       .Use(async (ctx, next) =>
-                       {
-                           if (host.serverCancellationToken is null)
-                           {
-                               await next();
+                                ctx.Response.StatusCode = 500;
+                                await ctx.Response.WriteAsync($"internal server error\n{ex}", CancellationToken.None);
+                            }
+                        }
+                    )
+                    .Use(
+                        async (ctx, next) =>
+                        {
+                            if (host.serverCancellationToken is null)
+                            {
+                                await next();
 
-                               return;
-                           }
+                                return;
+                            }
 
-                           var logger = ctx.RequestServices.GetRequiredService<ILogger>();
+                            var logger = ctx.RequestServices.GetRequiredService<ILogger>();
 
-                           using var cts = CancellationTokenSource.CreateLinkedTokenSource(
-                               ctx.RequestAborted,
-                               host.serverCancellationToken.Value);
+                            using var cts = CancellationTokenSource.CreateLinkedTokenSource(
+                                ctx.RequestAborted,
+                                host.serverCancellationToken.Value
+                            );
 
-                           ctx.RequestAborted = cts.Token;
+                            ctx.RequestAborted = cts.Token;
 
-                           ctx.RequestAborted.ThrowIfCancellationRequested();
+                            ctx.RequestAborted.ThrowIfCancellationRequested();
 
-                           await using var d = ctx.RequestAborted.Register(static l => ((ILogger)l!).LogInformation("request aborted"), logger);
+                            await using var d = ctx.RequestAborted.Register(
+                                static l => ((ILogger)l!).LogInformation("request aborted"),
+                                logger
+                            );
 
-                           await next();
-                       })
-                       .Use(async (ctx, next) =>
-                       {
-                           if (host.ServerConnectionResponses.TryDequeue(out var res) && res.HasValue)
-                           {
-                               ctx.Response.ContentType = res.Value.ContentType;
-                               ctx.Response.StatusCode = res.Value.StatusCode;
-                               await ctx.Response.Body.FlushAsync(ctx.RequestAborted);
+                            await next();
+                        }
+                    )
+                    .Use(
+                        async (ctx, next) =>
+                        {
+                            if (host.ServerConnectionResponses.TryDequeue(out var res) && res.HasValue)
+                            {
+                                ctx.Response.ContentType = res.Value.ContentType;
+                                ctx.Response.StatusCode = res.Value.StatusCode;
+                                await ctx.Response.Body.FlushAsync(ctx.RequestAborted);
 
-                               if (res.Value.KeepAlive)
-                               {
-                                   try
-                                   {
-                                       await Task.Delay(TimeSpan.FromMinutes(1), ctx.RequestAborted);
-                                   }
-                                   catch (OperationCanceledException)
-                                   {
-                                       // nothing to do
-                                   }
-                               }
+                                if (res.Value.KeepAlive)
+                                {
+                                    try
+                                    {
+                                        await Task.Delay(
+                                            TimeSpan.FromMinutes(value: 1),
+                                            TimeProvider.System,
+                                            ctx.RequestAborted
+                                        );
+                                    }
+                                    catch (OperationCanceledException)
+                                    {
+                                        // nothing to do
+                                    }
+                                }
 
-                               return;
-                           }
+                                return;
+                            }
 
-                           await next();
-                       });
+                            await next();
+                        }
+                    );
 
                 _ = app.UseConquerorWellKnownErrorHandling();
                 _ = app.UseRouting();
 
                 _ = app.UseEndpoints(endpoints =>
                 {
-                    endpoints.MapMethods("debug/{param:int}", ["GET"], (int param, HttpContext _) => TypedResults.Ok(param))
-                             .Finally(e =>
-                             {
-                                 // to allow stepping in with debugger
-                                 _ = e;
-                             });
+                    endpoints
+                        .MapMethods("debug/{param:int}", ["GET"], (int param, HttpContext _) => TypedResults.Ok(param))
+                        .Finally(e =>
+                        {
+                            // to allow stepping in with debugger
+                            _ = e;
+                        });
 
                     _ = testCase.TransportType switch
                     {
-                        HttpSignalConformityTestCase.HttpSignalTransportType.Sse => endpoints.MapServerSentEventsSignalsEndpoint(
-                            HttpSignalTransportConformityTestHost.SseAddress.AbsolutePath),
-                        HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets => endpoints.MapWebSocketsSignalsEndpoint(
-                            HttpSignalTransportConformityTestHost.WebSocketsAddress.AbsolutePath),
+                        HttpSignalConformityTestCase.HttpSignalTransportType.Sse =>
+                            endpoints.MapServerSentEventsSignalsEndpoint(
+                                HttpSignalTransportConformityTestHost.SseAddress.AbsolutePath
+                            ),
+                        HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets =>
+                            endpoints.MapWebSocketsSignalsEndpoint(
+                                HttpSignalTransportConformityTestHost.WebSocketsAddress.AbsolutePath
+                            ),
                         _ => throw new InvalidOperationException($"unknown transport type: {testCase.TransportType}"),
                     };
                 });
-            });
+            }
+        );
 
         host.serverCancellationToken = host.serverCts.Token;
 
@@ -178,11 +216,10 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
     }
 
     public T Resolve<T>()
-        where T : notnull
-        => HttpTransportTestHost.Resolve<T>();
+        where T : notnull => HttpTransportTestHost.Resolve<T>();
 
-    public Task<WebSocket> ConnectToWebSocket(Uri address, Action<IHeaderDictionary>? configureHeaders = null)
-        => HttpTransportTestHost.ConnectToWebSocket(address, configureHeaders);
+    public Task<WebSocket> ConnectToWebSocket(Uri address, Action<IHeaderDictionary>? configureHeaders = null) =>
+        HttpTransportTestHost.ConnectToWebSocket(address, configureHeaders);
 
     public async Task TriggerReconnect()
     {
@@ -191,12 +228,5 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
 
         // this should trigger reconnections
         await serverCts.CancelAsync();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        serverCts.Dispose();
-
-        await HttpTransportTestHost.DisposeAsync();
     }
 }

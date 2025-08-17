@@ -1,23 +1,12 @@
-﻿using Conqueror.Transport.ConformityTests.Messaging;
-
-namespace Conqueror.Transport.FileSystem.Tests.Messaging;
+﻿namespace Conqueror.Transport.FileSystem.Tests.Messaging;
 
 public abstract class FileSystemMessageConformityExecutionTestCase
     : FileSystemMessageConformityTestCase,
-      IMessageTransportConformityExecutionTestCase<FileSystemMessageTransportConformityTestHost>
+        IMessageTransportConformityExecutionTestCase<FileSystemMessageTransportConformityTestHost>
 {
     private readonly Type? singleResponseType;
 
-    public int NumOfReceivers { get; init; } = 1;
-
-    public bool MessagesAreSentInParallel { get; init; }
-
-    public required IReadOnlyCollection<object> ExpectedReceivedMessages { get; init; }
-
     public required IReadOnlyCollection<object> ExpectedResponses { get; init; }
-
-    IReadOnlyCollection<object> IMessageTransportConformityExecutionTestCase<FileSystemMessageTransportConformityTestHost>.ExpectedResponses
-        => ExpectedResponses.Where(r => r is not UnitMessageResponse).ToArray();
 
     public Type? SingleMessageType
     {
@@ -25,7 +14,7 @@ public abstract class FileSystemMessageConformityExecutionTestCase
         {
             var distinctMessageTypes = ExpectedReceivedMessages.Select(m => m.GetType()).Distinct().ToArray();
 
-            return distinctMessageTypes.Length == 1 ? distinctMessageTypes.Single() : null;
+            return distinctMessageTypes.Length is 1 ? distinctMessageTypes.Single() : null;
         }
     }
 
@@ -38,11 +27,23 @@ public abstract class FileSystemMessageConformityExecutionTestCase
                 return singleResponseType;
             }
 
-            var distinctResponseTypes = ExpectedResponses.Where(r => r is not UnitMessageResponse).Select(m => m.GetType()).Distinct().ToArray();
+            var distinctResponseTypes = ExpectedResponses
+                .Where(r => r is not UnitMessageResponse)
+                .Select(m => m.GetType())
+                .Distinct()
+                .ToArray();
 
-            return distinctResponseTypes.Length == 1 ? distinctResponseTypes.Single() : null;
+            return distinctResponseTypes.Length is 1 ? distinctResponseTypes.Single() : null;
         }
-
         init => singleResponseType = value;
     }
+
+    public int NumOfReceivers { get; init; } = 1;
+
+    public bool MessagesAreSentInParallel { get; init; }
+
+    public required IReadOnlyCollection<object> ExpectedReceivedMessages { get; init; }
+
+    IReadOnlyCollection<object> IMessageTransportConformityExecutionTestCase<FileSystemMessageTransportConformityTestHost>.ExpectedResponses =>
+        ExpectedResponses.Where(r => r is not UnitMessageResponse).ToArray();
 }

@@ -1,9 +1,7 @@
-using System;
-using System.Net.Http;
+namespace Conqueror.Streaming.Transport.Http.Client;
+
 using System.Net.Http.Headers;
 using System.Text.Json;
-
-namespace Conqueror.Streaming.Transport.Http.Client;
 
 public sealed class HttpStreamClientOptions
 {
@@ -11,13 +9,11 @@ public sealed class HttpStreamClientOptions
     {
         // HttpRequestHeaders does not have a public constructor, so we use this trick
         using var msg = new HttpRequestMessage();
+
         return msg.Headers;
     });
 
-    internal HttpStreamClientOptions(IServiceProvider serviceProvider)
-    {
-        ServiceProvider = serviceProvider;
-    }
+    internal HttpStreamClientOptions(IServiceProvider serviceProvider) => ServiceProvider = serviceProvider;
 
     public IServiceProvider ServiceProvider { get; }
 

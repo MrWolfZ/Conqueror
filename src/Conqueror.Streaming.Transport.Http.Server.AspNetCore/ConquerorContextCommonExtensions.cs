@@ -7,17 +7,14 @@ public static class ConquerorContextCommonExtensions
     /// <summary>
     ///     Signals to the next Conqueror operation execution that it was invoked from a transport.<br />
     ///     <br />
-    ///     This method is typically called from a server-side transport implementation and does not need to be called by user-code.
+    ///     This method is typically called from a server-side transport implementation and does not need to be called by
+    ///     user-code.
     /// </summary>
     /// <param name="conquerorContext">The conqueror context to mark</param>
     /// <param name="transportTypeName">The name of the transport type that was executed</param>
-    public static void SignalExecutionFromTransport(this ConquerorContext conquerorContext, string transportTypeName)
-    {
+    public static void SignalExecutionFromTransport(this ConquerorContext conquerorContext, string transportTypeName) =>
         conquerorContext.InProcessData.Set(TransportTypeNameKey, transportTypeName);
-    }
 
-    public static string? GetExecutionTransportTypeName(this ConquerorContext conquerorContext)
-    {
-        return conquerorContext.InProcessData.Get<string>(TransportTypeNameKey);
-    }
+    public static string? GetExecutionTransportTypeName(this ConquerorContext conquerorContext) =>
+        conquerorContext.InProcessData.Get<string>(TransportTypeNameKey);
 }

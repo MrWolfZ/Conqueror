@@ -1,9 +1,8 @@
-using Conqueror;
-
 namespace Quickstart;
 
-internal sealed partial class GetCountersHandler(
-    CountersRepository repository)
+using Conqueror;
+
+internal sealed partial class GetCountersHandler(CountersRepository repository)
     : GetCounters.IHandler
 {
     public static void ConfigurePipeline(GetCounters.IPipeline pipeline) =>
@@ -11,9 +10,9 @@ internal sealed partial class GetCountersHandler(
         {
             // The pipeline has access to the service provider from the scope of the call to the
             // handler in case you need it to resolve some services
-            var isDevelopment = pipeline.ServiceProvider
-                                        .GetRequiredService<IHostEnvironment>()
-                                        .IsDevelopment();
+            var isDevelopment = pipeline
+                .ServiceProvider.GetRequiredService<IHostEnvironment>()
+                .IsDevelopment();
 
             // The logging middleware supports detailed configuration options. For example, like
             // here we can omit verbose output from the logs in production
@@ -23,15 +22,15 @@ internal sealed partial class GetCountersHandler(
 
             // You can also make the logging strategy dependent on the message or response
             // payloads, e.g. to omit confidential data from the logs
-            c.ResponsePayloadLoggingStrategyFactory = (_, resp)
-                => resp.Any(m => m.CounterName == "confidential")
+            c.ResponsePayloadLoggingStrategyFactory = (_, resp) =>
+                resp.Exists(m => m.CounterName == "confidential")
                     ? PayloadLoggingStrategy.Omit
                     : c.ResponsePayloadLoggingStrategy;
 
             // you can customize logging even further by hooking into the log message creation
             c.PostExecutionHook = ctx =>
             {
-                if (ctx.Response.Any(m => m.CounterName == "confidential"))
+                if (ctx.Response.Exists(m => m.CounterName == "confidential"))
                 {
                     // log an additional explanation for why the response is omitted from the logs
                     ctx.Logger.LogInformation("response omitted because of confidential data");
@@ -43,12 +42,14 @@ internal sealed partial class GetCountersHandler(
 
     public async Task<List<CounterValue>> Handle(
         GetCounters message,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var allCounters = await repository.GetCounters();
 
-        return allCounters.Where(p => message.Prefix is null || p.Key.StartsWith(message.Prefix))
-                          .Select(p => new CounterValue(p.Key, p.Value))
-                          .ToList();
+        return allCounters
+            .Where(p => message.Prefix is null || p.Key.StartsWith(message.Prefix))
+            .Select(p => new CounterValue(p.Key, p.Value))
+            .ToList();
     }
 }

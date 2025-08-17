@@ -1,63 +1,60 @@
+namespace Conqueror.Transport.Http.Tests;
+
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 using NUnit.Framework.Interfaces;
 
-namespace Conqueror.Transport.Http.Tests;
-
 file sealed class HttpTransportTestLogger(
     string categoryName,
     HttpTransportTestLogSink logSink,
-    ConsoleFormatter consoleFormatter) : ILogger
+    ConsoleFormatter consoleFormatter
+) : ILogger
 {
     public void Log<TState>(
         LogLevel logLevel,
         EventId eventId,
         TState state,
         Exception? exception,
-        Func<TState, Exception?, string> formatter)
+        Func<TState, Exception?, string> formatter
+    )
     {
-        var logEntry = new LogEntry<TState>(
-            logLevel,
-            categoryName,
-            eventId,
-            state,
-            exception,
-            formatter);
+        var logEntry = new LogEntry<TState>(logLevel, categoryName, eventId, state, exception, formatter);
         using var textWriter = new StringWriter();
-        consoleFormatter.Write(in logEntry, null, textWriter);
+        consoleFormatter.Write(in logEntry, scopeProvider: null, textWriter);
         logSink.LogEntries.Add(textWriter.ToString());
     }
 
-    public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;
+    public bool IsEnabled(LogLevel logLevel) => logLevel is not LogLevel.None;
 
     public IDisposable BeginScope<TState>(TState state)
-        where TState : notnull
-    {
-        return new NoopDisposable();
-    }
+        where TState : notnull => new NoopDisposable();
 
     private sealed class NoopDisposable : IDisposable
     {
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }
 
 file sealed class HttpTransportTestLoggerProvider(
     HttpTransportTestLogSink logSink,
     IEnumerable<ConsoleFormatter> consoleFormatters,
-    IOptions<ConsoleLoggerOptions> consoleOptions) : ILoggerProvider
+    IOptions<ConsoleLoggerOptions> consoleOptions
+) : ILoggerProvider
 {
-    public ILogger CreateLogger(string categoryName)
-        => new HttpTransportTestLogger(
+    public ILogger CreateLogger(string categoryName) =>
+        new HttpTransportTestLogger(
             categoryName,
             logSink,
-            consoleFormatters.Single(f => f.Name == (consoleOptions.Value.FormatterName ?? ConsoleFormatterNames.Simple)));
+            consoleFormatters.Single(f =>
+                string.Equals(
+                    f.Name,
+                    consoleOptions.Value.FormatterName ?? ConsoleFormatterNames.Simple,
+                    StringComparison.Ordinal
+                )
+            )
+        );
 
-    public void Dispose()
-    {
-    }
+    public void Dispose() { }
 }
 
 internal sealed class HttpTransportTestLogSink : IDisposable
@@ -68,9 +65,9 @@ internal sealed class HttpTransportTestLogSink : IDisposable
     {
         var testContext = TestContext.CurrentContext;
 
-        if (testContext.Result.Outcome.Status == TestStatus.Failed)
+        if (testContext.Result.Outcome.Status is TestStatus.Failed)
         {
-            Console.Write(string.Join(string.Empty, LogEntries));
+            Console.Write(string.Concat(LogEntries));
         }
     }
 }
@@ -81,15 +78,19 @@ internal static class HttpTransportTestLoggingBuilderExtensions
     {
         _ = builder.AddSimpleConsole(o => o.TimestampFormat = "[HH:mm:ss.fff]");
 
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, HttpTransportTestLoggerProvider>());
+        builder.Services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<ILoggerProvider, HttpTransportTestLoggerProvider>()
+        );
         builder.Services.TryAddSingleton<HttpTransportTestLogSink>();
 
         // remove the console logger provider so that we can control the logging
         // ourselves (we want to only log stuff if a test fails to prevent disk
         // churn with superfluous log data, and also to improve test performance)
         _ = builder.Services.Remove(
-            builder.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
-                                         && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+            builder.Services.Single(s =>
+                s.ServiceType == typeof(ILoggerProvider) && s.ImplementationType == typeof(ConsoleLoggerProvider)
+            )
+        );
 
         return builder;
     }

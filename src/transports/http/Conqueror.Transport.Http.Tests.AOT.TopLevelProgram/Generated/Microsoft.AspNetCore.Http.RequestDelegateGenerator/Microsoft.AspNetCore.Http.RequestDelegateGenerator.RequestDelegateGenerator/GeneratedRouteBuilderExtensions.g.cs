@@ -59,7 +59,7 @@ namespace Microsoft.AspNetCore.Http.Generated
                 private static readonly string[] GetVerb = new[] { global::Microsoft.AspNetCore.Http.HttpMethods.Get };
         private static readonly string[] PostVerb = new[] { global::Microsoft.AspNetCore.Http.HttpMethods.Post };
 
-                        [InterceptsLocation(@"C:\Programming\conqueror\src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Program.cs", 29, 5)]
+                        [InterceptsLocation(@"C:\Programming\conqueror\src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Program.cs", 33, 5)]
         internal static RouteHandlerBuilder MapPost0(
             this IEndpointRouteBuilder endpoints,
             [StringSyntax("Route")] string pattern,
@@ -150,8 +150,8 @@ namespace Microsoft.AspNetCore.Http.Generated
                 createRequestDelegate);
         }
 
-                [InterceptsLocation(@"C:\Programming\conqueror\src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Program.cs", 47, 5)]
-        [InterceptsLocation(@"C:\Programming\conqueror\src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Program.cs", 59, 5)]
+                [InterceptsLocation(@"C:\Programming\conqueror\src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Program.cs", 56, 5)]
+        [InterceptsLocation(@"C:\Programming\conqueror\src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Program.cs", 74, 5)]
         internal static RouteHandlerBuilder MapGet1(
             this IEndpointRouteBuilder endpoints,
             [StringSyntax("Route")] string pattern,

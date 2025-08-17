@@ -8,24 +8,23 @@ public sealed partial class SignalMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddSignalHandler<TestSignalHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddSignalHandler<TestSignalHandler>().AddSingleton(observations);
 
         _ = services.AddSingleton<Action<ISignalPipeline<TestSignal>>>(pipeline =>
         {
-            _ = pipeline.Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            var testObservations = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+            _ = pipeline.Use(new TestSignalMiddleware<TestSignal>(testObservations) { Parameter = 10 });
 
             _ = pipeline.Configure<TestSignalMiddleware<TestSignal>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<ISignalPublishers>()
-                              .For(TestSignal.T);
+        var handler = provider.GetRequiredService<ISignalPublishers>().For(TestSignal.T);
 
-        await handler.Handle(new());
+        await handler.Handle(new(), CancellationToken.None);
 
-        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
+        Assert.That(observations.Parameters, Is.EqualTo([20]));
     }
 
     [Test]
@@ -34,26 +33,26 @@ public sealed partial class SignalMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddSignalHandler<TestSignalHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddSignalHandler<TestSignalHandler>().AddSingleton(observations);
 
         _ = services.AddSingleton<Action<ISignalPipeline<TestSignal>>>(pipeline =>
         {
-            _ = pipeline.Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
-            _ = pipeline.Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 30 });
-            _ = pipeline.Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 50 });
+            var testObservations = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+            _ = pipeline
+                .Use(new TestSignalMiddleware<TestSignal>(testObservations) { Parameter = 10 })
+                .Use(new TestSignalMiddleware<TestSignal>(testObservations) { Parameter = 30 })
+                .Use(new TestSignalMiddleware<TestSignal>(testObservations) { Parameter = 50 });
 
             _ = pipeline.Configure<TestSignalMiddleware<TestSignal>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<ISignalPublishers>()
-                              .For(TestSignal.T);
+        var handler = provider.GetRequiredService<ISignalPublishers>().For(TestSignal.T);
 
-        await handler.Handle(new());
+        await handler.Handle(new(), CancellationToken.None);
 
-        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20, 40, 60 }));
+        Assert.That(observations.Parameters, Is.EqualTo([20, 40, 60]));
     }
 
     [Test]
@@ -62,24 +61,23 @@ public sealed partial class SignalMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddSignalHandler<TestSignalHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddSignalHandler<TestSignalHandler>().AddSingleton(observations);
 
         _ = services.AddSingleton<Action<ISignalPipeline<TestSignal>>>(pipeline =>
         {
-            _ = pipeline.Use(new TestSignalMiddlewareSub<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            var testObservations = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+            _ = pipeline.Use(new TestSignalMiddlewareSub<TestSignal>(testObservations) { Parameter = 10 });
 
             _ = pipeline.Configure<TestSignalMiddlewareBase<TestSignal>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<ISignalPublishers>()
-                              .For(TestSignal.T);
+        var handler = provider.GetRequiredService<ISignalPublishers>().For(TestSignal.T);
 
-        await handler.Handle(new());
+        await handler.Handle(new(), CancellationToken.None);
 
-        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
+        Assert.That(observations.Parameters, Is.EqualTo([20]));
     }
 
     [Test]
@@ -88,15 +86,18 @@ public sealed partial class SignalMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddSignalHandler<TestSignalHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddSignalHandler<TestSignalHandler>().AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<ISignalPipeline<TestSignal>>>(pipeline => { _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestSignalMiddleware<TestSignal>>(c => c.Parameter += 10)); });
+        _ = services.AddSingleton<Action<ISignalPipeline<TestSignal>>>(pipeline =>
+        {
+            _ = Assert.Throws<InvalidOperationException>(() =>
+                pipeline.Configure<TestSignalMiddleware<TestSignal>>(c => c.Parameter += 10)
+            );
+        });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<ISignalPublishers>()
-                              .For(TestSignal.T);
+        var handler = provider.GetRequiredService<ISignalPublishers>().For(TestSignal.T);
 
         await handler.Handle(new(), CancellationToken.None);
     }
@@ -107,26 +108,29 @@ public sealed partial class SignalMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddSignalHandler<TestSignalHandler>()
-                    .AddSingleton(observations);
+        _ = services.AddSignalHandler<TestSignalHandler>().AddSingleton(observations);
 
         _ = services.AddSingleton<Action<ISignalPipeline<TestSignal>>>(pipeline =>
         {
             _ = pipeline.UseWhen(
                 _ => true,
-                p => p.Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 }));
+                p =>
+                {
+                    var testObservations = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                    _ = p.Use(new TestSignalMiddleware<TestSignal>(testObservations) { Parameter = 10 });
+                }
+            );
 
             _ = pipeline.Configure<TestSignalMiddleware<TestSignal>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<ISignalPublishers>()
-                              .For(TestSignal.T);
+        var handler = provider.GetRequiredService<ISignalPublishers>().For(TestSignal.T);
 
-        await handler.Handle(new());
+        await handler.Handle(new(), CancellationToken.None);
 
-        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
+        Assert.That(observations.Parameters, Is.EqualTo([20]));
     }
 
     [Signal]
@@ -134,10 +138,8 @@ public sealed partial class SignalMiddlewareConfigurationTests
 
     private sealed partial class TestSignalHandler : TestSignal.IHandler
     {
-        public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
-        {
+        public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default) =>
             await Task.Yield();
-        }
 
         public static void ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
             where T : class, ISignal<T>
@@ -163,7 +165,8 @@ public sealed partial class SignalMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestSignalMiddlewareSub<TSignal>(TestObservations observations) : TestSignalMiddlewareBase<TSignal>(observations)
+    private sealed class TestSignalMiddlewareSub<TSignal>(TestObservations observations)
+        : TestSignalMiddlewareBase<TSignal>(observations)
         where TSignal : class, ISignal<TSignal>;
 
     private abstract class TestSignalMiddlewareBase<TSignal>(TestObservations observations) : ISignalMiddleware<TSignal>

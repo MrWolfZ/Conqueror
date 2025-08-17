@@ -1,8 +1,6 @@
-using System;
-using Conqueror.Signalling;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
+
+using Signalling;
 
 [SignalTransport(Prefix = "Core", Namespace = "Conqueror")]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]

@@ -1,16 +1,21 @@
-using System.Text.Json;
-using static Conqueror.Tests.ContextDataTestHelper;
-
 namespace Conqueror.Tests.Signalling;
 
-public sealed partial class SignalContextDataTests
+using static ContextDataTestHelper;
+
+internal sealed partial class SignalContextDataTests
 {
     private const string TestKey = "TestKey";
 
     [Test]
     [TestCaseSource(nameof(GenerateTestCases))]
-    [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "parameter name makes sense here")]
-    public async Task GivenDataSetup_WhenExecutingHandler_DataIsCorrectlyAvailable(ConquerorContextDataTestCase testCase)
+    [SuppressMessage(
+        "Usage",
+        "CA2208:Instantiate argument exceptions correctly",
+        Justification = "parameter name makes sense here"
+    )]
+    public async Task GivenDataSetup_WhenExecutingHandler_DataIsCorrectlyAvailable(
+        ConquerorContextDataTestCase testCase
+    )
     {
         const string stringValue = "TestValue";
 
@@ -22,7 +27,7 @@ public sealed partial class SignalContextDataTests
             DataDirection.Downstream => testDataInstructions.DownstreamDataToSet,
             DataDirection.Upstream => testDataInstructions.UpstreamDataToSet,
             DataDirection.Bidirectional => testDataInstructions.BidirectionalDataToSet,
-            _ => throw new ArgumentOutOfRangeException(nameof(testCase.DataDirection)),
+            _ => throw new ArgumentOutOfRangeException(nameof(testCase), testCase.DataDirection),
         };
 
         var dataToRemoveCol = testCase.DataDirection switch
@@ -30,12 +35,20 @@ public sealed partial class SignalContextDataTests
             DataDirection.Downstream => testDataInstructions.DownstreamDataToRemove,
             DataDirection.Upstream => testDataInstructions.UpstreamDataToRemove,
             DataDirection.Bidirectional => testDataInstructions.BidirectionalDataToRemove,
-            _ => throw new ArgumentOutOfRangeException(nameof(testCase.DataDirection)),
+            _ => throw new ArgumentOutOfRangeException(nameof(testCase), testCase.DataDirection),
         };
 
         foreach (var (data, i) in testCase.TestData.Select((value, i) => (value, i)))
         {
-            dataToSetCol.Add((TestKey, data.DataType == ContextDataType.String ? stringValue + i : new TestDataEntry(i), data.DataSettingLocation));
+            dataToSetCol.Add(
+                (
+                    TestKey,
+                    string.Equals(data.DataType, ContextDataType.String, StringComparison.OrdinalIgnoreCase)
+                        ? $"{stringValue}{i}"
+                        : new TestDataEntry(i),
+                    data.DataSettingLocation
+                )
+            );
 
             if (data.DataRemovalLocation is not null)
             {
@@ -45,108 +58,119 @@ public sealed partial class SignalContextDataTests
 
         var services = new ServiceCollection();
 
-        _ = services.AddSingleton(testDataInstructions)
-                    .AddSingleton(testObservations)
-                    .AddSingleton<NestedTestClass>()
+        _ = services
+            .AddSingleton(testDataInstructions)
+            .AddSingleton(testObservations)
+            .AddSingleton<NestedTestClass>()
+            // first handler
+            .AddSignalHandlerDelegate(
+                TestSignal.T,
+                async (_, p, _) =>
+                {
+                    SetAndObserveContextData(
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
+                        testDataInstructions,
+                        testObservations,
+                        Location.Handler1PreNestedExecution
+                    );
 
-                    // first handler
-                    .AddSignalHandlerDelegate(
-                        TestSignal.T,
-                        async (_, p, _) =>
-                        {
-                            SetAndObserveContextData(
-                                p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
-                                testDataInstructions,
-                                testObservations,
-                                Location.Handler1PreNestedExecution);
+                    await p.GetRequiredService<NestedTestClass>().Execute();
 
-                            await p.GetRequiredService<NestedTestClass>().Execute();
+                    SetAndObserveContextData(
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
+                        testDataInstructions,
+                        testObservations,
+                        Location.Handler1PostNestedExecution
+                    );
+                },
+                pipeline =>
+                {
+                    _ = pipeline.Use(
+                        new TestSignalMiddleware<TestSignal>(
+                            pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
+                            pipeline.ServiceProvider.GetRequiredService<TestObservations>()
+                        )
+                    );
+                }
+            )
+            // second handler
+            .AddSignalHandlerDelegate(
+                TestSignal.T,
+                (_, p) =>
+                {
+                    SetAndObserveContextData(
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
+                        testDataInstructions,
+                        testObservations,
+                        Location.Handler2Execution
+                    );
+                },
+                pipeline =>
+                {
+                    _ = pipeline.Use(
+                        new TestSignalMiddleware2<TestSignal>(
+                            pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
+                            pipeline.ServiceProvider.GetRequiredService<TestObservations>()
+                        )
+                    );
+                }
+            )
+            .AddSignalHandlerDelegate(
+                NestedTestSignal.T,
+                (_, p) =>
+                {
+                    SetAndObserveContextData(
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
+                        testDataInstructions,
+                        testObservations,
+                        Location.NestedSignalHandler
+                    );
+                }
+            );
 
-                            SetAndObserveContextData(
-                                p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
-                                testDataInstructions,
-                                testObservations,
-                                Location.Handler1PostNestedExecution);
-                        },
-                        pipeline =>
-                        {
-                            _ = pipeline.Use(
-                                new TestSignalMiddleware<TestSignal>(
-                                    pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
-                                    pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
-                        })
-
-                    // second handler
-                    .AddSignalHandlerDelegate(
-                        TestSignal.T,
-                        (_, p) =>
-                        {
-                            SetAndObserveContextData(
-                                p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
-                                testDataInstructions,
-                                testObservations,
-                                Location.Handler2Execution);
-                        },
-                        pipeline =>
-                        {
-                            _ = pipeline.Use(
-                                new TestSignalMiddleware2<TestSignal>(
-                                    pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
-                                    pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
-                        })
-                    .AddSignalHandlerDelegate(
-                        NestedTestSignal.T,
-                        (_, p) =>
-                        {
-                            SetAndObserveContextData(
-                                p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
-                                testDataInstructions,
-                                testObservations,
-                                Location.NestedSignalHandler);
-                        });
-
-        await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+        await using var serviceProvider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateOnBuild = true }
+        );
 
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        SetAndObserveContextData(
-            conquerorContext,
-            testDataInstructions,
-            testObservations,
-            Location.PreExecution);
+        SetAndObserveContextData(conquerorContext, testDataInstructions, testObservations, Location.PreExecution);
 
-        var handlerClient = serviceProvider.GetRequiredService<ISignalPublishers>()
-                                           .For(TestSignal.T)
-                                           .WithTransport(b => b.UseInProcess());
+        var handlerClient = serviceProvider
+            .GetRequiredService<ISignalPublishers>()
+            .For(TestSignal.T)
+            .WithTransport(b => b.UseInProcess());
 
-        await handlerClient.WithPipeline(pipeline =>
-                           {
-                               _ = pipeline.Use(
-                                   new TestPublisherSignalMiddleware<TestSignal>(
-                                       pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
-                                       pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
-                           })
-                           .Handle(new());
+        await handlerClient
+            .WithPipeline(pipeline =>
+            {
+                _ = pipeline.Use(
+                    new TestPublisherSignalMiddleware<TestSignal>(
+                        pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
+                        pipeline.ServiceProvider.GetRequiredService<TestObservations>()
+                    )
+                );
+            })
+            .Handle(new(), CancellationToken.None);
 
-        SetAndObserveContextData(
-            conquerorContext,
-            testDataInstructions,
-            testObservations,
-            Location.PostExecution);
+        SetAndObserveContextData(conquerorContext, testDataInstructions, testObservations, Location.PostExecution);
 
         var observedData = testCase.DataDirection switch
         {
             DataDirection.Downstream => testObservations.ObservedDownstreamData,
             DataDirection.Upstream => testObservations.ObservedUpstreamData,
             DataDirection.Bidirectional => testObservations.ObservedBidirectionalData,
-            _ => throw new ArgumentOutOfRangeException(nameof(testCase.DataDirection)),
+            _ => throw new ArgumentOutOfRangeException(nameof(testCase), testCase.DataDirection),
         };
 
         foreach (var (data, i) in testCase.TestData.Select((value, i) => (value, i)))
         {
-            object value = data.DataType == ContextDataType.String ? stringValue + i : new TestDataEntry(i);
+            object value = string.Equals(data.DataType, ContextDataType.String, StringComparison.OrdinalIgnoreCase)
+                ? $"{stringValue}{i}"
+                : new TestDataEntry(i);
 
-            var errorSignal = $"test case:\n{JsonSerializer.Serialize(testCase, new JsonSerializerOptions { WriteIndented = true })}";
+            var errorSignal =
+                $"test case:\n{JsonSerializer.Serialize(testCase, new JsonSerializerOptions { WriteIndented = true })}";
 
             try
             {
@@ -155,12 +179,30 @@ public sealed partial class SignalContextDataTests
                     foreach (var location in data.LocationsWhereDataShouldBeAccessible)
                     {
                         // we assert on count equal to 2, because observed data should be added twice (once by enumeration and once by direct access)
-                        Assert.That(observedData, Has.Exactly(2).Matches<(string Key, object Value, string Location)>(d => d.Value.Equals(value) && d.Location == location), () => $"location: {location}, value: {value}, observedData: [{string.Join(",", observedData)}]");
+                        Assert.That(
+                            observedData,
+                            Has.Exactly(expectedCount: 2)
+                                .Matches<(string Key, object Value, string Location)>(d =>
+                                    d.Value.Equals(value)
+                                    && string.Equals(d.Location, location, StringComparison.Ordinal)
+                                ),
+                            () =>
+                                $"location: {location}, value: {value}, observedData: [{string.Join(',', observedData)}]"
+                        );
                     }
 
                     foreach (var location in data.LocationsWhereDataShouldNotBeAccessible)
                     {
-                        Assert.That(observedData, Has.Exactly(0).Matches<(string Key, object Value, string Location)>(d => d.Value.Equals(value) && d.Location == location), () => $"location: {location}, value: {value}, observedData: [{string.Join(",", observedData)}]");
+                        Assert.That(
+                            observedData,
+                            Has.Exactly(expectedCount: 0)
+                                .Matches<(string Key, object Value, string Location)>(d =>
+                                    d.Value.Equals(value)
+                                    && string.Equals(d.Location, location, StringComparison.Ordinal)
+                                ),
+                            () =>
+                                $"location: {location}, value: {value}, observedData: [{string.Join(',', observedData)}]"
+                        );
                     }
                 });
             }
@@ -196,22 +238,22 @@ public sealed partial class SignalContextDataTests
     private static class ExecutionOrder
     {
         public static ExecutionOrderItem[] Order =>
-        [
-            new(1, 1, Location.PreExecution),
-            new(2, 1, Location.PublisherMiddlewarePreExecution),
-            new(3, 1, Location.Handler1MiddlewarePreExecution),
-            new(3, 1, Location.Handler1PreNestedExecution),
-            new(3, 1, Location.NestedClassPreExecution),
-            new(4, 1, Location.NestedSignalHandler),
-            new(3, 1, Location.NestedClassPostExecution),
-            new(3, 1, Location.Handler1PostNestedExecution),
-            new(3, 1, Location.Handler1MiddlewarePostExecution),
-            new(3, 2, Location.Handler2MiddlewarePreExecution),
-            new(3, 2, Location.Handler2Execution),
-            new(3, 2, Location.Handler2MiddlewarePostExecution),
-            new(2, 1, Location.PublisherMiddlewarePostExecution),
-            new(1, 1, Location.PostExecution),
-        ];
+            [
+                new(ContextDepth: 1, DepthInstance: 1, Location.PreExecution),
+                new(ContextDepth: 2, DepthInstance: 1, Location.PublisherMiddlewarePreExecution),
+                new(ContextDepth: 3, DepthInstance: 1, Location.Handler1MiddlewarePreExecution),
+                new(ContextDepth: 3, DepthInstance: 1, Location.Handler1PreNestedExecution),
+                new(ContextDepth: 3, DepthInstance: 1, Location.NestedClassPreExecution),
+                new(ContextDepth: 4, DepthInstance: 1, Location.NestedSignalHandler),
+                new(ContextDepth: 3, DepthInstance: 1, Location.NestedClassPostExecution),
+                new(ContextDepth: 3, DepthInstance: 1, Location.Handler1PostNestedExecution),
+                new(ContextDepth: 3, DepthInstance: 1, Location.Handler1MiddlewarePostExecution),
+                new(ContextDepth: 3, DepthInstance: 2, Location.Handler2MiddlewarePreExecution),
+                new(ContextDepth: 3, DepthInstance: 2, Location.Handler2Execution),
+                new(ContextDepth: 3, DepthInstance: 2, Location.Handler2MiddlewarePostExecution),
+                new(ContextDepth: 2, DepthInstance: 1, Location.PublisherMiddlewarePostExecution),
+                new(ContextDepth: 1, DepthInstance: 1, Location.PostExecution),
+            ];
     }
 
     private sealed record TestDataEntry(int Value);
@@ -224,8 +266,8 @@ public sealed partial class SignalContextDataTests
 
     private sealed class TestSignalMiddleware<TSignal>(
         TestDataInstructions dataInstructions,
-        TestObservations observations)
-        : ISignalMiddleware<TSignal>
+        TestObservations observations
+    ) : ISignalMiddleware<TSignal>
         where TSignal : class, ISignal<TSignal>
     {
         public async Task Execute(SignalMiddlewareContext<TSignal> ctx)
@@ -236,7 +278,8 @@ public sealed partial class SignalContextDataTests
                 ctx.ConquerorContext,
                 dataInstructions,
                 observations,
-                Location.Handler1MiddlewarePreExecution);
+                Location.Handler1MiddlewarePreExecution
+            );
 
             await ctx.Next(ctx.Signal, ctx.CancellationToken);
 
@@ -244,14 +287,15 @@ public sealed partial class SignalContextDataTests
                 ctx.ConquerorContext,
                 dataInstructions,
                 observations,
-                Location.Handler1MiddlewarePostExecution);
+                Location.Handler1MiddlewarePostExecution
+            );
         }
     }
 
     private sealed class TestSignalMiddleware2<TSignal>(
         TestDataInstructions dataInstructions,
-        TestObservations observations)
-        : ISignalMiddleware<TSignal>
+        TestObservations observations
+    ) : ISignalMiddleware<TSignal>
         where TSignal : class, ISignal<TSignal>
     {
         public async Task Execute(SignalMiddlewareContext<TSignal> ctx)
@@ -262,7 +306,8 @@ public sealed partial class SignalContextDataTests
                 ctx.ConquerorContext,
                 dataInstructions,
                 observations,
-                Location.Handler2MiddlewarePreExecution);
+                Location.Handler2MiddlewarePreExecution
+            );
 
             await ctx.Next(ctx.Signal, ctx.CancellationToken);
 
@@ -270,14 +315,15 @@ public sealed partial class SignalContextDataTests
                 ctx.ConquerorContext,
                 dataInstructions,
                 observations,
-                Location.Handler2MiddlewarePostExecution);
+                Location.Handler2MiddlewarePostExecution
+            );
         }
     }
 
     private sealed class TestPublisherSignalMiddleware<TSignal>(
         TestDataInstructions dataInstructions,
-        TestObservations observations)
-        : ISignalMiddleware<TSignal>
+        TestObservations observations
+    ) : ISignalMiddleware<TSignal>
         where TSignal : class, ISignal<TSignal>
     {
         public async Task Execute(SignalMiddlewareContext<TSignal> ctx)
@@ -288,7 +334,8 @@ public sealed partial class SignalContextDataTests
                 ctx.ConquerorContext,
                 dataInstructions,
                 observations,
-                Location.PublisherMiddlewarePreExecution);
+                Location.PublisherMiddlewarePreExecution
+            );
 
             await ctx.Next(ctx.Signal, ctx.CancellationToken);
 
@@ -296,7 +343,8 @@ public sealed partial class SignalContextDataTests
                 ctx.ConquerorContext,
                 dataInstructions,
                 observations,
-                Location.PublisherMiddlewarePostExecution);
+                Location.PublisherMiddlewarePostExecution
+            );
         }
     }
 
@@ -304,7 +352,8 @@ public sealed partial class SignalContextDataTests
         IConquerorContextAccessor conquerorContextAccessor,
         TestObservations observations,
         TestDataInstructions dataInstructions,
-        ISignalPublishers signalPublishers)
+        ISignalPublishers signalPublishers
+    )
     {
         public async Task Execute()
         {
@@ -312,15 +361,17 @@ public sealed partial class SignalContextDataTests
                 conquerorContextAccessor.ConquerorContext!,
                 dataInstructions,
                 observations,
-                Location.NestedClassPreExecution);
+                Location.NestedClassPreExecution
+            );
 
-            await signalPublishers.For(NestedTestSignal.T).Handle(new());
+            await signalPublishers.For(NestedTestSignal.T).Handle(new(), CancellationToken.None);
 
             SetAndObserveContextData(
                 conquerorContextAccessor.ConquerorContext!,
                 dataInstructions,
                 observations,
-                Location.NestedClassPostExecution);
+                Location.NestedClassPostExecution
+            );
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿// ReSharper disable once CheckNamespace
-
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IInProcessSignalPublisherFactory
 {

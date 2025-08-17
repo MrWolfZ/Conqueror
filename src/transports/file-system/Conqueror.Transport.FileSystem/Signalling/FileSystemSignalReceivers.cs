@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace Conqueror.Transport.FileSystem.Signalling;
+﻿namespace Conqueror.Transport.FileSystem.Signalling;
 
 internal sealed class FileSystemSignalReceivers : IFileSystemSignalReceivers
 {
@@ -9,15 +7,20 @@ internal sealed class FileSystemSignalReceivers : IFileSystemSignalReceivers
         return receivers.RunReceivers(
             receivers.ServiceProvider.GetRequiredService<FileSystemSignalReceiverFactory>(),
             receivers.ServiceProvider.GetRequiredService<FileSystemSignalReceiverRunner>(),
-            cancellationToken);
+            cancellationToken
+        );
     }
 
-    public ReceiverExecutionHandle RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
+    public ReceiverExecutionHandle RunReceiver<THandler>(
+        ISignalReceivers receivers,
+        CancellationToken cancellationToken
+    )
         where THandler : class, IFileSystemSignalHandler, ISignalHandlerWithSourceGeneration
     {
         return receivers.RunReceiver<THandler, IFileSystemSignalHandlerTypesInjector, FileSystemSignalReceiver>(
             receivers.ServiceProvider.GetRequiredService<FileSystemSignalReceiverFactory>(),
             receivers.ServiceProvider.GetRequiredService<FileSystemSignalReceiverRunner>(),
-            cancellationToken);
+            cancellationToken
+        );
     }
 }

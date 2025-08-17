@@ -1,8 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
+﻿namespace Conqueror.Middleware.Logging;
 
-namespace Conqueror.Middleware.Logging;
+using System.Diagnostics;
 
 internal static class LoggingStopwatch
 {

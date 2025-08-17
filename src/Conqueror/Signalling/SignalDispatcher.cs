@@ -1,16 +1,11 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Conqueror.Signalling;
+﻿namespace Conqueror.Signalling;
 
 internal sealed class SignalDispatcher(
     IConquerorContextAccessor conquerorContextAccessor,
     ISignalIdFactory signalIdFactory,
     SignalTransportRole transportRole,
-    Type? handlerType)
-    : ISignalDispatcher
+    Type? handlerType
+) : ISignalDispatcher
 {
     public async Task Dispatch<TSignal>(
         TSignal signal,
@@ -18,7 +13,8 @@ internal sealed class SignalDispatcher(
         Action<ISignalPipeline<TSignal>>? configurePipeline,
         ISignalPublisher<TSignal>? publisher,
         ConfigureSignalPublisherAsync<TSignal>? configurePublisherAsync,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         where TSignal : class, ISignal<TSignal>
     {
         using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
@@ -48,15 +44,12 @@ internal sealed class SignalDispatcher(
 
         var transportType = new SignalTransportType(publisher.TransportTypeName, transportRole);
 
-        var initialCapacity = transportRole is SignalTransportRole.Publisher
-            ? PipelineCapacityCache<TSignal>.MaxObservedPublisherPipelineCapacity
-            : PipelineCapacityCache<TSignal>.MaxObservedHandlerPipelineCapacity;
+        var initialCapacity =
+            transportRole is SignalTransportRole.Publisher
+                ? PipelineCapacityCache<TSignal>.MaxObservedPublisherPipelineCapacity
+                : PipelineCapacityCache<TSignal>.MaxObservedHandlerPipelineCapacity;
 
-        var pipeline = new SignalPipeline<TSignal>(
-            handlerType,
-            serviceProvider,
-            transportType,
-            initialCapacity);
+        var pipeline = new SignalPipeline<TSignal>(handlerType, serviceProvider, transportType, initialCapacity);
 
         configurePipeline?.Invoke(pipeline);
 
@@ -72,17 +65,22 @@ internal sealed class SignalDispatcher(
             }
         }
 
-        await pipeline.Execute(
-                          signal,
-                          publisher,
-                          conquerorContext,
-                          cancellationToken)
-                      .ConfigureAwait(false);
+        await pipeline.Execute(signal, publisher, conquerorContext, cancellationToken).ConfigureAwait(false);
     }
 }
 
-[SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "intentional design to leverage static classes as cache")]
+[SuppressMessage(
+    "ReSharper",
+    "StaticMemberInGenericType",
+    Justification = "intentional design to leverage static classes as cache"
+)]
 [SuppressMessage("ReSharper", "UnusedTypeParameter", Justification = "used as static lookup key")]
+[SuppressMessage(
+    "Major Code Smell",
+    "S2326:Unused type parameters should be removed",
+    Justification = "used as static lookup key"
+)]
+// TODO: remove this in favor of the approach used for messages
 file static class PipelineCapacityCache<TSignal>
 {
     public static int MaxObservedPublisherPipelineCapacity { get; set; }

@@ -1,3 +1,5 @@
+namespace Conqueror.Streaming.Transport.Http.Client.Tests;
+
 using System.Collections.Concurrent;
 using System.Net.Mime;
 using System.Runtime.CompilerServices;
@@ -6,8 +8,6 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
-namespace Conqueror.Streaming.Transport.Http.Client.Tests;
 
 [TestFixture]
 public sealed class StreamingHttpClientTests : TestBase
@@ -22,7 +22,7 @@ public sealed class StreamingHttpClientTests : TestBase
     {
         var producer = ResolveOnClient<ITestStreamProducer>();
 
-        var result = await producer.ExecuteRequest(new(10), TestTimeoutToken).Drain();
+        var result = await producer.ExecuteRequest(new(Payload: 10), TestTimeoutToken).Drain(CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Select(i => i.Payload), Is.EquivalentTo(new[] { 11, 12, 13 }));
@@ -35,7 +35,9 @@ public sealed class StreamingHttpClientTests : TestBase
 
         customResponseStatusCode = StatusCodes.Status402PaymentRequired;
 
-        var ex = Assert.ThrowsAsync<HttpStreamFailedException>(() => producer.ExecuteRequest(new(10)).Drain());
+        var ex = Assert.ThrowsAsync<HttpStreamFailedException>(() =>
+            producer.ExecuteRequest(new(Payload: 10), CancellationToken.None).Drain(CancellationToken.None)
+        );
 
         Assert.That(ex, Is.Not.Null);
         Assert.That(ex.InnerException, Is.Not.Null);
@@ -43,17 +45,22 @@ public sealed class StreamingHttpClientTests : TestBase
 
         // we cannot assert on the status code property of the HttpStreamFailedException since that is
         // only populated when using a real websocket client
-        Assert.That(ex.InnerException.Message, Is.EqualTo($"Incomplete handshake, status code: {customResponseStatusCode}"));
+        Assert.That(
+            ex.InnerException.Message,
+            Is.EqualTo($"Incomplete handshake, status code: {customResponseStatusCode}")
+        );
     }
 
     [Test]
     public void GivenExceptionDuringWebSocketCreation_ThrowsHttpStreamFailedException()
     {
-        webSocketFactoryException = new();
+        webSocketFactoryException = new Exception();
 
         var producer = ResolveOnClient<ITestStreamProducer>();
 
-        var ex = Assert.ThrowsAsync<HttpStreamFailedException>(() => producer.ExecuteRequest(new(10)).Drain());
+        var ex = Assert.ThrowsAsync<HttpStreamFailedException>(() =>
+            producer.ExecuteRequest(new(Payload: 10), CancellationToken.None).Drain(CancellationToken.None)
+        );
 
         Assert.That(ex, Is.Not.Null);
         Assert.That(ex?.StatusCode, Is.Null);
@@ -65,7 +72,7 @@ public sealed class StreamingHttpClientTests : TestBase
     {
         var producer = ResolveOnClient<ITestStreamProducerWithoutPayload>();
 
-        var result = await producer.ExecuteRequest(new(), TestTimeoutToken).Drain();
+        var result = await producer.ExecuteRequest(new(), TestTimeoutToken).Drain(CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Select(i => i.Payload), Is.EquivalentTo(new[] { 1, 2, 3 }));
@@ -76,7 +83,7 @@ public sealed class StreamingHttpClientTests : TestBase
     {
         var producer = ResolveOnClient<ITestStreamProducerWithCustomSerializedItemType>();
 
-        var result = await producer.ExecuteRequest(new(10), TestTimeoutToken).Drain();
+        var result = await producer.ExecuteRequest(new(Payload: 10), TestTimeoutToken).Drain(CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Select(i => i.Payload.Payload), Is.EquivalentTo(new[] { 11, 12, 13 }));
@@ -87,7 +94,7 @@ public sealed class StreamingHttpClientTests : TestBase
     {
         var producer = ResolveOnClient<ITestStreamProducerWithCollectionPayload>();
 
-        var result = await producer.ExecuteRequest(new([10, 11]), TestTimeoutToken).Drain();
+        var result = await producer.ExecuteRequest(new([10, 11]), TestTimeoutToken).Drain(CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Select(i => i.Payload), Is.EquivalentTo(new[] { 22, 23, 24 }));
@@ -116,7 +123,7 @@ public sealed class StreamingHttpClientTests : TestBase
 
         using var cts = new CancellationTokenSource();
 
-        var stream = producer.ExecuteRequest(new(10), TestTimeoutToken);
+        var stream = producer.ExecuteRequest(new(Payload: 10), TestTimeoutToken);
 
         var enumerator = stream.GetAsyncEnumerator(cts.Token);
 
@@ -124,7 +131,7 @@ public sealed class StreamingHttpClientTests : TestBase
 
         await cts.CancelAsync();
 
-        Resolve<TestObservations>().CancelledRequests.ShouldReceiveItem(new(10));
+        Resolve<TestObservations>().CancelledRequests.ShouldReceiveItem(new(Payload: 10));
     }
 
     [Test]
@@ -137,7 +144,7 @@ public sealed class StreamingHttpClientTests : TestBase
 
             using var cts = new CancellationTokenSource();
 
-            var stream = producer.ExecuteRequest(new(10), TestTimeoutToken);
+            var stream = producer.ExecuteRequest(new(Payload: 10), TestTimeoutToken);
 
             var enumerator = stream.GetAsyncEnumerator(cts.Token);
 
@@ -150,7 +157,7 @@ public sealed class StreamingHttpClientTests : TestBase
             // to try and trigger a race condition
             var lastMoveTask = enumerator.MoveNextAsync();
 
-            Assert.DoesNotThrow(() => cts.Cancel());
+            Assert.DoesNotThrowAsync(async () => await cts.CancelAsync());
 
             try
             {
@@ -166,63 +173,80 @@ public sealed class StreamingHttpClientTests : TestBase
     protected override void ConfigureServerServices(IServiceCollection services)
     {
         _ = services.AddMvc().AddConquerorStreamingHttpControllers();
-        _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestItemJsonConverterFactory()); });
+        _ = services.PostConfigure<JsonOptions>(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new TestItemJsonConverterFactory());
+        });
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithoutPayload>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithCollectionPayload>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithCustomSerializedItemType>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithError>()
-                    .AddConquerorStreamProducer<NonHttpTestStreamProducer>()
-                    .AddSingleton<TestObservations>();
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducerWithoutPayload>()
+            .AddConquerorStreamProducer<TestStreamProducerWithCollectionPayload>()
+            .AddConquerorStreamProducer<TestStreamProducerWithCustomSerializedItemType>()
+            .AddConquerorStreamProducer<TestStreamProducerWithError>()
+            .AddConquerorStreamProducer<NonHttpTestStreamProducer>()
+            .AddSingleton<TestObservations>();
     }
 
     protected override void ConfigureClientServices(IServiceCollection services)
     {
         _ = services.AddConquerorStreamingHttpClientServices(o =>
         {
-            _ = o.UseWebSocketFactory((uri, headers, _) =>
-            {
-                if (webSocketFactoryException is not null)
+            _ = o.UseWebSocketFactory(
+                (uri, headers, _) =>
                 {
-                    throw webSocketFactoryException;
+                    if (webSocketFactoryException is not null)
+                    {
+                        throw webSocketFactoryException;
+                    }
+
+                    return ConnectToWebSocket(uri.AbsolutePath, headers);
                 }
+            );
 
-                return ConnectToWebSocket(uri.AbsolutePath, headers);
-            });
-
-            o.JsonSerializerOptions = new()
-            {
-                PropertyNameCaseInsensitive = true,
-            };
+            o.JsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         });
 
-        _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(b => b.UseWebSocket(new("http://example")))
-                    .AddConquerorStreamProducerClient<ITestStreamProducerWithoutPayload>(b => b.UseWebSocket(new("http://example")))
-                    .AddConquerorStreamProducerClient<ITestStreamProducerWithCollectionPayload>(b => b.UseWebSocket(new("http://example")))
-                    .AddConquerorStreamProducerClient<ITestStreamProducerWithCustomSerializedItemType>(b => b.UseWebSocket(new("http://example"), o => o.JsonSerializerOptions = new()
-                    {
-                        Converters = { new TestItemJsonConverterFactory() },
-                        PropertyNameCaseInsensitive = true,
-                    }))
-                    .AddConquerorStreamProducerClient<ITestStreamProducerWithError>(b => b.UseWebSocket(new("http://example")));
+        _ = services
+            .AddConquerorStreamProducerClient<ITestStreamProducer>(b => b.UseWebSocket(new("http://example")))
+            .AddConquerorStreamProducerClient<ITestStreamProducerWithoutPayload>(b =>
+                b.UseWebSocket(new("http://example"))
+            )
+            .AddConquerorStreamProducerClient<ITestStreamProducerWithCollectionPayload>(b =>
+                b.UseWebSocket(new("http://example"))
+            )
+            .AddConquerorStreamProducerClient<ITestStreamProducerWithCustomSerializedItemType>(b =>
+                b.UseWebSocket(
+                    new("http://example"),
+                    o =>
+                        o.JsonSerializerOptions = new JsonSerializerOptions
+                        {
+                            Converters = { new TestItemJsonConverterFactory() },
+                            PropertyNameCaseInsensitive = true,
+                        }
+                )
+            )
+            .AddConquerorStreamProducerClient<ITestStreamProducerWithError>(b => b.UseWebSocket(new("http://example")));
     }
 
     protected override void Configure(IApplicationBuilder app)
     {
-        _ = app.Use(async (ctx, next) =>
-        {
-            if (customResponseStatusCode != null)
+        _ = app.Use(
+            async (ctx, next) =>
             {
-                ctx.Response.StatusCode = customResponseStatusCode.Value;
-                ctx.Response.ContentType = MediaTypeNames.Application.Json;
-                await using var streamWriter = new StreamWriter(ctx.Response.Body);
-                await streamWriter.WriteAsync(ErrorPayload);
-                return;
-            }
+                if (customResponseStatusCode is not null)
+                {
+                    ctx.Response.StatusCode = customResponseStatusCode.Value;
+                    ctx.Response.ContentType = MediaTypeNames.Application.Json;
+                    await using var streamWriter = new StreamWriter(ctx.Response.Body);
+                    await streamWriter.WriteAsync(ErrorPayload);
 
-            await next();
-        });
+                    return;
+                }
+
+                await next();
+            }
+        );
 
         _ = app.UseRouting();
         _ = app.UseConqueror();
@@ -234,12 +258,18 @@ public sealed class StreamingHttpClientTests : TestBase
 
     public sealed record TestItem(int Payload);
 
+    // ReSharper disable once ClassNeverInstantiated.Local - used by reflection
     private sealed class TestStreamProducer(TestObservations observations) : ITestStreamProducer
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             // ReSharper disable once MethodSupportsCancellation
-            await using var d = cancellationToken.Register(() => observations.CancelledRequests.Add(request));
+            await using var d = cancellationToken.Register(() =>
+                observations.CancelledRequests.Add(request, CancellationToken.None)
+            );
 
             yield return new(request.Payload + 1);
             yield return new(request.Payload + 2);
@@ -254,13 +284,17 @@ public sealed class StreamingHttpClientTests : TestBase
 
     private sealed class TestStreamProducerWithoutPayload : ITestStreamProducerWithoutPayload
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithoutPayload request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestRequestWithoutPayload request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            yield return new(1);
-            yield return new(2);
-            yield return new(3);
+
+            yield return new(Payload: 1);
+            yield return new(Payload: 2);
+            yield return new(Payload: 3);
         }
     }
 
@@ -271,17 +305,22 @@ public sealed class StreamingHttpClientTests : TestBase
 
     private sealed class TestStreamProducerWithCollectionPayload : ITestStreamProducerWithCollectionPayload
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithCollectionPayload request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestRequestWithCollectionPayload request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return new(request.Payload.Sum() + 1);
             yield return new(request.Payload.Sum() + 2);
             yield return new(request.Payload.Sum() + 3);
         }
     }
 
-    public interface ITestStreamProducerWithCollectionPayload : IStreamProducer<TestRequestWithCollectionPayload, TestItem>;
+    public interface ITestStreamProducerWithCollectionPayload
+        : IStreamProducer<TestRequestWithCollectionPayload, TestItem>;
 
     [HttpStream]
     public sealed record TestRequestWithCustomSerializedItemType(int Payload);
@@ -290,42 +329,47 @@ public sealed class StreamingHttpClientTests : TestBase
 
     public sealed record TestItemCustomSerializedPayload(int Payload);
 
-    private sealed class TestStreamProducerWithCustomSerializedItemType : ITestStreamProducerWithCustomSerializedItemType
+    private sealed class TestStreamProducerWithCustomSerializedItemType
+        : ITestStreamProducerWithCustomSerializedItemType
     {
-        public async IAsyncEnumerable<TestItemWithCustomSerializedPayload> ExecuteRequest(TestRequestWithCustomSerializedItemType request,
-                                                                                          [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItemWithCustomSerializedPayload> ExecuteRequest(
+            TestRequestWithCustomSerializedItemType request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return new(new(request.Payload + 1));
             yield return new(new(request.Payload + 2));
             yield return new(new(request.Payload + 3));
         }
     }
 
-    public interface ITestStreamProducerWithCustomSerializedItemType : IStreamProducer<TestRequestWithCustomSerializedItemType, TestItemWithCustomSerializedPayload>;
+    public interface ITestStreamProducerWithCustomSerializedItemType
+        : IStreamProducer<TestRequestWithCustomSerializedItemType, TestItemWithCustomSerializedPayload>;
 
     internal sealed class TestItemJsonConverterFactory : JsonConverterFactory
     {
         public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestItemCustomSerializedPayload);
 
-        public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
-        {
-            return Activator.CreateInstance(typeof(TestItemConverter)) as JsonConverter;
-        }
+        public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
+            Activator.CreateInstance<TestItemConverter>();
     }
 
     internal sealed class TestItemConverter : JsonConverter<TestItemCustomSerializedPayload>
     {
-        public override TestItemCustomSerializedPayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            return new(reader.GetInt32());
-        }
+        public override TestItemCustomSerializedPayload Read(
+            ref Utf8JsonReader reader,
+            Type typeToConvert,
+            JsonSerializerOptions options
+        ) => new(reader.GetInt32());
 
-        public override void Write(Utf8JsonWriter writer, TestItemCustomSerializedPayload value, JsonSerializerOptions options)
-        {
-            writer.WriteNumberValue(value.Payload);
-        }
+        public override void Write(
+            Utf8JsonWriter writer,
+            TestItemCustomSerializedPayload value,
+            JsonSerializerOptions options
+        ) => writer.WriteNumberValue(value.Payload);
     }
 
     [HttpStream]
@@ -333,31 +377,41 @@ public sealed class StreamingHttpClientTests : TestBase
 
     private sealed class TestStreamProducerWithError : ITestStreamProducerWithError
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithError request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestRequestWithError request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            yield return new(1);
+
+            yield return new(Payload: 1);
+
             throw new InvalidOperationException("test");
         }
     }
 
     public interface ITestStreamProducerWithError : IStreamProducer<TestRequestWithError, TestItem>;
 
+    // ReSharper disable once ClassNeverInstantiated.Global - used by reflection
     public sealed record NonHttpTestRequest
     {
         public int Payload { get; init; }
     }
 
+    // ReSharper disable once ClassNeverInstantiated.Local - used by reflection
     private sealed class NonHttpTestStreamProducer : INonHttpTestStreamProducer
     {
-        public IAsyncEnumerable<TestItem> ExecuteRequest(NonHttpTestRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public IAsyncEnumerable<TestItem> ExecuteRequest(
+            NonHttpTestRequest request,
+            CancellationToken cancellationToken = default
+        ) => throw new NotSupportedException();
     }
 
     public interface INonHttpTestStreamProducer : IStreamProducer<NonHttpTestRequest, TestItem>;
 
     private sealed class TestObservations
     {
-        public BlockingCollection<TestRequest> CancelledRequests { get; } = new();
+        public BlockingCollection<TestRequest> CancelledRequests { get; } = [];
     }
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IHttpMessageSender<in TMessage, TResponse> : IMessageSender<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>

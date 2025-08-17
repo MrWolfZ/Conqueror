@@ -1,15 +1,11 @@
-﻿using System.Collections.Concurrent;
-using System.Linq.Expressions;
-using Microsoft.Extensions.Logging;
-using static Conqueror.Transport.ConformityTests.TestContextData;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
+﻿namespace Conqueror.Transport.ConformityTests.Messaging;
 
-namespace Conqueror.Transport.ConformityTests.Messaging;
+using static TestContextData;
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "by design")]
 public abstract class MessageTransportContextConformityTests<TTestClass, TTestHost, TTestCase>
     where TTestClass : MessageTransportContextConformityTests<TTestClass, TTestHost, TTestCase>,
-    IMessageTransportContextConformityTests<TTestHost, TTestCase>
+        IMessageTransportContextConformityTests<TTestHost, TTestCase>
     where TTestHost : IMessageTransportConformityTestHost
     where TTestCase : IMessageTransportConformityContextTestCase<TTestHost>
 {
@@ -32,8 +28,10 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
                 receivedMessageIds.Enqueue(ctx.MessageId);
                 receivedTraceIds.Enqueue(ctx.TraceId);
 
-                receivedDownstreamContextDatas.Enqueue(ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Downstream).ToList());
-                receivedBidirectionalContextDatas.Enqueue(ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional).ToList());
+                receivedDownstreamContextDatas.Enqueue(ctx.TransportableData.GetAll().ToList());
+                receivedBidirectionalContextDatas.Enqueue(
+                    ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional).ToList()
+                );
 
                 if (testCase.HasUpstreamData)
                 {
@@ -52,22 +50,28 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
                 {
                     foreach (var item in ContextDataUpstreamBidirectionalAcrossTransports)
                     {
-                        ctx?.TransportableData.Set(item.Key, item.Value, ConquerorContextDataFlowDirection.Bidirectional);
+                        ctx?.TransportableData.Set(
+                            item.Key,
+                            item.Value,
+                            ConquerorContextDataFlowDirection.Bidirectional
+                        );
                     }
                 }
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         _ = receiverHost.ReceiverExecutionHandle?.CompletionTask.ContinueWith(
             (t, logger) =>
             {
-                ((ILogger)logger!).LogError(t.Exception!, "error in run");
+                ((ILogger)logger!).LogError(t.Exception, "error in run");
             },
             host.Logger,
             host.TestTimeoutToken,
             TaskContinuationOptions.OnlyOnFaulted,
-            TaskScheduler.Default);
+            TaskScheduler.Default
+        );
 
         var seenMessageIdsOnSender = new ConcurrentQueue<string?>();
         var seenTraceIdsOnSender = new ConcurrentQueue<string>();
@@ -84,11 +88,18 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
                 seenTraceIdsOnSender.Enqueue(ctx.TraceId);
 
                 return Task.CompletedTask;
-            });
+            }
+        );
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
 
         await testCase.BeforeSend(host);
 
@@ -106,12 +117,12 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
         {
             foreach (var (key, value) in ContextDataDownstreamAcrossTransports)
             {
-                conquerorContext.TransportableData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
+                conquerorContext.TransportableData.Set(key, value);
             }
 
             foreach (var (key, value) in InProcessContextData)
             {
-                conquerorContext.InProcessData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
+                conquerorContext.InProcessData.Set(key, value);
             }
         }
 
@@ -133,10 +144,10 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
         Assert.That(
             () => receivedMessageIds,
             Is.EqualTo(seenMessageIdsOnSender)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+                .After(host.AssertionTimeoutInMs)
+                .MilliSeconds.PollEvery(milliSeconds: 10)
+                .MilliSeconds
+        );
 
         Assert.That(receivedTraceIds, Is.EqualTo(seenTraceIdsOnSender));
 
@@ -150,11 +161,19 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
         {
             if (testCase.HasDownstreamData)
             {
-                Assert.That(receivedDownstreamContextData, Is.SupersetOf(ContextDataDownstreamAcrossTransports.Select(p => (p.Key, p.Value))));
+                Assert.That(
+                    receivedDownstreamContextData,
+                    Is.SupersetOf(ContextDataDownstreamAcrossTransports.Select(p => (p.Key, p.Value)))
+                );
             }
             else
             {
-                Assert.That(receivedDownstreamContextData.Intersect(ContextDataDownstreamAcrossTransports.Select(p => (p.Key, p.Value))), Is.Empty);
+                Assert.That(
+                    receivedDownstreamContextData.Intersect(
+                        ContextDataDownstreamAcrossTransports.Select(p => (p.Key, p.Value))
+                    ),
+                    Is.Empty
+                );
             }
         }
 
@@ -165,7 +184,8 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
             {
                 Assert.That(
                     receivedBidirectionalContextData,
-                    Is.EquivalentTo(ContextDataDownstreamBidirectionalAcrossTransports.Select(p => (p.Key, p.Value))));
+                    Is.EquivalentTo(ContextDataDownstreamBidirectionalAcrossTransports.Select(p => (p.Key, p.Value)))
+                );
             }
             else
             {
@@ -177,13 +197,15 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
         {
             Assert.That(
                 conquerorContext.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream),
-                Is.EquivalentTo(ContextDataUpstreamAcrossTransports.Select(p => (p.Key, p.Value))));
+                Is.EquivalentTo(ContextDataUpstreamAcrossTransports.Select(p => (p.Key, p.Value)))
+            );
         }
         else
         {
             Assert.That(
                 conquerorContext.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream),
-                Is.Empty);
+                Is.Empty
+            );
         }
 
         if (testCase.HasBidirectionalData)
@@ -191,14 +213,18 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
             Assert.That(
                 conquerorContext.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional),
                 Is.EquivalentTo(
-                    ContextDataUpstreamBidirectionalAcrossTransports.Concat(ContextDataDownstreamBidirectionalAcrossTransports)
-                                                                    .Select(p => (p.Key, p.Value))));
+                    ContextDataUpstreamBidirectionalAcrossTransports
+                        .Concat(ContextDataDownstreamBidirectionalAcrossTransports)
+                        .Select(p => (p.Key, p.Value))
+                )
+            );
         }
         else
         {
             Assert.That(
                 conquerorContext.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional),
-                Is.Empty);
+                Is.Empty
+            );
         }
     }
 
@@ -207,8 +233,8 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
     {
         var testCases = TTestClass.CreateTestCases().ToList();
 
-        List<Expression<Func<IMessageTransportConformityContextTestCase<TTestHost>, bool>>> predicates =
-        [
+        var predicates = new List<Expression<Func<IMessageTransportConformityContextTestCase<TTestHost>, bool>>>
+        {
             testCase => testCase.HasActivity,
             testCase => !testCase.HasActivity,
             testCase => testCase.HasDownstreamData,
@@ -217,7 +243,7 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
             testCase => !testCase.HasBidirectionalData,
             testCase => testCase.HasUpstreamData,
             testCase => !testCase.HasUpstreamData,
-        ];
+        };
 
         Assert.Multiple(() =>
         {
@@ -225,12 +251,15 @@ public abstract class MessageTransportContextConformityTests<TTestClass, TTestHo
             {
                 Assert.That(
                     testCases,
-                    Has.Some.Matches<IMessageTransportConformityContextTestCase<TTestHost>>(tc => predicate.Compile().Invoke(tc)),
-                    $"missing expected test case: {predicate.Body}");
+                    Has.Some.Matches<IMessageTransportConformityContextTestCase<TTestHost>>(tc =>
+                        predicate.Compile().Invoke(tc)
+                    ),
+                    $"missing expected test case: {predicate.Body}"
+                );
             }
         });
     }
 
-    private static IEnumerable<TestCaseData> CreateTestCasesPrivate()
-        => TTestClass.CreateTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name));
+    private static IEnumerable<TestCaseData> CreateTestCasesPrivate() =>
+        TTestClass.CreateTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name));
 }

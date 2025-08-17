@@ -6,12 +6,18 @@ public sealed class FileSystemSignalTransportConformityPublisherTestHost : ISign
 
     public ISignalPublishers SignalPublishers => FileSystemTransportTestHost.Resolve<ISignalPublishers>();
 
-    public IConquerorContextAccessor ConquerorContextAccessor => FileSystemTransportTestHost.Resolve<IConquerorContextAccessor>();
+    public IConquerorContextAccessor ConquerorContextAccessor =>
+        FileSystemTransportTestHost.Resolve<IConquerorContextAccessor>();
 
+    public async ValueTask DisposeAsync() => await FileSystemTransportTestHost.DisposeAsync();
+
+    [SuppressMessage("Style", "IDE0017:Simplify object initialization", Justification = "false positive")]
     public static async Task<FileSystemSignalTransportConformityPublisherTestHost> CreatePublisherHost(
         FileSystemSignalConformityTestCase testCase,
         DirectoryInfo baseDirectory,
-        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback)
+        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback,
+        CancellationToken cancellationToken
+    )
     {
         var host = new FileSystemSignalTransportConformityPublisherTestHost();
 
@@ -20,9 +26,12 @@ public sealed class FileSystemSignalTransportConformityPublisherTestHost : ISign
             {
                 testCase.RegisterOnPublisher?.Invoke(services);
 
-                _ = services.AddConquerorFileSystemTransport()
-                            .AddSingleton(baseDirectory)
-                            .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<FileSystemSignalTransportConformityTestHost>>());
+                _ = services
+                    .AddConquerorFileSystemTransport()
+                    .AddSingleton(baseDirectory)
+                    .AddSingleton(
+                        ILogger (p) => p.GetRequiredService<ILogger<FileSystemSignalTransportConformityTestHost>>()
+                    );
 
                 if (publishCallback is not null)
                 {
@@ -30,17 +39,13 @@ public sealed class FileSystemSignalTransportConformityPublisherTestHost : ISign
                 }
 
                 testCase.RegisterServerServices(services);
-            });
+            },
+            cancellationToken
+        );
 
         return host;
     }
 
     public T Resolve<T>()
-        where T : notnull
-        => FileSystemTransportTestHost.Resolve<T>();
-
-    public async ValueTask DisposeAsync()
-    {
-        await FileSystemTransportTestHost.DisposeAsync();
-    }
+        where T : notnull => FileSystemTransportTestHost.Resolve<T>();
 }

@@ -5,11 +5,13 @@ public sealed class FileSystemSignalContextConformityTests
     : SignalTransportContextConformityTests<
           FileSystemSignalContextConformityTests,
           FileSystemSignalTransportConformityTestHost,
-          FileSystemSignalConformityContextTestCase>,
+          FileSystemSignalConformityContextTestCase
+      >,
       ISignalTransportContextConformityTests<
           FileSystemSignalTransportConformityTestHost,
-          FileSystemSignalConformityContextTestCase>
+          FileSystemSignalConformityContextTestCase
+      >
 {
-    public static IEnumerable<FileSystemSignalConformityContextTestCase> CreateTestCases()
-        => FileSystemSignalTestCases.CreateContextTestCases();
+    public static IEnumerable<FileSystemSignalConformityContextTestCase> CreateTestCases() =>
+        FileSystemSignalTestCases.CreateContextTestCases();
 }

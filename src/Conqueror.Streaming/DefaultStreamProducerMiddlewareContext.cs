@@ -1,10 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-
 namespace Conqueror.Streaming;
 
-internal delegate IAsyncEnumerable<TItem> StreamProducerMiddlewareNext<in TRequest, out TItem>(TRequest request, CancellationToken cancellationToken);
+internal delegate IAsyncEnumerable<TItem> StreamProducerMiddlewareNext<in TRequest, out TItem>(
+    TRequest request,
+    CancellationToken cancellationToken
+);
 
 internal sealed class DefaultStreamProducerMiddlewareContext<TRequest, TItem, TConfiguration>(
     TRequest request,
@@ -12,8 +11,8 @@ internal sealed class DefaultStreamProducerMiddlewareContext<TRequest, TItem, TC
     TConfiguration configuration,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
-    CancellationToken cancellationToken)
-    : StreamProducerMiddlewareContext<TRequest, TItem, TConfiguration>
+    CancellationToken cancellationToken
+) : StreamProducerMiddlewareContext<TRequest, TItem, TConfiguration>
     where TRequest : class
 {
     public override TRequest Request { get; } = request;
@@ -26,5 +25,6 @@ internal sealed class DefaultStreamProducerMiddlewareContext<TRequest, TItem, TC
 
     public override TConfiguration Configuration { get; } = configuration;
 
-    public override IAsyncEnumerable<TItem> Next(TRequest request, CancellationToken cancellationToken) => next(request, cancellationToken);
+    public override IAsyncEnumerable<TItem> Next(TRequest request, CancellationToken cancellationToken) =>
+        next(request, cancellationToken);
 }

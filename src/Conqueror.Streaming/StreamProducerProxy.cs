@@ -1,29 +1,30 @@
-using System;
-using System.Collections.Generic;
+namespace Conqueror.Streaming;
+
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Conqueror.Streaming;
 
 internal sealed class StreamProducerProxy<TRequest, TItem>(
     IServiceProvider serviceProvider,
     StreamProducerTransportClientFactory transportClientFactory,
     Action<IStreamProducerPipelineBuilder>? configurePipeline,
-    StreamProducerMiddlewareRegistry producerMiddlewareRegistry)
-    : IStreamProducer<TRequest, TItem>
+    StreamProducerMiddlewareRegistry producerMiddlewareRegistry
+) : IStreamProducer<TRequest, TItem>
     where TRequest : class
 {
     // note that it is important for this function to be async instead of just returning the result
     // of pipeline.Execute directly, since otherwise the conqueror context will be set "too early",
     // i.e. during the creation of the enumerable instead of during the actual enumeration
-    public async IAsyncEnumerable<TItem> ExecuteRequest(TRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<TItem> ExecuteRequest(
+        TRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
-        if (conquerorContext.GetExecutionTransportTypeName() is null || conquerorContext.GetStreamingRequestId() is null)
+        if (
+            conquerorContext.GetExecutionTransportTypeName() is null
+            || conquerorContext.GetStreamingRequestId() is null
+        )
         {
             conquerorContext.SetStreamingRequestId(ActivitySpanId.CreateRandom().ToString());
         }
@@ -34,7 +35,11 @@ internal sealed class StreamProducerProxy<TRequest, TItem>(
 
         var pipeline = pipelineBuilder.Build(conquerorContext);
 
-        await foreach (var item in pipeline.Execute<TRequest, TItem>(serviceProvider, request, transportClientFactory, cancellationToken).ConfigureAwait(false))
+        await foreach (
+            var item in pipeline
+                .Execute<TRequest, TItem>(serviceProvider, request, transportClientFactory, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             // workaround for execution context not being automatically captured across
             // yields (see https://github.com/dotnet/runtime/issues/47802)

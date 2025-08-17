@@ -1,6 +1,6 @@
-using System.Security.Claims;
-
 namespace Conqueror.Context;
+
+using System.Security.Claims;
 
 internal sealed class NoOpDisposeConquerorContext(ConquerorContext wrappedContext) : ConquerorContext
 {
@@ -32,7 +32,5 @@ internal sealed class NoOpDisposeConquerorContext(ConquerorContext wrappedContex
 
     public override IInProcessConquerorContextData InProcessData => wrappedContext.InProcessData;
 
-    protected override void Dispose(bool isDisposing)
-    {
-    }
+    protected override void Dispose(bool isDisposing) { }
 }

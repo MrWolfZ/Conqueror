@@ -1,10 +1,5 @@
-using Conqueror;
-using Conqueror.Transport.FileSystem;
-using Conqueror.Transport.FileSystem.Messaging;
-using Conqueror.Transport.FileSystem.Signalling;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
 
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorFileSystemTransportServiceCollectionExtensions

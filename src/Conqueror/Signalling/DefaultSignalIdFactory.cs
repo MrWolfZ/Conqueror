@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Conqueror.Signalling;
+﻿namespace Conqueror.Signalling;
 
 internal sealed class DefaultSignalIdFactory : ISignalIdFactory
 {

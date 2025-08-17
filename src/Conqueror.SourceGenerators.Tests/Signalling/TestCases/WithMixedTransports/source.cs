@@ -1,20 +1,26 @@
 ﻿#nullable enable
 
+namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithMixedTransports;
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Conqueror.Signalling;
 
-namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithMixedTransports;
-
-[SignalTransport(Prefix = "TestTransport", Namespace = "Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithMixedTransports")]
+[SignalTransport(
+    Prefix = "TestTransport",
+    Namespace = "Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithMixedTransports"
+)]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class TestTransportSignalAttribute : Attribute
 {
     public string? StringProperty { get; init; }
 }
 
-[SignalTransport(Prefix = "TestTransport2", Namespace = "Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithMixedTransports")]
+[SignalTransport(
+    Prefix = "TestTransport2",
+    Namespace = "Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithMixedTransports"
+)]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class TestTransport2SignalAttribute : Attribute
 {
@@ -40,8 +46,7 @@ public interface ITestTransportSignalHandler<TSignal, TIHandler>
     where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
 {
     static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-        where THandler : class, TIHandler
-        => throw new NotSupportedException();
+        where THandler : class, TIHandler => throw new NotSupportedException();
 }
 
 public interface ITestTransport2SignalHandler;
@@ -51,8 +56,7 @@ public interface ITestTransport2SignalHandler<TSignal, TIHandler>
     where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
 {
     static ISignalHandlerTypesInjector CreateTestTransport2TypesInjector<THandler>()
-        where THandler : class, TIHandler
-        => throw new NotSupportedException();
+        where THandler : class, TIHandler => throw new NotSupportedException();
 }
 
 [TestTransportSignal(StringProperty = "Test")]
@@ -62,8 +66,7 @@ public partial record TestSignal;
 [TestTransport2Signal(StringProperty = "Test2")]
 public partial record TestSignal2;
 
-public partial class TestSignalHandler : TestSignal.IHandler,
-                                         TestSignal2.IHandler
+public partial class TestSignalHandler : TestSignal.IHandler, TestSignal2.IHandler
 {
     public Task Handle(TestSignal message, CancellationToken cancellationToken) => throw new NotSupportedException();
 

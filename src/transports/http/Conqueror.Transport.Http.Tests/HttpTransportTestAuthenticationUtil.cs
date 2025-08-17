@@ -1,10 +1,7 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+﻿namespace Conqueror.Transport.Http.Tests;
 
-namespace Conqueror.Transport.Http.Tests;
+using System.Security.Cryptography;
+using Microsoft.IdentityModel.Tokens;
 
 internal static class HttpTransportTestAuthenticationUtil
 {
@@ -27,7 +24,7 @@ internal static class HttpTransportTestAuthenticationUtil
         var identity = new ClaimsIdentity(JwtBearerDefaults.AuthenticationScheme, "id", "role");
         identity.AddClaim(new(identity.NameClaimType, name));
 
-        return new(identity);
+        return new ClaimsPrincipal(identity);
     }
 
     private static string BuildToken(string name)
@@ -35,15 +32,16 @@ internal static class HttpTransportTestAuthenticationUtil
         var signingCredentials = new SigningCredentials(SigningKeyLazy.Value, SecurityAlgorithms.HmacSha256);
 
         var principal = CreateUserPrincipal(name);
-        var notBefore = DateTime.UtcNow.AddMinutes(-10);
-        var expires = DateTime.UtcNow.AddHours(1);
+        var notBefore = DateTimeOffset.UtcNow.AddMinutes(-10);
+        var expires = DateTimeOffset.UtcNow.AddHours(1);
         var token = new JwtSecurityToken(
             Issuer,
             Audience,
             principal.Claims,
-            notBefore,
-            expires,
-            signingCredentials);
+            notBefore.UtcDateTime,
+            expires.UtcDateTime,
+            signingCredentials
+        );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
@@ -55,6 +53,6 @@ internal static class HttpTransportTestAuthenticationUtil
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(keyBytes);
 
-        return new(keyBytes) { KeyId = Guid.NewGuid().ToString() };
+        return new SymmetricSecurityKey(keyBytes) { KeyId = Guid.NewGuid().ToString() };
     }
 }

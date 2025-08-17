@@ -1,15 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading.Tasks;
-using Conqueror.Transport.Http.Client.WebSockets;
-using Conqueror.Transport.Http.Server.AspNetCore.Signalling.WebSockets;
-using Conqueror.Transport.Http.Server.AspNetCore.WebSockets;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Logging;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
 
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpWebSocketsServerSignallingEndpointRouteBuilderExtensions
@@ -17,8 +7,12 @@ public static class ConquerorHttpWebSocketsServerSignallingEndpointRouteBuilderE
     [SuppressMessage(
         "Minor Code Smell",
         "S6667:Logging in a catch clause should pass the caught exception as a parameter.",
-        Justification = "not necessary for cancellation exceptions")]
-    public static IEndpointConventionBuilder MapWebSocketsSignalsEndpoint(this IEndpointRouteBuilder builder, string path)
+        Justification = "not necessary for cancellation exceptions"
+    )]
+    public static IEndpointConventionBuilder MapWebSocketsSignalsEndpoint(
+        this IEndpointRouteBuilder builder,
+        string path
+    )
     {
         return builder.MapGet(
             path,
@@ -31,20 +25,25 @@ public static class ConquerorHttpWebSocketsServerSignallingEndpointRouteBuilderE
                     ? st.OfType<string>().Where(t => !string.IsNullOrWhiteSpace(t)).ToList()
                     : [];
 
-                if (tags.Count == 0)
+                if (tags.Count is 0)
                 {
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     context.Response.Headers.Append(HeaderNames.ContentType, ContentTypes.TextPlain);
-                    await context.Response.WriteAsync("must provide at least one signal tag", context.RequestAborted).ConfigureAwait(false);
+                    await context
+                        .Response.WriteAsync("must provide at least one signal tag", context.RequestAborted)
+                        .ConfigureAwait(false);
 
                     return;
                 }
 
-                if (!WebSocketEndpoint.TryGetHeartbeatParameters(
+                if (
+                    !WebSocketEndpoint.TryGetHeartbeatParameters(
                         context,
                         out var heartbeatInterval,
                         out var heartbeatTimeout,
-                        out var message))
+                        out var message
+                    )
+                )
                 {
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     context.Response.Headers.Append(HeaderNames.ContentType, ContentTypes.TextPlain);
@@ -57,22 +56,19 @@ public static class ConquerorHttpWebSocketsServerSignallingEndpointRouteBuilderE
                 {
                     var stream = new HttpWebSocketsSignalBrokerStream(tcs.Task);
 
-                    using var sub = context.RequestServices
-                                           .GetRequiredService<HttpWebSocketsSignalBroker>()
-                                           .Subscribe(stream, tags, context.RequestAborted);
+                    using var sub = context
+                        .RequestServices.GetRequiredService<HttpWebSocketsSignalBroker>()
+                        .Subscribe(stream, tags, context.RequestAborted);
 
-                    await WebSocketEndpoint.Run(
-                                               context,
-                                               logger,
-                                               heartbeatInterval,
-                                               heartbeatTimeout,
-                                               s => tcs.TrySetResult(s))
-                                           .ConfigureAwait(false);
+                    await WebSocketEndpoint
+                        .Run(context, logger, heartbeatInterval, heartbeatTimeout, s => tcs.TrySetResult(s))
+                        .ConfigureAwait(false);
                 }
                 finally
                 {
-                    _ = tcs.TrySetCanceled();
+                    _ = tcs.TrySetCanceled(CancellationToken.None);
                 }
-            });
+            }
+        );
     }
 }

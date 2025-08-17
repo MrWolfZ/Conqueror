@@ -1,12 +1,10 @@
-using Conqueror.Messaging;
-
 #pragma warning disable CA1813 // Avoid unsealed attributes; we don't want to have to repeat all properties for the generic attribute
 
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 [MessageTransport(Prefix = "FileSystem", Namespace = "Conqueror")]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+[SuppressMessage("Minor Code Smell", "S4060:Non-abstract attributes should be sealed", Justification = "by design")]
 public class FileSystemMessageAttribute : Attribute
 {
     /// <summary>
@@ -26,4 +24,9 @@ public class FileSystemMessageAttribute : Attribute
 // ReSharper disable once UnusedTypeParameter (used by source generator)
 [MessageTransport(Prefix = "FileSystem", Namespace = "Conqueror")]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+[SuppressMessage(
+    "Major Code Smell",
+    "S2326:Unused type parameters should be removed",
+    Justification = "used by source generator"
+)]
 public sealed class FileSystemMessageAttribute<TResponse> : FileSystemMessageAttribute;

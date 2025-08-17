@@ -1,16 +1,11 @@
-﻿using System.Reflection;
-using Conqueror.Transport.ConformityTests.Messaging;
-
-namespace Conqueror.Transport.FileSystem.Tests.Messaging;
+﻿namespace Conqueror.Transport.FileSystem.Tests.Messaging;
 
 public sealed class FileSystemMessageConformityExecutionSuccessTestCase
     : FileSystemMessageConformityExecutionTestCase,
-      IMessageTransportConformityExecutionSuccessTestCase<FileSystemMessageTransportConformityTestHost>
+        IMessageTransportConformityExecutionSuccessTestCase<FileSystemMessageTransportConformityTestHost>
 {
     private readonly IReadOnlyCollection<string?>? messagePayloads;
     private readonly IReadOnlyCollection<string>? responsePayloads;
-
-    public bool ShouldCompleteImmediately => !HandlerIsEnabled;
 
     public bool HandlerIsEnabled { get; init; } = true;
 
@@ -18,19 +13,25 @@ public sealed class FileSystemMessageConformityExecutionSuccessTestCase
 
     public IReadOnlyCollection<string?> MessagePayloads
     {
-        get => messagePayloads
-               ?? ExpectedReceivedMessages
-                  .Select(m => $"{{\"payload\":{m.GetType().GetProperty("Payload", BindingFlags.Public | BindingFlags.Instance)?.GetValue(m)}}}")
-                  .ToArray();
+        get =>
+            messagePayloads
+            ?? ExpectedReceivedMessages
+                .Select(m =>
+                    $"{{\"payload\":{m.GetType().GetProperty("Payload", BindingFlags.Public | BindingFlags.Instance)?.GetValue(m)}}}"
+                )
+                .ToArray();
         init => messagePayloads = value;
     }
 
     public IReadOnlyCollection<string> ResponsePayloads
     {
-        get => responsePayloads
-               ?? ExpectedResponses
-                  .Select(r => $"{{\"payload\":{r.GetType().GetProperty("Payload", BindingFlags.Public | BindingFlags.Instance)?.GetValue(r)}}}")
-                  .ToArray();
+        get =>
+            responsePayloads
+            ?? ExpectedResponses
+                .Select(r =>
+                    $"{{\"payload\":{r.GetType().GetProperty("Payload", BindingFlags.Public | BindingFlags.Instance)?.GetValue(r)}}}"
+                )
+                .ToArray();
         init => responsePayloads = value;
     }
 
@@ -38,22 +39,31 @@ public sealed class FileSystemMessageConformityExecutionSuccessTestCase
 
     public Func<FileSystemMessageTransportConformityTestHost, Task>? AfterMessagesAreReceived { get; init; }
 
-    public Action<FileSystemMessageTransportConformityTestHost, IFileSystemMessageReceiver>? ConfigureReceiverFn { get; init; }
+    public Action<
+        FileSystemMessageTransportConformityTestHost,
+        IFileSystemMessageReceiver
+    >? ConfigureReceiverFn { get; init; }
+
+    public bool ShouldCompleteImmediately => !HandlerIsEnabled;
 
     Task IMessageTransportConformityExecutionSuccessTestCase<FileSystemMessageTransportConformityTestHost>.BeforeSend(
-        FileSystemMessageTransportConformityTestHost host)
-        => BeforeSend?.Invoke(host) ?? Task.CompletedTask;
+        FileSystemMessageTransportConformityTestHost host
+    ) => BeforeSend?.Invoke(host) ?? Task.CompletedTask;
 
     async Task IMessageTransportConformityExecutionSuccessTestCase<FileSystemMessageTransportConformityTestHost>.AfterMessagesAreReceived(
-        FileSystemMessageTransportConformityTestHost testHost)
+        FileSystemMessageTransportConformityTestHost host
+    )
     {
         if (AfterMessagesAreReceived is not null)
         {
-            await AfterMessagesAreReceived.Invoke(testHost);
+            await AfterMessagesAreReceived.Invoke(host);
         }
     }
 
-    public override void ConfigureReceiver(FileSystemMessageTransportConformityTestHost host, IFileSystemMessageReceiver receiver)
+    public override void ConfigureReceiver(
+        FileSystemMessageTransportConformityTestHost host,
+        IFileSystemMessageReceiver receiver
+    )
     {
         ConfigureReceiverFn?.Invoke(host, receiver);
 

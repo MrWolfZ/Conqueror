@@ -1,10 +1,14 @@
 ﻿namespace Conqueror.SourceGenerators.Util;
 
-public readonly record struct DescriptorWithDiagnostics<TDescriptor>(
+using System.Runtime.InteropServices;
+
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct DescriptorWithDiagnostics<TDescriptor>(
     TDescriptor? Descriptor,
-    EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics)
+    EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics
+)
     where TDescriptor : struct
 {
-    public readonly EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics = Diagnostics;
     public readonly TDescriptor? Descriptor = Descriptor;
+    public readonly EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics = Diagnostics;
 }

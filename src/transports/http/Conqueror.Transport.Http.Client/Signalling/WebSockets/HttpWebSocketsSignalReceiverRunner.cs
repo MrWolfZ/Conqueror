@@ -1,40 +1,44 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror.Signalling.WebSockets;
-using Conqueror.Transport.Http.Client.WebSockets;
+﻿namespace Conqueror.Transport.Http.Client.Signalling.WebSockets;
 
-namespace Conqueror.Transport.Http.Client.Signalling.WebSockets;
+using System.Globalization;
 
-internal sealed class HttpWebSocketsSignalReceiverRunner(
-    IConquerorContextAccessor conquerorContextAccessor)
+internal sealed class HttpWebSocketsSignalReceiverRunner(IConquerorContextAccessor conquerorContextAccessor)
     : ISignalReceiverRunner<HttpWebSocketsSignalReceiver>
 {
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
-        Justification = "false positive, the source is returned to the caller")]
-    public ReceiverExecutionHandle RunReceiver(HttpWebSocketsSignalReceiver receiver, CancellationToken cancellationToken)
+        Justification = "false positive, the source is returned to the caller"
+    )]
+    public ReceiverExecutionHandle RunReceiver(
+        HttpWebSocketsSignalReceiver receiver,
+        CancellationToken cancellationToken
+    )
     {
         var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var connectionTaskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var connectionTaskCompletionSource = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
 
-        return new(
+        return new ReceiverExecutionHandle(
             connectionTaskCompletionSource.Task,
             Run(receiver, connectionTaskCompletionSource, linkedSource.Token),
             linkedSource,
-            onDispose: null);
+            onDispose: null
+        );
     }
 
     private async Task Run(
         HttpWebSocketsSignalReceiver receiver,
         TaskCompletionSource connectionTaskCompletionSource,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var config = receiver.Configuration ?? throw new InvalidOperationException($"the receiver for handler type '{receiver.HandlerType}' is not enabled");
+        var config =
+            receiver.Configuration
+            ?? throw new InvalidOperationException(
+                $"the receiver for handler type '{receiver.HandlerType}' is not enabled"
+            );
 
         try
         {
@@ -50,10 +54,17 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                     if (statusCode is >= 400 and < 500)
                     {
                         throw new SignalReceiverExecutionFailedException(
-                            $"failed to connect signal receiver for handler type '{receiver.HandlerType}' to address '{config.Address}'; got status code {statusCode}")
+                            string.Create(
+                                CultureInfo.InvariantCulture,
+                                $"failed to connect signal {nameof(receiver)} for handler type '{receiver.HandlerType}' to address '{config.Address}'; got status code {statusCode}"
+                            )
+                        )
                         {
                             HandlerType = receiver.HandlerType,
-                            SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
+                            SignalTransportType = new SignalTransportType(
+                                WebSocketsTransportName,
+                                SignalTransportRole.Receiver
+                            ),
                         };
                     }
 
@@ -63,8 +74,9 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
 
                         await foreach (var stream in socket.Read(cancellationToken).ConfigureAwait(false))
                         {
-                            var (signal, contextData) =
-                                await HttpWebSocketsSignalProtocolV1.Read(stream, receiver.ReadSignal, cancellationToken).ConfigureAwait(false);
+                            var (signal, contextData) = await HttpWebSocketsSignalProtocolV1
+                                .Read(stream, receiver.ReadSignal, cancellationToken)
+                                .ConfigureAwait(false);
 
                             config.SignalCallback?.Invoke(signal);
 
@@ -83,12 +95,14 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
 
                     if (config.ReconnectDelayFn is not null)
                     {
-                        await config.ReconnectDelayFn(
-                                        socket?.CloseStatus ?? WebSocketCloseStatus.Empty,
-                                        statusCode ?? 200,
-                                        null,
-                                        cancellationToken)
-                                    .ConfigureAwait(false);
+                        await config
+                            .ReconnectDelayFn(
+                                socket?.CloseStatus ?? WebSocketCloseStatus.Empty,
+                                statusCode ?? 200,
+                                exception: null,
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)
@@ -100,16 +114,22 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                     // the http stream reader might throw an IOException instead of an OperationCanceledException when
                     // the token is canceled, so we catch it here and return gracefully
                 }
-                catch (WebSocketException wex) when (wex.WebSocketErrorCode is not WebSocketError.UnsupportedVersion and not WebSocketError.UnsupportedProtocol)
+                catch (WebSocketException wex)
+                    when (wex.WebSocketErrorCode
+                            is not WebSocketError.UnsupportedVersion
+                                and not WebSocketError.UnsupportedProtocol
+                    )
                 {
                     if (config.ReconnectDelayFn is not null)
                     {
-                        await config.ReconnectDelayFn(
-                                        socket?.CloseStatus ?? WebSocketCloseStatus.Empty,
-                                        statusCode ?? 200,
-                                        wex,
-                                        cancellationToken)
-                                    .ConfigureAwait(false);
+                        await config
+                            .ReconnectDelayFn(
+                                socket?.CloseStatus ?? WebSocketCloseStatus.Empty,
+                                statusCode ?? 200,
+                                wex,
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false);
                     }
                 }
                 catch (SignalReceiverExecutionFailedException)
@@ -119,11 +139,15 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                 catch (Exception ex)
                 {
                     throw new SignalReceiverExecutionFailedException(
-                        $"an exception occured while running receiver for signal handler type '{receiver.HandlerType}'",
-                        ex)
+                        $"an exception occured while running {nameof(receiver)} for signal handler type '{receiver.HandlerType}'",
+                        ex
+                    )
                     {
                         HandlerType = receiver.HandlerType,
-                        SignalTransportType = new(WebSocketsTransportName, SignalTransportRole.Receiver),
+                        SignalTransportType = new SignalTransportType(
+                            WebSocketsTransportName,
+                            SignalTransportRole.Receiver
+                        ),
                     };
                 }
                 finally
@@ -152,11 +176,13 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
-        Justification = "false positive, objects are returned to the caller to be disposed there")]
+        Justification = "false positive, objects are returned to the caller to be disposed there"
+    )]
     private async Task<(ConquerorWebSocket? Socket, int? StatusCode)> Connect(
         HttpWebSocketsSignalReceiver receiver,
         HttpWebSocketsSignalReceiverConfiguration config,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         WebSocket? webSocket = null;
 
@@ -169,13 +195,16 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
                 queryString = queryString.Add(QueryParameterNames.SignalWebSocketsTag, tag);
             }
 
-            queryString = queryString.Add(QueryParameterNames.HeartbeatInterval, $"{config.HeartbeatInterval.TotalSeconds:N0}");
-            queryString = queryString.Add(QueryParameterNames.HeartbeatTimeout, $"{config.HeartbeatTimeout.TotalSeconds:N0}");
+            queryString = queryString.Add(
+                QueryParameterNames.HeartbeatInterval,
+                string.Create(CultureInfo.InvariantCulture, $"{config.HeartbeatInterval.TotalSeconds:N0}")
+            );
+            queryString = queryString.Add(
+                QueryParameterNames.HeartbeatTimeout,
+                string.Create(CultureInfo.InvariantCulture, $"{config.HeartbeatTimeout.TotalSeconds:N0}")
+            );
 
-            var targetUriBuilder = new UriBuilder(config.Address)
-            {
-                Query = queryString.Build(),
-            };
+            var targetUriBuilder = new UriBuilder(config.Address) { Query = queryString.Build() };
 
             webSocket = await config.WebSocketFactory(targetUriBuilder.Uri, cancellationToken).ConfigureAwait(false);
 
@@ -183,13 +212,15 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(
 
             return (socket, null);
         }
-
-        // special case for ASP core test host web socket client
-        catch (InvalidOperationException ex) when (ex.Message.StartsWith("Incomplete handshake, status code: "))
+        catch (InvalidOperationException ex) // special case for ASP core test host web socket client
+            when (ex.Message.StartsWith("Incomplete handshake, status code: ", StringComparison.Ordinal))
         {
             webSocket?.Dispose();
 
-            var statusCode = int.Parse(ex.Message.Replace("Incomplete handshake, status code: ", string.Empty));
+            var statusCode = int.Parse(
+                ex.Message.Replace("Incomplete handshake, status code: ", "", StringComparison.Ordinal),
+                CultureInfo.InvariantCulture
+            );
 
             return (null, statusCode);
         }

@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization.Metadata;
-
-namespace Conqueror.Transport.FileSystem;
+﻿namespace Conqueror.Transport.FileSystem;
 
 internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
 {
@@ -10,7 +8,8 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         string fileExtension,
         Func<TState, Stream, CancellationToken, Task> writeFn,
         TState state,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var payloadFilePath = GetPayloadFilePath(tag, entryId, fileExtension);
 
@@ -27,7 +26,8 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         TMetadata metadata,
         string? fileNameSuffix,
         JsonTypeInfo<TMetadata> jsonTypeInfo,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var metadataFilePath = GetMetadataFilePath(tag, messageId, fileNameSuffix);
 
@@ -44,7 +44,8 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         string fileExtension,
         Func<TState, Stream, CancellationToken, Task<object?>> readFn,
         TState state,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var payloadFilePath = GetPayloadFilePath(tag, entryId, fileExtension);
 
@@ -59,7 +60,8 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
 
         var result = await readFn(state, handle.Stream, cancellationToken).ConfigureAwait(false);
 
-        return result ?? throw new IOException($"failed to read payload for entry ID '{entryId}' from path '{payloadFilePath}'");
+        return result
+            ?? throw new IOException($"failed to read payload for entry ID '{entryId}' from path '{payloadFilePath}'");
     }
 
     public TMetadata ReadMetadata<TMetadata>(
@@ -67,7 +69,8 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         EntryId messageId,
         string? fileNameSuffix,
         JsonTypeInfo<TMetadata> jsonTypeInfo,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var metadataFilePath = GetMetadataFilePath(tag, messageId, fileNameSuffix);
 
@@ -85,17 +88,12 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         Func<TState, Stream, CancellationToken, Task<object?>> readFn,
         TState state,
         TimeSpan pollingInterval,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var result = await ReadPayload(
-                    tag,
-                    entryId,
-                    fileExtension,
-                    readFn,
-                    state,
-                    cancellationToken)
+            var result = await ReadPayload(tag, entryId, fileExtension, readFn, state, cancellationToken)
                 .ConfigureAwait(false);
 
             if (result is not null)
@@ -103,14 +101,15 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
                 return result;
             }
 
-            await Task.Delay(pollingInterval, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(pollingInterval, TimeProvider.System, cancellationToken).ConfigureAwait(false);
         }
 
         throw new OperationCanceledException();
     }
 
-    private FilePath GetPayloadFilePath(Tag tag, EntryId id, string extension) => baseDirectoryPath.SubDir(tag).File($"{id}{extension}");
+    private FilePath GetPayloadFilePath(Tag tag, EntryId id, string extension) =>
+        baseDirectoryPath.SubDir(tag).File($"{id}{extension}");
 
-    private FilePath GetMetadataFilePath(Tag tag, EntryId id, string? fileNameSuffix)
-        => baseDirectoryPath.SubDir(tag).File($"{id}{fileNameSuffix ?? string.Empty}.meta.json");
+    private FilePath GetMetadataFilePath(Tag tag, EntryId id, string? fileNameSuffix) =>
+        baseDirectoryPath.SubDir(tag).File($"{id}{fileNameSuffix ?? ""}.meta.json");
 }

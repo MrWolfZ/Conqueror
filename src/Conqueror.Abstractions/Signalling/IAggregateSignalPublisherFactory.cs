@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IAggregateSignalPublisherFactory
 {

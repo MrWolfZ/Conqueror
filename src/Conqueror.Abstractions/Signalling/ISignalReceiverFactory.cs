@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface ISignalReceiverFactory<in TTypesInjector, out TReceiver>
     where TTypesInjector : class, ISignalHandlerTypesInjector
@@ -13,5 +9,6 @@ public interface ISignalReceiverFactory<in TTypesInjector, out TReceiver>
     TReceiver? CreateReceiverForHandlerType(
         Type? handlerType,
         IReadOnlyCollection<ISignalReceiverHandlerInvoker<TTypesInjector>> invokers,
-        TTypesInjector typesInjector);
+        TTypesInjector typesInjector
+    );
 }

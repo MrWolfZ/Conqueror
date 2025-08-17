@@ -1,15 +1,13 @@
 ﻿#nullable enable
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Signalling;
-using Signalling.WithCustomTransports.Transport1;
-using Signalling.WithCustomTransports.Transport2;
-
 namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransports
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using global::Signalling.WithCustomTransports.Transport1;
+    using global::Signalling.WithCustomTransports.Transport2;
+
     [Signal]
     [TestTransportSignal(StringProperty = "Test")]
     [TestTransport2Signal(StringProperty = "Test2")]
@@ -17,12 +15,17 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransp
 
     public partial class TestSignalHandler : TestSignal.IHandler
     {
-        public Task Handle(TestSignal message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task Handle(TestSignal message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 
 namespace Signalling.WithCustomTransports.Transport1
 {
+    using System;
+    using Conqueror;
+    using Conqueror.Signalling;
+
     [SignalTransport(Prefix = "TestTransport", Namespace = "Signalling.WithCustomTransports.Transport1")]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransportSignalAttribute : Attribute
@@ -43,13 +46,16 @@ namespace Signalling.WithCustomTransports.Transport1
         where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
     {
         static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 
 namespace Signalling.WithCustomTransports.Transport2
 {
+    using System;
+    using Conqueror;
+    using Conqueror.Signalling;
+
     [SignalTransport(Prefix = "TestTransport2", Namespace = "Signalling.WithCustomTransports.Transport2")]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransport2SignalAttribute : Attribute
@@ -70,8 +76,7 @@ namespace Signalling.WithCustomTransports.Transport2
         where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
     {
         static ISignalHandlerTypesInjector CreateTestTransport2TypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 

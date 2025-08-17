@@ -1,11 +1,9 @@
-using System;
-using System.Linq;
+namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
+
 using System.Reflection;
 using System.Reflection.Emit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
-namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 
 internal static class DynamicStreamingEndpointControllerFactory
 {
@@ -30,36 +28,51 @@ internal static class DynamicStreamingEndpointControllerFactory
 
             executorMethod = executorMethod.MakeGenericMethod(endpoint.RequestType, endpoint.ItemType);
 
-            var httpContextProperty = typeof(ControllerBase).GetProperty(nameof(ControllerBase.HttpContext), BindingFlags.Public | BindingFlags.Instance);
+            var httpContextProperty = typeof(ControllerBase).GetProperty(
+                nameof(ControllerBase.HttpContext),
+                BindingFlags.Public | BindingFlags.Instance
+            );
 
-            var parameterTypes = executorMethod.GetParameters().Select(p => p.ParameterType).Skip(1).ToArray();
+            var parameterTypes = executorMethod.GetParameters().Select(p => p.ParameterType).Skip(count: 1).ToArray();
 
-            var methodBuilder = typeBuilder.DefineMethod($"Execute{endpoint.Name}",
-                                                         MethodAttributes.Public | MethodAttributes.Virtual,
-                                                         executorMethod.ReturnType,
-                                                         parameterTypes);
+            var methodBuilder = typeBuilder.DefineMethod(
+                $"Execute{endpoint.Name}",
+                MethodAttributes.Public | MethodAttributes.Virtual,
+                executorMethod.ReturnType,
+                parameterTypes
+            );
 
             var httpMethodAttributeType = typeof(HttpGetAttribute);
-            DynamicStreamingControllerFactory.ApplyHttpMethodAttribute(methodBuilder, httpMethodAttributeType, endpoint.OperationId);
+            DynamicStreamingControllerFactory.ApplyHttpMethodAttribute(
+                methodBuilder,
+                httpMethodAttributeType,
+                endpoint.OperationId
+            );
 
-            DynamicStreamingControllerFactory.ApplyProducesResponseTypeAttribute(methodBuilder, StatusCodes.Status200OK);
+            DynamicStreamingControllerFactory.ApplyProducesResponseTypeAttribute(
+                methodBuilder,
+                StatusCodes.Status200OK
+            );
 
             _ = methodBuilder.DefineParameter(parameterTypes.Length, ParameterAttributes.None, "cancellationToken");
 
-            var ilGenerator = methodBuilder.GetILGenerator();
+            var generator = methodBuilder.GetILGenerator();
 
-            ilGenerator.Emit(OpCodes.Ldarg_0);
-            ilGenerator.Emit(OpCodes.Callvirt, httpContextProperty?.GetGetMethod()!);
-            ilGenerator.Emit(OpCodes.Ldarg_1);
+            generator.Emit(OpCodes.Ldarg_0);
+            generator.Emit(OpCodes.Callvirt, httpContextProperty?.GetGetMethod()!);
+            generator.Emit(OpCodes.Ldarg_1);
 
-            ilGenerator.Emit(OpCodes.Call, executorMethod);
-            ilGenerator.Emit(OpCodes.Ret);
+            generator.Emit(OpCodes.Call, executorMethod);
+            generator.Emit(OpCodes.Ret);
         }
 
         MethodInfo GetExecutorMethod()
         {
-            return typeof(HttpStreamExecutor).GetMethods(BindingFlags.Public | BindingFlags.Static)
-                                             .Single(m => m.Name == nameof(HttpStreamExecutor.ExecuteStreamingRequest));
+            return typeof(HttpStreamExecutor)
+                .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Single(m =>
+                    string.Equals(m.Name, nameof(HttpStreamExecutor.ExecuteStreamingRequest), StringComparison.Ordinal)
+                );
         }
     }
 }

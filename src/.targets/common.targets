@@ -1,23 +1,22 @@
 <Project>
-
-    <PropertyGroup>
-        <ConquerorBaseVersion>0.8.2</ConquerorBaseVersion>
-        <ConquerorPreReleaseVersionCount>.3</ConquerorPreReleaseVersionCount>
-        <ConquerorPreReleaseVersion>-beta</ConquerorPreReleaseVersion>
-        <ConquerorPreReleaseVersion Condition="'$(IsExperimental)' == 'true'">-experimental</ConquerorPreReleaseVersion>
-        <ConquerorPreReleaseVersion Condition="'$(IsDeprecated)' == 'true'">-deprecated</ConquerorPreReleaseVersion>
-        <ConquerorVersion>$(ConquerorBaseVersion)$(ConquerorPreReleaseVersion)$(ConquerorPreReleaseVersionCount)</ConquerorVersion>
-        <ConquerorAssemblyVersion>$(ConquerorBaseVersion)$(ConquerorPreReleaseVersionCount)</ConquerorAssemblyVersion>
-
-        <LangVersion>12</LangVersion>
-
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-
-    <!-- when we clean the projects we want all output directories to be deleted to prevent erroneous remnants -->
-    <Target Name="PostClean" AfterTargets="Clean">
-        <RemoveDir Directories="$(BaseIntermediateOutputPath)" /><!-- obj -->
-        <RemoveDir Directories="$(BaseOutputPath)" /><!-- bin -->
-    </Target>
-
+  <PropertyGroup>
+    <ConquerorBaseVersion>0.8.2</ConquerorBaseVersion>
+    <ConquerorPreReleaseVersionCount>.3</ConquerorPreReleaseVersionCount>
+    <ConquerorPreReleaseVersion>-beta</ConquerorPreReleaseVersion>
+    <ConquerorPreReleaseVersion Condition="'$(IsExperimental)' == 'true'">-experimental</ConquerorPreReleaseVersion>
+    <ConquerorPreReleaseVersion Condition="'$(IsDeprecated)' == 'true'">-deprecated</ConquerorPreReleaseVersion>
+    <ConquerorVersion>$(ConquerorBaseVersion)$(ConquerorPreReleaseVersion)$(ConquerorPreReleaseVersionCount)</ConquerorVersion>
+    <ConquerorAssemblyVersion>$(ConquerorBaseVersion)$(ConquerorPreReleaseVersionCount)</ConquerorAssemblyVersion>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <!-- when we clean the projects we want all output directories to be deleted to prevent erroneous remnants -->
+  <Target Name="PostClean" AfterTargets="Clean">
+    <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
+    <!-- obj -->
+    <RemoveDir Directories="$(BaseOutputPath)" />
+    <!-- bin -->
+  </Target>
 </Project>

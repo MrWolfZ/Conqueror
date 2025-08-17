@@ -1,11 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Conqueror.Signalling.WebSockets;
+﻿namespace Conqueror.Signalling.WebSockets;
 
 internal sealed class HttpWebSocketsSignalJsonSerializer<TSignal> : IHttpWebSocketsSignalSerializer<TSignal>
     where TSignal : class, IHttpWebSocketsSignal<TSignal>
@@ -14,29 +7,31 @@ internal sealed class HttpWebSocketsSignalJsonSerializer<TSignal> : IHttpWebSock
         IServiceProvider serviceProvider,
         TSignal signal,
         Stream stream,
-        CancellationToken cancellationToken)
-    {
-        return JsonSerializer.SerializeAsync(
-            stream,
-            signal,
-            GetJsonTypeInfo(serviceProvider),
-            cancellationToken);
-    }
+        CancellationToken cancellationToken
+    ) => JsonSerializer.SerializeAsync(stream, signal, GetJsonTypeInfo(serviceProvider), cancellationToken);
 
-    public async Task<TSignal> DeserializeSignal(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
+    public async Task<TSignal> DeserializeSignal(
+        IServiceProvider serviceProvider,
+        Stream stream,
+        CancellationToken cancellationToken
+    )
     {
-        return await JsonSerializer.DeserializeAsync(stream, GetJsonTypeInfo(serviceProvider), cancellationToken).ConfigureAwait(false)
-               ?? throw new InvalidOperationException("failed to deserialize HTTP WebSockets signal");
+        return await JsonSerializer
+                .DeserializeAsync(stream, GetJsonTypeInfo(serviceProvider), cancellationToken)
+                .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("failed to deserialize HTTP WebSockets signal");
     }
 
     private static JsonTypeInfo<TSignal> GetJsonTypeInfo(IServiceProvider serviceProvider)
     {
-        var jsonTypeInfo = (JsonTypeInfo<TSignal>?)TSignal.HttpWebSocketsJsonSerializerContext?.GetTypeInfo(typeof(TSignal));
+        var jsonTypeInfo = (JsonTypeInfo<TSignal>?)
+            TSignal.HttpWebSocketsJsonSerializerContext?.GetTypeInfo(typeof(TSignal));
 
-        if (jsonTypeInfo == null)
+        if (jsonTypeInfo is null)
         {
-            var jsonSerializerSettings = (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
-                                         ?? HttpJsonSerializerOptions.DefaultJsonSerializerOptions;
+            var jsonSerializerSettings =
+                (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
+                ?? HttpJsonSerializerOptions.DefaultJsonSerializerOptions;
             jsonTypeInfo = (JsonTypeInfo<TSignal>)jsonSerializerSettings.GetTypeInfo(typeof(TSignal));
         }
 

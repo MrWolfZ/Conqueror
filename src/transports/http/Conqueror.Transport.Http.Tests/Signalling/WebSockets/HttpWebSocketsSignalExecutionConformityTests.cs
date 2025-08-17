@@ -6,11 +6,13 @@ public sealed class HttpWebSocketsSignalExecutionConformityTests
           HttpWebSocketsSignalExecutionConformityTests,
           HttpSignalTransportConformityTestHost,
           HttpSignalConformityExecutionSuccessTestCase,
-          HttpSignalConformityExecutionErrorTestCase>,
+          HttpSignalConformityExecutionErrorTestCase
+      >,
       ISignalTransportExecutionConformityTests<
           HttpSignalTransportConformityTestHost,
           HttpSignalConformityExecutionSuccessTestCase,
-          HttpSignalConformityExecutionErrorTestCase>
+          HttpSignalConformityExecutionErrorTestCase
+      >
 {
     public static bool TransportBuffersSignalsDuringReceiverDowntime => false;
 
@@ -20,12 +22,14 @@ public sealed class HttpWebSocketsSignalExecutionConformityTests
 
     public static string TransportTypeName => WebSocketsTransportName;
 
-    public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
-        => HttpSignalTestCases.CreateSuccessTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
+    public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases() =>
+        HttpSignalTestCases.CreateSuccessTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
 
-    public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSimpleSuccessTestCases()
-        => HttpSignalTestCases.CreateSimpleSuccessTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
+    public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSimpleSuccessTestCases() =>
+        HttpSignalTestCases.CreateSimpleSuccessTestCases(
+            HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets
+        );
 
-    public static IEnumerable<HttpSignalConformityExecutionErrorTestCase> CreateErrorTestCases()
-        => HttpSignalTestCases.CreateErrorTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
+    public static IEnumerable<HttpSignalConformityExecutionErrorTestCase> CreateErrorTestCases() =>
+        HttpSignalTestCases.CreateErrorTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.WebSockets);
 }

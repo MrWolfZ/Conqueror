@@ -1,44 +1,48 @@
-using System;
-using System.Collections.Generic;
+namespace Conqueror.Streaming.Transport.Http.Client;
+
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror.Streaming.Transport.Http.Common;
-
-namespace Conqueror.Streaming.Transport.Http.Client;
+using Common;
 
 internal sealed class HttpStreamProducerTransportClient(
     ResolvedHttpClientOptions options,
-    IConquerorContextAccessor conquerorContextAccessor)
-    : IStreamProducerTransportClient
+    IConquerorContextAccessor conquerorContextAccessor
+) : IStreamProducerTransportClient
 {
     public ResolvedHttpClientOptions Options { get; } = options;
 
-    public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
-                                                                         IServiceProvider serviceProvider,
-                                                                         [EnumeratorCancellation] CancellationToken cancellationToken)
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "cannot be made async"
+    )]
+    public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(
+        TRequest request,
+        IServiceProvider serviceProvider,
+        [EnumeratorCancellation] CancellationToken cancellationToken
+    )
         where TRequest : class
     {
         var attribute = typeof(TRequest).GetCustomAttribute<HttpStreamAttribute>()!;
 
-        var uriString = Options.PathConvention?.GetStreamPath(typeof(TRequest), attribute) ?? DefaultHttpStreamPathConvention.Instance.GetStreamPath(typeof(TRequest), attribute);
+        var uriString =
+            Options.PathConvention?.GetStreamPath(typeof(TRequest), attribute)
+            ?? DefaultHttpStreamPathConvention.Instance.GetStreamPath(typeof(TRequest), attribute);
         var requestUri = new Uri(Options.BaseAddress, uriString);
         using var requestMessage = new HttpRequestMessage();
 
         SetHeaders(requestMessage.Headers);
 
-        using var socket = await CreateSocket<TRequest, TItem>(requestUri, requestMessage.Headers, cancellationToken).ConfigureAwait(false);
+        using var socket = await CreateSocket<TRequest, TItem>(requestUri, requestMessage.Headers, cancellationToken)
+            .ConfigureAwait(false);
 
-        using var closingSemaphore = new SemaphoreSlim(1);
+        using var closingSemaphore = new SemaphoreSlim(initialCount: 1);
 
         async Task Close(CancellationToken ct)
         {
@@ -57,7 +61,9 @@ internal sealed class HttpStreamProducerTransportClient(
             // ReSharper enable AccessToDisposedClosure
         }
 
-        await using var d = cancellationToken.Register(() => Close(CancellationToken.None).Wait(CancellationToken.None)).ConfigureAwait(false);
+        await using var d = cancellationToken
+            .Register(() => Close(CancellationToken.None).Wait(CancellationToken.None))
+            .ConfigureAwait(false);
 
         var enumerator = socket.Read(cancellationToken).GetAsyncEnumerator(cancellationToken);
 
@@ -68,36 +74,47 @@ internal sealed class HttpStreamProducerTransportClient(
             if (cancellationToken.IsCancellationRequested)
             {
                 await Close(cancellationToken).ConfigureAwait(false);
+
                 yield break;
             }
 
             try
             {
-                if (!await enumerator.MoveNextAsync().ConfigureAwait(false) || cancellationToken.IsCancellationRequested)
+                if (
+                    !await enumerator.MoveNextAsync().ConfigureAwait(false) || cancellationToken.IsCancellationRequested
+                )
                 {
                     await Close(cancellationToken).ConfigureAwait(false);
+
                     yield break;
                 }
             }
             catch (OperationCanceledException)
             {
                 await Close(CancellationToken.None).ConfigureAwait(false);
+
                 throw;
             }
             catch
             {
                 await Close(cancellationToken).ConfigureAwait(false);
+
                 throw;
             }
 
             switch (enumerator.Current)
             {
-                case StreamingMessageEnvelope<TItem> { Message: { } } env:
+                case StreamingMessageEnvelope<TItem> { Message: not null } env:
                     yield return env.Message;
+
                     break;
 
                 case ErrorMessage msg:
-                    throw new HttpStreamFailedException(msg.Message, null);
+                    throw new HttpStreamFailedException(msg.Message, statusCode: null);
+
+                default:
+                    // all ok
+                    break;
             }
 
             try
@@ -107,20 +124,33 @@ internal sealed class HttpStreamProducerTransportClient(
             catch (OperationCanceledException)
             {
                 await Close(CancellationToken.None).ConfigureAwait(false);
+
                 throw;
             }
             catch
             {
                 await Close(cancellationToken).ConfigureAwait(false);
+
                 throw;
             }
         }
     }
 
-    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "all sockets are disposed when the client socket is disposed")]
-    private async Task<StreamingClientWebSocket<TRequest, TItem>> CreateSocket<TRequest, TItem>(Uri uri,
-                                                                                                HttpRequestHeaders headers,
-                                                                                                CancellationToken cancellationToken)
+    [SuppressMessage(
+        "Reliability",
+        "CA2000:Dispose objects before losing scope",
+        Justification = "all sockets are disposed when the client socket is disposed"
+    )]
+    [SuppressMessage(
+        "Usage",
+        "MA0099:Use Explicit enum value instead of 0",
+        Justification = "there is no 0 value for the enum, but in error cases a 0 can be returned"
+    )]
+    private async Task<StreamingClientWebSocket<TRequest, TItem>> CreateSocket<TRequest, TItem>(
+        Uri uri,
+        HttpRequestHeaders headers,
+        CancellationToken cancellationToken
+    )
         where TRequest : class
     {
         WebSocket? socket = null;
@@ -134,25 +164,41 @@ internal sealed class HttpStreamProducerTransportClient(
 
             if (socket is ClientWebSocket cws)
             {
-                if (socket.State != WebSocketState.Open)
+                if (socket.State is not WebSocketState.Open)
                 {
                     socket.Dispose();
-                    throw new HttpStreamFailedException($"streaming request of type {typeof(TRequest).Name} failed to open web socket connection", cws.HttpStatusCode);
+
+                    throw new HttpStreamFailedException(
+                        $"streaming request of type {typeof(TRequest).Name} failed to open web socket connection",
+                        cws.HttpStatusCode
+                    );
                 }
 
-                if (cws.HttpStatusCode != HttpStatusCode.OK && cws.HttpStatusCode != 0)
+                if (cws.HttpStatusCode is not HttpStatusCode.OK and not 0)
                 {
                     socket.Dispose();
-                    throw new HttpStreamFailedException($"streaming request of type {typeof(TRequest).Name} failed with status code {cws.HttpStatusCode}", cws.HttpStatusCode);
+
+                    throw new HttpStreamFailedException(
+                        $"streaming request of type {typeof(TRequest).Name} failed with status code {cws.HttpStatusCode}",
+                        cws.HttpStatusCode
+                    );
                 }
 
                 ReadResponseHeaders(cws.HttpResponseHeaders);
             }
 
-            textWebSocket = new(socket);
-            textWebSocketWithHeartbeat = new(textWebSocket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
-            jsonWebSocket = new(textWebSocketWithHeartbeat, Options.JsonSerializerOptions ?? new JsonSerializerOptions());
-            return new(jsonWebSocket);
+            textWebSocket = new TextWebSocket(socket);
+            textWebSocketWithHeartbeat = new TextWebSocketWithHeartbeat(
+                textWebSocket,
+                TimeSpan.FromSeconds(value: 30),
+                TimeSpan.FromSeconds(value: 60)
+            );
+            jsonWebSocket = new JsonWebSocket(
+                textWebSocketWithHeartbeat,
+                Options.JsonSerializerOptions ?? new JsonSerializerOptions()
+            );
+
+            return new StreamingClientWebSocket<TRequest, TItem>(jsonWebSocket);
         }
         catch (Exception ex) when (ex is not HttpStreamFailedException)
         {
@@ -161,7 +207,11 @@ internal sealed class HttpStreamProducerTransportClient(
             textWebSocketWithHeartbeat?.Dispose();
             jsonWebSocket?.Dispose();
 
-            throw new HttpStreamFailedException($"streaming request of type {typeof(TRequest).Name} failed", null, ex);
+            throw new HttpStreamFailedException(
+                $"streaming request of type {typeof(TRequest).Name} failed",
+                statusCode: null,
+                ex
+            );
         }
     }
 
@@ -193,7 +243,14 @@ internal sealed class HttpStreamProducerTransportClient(
             return;
         }
 
-        if (headers?.FirstOrDefault(p => p.Key == HttpConstants.ConquerorContextHeaderName).Value is { } values)
+        if (
+            headers
+                ?.FirstOrDefault(p =>
+                    string.Equals(p.Key, HttpConstants.ConquerorContextHeaderName, StringComparison.OrdinalIgnoreCase)
+                )
+                .Value is
+            { } values
+        )
         {
             ctx.DecodeContextData(values);
         }

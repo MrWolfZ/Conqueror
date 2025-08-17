@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Conqueror;
 
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+public delegate Task HttpSseSignalReceiverReconnectDelayFn(int statusCode, CancellationToken cancellationToken);
 
 public interface IHttpSseSignalReceiver
 {
@@ -76,7 +70,9 @@ public sealed class HttpSseSignalReceiverConfiguration
         return this;
     }
 
-    public HttpSseSignalReceiverConfiguration WithReconnectDelayFunction(HttpSseSignalReceiverReconnectDelayFn retryDelayFn)
+    public HttpSseSignalReceiverConfiguration WithReconnectDelayFunction(
+        HttpSseSignalReceiverReconnectDelayFn retryDelayFn
+    )
     {
         ReconnectDelayFn = retryDelayFn;
 
@@ -97,5 +93,3 @@ public sealed class HttpSseSignalReceiverConfiguration
         return this;
     }
 }
-
-public delegate Task HttpSseSignalReceiverReconnectDelayFn(int statusCode, CancellationToken cancellationToken);

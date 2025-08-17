@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Conqueror;
 
 // ReSharper disable CheckNamespace
+#pragma warning disable CA1050 // Declare types in namespaces
 
 [Message<GlobalTestMessageResponse>]
 public partial record GlobalTestMessage;
@@ -12,7 +13,8 @@ public record GlobalTestMessageResponse;
 
 public partial class GlobalTestMessageHandler : GlobalTestMessage.IHandler
 {
-    public Task<GlobalTestMessageResponse> Handle(GlobalTestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task<GlobalTestMessageResponse> Handle(GlobalTestMessage message, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 }
 
 // make the compiler happy during design time

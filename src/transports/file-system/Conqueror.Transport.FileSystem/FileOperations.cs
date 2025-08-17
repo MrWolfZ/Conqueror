@@ -1,11 +1,12 @@
-﻿using System.Text.Json.Serialization.Metadata;
+﻿namespace Conqueror.Transport.FileSystem;
 
-namespace Conqueror.Transport.FileSystem;
+using System.Globalization;
+using System.Text.Json;
 
 internal static class FileOperations
 {
     [ThreadStatic]
-    private static Random? random;
+    private static Random? Random;
 
     public static FileInfo GetFileInfo(this FilePath filePath) => new(filePath);
 
@@ -14,9 +15,9 @@ internal static class FileOperations
     {
         try
         {
-            var fileStream = filePath.OpenWithRetry(FileAccess.Read, cancellationToken, mode: FileMode.Open);
+            var fileStream = filePath.OpenWithRetry(FileAccess.Read, cancellationToken, FileMode.Open);
 
-            return new(filePath, fileStream);
+            return new ReadOnlyFileHandle(filePath, fileStream);
         }
         catch (FileNotFoundException)
         {
@@ -33,24 +34,21 @@ internal static class FileOperations
     {
         var fileStream = filePath.OpenWithRetry(FileAccess.ReadWrite, cancellationToken);
 
-        return new(filePath, fileStream);
+        return new ReadWriteFileHandle(filePath, fileStream);
     }
 
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
-        Justification = "false positive, stream is passed to caller in the handle")]
+        Justification = "false positive, stream is passed to caller in the handle"
+    )]
     public static ReadOnlyFileHandle? TryOpenRead(this FilePath filePath)
     {
         try
         {
-            var fileStream = new FileStream(
-                filePath,
-                FileMode.OpenOrCreate,
-                FileAccess.Read,
-                FileShare.None);
+            var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.None);
 
-            return new(filePath, fileStream);
+            return new ReadOnlyFileHandle(filePath, fileStream);
         }
         catch (IOException)
         {
@@ -58,23 +56,35 @@ internal static class FileOperations
         }
     }
 
-    public static void WriteJson<T>(this ReadWriteFileHandle handle, T value, JsonTypeInfo<T> jsonTypeInfo)
-    {
+    public static void WriteJson<T>(this ReadWriteFileHandle handle, T value, JsonTypeInfo<T> jsonTypeInfo) =>
         JsonSerializer.Serialize(handle.Stream, value, jsonTypeInfo);
-    }
 
     public static T ReadJson<T>(this ReadWriteFileHandle handle, JsonTypeInfo<T> jsonTypeInfo)
     {
         var result = JsonSerializer.Deserialize(handle.Stream, jsonTypeInfo);
 
-        return result ?? throw new IOException($"failed to JSON-deserialize file '{handle.FilePath}' to object of type '{typeof(T)}'");
+        return result
+            ?? throw new IOException(
+                $"failed to JSON-deserialize file '{handle.FilePath}' to object of type '{typeof(T)}'"
+            );
     }
 
     public static void DeleteLineFromFile(ReadWriteFileHandle handle, int lineNumber, int lineLength)
     {
-        if (lineNumber < 0 || lineLength <= 0)
+        if (lineNumber < 0)
         {
-            throw new ArgumentException("Invalid line number or line length.");
+            throw new ArgumentException(
+                string.Create(CultureInfo.InvariantCulture, $"Invalid line number: {lineNumber}"),
+                nameof(lineNumber)
+            );
+        }
+
+        if (lineLength <= 0)
+        {
+            throw new ArgumentException(
+                string.Create(CultureInfo.InvariantCulture, $"Invalid line length: {lineLength}"),
+                nameof(lineLength)
+            );
         }
 
         var stream = handle.Stream;
@@ -95,7 +105,7 @@ internal static class FileOperations
         {
             _ = stream.Seek(readPos, SeekOrigin.Begin);
             var bytesRead = stream.Read(buffer);
-            if (bytesRead == 0)
+            if (bytesRead is 0)
             {
                 break;
             }
@@ -111,8 +121,21 @@ internal static class FileOperations
         stream.SetLength(stream.Length - lineLength);
     }
 
-    [SuppressMessage("Security", "CA5394:Do not use insecure randomness", Justification = "we don't need security here")]
-    [SuppressMessage("Major Bug", "S1751:Loops with at most one iteration should be refactored", Justification = "by design")]
+    [SuppressMessage(
+        "Security",
+        "CA5394:Do not use insecure randomness",
+        Justification = "we don't need security here"
+    )]
+    [SuppressMessage(
+        "Major Bug",
+        "S1751:Loops with at most one iteration should be refactored",
+        Justification = "by design"
+    )]
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "we want this to be sync"
+    )]
     private static FileStream OpenWithRetry(
         this FilePath filePath,
         FileAccess access,
@@ -121,7 +144,8 @@ internal static class FileOperations
         FileShare share = FileShare.Read,
         int maxAttempts = 25,
         int initialDelayMs = 0,
-        int maxDelayMs = 1000)
+        int maxDelayMs = 1000
+    )
     {
         var attempt = 0;
         var delayMs = initialDelayMs;
@@ -134,40 +158,43 @@ internal static class FileOperations
 
             try
             {
-                return new(
-                    filePath,
-                    mode,
-                    access,
-                    share,
-                    bufferSize: 128);
+                return new FileStream(filePath, mode, access, share, bufferSize: 128);
             }
             catch (IOException iex) when (iex is not FileNotFoundException and not DirectoryNotFoundException)
             {
                 sw ??= Stopwatch.StartNew();
-                random ??= new();
+                Random ??= new Random();
 
                 attempt += 1;
 
                 if (attempt >= maxAttempts)
                 {
                     throw new IOException(
-                        $"Could not acquire lock on file '{filePath}' after {maxAttempts} attempts (elapsed time: {sw.ElapsedMilliseconds}ms).",
-                        iex);
+                        string.Create(
+                            CultureInfo.InvariantCulture,
+                            $"Could not acquire lock on file '{filePath}' after {maxAttempts} attempts (elapsed time: {sw.ElapsedMilliseconds}ms)."
+                        ),
+                        iex
+                    );
                 }
 
                 if (attempt >= 10)
                 {
                     // Exponential backoff with jitter
-                    var baseDelay = delayMs == 0 ? 10 : Math.Min(delayMs * 2, maxDelayMs);
+                    var baseDelay = delayMs is 0 ? 10 : Math.Min(delayMs * 2, maxDelayMs);
 
                     // Add ±50% jitter
                     var jitterRange = (int)(baseDelay * 0.5);
-                    delayMs = baseDelay + random.Next(-jitterRange, jitterRange + 1);
-                    delayMs = Math.Max(1, delayMs);
+                    delayMs = baseDelay + Random.Next(-jitterRange, jitterRange + 1);
+                    delayMs = Math.Max(val1: 1, delayMs);
                 }
                 else if (attempt >= 5)
                 {
-                    delayMs = random.Next(1, 5);
+                    delayMs = Random.Next(minValue: 1, maxValue: 5);
+                }
+                else
+                {
+                    // on the first we attempt, we don't want to increase the delay
                 }
 
                 if (delayMs > 0)
@@ -176,7 +203,7 @@ internal static class FileOperations
                 }
                 else
                 {
-                    Thread.SpinWait(1);
+                    Thread.SpinWait(iterations: 1);
                 }
             }
         }
@@ -191,14 +218,19 @@ internal class ReadOnlyFileHandle(FilePath path, FileStream stream) : IDisposabl
 
     public FileStream Stream => stream;
 
-    public StreamReader Reader => reader ??= new(Stream, leaveOpen: true);
+    public StreamReader Reader => reader ??= new StreamReader(Stream, leaveOpen: true);
 
     public void Dispose()
     {
-        Dispose(true);
+        Dispose(isDisposing: true);
         GC.SuppressFinalize(this);
     }
 
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "we want this to be sync"
+    )]
     protected virtual void Dispose(bool isDisposing)
     {
         if (isDisposing)
@@ -213,7 +245,7 @@ internal sealed class ReadWriteFileHandle(FilePath path, FileStream stream) : Re
 {
     private StreamWriter? writer;
 
-    public StreamWriter Writer => writer ??= new(Stream, leaveOpen: true);
+    public StreamWriter Writer => writer ??= new StreamWriter(Stream, leaveOpen: true);
 
     protected override void Dispose(bool isDisposing)
     {

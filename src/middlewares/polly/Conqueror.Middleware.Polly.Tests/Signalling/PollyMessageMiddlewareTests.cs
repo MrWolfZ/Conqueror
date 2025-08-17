@@ -1,6 +1,6 @@
-﻿using Polly;
+﻿namespace Conqueror.Middleware.Polly.Tests.Signalling;
 
-namespace Conqueror.Middleware.Polly.Tests.Signalling;
+using global::Polly;
 
 public sealed partial class PollySignalMiddlewareTests
 {
@@ -9,7 +9,8 @@ public sealed partial class PollySignalMiddlewareTests
     public async Task GivenHandlerWithPollyMiddlewareWithPolicy_WhenCallingHandler_ExecutesPipelineWithPolicy(
         [Values] bool shouldConfigureInitialBuilder,
         [Values] bool shouldConfigureAdditionalBuilder,
-        [Values] bool shouldRemoveMiddleware)
+        [Values] bool shouldRemoveMiddleware
+    )
     {
         var executionCount = 0;
 
@@ -29,46 +30,45 @@ public sealed partial class PollySignalMiddlewareTests
                     {
                         throw new IOException();
                     }
-                });
+                }
+            );
         });
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TestSignal.T)
-                          .WithPipeline(p =>
-                          {
-                              var initialP = p;
+            .For(TestSignal.T)
+            .WithPipeline(p =>
+            {
+                var initialP = p;
 
-                              p = shouldConfigureInitialBuilder
-                                  ? p.UsePolly(b => b.AddRetry(new() { Delay = TimeSpan.Zero }))
-                                  : p.UsePolly();
+                p = shouldConfigureInitialBuilder
+                    ? p.UsePolly(b => b.AddRetry(new() { Delay = TimeSpan.Zero }))
+                    : p.UsePolly();
 
-                              if (shouldConfigureAdditionalBuilder)
-                              {
-                                  p = p.ConfigurePolly(b => b.AddRetry(new() { Delay = TimeSpan.Zero }));
-                              }
+                if (shouldConfigureAdditionalBuilder)
+                {
+                    p = p.ConfigurePolly(b => b.AddRetry(new() { Delay = TimeSpan.Zero }));
+                }
 
-                              if (shouldRemoveMiddleware)
-                              {
-                                  p = p.WithoutPolly();
-                              }
+                if (shouldRemoveMiddleware)
+                {
+                    p = p.WithoutPolly();
+                }
 
-                              Assert.That(p, Is.SameAs(initialP));
-                          });
+                Assert.That(p, Is.SameAs(initialP));
+            });
 
         if ((shouldConfigureInitialBuilder || shouldConfigureAdditionalBuilder) && !shouldRemoveMiddleware)
         {
             await handler.Handle(signal, host.TestTimeoutToken);
 
-            Assert.That(executionCount, Is.EqualTo(2));
+            Assert.That(executionCount, Is.EqualTo(expected: 2));
 
             return;
         }
 
-        await Assert.ThatAsync(
-            () => handler.Handle(signal, host.TestTimeoutToken),
-            Throws.TypeOf<IOException>());
+        await Assert.ThatAsync(() => handler.Handle(signal, host.TestTimeoutToken), Throws.TypeOf<IOException>());
 
-        Assert.That(executionCount, Is.EqualTo(1));
+        Assert.That(executionCount, Is.EqualTo(expected: 1));
     }
 
     [Signal]

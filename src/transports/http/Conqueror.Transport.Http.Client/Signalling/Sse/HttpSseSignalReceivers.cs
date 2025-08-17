@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Conqueror.Transport.Http.Client.Signalling.Sse;
+﻿namespace Conqueror.Transport.Http.Client.Signalling.Sse;
 
 internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
 {
@@ -10,15 +7,20 @@ internal sealed class HttpSseSignalReceivers : IHttpSseSignalReceivers
         return receivers.RunReceivers(
             receivers.ServiceProvider.GetRequiredService<HttpSseSignalReceiverFactory>(),
             receivers.ServiceProvider.GetRequiredService<HttpSseSignalReceiverRunner>(),
-            cancellationToken);
+            cancellationToken
+        );
     }
 
-    public ReceiverExecutionHandle RunReceiver<THandler>(ISignalReceivers receivers, CancellationToken cancellationToken)
+    public ReceiverExecutionHandle RunReceiver<THandler>(
+        ISignalReceivers receivers,
+        CancellationToken cancellationToken
+    )
         where THandler : class, IHttpSseSignalHandler, ISignalHandlerWithSourceGeneration
     {
         return receivers.RunReceiver<THandler, IHttpSseSignalHandlerTypesInjector, HttpSseSignalReceiver>(
             receivers.ServiceProvider.GetRequiredService<HttpSseSignalReceiverFactory>(),
             receivers.ServiceProvider.GetRequiredService<HttpSseSignalReceiverRunner>(),
-            cancellationToken);
+            cancellationToken
+        );
     }
 }

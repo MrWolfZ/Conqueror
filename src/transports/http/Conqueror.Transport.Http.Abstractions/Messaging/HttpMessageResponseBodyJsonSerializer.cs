@@ -1,14 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Net.Mime;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 internal sealed class HttpMessageResponseBodyJsonSerializer<TMessage, TResponse>
     : IHttpMessageResponseSerializer<TMessage, TResponse>
@@ -22,20 +12,20 @@ internal sealed class HttpMessageResponseBodyJsonSerializer<TMessage, TResponse>
         IServiceProvider serviceProvider,
         Stream bodyStream,
         TResponse response,
-        CancellationToken cancellationToken)
-    {
-        return JsonSerializer.SerializeAsync(
-            bodyStream,
-            response,
-            GetJsonTypeInfo(serviceProvider),
-            cancellationToken);
-    }
+        CancellationToken cancellationToken
+    ) => JsonSerializer.SerializeAsync(bodyStream, response, GetJsonTypeInfo(serviceProvider), cancellationToken);
 
+    [SuppressMessage(
+        "Reliability",
+        "CA2000:Dispose objects before losing scope",
+        Justification = "false positive, we are always disposing the stream"
+    )]
     public async Task<TResponse> DeserializeResponse(
         IServiceProvider serviceProvider,
         Stream bodyStream,
         Encoding? encoding,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         if (typeof(TResponse) == typeof(UnitMessageResponse))
         {
@@ -46,26 +36,28 @@ internal sealed class HttpMessageResponseBodyJsonSerializer<TMessage, TResponse>
 
         try
         {
-            if (encoding != null && !encoding.Equals(Encoding.UTF8))
+            if ((encoding?.Equals(Encoding.UTF8)) is false)
             {
                 transcodingStream = Encoding.CreateTranscodingStream(
                     bodyStream,
                     encoding,
                     Encoding.UTF8,
-                    leaveOpen: true);
+                    leaveOpen: true
+                );
             }
 
-            var result = await JsonSerializer.DeserializeAsync(
-                                                 transcodingStream ?? bodyStream,
-                                                 GetJsonTypeInfo(serviceProvider),
-                                                 cancellationToken)
-                                             .ConfigureAwait(false);
+            var result = await JsonSerializer
+                .DeserializeAsync(transcodingStream ?? bodyStream, GetJsonTypeInfo(serviceProvider), cancellationToken)
+                .ConfigureAwait(false);
 
-            return result ?? throw new IOException($"failed to deserialize HTTP body to message response of type '{typeof(TResponse)}' (for message type '{typeof(TMessage)}')");
+            return result
+                ?? throw new IOException(
+                    $"failed to deserialize HTTP body to message response of type '{typeof(TResponse)}' (for message type '{typeof(TMessage)}')"
+                );
         }
         finally
         {
-            if (transcodingStream != null)
+            if (transcodingStream is not null)
             {
                 await transcodingStream.DisposeAsync().ConfigureAwait(false);
             }
@@ -76,10 +68,11 @@ internal sealed class HttpMessageResponseBodyJsonSerializer<TMessage, TResponse>
     {
         var jsonTypeInfo = (JsonTypeInfo<TResponse>?)TMessage.HttpJsonSerializerContext?.GetTypeInfo(typeof(TResponse));
 
-        if (jsonTypeInfo == null)
+        if (jsonTypeInfo is null)
         {
-            var jsonSerializerSettings = (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
-                                         ?? HttpJsonSerializerOptions.DefaultJsonSerializerOptions;
+            var jsonSerializerSettings =
+                (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
+                ?? HttpJsonSerializerOptions.DefaultJsonSerializerOptions;
             jsonTypeInfo = (JsonTypeInfo<TResponse>)jsonSerializerSettings.GetTypeInfo(typeof(TResponse));
         }
 

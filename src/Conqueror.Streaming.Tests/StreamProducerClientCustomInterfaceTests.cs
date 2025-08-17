@@ -1,6 +1,6 @@
-using System.Runtime.CompilerServices;
-
 namespace Conqueror.Streaming.Tests;
+
+using System.Runtime.CompilerServices;
 
 public abstract class StreamProducerClientCustomInterfaceTests
 {
@@ -10,10 +10,12 @@ public abstract class StreamProducerClientCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddStreamingRequestClient<ITestStreamProducer>(services, b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>());
+        AddStreamingRequestClient<ITestStreamProducer>(
+            services,
+            b => b.ServiceProvider.GetRequiredService<TestStreamProducerTransport>()
+        );
 
-        _ = services.AddTransient<TestStreamProducerTransport>()
-                    .AddSingleton(observations);
+        _ = services.AddTransient<TestStreamProducerTransport>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -21,14 +23,16 @@ public abstract class StreamProducerClientCustomInterfaceTests
 
         var request = new TestStreamingRequest();
 
-        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain();
+        _ = await client.ExecuteRequest(request, CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.Requests, Is.EquivalentTo(new[] { request }));
     }
 
-    protected abstract void AddStreamingRequestClient<TProducer>(IServiceCollection services,
-                                                                 Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
-                                                                 Action<IStreamProducerPipelineBuilder>? configurePipeline = null)
+    protected abstract void AddStreamingRequestClient<TProducer>(
+        IServiceCollection services,
+        Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
+        Action<IStreamProducerPipelineBuilder>? configurePipeline = null
+    )
         where TProducer : class, IStreamProducer;
 
     public sealed record TestStreamingRequest;
@@ -40,9 +44,11 @@ public abstract class StreamProducerClientCustomInterfaceTests
 
     private sealed class TestStreamProducerTransport(TestObservations observations) : IStreamProducerTransportClient
     {
-        public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
-                                                                             IServiceProvider serviceProvider,
-                                                                             [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(
+            TRequest request,
+            IServiceProvider serviceProvider,
+            [EnumeratorCancellation] CancellationToken cancellationToken
+        )
             where TRequest : class
         {
             await Task.Yield();
@@ -61,26 +67,30 @@ public abstract class StreamProducerClientCustomInterfaceTests
 [TestFixture]
 public sealed class StreamProducerClientCustomInterfaceWithSyncFactoryTests : StreamProducerClientCustomInterfaceTests
 {
-    protected override void AddStreamingRequestClient<TProducer>(IServiceCollection services,
-                                                                 Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
-                                                                 Action<IStreamProducerPipelineBuilder>? configurePipeline = null)
-    {
-        _ = services.AddConquerorStreamProducerClient<TProducer>(transportClientFactory, configurePipeline);
-    }
+    protected override void AddStreamingRequestClient<TProducer>(
+        IServiceCollection services,
+        Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
+        Action<IStreamProducerPipelineBuilder>? configurePipeline = null
+    ) => _ = services.AddConquerorStreamProducerClient<TProducer>(transportClientFactory, configurePipeline);
 }
 
 [TestFixture]
 public sealed class StreamProducerClientCustomInterfaceWithAsyncFactoryTests : StreamProducerClientCustomInterfaceTests
 {
-    protected override void AddStreamingRequestClient<TProducer>(IServiceCollection services,
-                                                                 Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
-                                                                 Action<IStreamProducerPipelineBuilder>? configurePipeline = null)
+    protected override void AddStreamingRequestClient<TProducer>(
+        IServiceCollection services,
+        Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient> transportClientFactory,
+        Action<IStreamProducerPipelineBuilder>? configurePipeline = null
+    )
     {
-        _ = services.AddConquerorStreamProducerClient<TProducer>(async b =>
-                                                                 {
-                                                                     await Task.Delay(1);
-                                                                     return transportClientFactory(b);
-                                                                 },
-                                                                 configurePipeline);
+        _ = services.AddConquerorStreamProducerClient<TProducer>(
+            async b =>
+            {
+                await Task.Delay(millisecondsDelay: 1);
+
+                return transportClientFactory(b);
+            },
+            configurePipeline
+        );
     }
 }

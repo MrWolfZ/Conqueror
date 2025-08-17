@@ -1,6 +1,6 @@
-using System.Runtime.CompilerServices;
-
 namespace Conqueror.Streaming.Tests;
+
+using System.Runtime.CompilerServices;
 
 public sealed class StreamProducerMiddlewareLifetimeTests
 {
@@ -10,15 +10,16 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducer2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducer2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -26,11 +27,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1 }));
     }
@@ -41,15 +42,18 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducer2>()
-                    .AddConquerorStreamProducerMiddleware(p => new TestStreamProducerMiddleware(p.GetRequiredService<TestObservations>()))
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducer2>()
+            .AddConquerorStreamProducerMiddleware(p => new TestStreamProducerMiddleware(
+                p.GetRequiredService<TestObservations>()
+            ))
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -57,11 +61,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1 }));
     }
@@ -72,15 +76,16 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducer2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Scoped)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducer2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Scoped)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -88,11 +93,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -103,15 +108,19 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducer2>()
-                    .AddConquerorStreamProducerMiddleware(p => new TestStreamProducerMiddleware(p.GetRequiredService<TestObservations>()), ServiceLifetime.Scoped)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducer2>()
+            .AddConquerorStreamProducerMiddleware(
+                p => new TestStreamProducerMiddleware(p.GetRequiredService<TestObservations>()),
+                ServiceLifetime.Scoped
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -119,11 +128,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -134,15 +143,16 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducer2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducer2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Singleton)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -150,11 +160,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 5 }));
     }
@@ -165,15 +175,19 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducer2>()
-                    .AddConquerorStreamProducerMiddleware(p => new TestStreamProducerMiddleware(p.GetRequiredService<TestObservations>()), ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducer2>()
+            .AddConquerorStreamProducerMiddleware(
+                p => new TestStreamProducerMiddleware(p.GetRequiredService<TestObservations>()),
+                ServiceLifetime.Singleton
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -181,11 +195,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 5 }));
     }
@@ -196,16 +210,17 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares>()
+            .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -213,11 +228,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
     }
@@ -228,16 +243,17 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Scoped)
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>(ServiceLifetime.Scoped)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares>()
+            .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Scoped)
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>(ServiceLifetime.Scoped)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -245,11 +261,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 2, 2, 3, 3, 1, 1, 2, 2 }));
     }
@@ -260,16 +276,17 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Singleton)
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares>()
+            .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Singleton)
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>(ServiceLifetime.Singleton)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -277,11 +294,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 2, 2, 3, 3, 4, 4, 5, 5 }));
     }
@@ -292,16 +309,17 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares>()
-                    .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares>()
+            .AddConquerorStreamProducer<TestStreamProducerWithMultipleMiddlewares2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>(ServiceLifetime.Singleton)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -309,11 +327,11 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 3, 1, 4, 1, 5 }));
     }
@@ -324,22 +342,23 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
     }
@@ -350,22 +369,23 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Scoped)
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Scoped)
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 1, 1, 2, 1 }));
     }
@@ -376,22 +396,23 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Singleton)
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Singleton)
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 3, 1, 4, 1 }));
     }
@@ -402,22 +423,23 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.ProducerInvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1 }));
     }
@@ -428,22 +450,23 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>(ServiceLifetime.Scoped)
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>(ServiceLifetime.Scoped)
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.ProducerInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1, 2 }));
     }
@@ -454,22 +477,23 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>(ServiceLifetime.Singleton)
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithRetryMiddleware>(ServiceLifetime.Singleton)
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerRetryMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware2>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.ProducerInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4 }));
     }
@@ -480,15 +504,16 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducerWithSameMiddlewareMultipleTimes>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducerWithSameMiddlewareMultipleTimes>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var producer = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
 
-        _ = await producer.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
     }
@@ -499,16 +524,17 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducer2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducer2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -516,13 +542,16 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
-        Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
+        Assert.That(
+            observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts,
+            Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 })
+        );
     }
 
     [Test]
@@ -531,16 +560,17 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducer2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Scoped)
-                    .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducer2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Scoped)
+            .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -548,13 +578,16 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
-        Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
+        Assert.That(
+            observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts,
+            Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 })
+        );
     }
 
     [Test]
@@ -563,16 +596,17 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                    .AddConquerorStreamProducer<TestStreamProducer2>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Singleton)
-                    .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamProducer<TestStreamProducer>()
+            .AddConquerorStreamProducer<TestStreamProducer2>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(ServiceLifetime.Singleton)
+            .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var producer1 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer2 = scope1.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
@@ -580,13 +614,16 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         var producer4 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
         var producer5 = scope2.ServiceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest2, TestItem2>>();
 
-        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain();
-        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain();
+        _ = await producer1.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer2.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer3.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer4.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
+        _ = await producer5.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
-        Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
+        Assert.That(
+            observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts,
+            Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 })
+        );
     }
 
     private sealed record TestStreamingRequest;
@@ -597,94 +634,128 @@ public sealed class StreamProducerMiddlewareLifetimeTests
 
     private sealed record TestItem2;
 
-    private sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
+    private sealed class TestStreamProducer
+        : IStreamProducer<TestStreamingRequest, TestItem>,
+            IConfigureStreamProducerPipeline
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) =>
+            pipeline.Use<TestStreamProducerMiddleware>();
+
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
-            yield return new();
-        }
 
-        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) => pipeline.Use<TestStreamProducerMiddleware>();
-    }
-
-    private sealed class TestStreamProducer2 : IStreamProducer<TestStreamingRequest2, TestItem2>, IConfigureStreamProducerPipeline
-    {
-        public async IAsyncEnumerable<TestItem2> ExecuteRequest(TestStreamingRequest2 request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
             yield return new();
-            yield return new();
-            yield return new();
-        }
-
-        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) => pipeline.Use<TestStreamProducerMiddleware>();
-    }
-
-    private sealed class TestStreamProducerWithMultipleMiddlewares : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
-    {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            yield return new();
-        }
-
-        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline)
-        {
-            _ = pipeline.Use<TestStreamProducerMiddleware>()
-                        .Use<TestStreamProducerMiddleware2>();
         }
     }
 
-    private sealed class TestStreamProducerWithMultipleMiddlewares2 : IStreamProducer<TestStreamingRequest2, TestItem2>, IConfigureStreamProducerPipeline
+    private sealed class TestStreamProducer2
+        : IStreamProducer<TestStreamingRequest2, TestItem2>,
+            IConfigureStreamProducerPipeline
     {
-        public async IAsyncEnumerable<TestItem2> ExecuteRequest(TestStreamingRequest2 request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) =>
+            pipeline.Use<TestStreamProducerMiddleware>();
+
+        public async IAsyncEnumerable<TestItem2> ExecuteRequest(
+            TestStreamingRequest2 request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
-            yield return new();
-            yield return new();
-            yield return new();
-        }
 
-        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline)
-        {
-            _ = pipeline.Use<TestStreamProducerMiddleware>()
-                        .Use<TestStreamProducerMiddleware2>();
+            yield return new();
+            yield return new();
+            yield return new();
         }
     }
 
-    private sealed class TestStreamProducerWithSameMiddlewareMultipleTimes : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
+    private sealed class TestStreamProducerWithMultipleMiddlewares
+        : IStreamProducer<TestStreamingRequest, TestItem>,
+            IConfigureStreamProducerPipeline
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) =>
+            _ = pipeline.Use<TestStreamProducerMiddleware>().Use<TestStreamProducerMiddleware2>();
+
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
+
+            yield return new();
+        }
+    }
+
+    private sealed class TestStreamProducerWithMultipleMiddlewares2
+        : IStreamProducer<TestStreamingRequest2, TestItem2>,
+            IConfigureStreamProducerPipeline
+    {
+        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) =>
+            _ = pipeline.Use<TestStreamProducerMiddleware>().Use<TestStreamProducerMiddleware2>();
+
+        public async IAsyncEnumerable<TestItem2> ExecuteRequest(
+            TestStreamingRequest2 request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
+        {
+            await Task.Yield();
+
             yield return new();
             yield return new();
             yield return new();
         }
-
-        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) => pipeline.Use<TestStreamProducerMiddleware>().Use<TestStreamProducerMiddleware>();
     }
 
-    private sealed class TestStreamProducerWithRetryMiddleware(TestObservations observations) : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
+    private sealed class TestStreamProducerWithSameMiddlewareMultipleTimes
+        : IStreamProducer<TestStreamingRequest, TestItem>,
+            IConfigureStreamProducerPipeline
+    {
+        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) =>
+            pipeline.Use<TestStreamProducerMiddleware>().Use<TestStreamProducerMiddleware>();
+
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
+        {
+            await Task.Yield();
+
+            yield return new();
+            yield return new();
+            yield return new();
+        }
+    }
+
+    private sealed class TestStreamProducerWithRetryMiddleware(TestObservations observations)
+        : IStreamProducer<TestStreamingRequest, TestItem>,
+            IConfigureStreamProducerPipeline
     {
         private int invocationCount;
 
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline)
+        {
+            _ = pipeline
+                .Use<TestStreamProducerRetryMiddleware>()
+                .Use<TestStreamProducerMiddleware>()
+                .Use<TestStreamProducerMiddleware2>();
+        }
+
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             invocationCount += 1;
             await Task.Yield();
             observations.ProducerInvocationCounts.Add(invocationCount);
-            yield return new();
-            yield return new();
-            yield return new();
-        }
 
-        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline)
-        {
-            _ = pipeline.Use<TestStreamProducerRetryMiddleware>()
-                        .Use<TestStreamProducerMiddleware>()
-                        .Use<TestStreamProducerMiddleware2>();
+            yield return new();
+            yield return new();
+            yield return new();
         }
     }
 
@@ -692,7 +763,9 @@ public sealed class StreamProducerMiddlewareLifetimeTests
     {
         private int invocationCount;
 
-        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
+        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(
+            StreamProducerMiddlewareContext<TRequest, TItem> ctx
+        )
             where TRequest : class
         {
             invocationCount += 1;
@@ -712,7 +785,9 @@ public sealed class StreamProducerMiddlewareLifetimeTests
     {
         private int invocationCount;
 
-        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
+        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(
+            StreamProducerMiddlewareContext<TRequest, TItem> ctx
+        )
             where TRequest : class
         {
             invocationCount += 1;
@@ -732,7 +807,9 @@ public sealed class StreamProducerMiddlewareLifetimeTests
     {
         private int invocationCount;
 
-        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
+        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(
+            StreamProducerMiddlewareContext<TRequest, TItem> ctx
+        )
             where TRequest : class
         {
             invocationCount += 1;

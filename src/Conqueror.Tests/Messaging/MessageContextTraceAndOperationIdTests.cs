@@ -1,17 +1,16 @@
-using System.Diagnostics;
-
 namespace Conqueror.Tests.Messaging;
 
 public sealed partial class MessageContextTraceAndOperationIdTests
 {
-    private static int testCaseCounter;
+    private static int TestCaseCounter;
 
     [Test]
     [Combinatorial]
     public async Task GivenSetup_WhenExecutingHandler_OperationIdsAreCorrectlyAvailable(
-        [Values(true, false)] bool hasCustomTraceId,
-        [Values(true, false)] bool hasActivity,
-        [Values(true, false)] bool sendNestedWithDifferentTransport)
+        [Values(arg1: true, arg2: false)] bool hasCustomTraceId,
+        [Values(arg1: true, arg2: false)] bool hasActivity,
+        [Values(arg1: true, arg2: false)] bool sendNestedWithDifferentTransport
+    )
     {
         var customTraceId = Guid.NewGuid().ToString();
 
@@ -23,39 +22,48 @@ public sealed partial class MessageContextTraceAndOperationIdTests
 
         var services = new ServiceCollection();
 
-        _ = services.AddMessageHandlerDelegate(
-                        TestMessage.T,
-                        async (msg, p, ct) =>
-                        {
-                            await Task.Yield();
-                            traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
-                            messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.MessageId;
+        _ = services
+            .AddMessageHandlerDelegate(
+                TestMessage.T,
+                async (_1, p, ct) =>
+                {
+                    await Task.Yield();
+                    traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
+                    messageIdFromHandler =
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.MessageId;
 
-                            var handler = p.GetRequiredService<IMessageSenders>()
-                                           .For(NestedTestMessage.T);
+                    var handler = p.GetRequiredService<IMessageSenders>().For(NestedTestMessage.T);
 
-                            if (sendNestedWithDifferentTransport)
-                            {
-                                handler = handler.WithTransport(b => new TestMessageSender<NestedTestMessage, TestMessageResponse>(
-                                                                    b.UseInProcess()));
-                            }
+                    if (sendNestedWithDifferentTransport)
+                    {
+                        handler = handler.WithTransport(b => new TestMessageSender<
+                            NestedTestMessage,
+                            TestMessageResponse
+                        >(b.UseInProcess()));
+                    }
 
-                            _ = await handler.Handle(new(), ct);
+                    _ = await handler.Handle(new(), ct);
 
-                            return new();
-                        })
-                    .AddMessageHandlerDelegate(
-                        NestedTestMessage.T,
-                        async (_, p, _) =>
-                        {
-                            await Task.Yield();
-                            traceIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
-                            messageIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.MessageId;
+                    return new();
+                }
+            )
+            .AddMessageHandlerDelegate(
+                NestedTestMessage.T,
+                async (_, p, _) =>
+                {
+                    await Task.Yield();
+                    traceIdFromNestedMessageHandler =
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
+                    messageIdFromNestedMessageHandler =
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.MessageId;
 
-                            return new();
-                        });
+                    return new();
+                }
+            );
 
-        await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+        await using var serviceProvider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateOnBuild = true }
+        );
 
         ConquerorContext? conquerorContext = null;
 
@@ -67,19 +75,25 @@ public sealed partial class MessageContextTraceAndOperationIdTests
 
         using var d = conquerorContext;
 
-        var testCaseIdx = Interlocked.Increment(ref testCaseCounter);
-        using var activity = hasActivity ? StartActivity(nameof(MessageContextTraceAndOperationIdTests) + testCaseIdx) : null;
+        var testCaseIdx = Interlocked.Increment(ref TestCaseCounter);
+        using var activity = hasActivity
+            ? StartActivity($"{nameof(MessageContextTraceAndOperationIdTests)}{testCaseIdx}")
+            : null;
 
-        var handlerSender = serviceProvider.GetRequiredService<IMessageSenders>()
-                                           .For(TestMessage.T)
-                                           .WithPipeline(p => p.Use(ctx =>
-                                           {
-                                               traceIdFromExecution = ctx.ConquerorContext.TraceId;
-                                               return ctx.Next(ctx.Message, ctx.CancellationToken);
-                                           }))
-                                           .WithTransport(b => b.UseInProcess());
+        var handlerSender = serviceProvider
+            .GetRequiredService<IMessageSenders>()
+            .For(TestMessage.T)
+            .WithPipeline(p =>
+                p.Use(ctx =>
+                {
+                    traceIdFromExecution = ctx.ConquerorContext.TraceId;
 
-        _ = await handlerSender.Handle(new());
+                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                })
+            )
+            .WithTransport(b => b.UseInProcess());
+
+        _ = await handlerSender.Handle(new(), CancellationToken.None);
 
         var expectedTraceId = (hasCustomTraceId, hasActivity) switch
         {
@@ -113,11 +127,7 @@ public sealed partial class MessageContextTraceAndOperationIdTests
 
         var activity = activitySource.StartActivity()!;
 
-        return new(
-            activity.TraceId.ToString(),
-            activitySource,
-            activityListener,
-            activity);
+        return new DisposableActivity(activity.TraceId.ToString(), activitySource, activityListener, activity);
     }
 
     private sealed class DisposableActivity(string traceId, params IDisposable[] disposables) : IDisposable
@@ -143,7 +153,8 @@ public sealed partial class MessageContextTraceAndOperationIdTests
     [Message<TestMessageResponse>]
     private sealed partial record NestedTestMessage;
 
-    private sealed class TestMessageSender<TMessage, TResponse>(IMessageSender<TMessage, TResponse> wrapped) : IMessageSender<TMessage, TResponse>
+    private sealed class TestMessageSender<TMessage, TResponse>(IMessageSender<TMessage, TResponse> wrapped)
+        : IMessageSender<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         public string TransportTypeName => "test";
@@ -152,13 +163,7 @@ public sealed partial class MessageContextTraceAndOperationIdTests
             TMessage message,
             IServiceProvider serviceProvider,
             ConquerorContext conquerorContext,
-            CancellationToken cancellationToken)
-        {
-            return wrapped.Send(
-                message,
-                serviceProvider,
-                conquerorContext,
-                cancellationToken);
-        }
+            CancellationToken cancellationToken
+        ) => wrapped.Send(message, serviceProvider, conquerorContext, cancellationToken);
     }
 }

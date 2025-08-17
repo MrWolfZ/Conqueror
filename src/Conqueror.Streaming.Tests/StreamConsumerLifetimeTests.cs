@@ -8,21 +8,20 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>().AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var consumer1 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer2 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer3 = scope2.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1 }));
     }
@@ -33,28 +32,41 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer))
-                    .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(nameof(TestStreamConsumer2))
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer))
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(nameof(TestStreamConsumer2))
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
-        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
+        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
-        await consumer4.HandleItem(new());
-        await consumer5.HandleItem(new());
-        await consumer6.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
+        await consumer4.HandleItem(new(), CancellationToken.None);
+        await consumer5.HandleItem(new(), CancellationToken.None);
+        await consumer6.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1 }));
     }
@@ -65,21 +77,22 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer(p => new TestStreamConsumer(p.GetRequiredService<TestObservations>()))
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer(p => new TestStreamConsumer(p.GetRequiredService<TestObservations>()))
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var consumer1 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer2 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer3 = scope2.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1 }));
     }
@@ -90,28 +103,47 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer), (p, _) => new TestStreamConsumer(p.GetRequiredService<TestObservations>()))
-                    .AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer2), (p, _) => new TestStreamConsumer2(p.GetRequiredService<TestObservations>()))
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed(
+                nameof(TestStreamConsumer),
+                (p, _) => new TestStreamConsumer(p.GetRequiredService<TestObservations>())
+            )
+            .AddConquerorStreamConsumerKeyed(
+                nameof(TestStreamConsumer2),
+                (p, _) => new TestStreamConsumer2(p.GetRequiredService<TestObservations>())
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
-        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
+        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
-        await consumer4.HandleItem(new());
-        await consumer5.HandleItem(new());
-        await consumer6.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
+        await consumer4.HandleItem(new(), CancellationToken.None);
+        await consumer5.HandleItem(new(), CancellationToken.None);
+        await consumer6.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1 }));
     }
@@ -122,21 +154,20 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>(ServiceLifetime.Scoped)
-                    .AddSingleton(observations);
+        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>(ServiceLifetime.Scoped).AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var consumer1 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer2 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer3 = scope2.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1 }));
     }
@@ -147,28 +178,41 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer), ServiceLifetime.Scoped)
-                    .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(nameof(TestStreamConsumer2), ServiceLifetime.Scoped)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer), ServiceLifetime.Scoped)
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(nameof(TestStreamConsumer2), ServiceLifetime.Scoped)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
-        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
+        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
-        await consumer4.HandleItem(new());
-        await consumer5.HandleItem(new());
-        await consumer6.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
+        await consumer4.HandleItem(new(), CancellationToken.None);
+        await consumer5.HandleItem(new(), CancellationToken.None);
+        await consumer6.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1, 1, 2, 1 }));
     }
@@ -179,21 +223,25 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer(p => new TestStreamConsumer(p.GetRequiredService<TestObservations>()), ServiceLifetime.Scoped)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer(
+                p => new TestStreamConsumer(p.GetRequiredService<TestObservations>()),
+                ServiceLifetime.Scoped
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var consumer1 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer2 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer3 = scope2.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1 }));
     }
@@ -204,28 +252,49 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer), (p, _) => new TestStreamConsumer(p.GetRequiredService<TestObservations>()), ServiceLifetime.Scoped)
-                    .AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer2), (p, _) => new TestStreamConsumer2(p.GetRequiredService<TestObservations>()), ServiceLifetime.Scoped)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed(
+                nameof(TestStreamConsumer),
+                (p, _) => new TestStreamConsumer(p.GetRequiredService<TestObservations>()),
+                ServiceLifetime.Scoped
+            )
+            .AddConquerorStreamConsumerKeyed(
+                nameof(TestStreamConsumer2),
+                (p, _) => new TestStreamConsumer2(p.GetRequiredService<TestObservations>()),
+                ServiceLifetime.Scoped
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
-        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
+        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
-        await consumer4.HandleItem(new());
-        await consumer5.HandleItem(new());
-        await consumer6.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
+        await consumer4.HandleItem(new(), CancellationToken.None);
+        await consumer5.HandleItem(new(), CancellationToken.None);
+        await consumer6.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1, 1, 2, 1 }));
     }
@@ -236,21 +305,22 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumer>(ServiceLifetime.Singleton)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var consumer1 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer2 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer3 = scope2.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
     }
@@ -261,28 +331,44 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer), ServiceLifetime.Singleton)
-                    .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(nameof(TestStreamConsumer2), ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer), ServiceLifetime.Singleton)
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(
+                nameof(TestStreamConsumer2),
+                ServiceLifetime.Singleton
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
-        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
+        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
-        await consumer4.HandleItem(new());
-        await consumer5.HandleItem(new());
-        await consumer6.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
+        await consumer4.HandleItem(new(), CancellationToken.None);
+        await consumer5.HandleItem(new(), CancellationToken.None);
+        await consumer6.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2, 3 }));
     }
@@ -293,21 +379,25 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer(p => new TestStreamConsumer(p.GetRequiredService<TestObservations>()), ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer(
+                p => new TestStreamConsumer(p.GetRequiredService<TestObservations>()),
+                ServiceLifetime.Singleton
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var consumer1 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer2 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer3 = scope2.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
     }
@@ -318,28 +408,49 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer), (p, _) => new TestStreamConsumer(p.GetRequiredService<TestObservations>()), ServiceLifetime.Singleton)
-                    .AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer2), (p, _) => new TestStreamConsumer2(p.GetRequiredService<TestObservations>()), ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed(
+                nameof(TestStreamConsumer),
+                (p, _) => new TestStreamConsumer(p.GetRequiredService<TestObservations>()),
+                ServiceLifetime.Singleton
+            )
+            .AddConquerorStreamConsumerKeyed(
+                nameof(TestStreamConsumer2),
+                (p, _) => new TestStreamConsumer2(p.GetRequiredService<TestObservations>()),
+                ServiceLifetime.Singleton
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
-        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
+        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
-        await consumer4.HandleItem(new());
-        await consumer5.HandleItem(new());
-        await consumer6.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
+        await consumer4.HandleItem(new(), CancellationToken.None);
+        await consumer5.HandleItem(new(), CancellationToken.None);
+        await consumer6.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2, 3 }));
     }
@@ -350,16 +461,17 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumerWithMultipleInterfaces>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumerWithMultipleInterfaces>(ServiceLifetime.Singleton)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer1 = provider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer2 = provider.GetRequiredService<IStreamConsumer<TestItem2>>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2 }));
     }
@@ -370,21 +482,28 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed<TestStreamConsumerWithMultipleInterfaces>(1, ServiceLifetime.Singleton)
-                    .AddConquerorStreamConsumerKeyed<TestStreamConsumerWithMultipleInterfaces>(2, ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumerWithMultipleInterfaces>(
+                key: 1,
+                ServiceLifetime.Singleton
+            )
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumerWithMultipleInterfaces>(
+                key: 2,
+                ServiceLifetime.Singleton
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        var consumer1 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(1);
-        var consumer2 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem2>>(1);
-        var consumer3 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(2);
-        var consumer4 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem2>>(2);
+        var consumer1 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(serviceKey: 1);
+        var consumer2 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem2>>(serviceKey: 1);
+        var consumer3 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(serviceKey: 2);
+        var consumer4 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem2>>(serviceKey: 2);
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
-        await consumer4.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
+        await consumer4.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1, 2 }));
     }
@@ -395,16 +514,17 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumer>(ServiceLifetime.Singleton)
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var consumer1 = provider.GetRequiredService<TestStreamConsumer>();
         var consumer2 = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2 }));
     }
@@ -415,9 +535,13 @@ public sealed class StreamConsumerLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer), ServiceLifetime.Singleton)
-                    .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(nameof(TestStreamConsumer2), ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer>(nameof(TestStreamConsumer), ServiceLifetime.Singleton)
+            .AddConquerorStreamConsumerKeyed<TestStreamConsumer2>(
+                nameof(TestStreamConsumer2),
+                ServiceLifetime.Singleton
+            )
+            .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -426,10 +550,10 @@ public sealed class StreamConsumerLifetimeTests
         var consumer3 = provider.GetRequiredKeyedService<TestStreamConsumer2>(nameof(TestStreamConsumer2));
         var consumer4 = provider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
-        await consumer4.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
+        await consumer4.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1, 2 }));
     }
@@ -445,16 +569,16 @@ public sealed class StreamConsumerLifetimeTests
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
         var consumer1 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer2 = scope1.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
         var consumer3 = scope2.ServiceProvider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
     }
@@ -467,27 +591,40 @@ public sealed class StreamConsumerLifetimeTests
         var instance1 = new TestStreamConsumer(observations);
         var instance2 = new TestStreamConsumer2(observations);
 
-        _ = services.AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer), instance1)
-                    .AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer2), instance2);
+        _ = services
+            .AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer), instance1)
+            .AddConquerorStreamConsumerKeyed(nameof(TestStreamConsumer2), instance2);
 
         var provider = services.BuildServiceProvider();
 
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        await using var scope1 = provider.CreateAsyncScope();
+        await using var scope2 = provider.CreateAsyncScope();
 
-        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer));
-        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
-        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(nameof(TestStreamConsumer2));
+        var consumer1 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer2 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer3 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer)
+        );
+        var consumer4 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer5 = scope1.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
+        var consumer6 = scope2.ServiceProvider.GetRequiredKeyedService<IStreamConsumer<TestItem>>(
+            nameof(TestStreamConsumer2)
+        );
 
-        await consumer1.HandleItem(new());
-        await consumer2.HandleItem(new());
-        await consumer3.HandleItem(new());
-        await consumer4.HandleItem(new());
-        await consumer5.HandleItem(new());
-        await consumer6.HandleItem(new());
+        await consumer1.HandleItem(new(), CancellationToken.None);
+        await consumer2.HandleItem(new(), CancellationToken.None);
+        await consumer3.HandleItem(new(), CancellationToken.None);
+        await consumer4.HandleItem(new(), CancellationToken.None);
+        await consumer5.HandleItem(new(), CancellationToken.None);
+        await consumer6.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2, 3 }));
     }
@@ -520,8 +657,9 @@ public sealed class StreamConsumerLifetimeTests
         }
     }
 
-    private sealed class TestStreamConsumerWithMultipleInterfaces(TestObservations observations) : IStreamConsumer<TestItem>,
-                                                                                                   IStreamConsumer<TestItem2>
+    private sealed class TestStreamConsumerWithMultipleInterfaces(TestObservations observations)
+        : IStreamConsumer<TestItem>,
+            IStreamConsumer<TestItem2>
     {
         private int invocationCount;
 

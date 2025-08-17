@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
-
-// ReSharper disable once CheckNamespace
+#pragma warning disable IDE0130 // Namespaces don't match folder structure' - part of the public API
 namespace Conqueror;
 
 /// <summary>
@@ -18,23 +13,26 @@ public static class ConquerorContextDataFormattingExtensions
     /// <param name="traceId">The trace ID to encode</param>
     /// <param name="messageId">The message ID to encode</param>
     /// <param name="signalId">The signal ID to encode</param>
-    /// <returns>The encoded data if any, otherwise <c>null</c></returns>
+    /// <returns>The encoded data if any, otherwise <see langword="null" /></returns>
+    [SuppressMessage(
+        "Minor Code Smell",
+        "S3254:Default parameter values should not be passed as arguments",
+        Justification = "explicit for readability"
+    )]
     public static string? EncodeDownstreamContextData(
         this ConquerorContext ctx,
         string? traceId = null,
         string? messageId = null,
-        string? signalId = null)
+        string? signalId = null
+    )
     {
         var sb = new StringBuilder();
 
-        EncodeIds(
-            sb,
-            traceId,
-            messageId,
-            signalId);
+        EncodeIds(sb, traceId, messageId, signalId);
 
-        ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Downstream).Encode("d", sb);
-        ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Bidirectional).Encode("b", sb);
+        // ReSharper disable once RedundantArgumentDefaultValue
+        ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Downstream).Encode("d", sb);
+        ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional).Encode("b", sb);
 
         return sb.Length > 0 ? sb.ToString() : null;
     }
@@ -43,13 +41,13 @@ public static class ConquerorContextDataFormattingExtensions
     ///     Encode all upstream and bidirectional context data as a string.
     /// </summary>
     /// <param name="ctx">The context to encode data from</param>
-    /// <returns>The encoded data if any, otherwise <c>null</c></returns>
+    /// <returns>The encoded data if any, otherwise <see langword="null" /></returns>
     public static string? EncodeUpstreamContextData(this ConquerorContext ctx)
     {
         var sb = new StringBuilder();
 
-        ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Upstream).Encode("u", sb);
-        ctx.TransportableData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Bidirectional).Encode("b", sb);
+        ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Upstream).Encode("u", sb);
+        ctx.TransportableData.GetAll(ConquerorContextDataFlowDirection.Bidirectional).Encode("b", sb);
 
         return sb.Length > 0 ? sb.ToString() : null;
     }
@@ -59,10 +57,7 @@ public static class ConquerorContextDataFormattingExtensions
     /// </summary>
     /// <param name="ctx">The context to decode data into</param>
     /// <param name="values">The encoded values to decode</param>
-    public static void DecodeContextData(this ConquerorContext ctx, string values)
-    {
-        ctx.DecodeContextData([values]);
-    }
+    public static void DecodeContextData(this ConquerorContext ctx, string values) => ctx.DecodeContextData([values]);
 
     /// <summary>
     ///     Decode the given encoded data strings into key/value pairs.
@@ -77,22 +72,21 @@ public static class ConquerorContextDataFormattingExtensions
         }
         catch (Exception e)
         {
-            throw new FormattedConquerorContextDataInvalidException("an error occurred while parsing formatted Conqueror context data", e);
+            throw new FormattedConquerorContextDataInvalidException(
+                "an error occurred while parsing formatted Conqueror context data",
+                e
+            );
         }
     }
 
-    private static void EncodeIds(
-        StringBuilder sb,
-        string? traceId,
-        string? messageId,
-        string? signalId)
+    private static void EncodeIds(StringBuilder sb, string? traceId, string? messageId, string? signalId)
     {
         if (traceId is null && messageId is null && signalId is null)
         {
             return;
         }
 
-        _ = sb.Append('c');
+        _ = sb.Append(value: 'c');
 
         if (traceId is not null)
         {
@@ -126,16 +120,21 @@ public static class ConquerorContextDataFormattingExtensions
                 addedTypeTag = true;
             }
 
-            _ = sb.Append('|');
+            _ = sb.Append(value: '|');
 
-            if (key.Contains('|') || key.Contains(':') || value.Contains('|') || value.Contains(':'))
+            if (
+                key.Contains(value: '|', StringComparison.OrdinalIgnoreCase)
+                || key.Contains(value: ':', StringComparison.OrdinalIgnoreCase)
+                || value.Contains(value: '|', StringComparison.OrdinalIgnoreCase)
+                || value.Contains(value: ':', StringComparison.OrdinalIgnoreCase)
+            )
             {
                 // since the key or value include our delimiter characters, we need to base64 encode it
-                _ = sb.Append(':').Append(Base64Encode(key)).Append(':').Append(Base64Encode(value));
+                _ = sb.Append(value: ':').Append(Base64Encode(key)).Append(value: ':').Append(Base64Encode(value));
             }
             else
             {
-                _ = sb.Append(key).Append(':').Append(value);
+                _ = sb.Append(key).Append(value: ':').Append(value);
             }
         }
     }
@@ -168,26 +167,14 @@ public static class ConquerorContextDataFormattingExtensions
                 _ => throw new InvalidOperationException($"unknown context data type tag '{typeTag}'"),
             };
 
-            return DecodeType(
-                ctx.TransportableData,
-                encodedData,
-                index + 2,
-                flowDirection);
+            return DecodeType(ctx.TransportableData, encodedData, index + 2, flowDirection);
         }
 
-        static int DecodeWellKnownValues(
-            ConquerorContext ctx,
-            string encodedData,
-            int index)
+        static int DecodeWellKnownValues(ConquerorContext ctx, string encodedData, int index)
         {
             while (index < encodedData.Length)
             {
-                if (!DecodeKeyValue(
-                        encodedData,
-                        index,
-                        out index,
-                        out var key,
-                        out var value))
+                if (!DecodeKeyValue(encodedData, index, out index, out var key, out var value))
                 {
                     return index;
                 }
@@ -224,16 +211,12 @@ public static class ConquerorContextDataFormattingExtensions
             ITransportableConquerorContextData ctxData,
             string encodedData,
             int index,
-            ConquerorContextDataFlowDirection flowDirection)
+            ConquerorContextDataFlowDirection flowDirection
+        )
         {
             while (index < encodedData.Length)
             {
-                if (!DecodeKeyValue(
-                        encodedData,
-                        index,
-                        out index,
-                        out var key,
-                        out var value))
+                if (!DecodeKeyValue(encodedData, index, out index, out var key, out var value))
                 {
                     return index;
                 }
@@ -248,12 +231,7 @@ public static class ConquerorContextDataFormattingExtensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static bool DecodeKeyValue(
-            string encodedData,
-            int index,
-            out int nextIndex,
-            out string? key,
-            out string? value)
+        static bool DecodeKeyValue(string encodedData, int index, out int nextIndex, out string? key, out string? value)
         {
             key = null;
             value = null;

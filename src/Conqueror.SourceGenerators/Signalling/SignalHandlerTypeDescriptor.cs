@@ -1,12 +1,13 @@
-﻿using Conqueror.SourceGenerators.Util;
+﻿namespace Conqueror.SourceGenerators.Signalling;
 
-namespace Conqueror.SourceGenerators.Signalling;
+using System.Runtime.InteropServices;
 
-public readonly record struct SignalHandlerTypeDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct SignalHandlerTypeDescriptor(
     TypeDescriptor HandlerDescriptor,
     EquatableArray<SignalTypeDescriptor> SignalTypes,
-    EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics)
-    : IHasDiagnostics
+    EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics
+) : IHasDiagnostics
 {
     public readonly EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics = Diagnostics;
     public readonly TypeDescriptor HandlerDescriptor = HandlerDescriptor;

@@ -1,25 +1,19 @@
-using System.Diagnostics.CodeAnalysis;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-[Serializable]
-[SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "the standard constructors don't make sense for this class")]
+[SuppressMessage(
+    "Roslynator",
+    "RCS1194:Implement exception constructors",
+    Justification = "the standard constructors don't make sense for this class"
+)]
 public sealed class FileSystemSignalFailedOnPublisherException : SignalFailedException
 {
     public FileSystemSignalFailedOnPublisherException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 
     public FileSystemSignalFailedOnPublisherException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
-    private FileSystemSignalFailedOnPublisherException()
-    {
-    }
+    private FileSystemSignalFailedOnPublisherException() { }
 
     public override string WellKnownReason => WellKnownReasons.None;
 }

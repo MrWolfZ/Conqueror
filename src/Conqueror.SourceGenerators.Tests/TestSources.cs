@@ -1,11 +1,10 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests;
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using VerifyTests;
-
-namespace Conqueror.SourceGenerators.Tests;
 
 public static class TestSources
 {
@@ -14,19 +13,23 @@ public static class TestSources
         foreach (var testCaseName in GetTestCaseNames(module))
         {
             var sourceCode = LoadTestFile(module, testCaseName);
-            var cutOffIndex = sourceCode.IndexOf("// make the compiler happy during design time", StringComparison.Ordinal);
+            var cutOffIndex = sourceCode.IndexOf(
+                "// make the compiler happy during design time",
+                StringComparison.Ordinal
+            );
 
             if (cutOffIndex > 0)
             {
                 sourceCode = sourceCode[..cutOffIndex];
             }
 
-            yield return new(new SourceGenerationTestCase(testCaseName,
-                                                          sourceCode,
-                                                          sourceCode.Contains("ExpectedDiagnostics", StringComparison.Ordinal)))
-            {
-                TestName = testCaseName,
-            };
+            var testCase = new SourceGenerationTestCase(
+                testCaseName,
+                sourceCode,
+                sourceCode.Contains("ExpectedDiagnostics", StringComparison.Ordinal)
+            );
+
+            yield return new TestCaseData(testCase) { TestName = testCaseName };
         }
     }
 
@@ -42,30 +45,40 @@ public static class TestSources
         return settings;
     }
 
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "method is not async"
+    )]
     private static string LoadTestFile(string module, string testCaseName)
     {
-        var assembly = Assembly.GetExecutingAssembly();
+        var assembly = typeof(TestSources).Assembly;
         var fullPrefix = $"{assembly.GetName().Name}.{module}.TestCases";
         var resourceName = $"{fullPrefix}.{testCaseName}.source.cs";
 
-        using var stream = assembly.GetManifestResourceStream(resourceName) ?? throw new FileNotFoundException($"Could not find embedded resource: {resourceName}");
+        using var stream =
+            assembly.GetManifestResourceStream(resourceName)
+            ?? throw new FileNotFoundException($"Could not find embedded resource: {resourceName}");
         using var reader = new StreamReader(stream);
+
         return reader.ReadToEnd();
     }
 
     private static IEnumerable<string> GetTestCaseNames(string module)
     {
-        var assembly = Assembly.GetExecutingAssembly();
+        var assembly = typeof(TestSources).Assembly;
         var prefix = $"{assembly.GetName().Name}.{module}.TestCases.";
         var extension = ".cs";
 
-        return assembly.GetManifestResourceNames()
-                       .Where(name => name.StartsWith(prefix) && name.EndsWith(extension))
-                       .Select(name => name.Replace(prefix, string.Empty).Replace(".source.cs", string.Empty));
+        return assembly
+            .GetManifestResourceNames()
+            .Where(name =>
+                name.StartsWith(prefix, StringComparison.Ordinal) && name.EndsWith(extension, StringComparison.Ordinal)
+            )
+            .Select(name =>
+                name.Replace(prefix, "", StringComparison.Ordinal).Replace(".source.cs", "", StringComparison.Ordinal)
+            );
     }
 
-    public sealed record SourceGenerationTestCase(
-        string Name,
-        string SourceCode,
-        bool HasExpectedDiagnostics);
+    public sealed record SourceGenerationTestCase(string Name, string SourceCode, bool HasExpectedDiagnostics);
 }

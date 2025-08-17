@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 // TODO: make this public once the API is more stable
 internal interface IHttpSseSignalSerializer<TSignal>

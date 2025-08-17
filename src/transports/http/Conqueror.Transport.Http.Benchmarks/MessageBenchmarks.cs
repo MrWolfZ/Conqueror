@@ -1,4 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿namespace Conqueror.Transport.Http.Benchmarks;
+
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Net.Http.Json;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
@@ -12,46 +15,53 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Conqueror.Transport.Http.Benchmarks;
-
 [Config(typeof(ConfigWithCustomEnvVars))]
 [MemoryDiagnoser]
 [SuppressMessage("ReSharper", "ClassCanBeSealed.Global", Justification = "Benchmark.NET requires non-sealed classes")]
-public partial class MessageBenchmarks
+internal sealed partial class MessageBenchmarks
 {
     [Benchmark]
     [ArgumentsSource(nameof(Arguments))]
     public void RunWithoutConqueror(int numOfExecutions, int? parallelism, bool enableLogging)
     {
         var hostBuilder = new HostBuilder()
-                          .ConfigureLogging(logging => _ = enableLogging ? logging.AddSimpleConsole() : logging.ClearProviders())
-                          .UseEnvironment(Environments.Development)
-                          .ConfigureWebHost(webHost => webHost
-                                                       .UseTestServer()
-                                                       .ConfigureServices(services => services
-                                                                                      .AddMessageHandler<TestMessageHandler>()
-                                                                                      .AddRouting())
-                                                       .Configure(app => app
-                                                                         .UseRouting()
-                                                                         .UseEndpoints(e => e.MapPost(
-                                                                                           "/api",
-                                                                                           async (TestMessageHandler handler, [FromBody] TestMessage message)
-                                                                                               => TypedResults.Ok(await handler.Handle(message))))));
+            .ConfigureLogging(logging => _ = enableLogging ? logging.AddSimpleConsole() : logging.ClearProviders())
+            .UseEnvironment(Environments.Development)
+            .ConfigureWebHost(webHost =>
+                webHost
+                    .UseTestServer()
+                    .ConfigureServices(services => services.AddMessageHandler<TestMessageHandler>().AddRouting())
+                    .Configure(app =>
+                        app.UseRouting()
+                            .UseEndpoints(e =>
+                                e.MapPost(
+                                    "/api",
+                                    async (TestMessageHandler handler, [FromBody] TestMessage message) =>
+                                        TypedResults.Ok(await handler.Handle(message, CancellationToken.None))
+                                )
+                            )
+                    )
+            );
 
-        using var host = hostBuilder.StartAsync().GetAwaiter().GetResult();
+        using var host = hostBuilder.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
         var client = host.GetTestClient();
 
         Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();
 
         async ValueTask RunSingle(int idx)
         {
-            var httpResponse = await client.PostAsJsonAsync("api", new TestMessage(idx));
-            httpResponse.EnsureSuccessStatusCode();
-            var response = await httpResponse.Content.ReadFromJsonAsync<TestMessageResponse>();
+            var httpResponse = await client.PostAsJsonAsync("api", new TestMessage(idx), CancellationToken.None);
+            _ = httpResponse.EnsureSuccessStatusCode();
+            var response = await httpResponse.Content.ReadFromJsonAsync<TestMessageResponse>(CancellationToken.None);
 
             if (response?.Value != idx)
             {
-                throw new InvalidOperationException($"got wrong result {response?.Value} on execution {idx}, expected {idx}");
+                throw new InvalidOperationException(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"got wrong result {response?.Value} on execution {idx}, expected {idx}"
+                    )
+                );
             }
         }
     }
@@ -61,20 +71,20 @@ public partial class MessageBenchmarks
     public void RunWithConqueror(int numOfExecutions, int? parallelism, bool enableLogging)
     {
         var hostBuilder = new HostBuilder()
-                          .ConfigureLogging(logging => _ = enableLogging ? logging.AddSimpleConsole() : logging.ClearProviders())
-                          .UseEnvironment(Environments.Development)
-                          .ConfigureWebHost(webHost => webHost
-                                                       .UseTestServer()
-                                                       .ConfigureServices(services => services
-                                                                                      .AddMessageHandler<TestMessageHandler>()
-                                                                                      .AddRouting()
-                                                                                      .AddConquerorHttpServerAspNetCore())
-                                                       .Configure(app => app
-                                                                         .UseRouting()
-                                                                         .UseConquerorWellKnownErrorHandling()
-                                                                         .UseEndpoints(e => e.MapMessageEndpoints())));
+            .ConfigureLogging(logging => _ = enableLogging ? logging.AddSimpleConsole() : logging.ClearProviders())
+            .UseEnvironment(Environments.Development)
+            .ConfigureWebHost(webHost =>
+                webHost
+                    .UseTestServer()
+                    .ConfigureServices(services =>
+                        services.AddMessageHandler<TestMessageHandler>().AddRouting().AddConquerorHttpServerAspNetCore()
+                    )
+                    .Configure(app =>
+                        app.UseRouting().UseConquerorWellKnownErrorHandling().UseEndpoints(e => e.MapMessageEndpoints())
+                    )
+            );
 
-        using var host = hostBuilder.StartAsync().GetAwaiter().GetResult();
+        using var host = hostBuilder.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
         var client = host.GetTestClient();
 
         var clientServiceProvider = new ServiceCollection().AddConquerorHttpClient().BuildServiceProvider();
@@ -83,25 +93,32 @@ public partial class MessageBenchmarks
 
         async ValueTask RunSingle(int idx)
         {
-            var response = await clientServiceProvider.GetRequiredService<IMessageSenders>()
-                                                      .For(TestMessage.T)
-                                                      .WithTransport(b => b.UseHttp(new("http://conqueror.test/"))
-                                                                           .WithHttpClient(client))
-                                                      .Handle(new(idx));
+            var response = await clientServiceProvider
+                .GetRequiredService<IMessageSenders>()
+                .For(TestMessage.T)
+                .WithTransport(b => b.UseHttp(new("http://conqueror.test/")).WithHttpClient(client))
+                .Handle(new(idx), CancellationToken.None);
 
             if (response.Value != idx)
             {
-                throw new InvalidOperationException($"got wrong result {response.Value} on execution {idx}, expected {idx}");
+                throw new InvalidOperationException(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"got wrong result {response.Value} on execution {idx}, expected {idx}"
+                    )
+                );
             }
         }
     }
 
     public static IEnumerable<object?[]> Arguments()
     {
-        foreach (var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000 }
-                                                       from parallelism in new int?[] { null, 4 }
-                                                       where parallelism is null || numOfExecutions >= parallelism
-                                                       select (numOfExecutions, parallelism))
+        foreach (
+            var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000 }
+            from parallelism in new int?[] { null, 4 }
+            where parallelism is null || numOfExecutions >= parallelism
+            select (numOfExecutions, parallelism)
+        )
         {
             yield return [numOfExecutions, parallelism, false];
         }
@@ -112,9 +129,10 @@ public partial class MessageBenchmarks
         if (parallelism is not null)
         {
             await Parallel.ForEachAsync(
-                Enumerable.Range(0, numOfExecutions),
+                Enumerable.Range(start: 0, numOfExecutions),
                 new ParallelOptions { MaxDegreeOfParallelism = parallelism.Value },
-                (i, _) => runSingle(i));
+                (i, _) => runSingle(i)
+            );
 
             return;
         }
@@ -131,7 +149,7 @@ public partial class MessageBenchmarks
         // ReSharper disable once EmptyConstructor
         public ConfigWithCustomEnvVars()
         {
-            AddJob(Job.ShortRun);
+            _ = AddJob(Job.ShortRun);
 
             // AddJob(Job.Default
             //           .WithEnvironmentVariables(new EnvironmentVariable("SOME_VAR", "SOME_VALUE"))
@@ -146,11 +164,14 @@ public partial class MessageBenchmarks
 
     private sealed partial class TestMessageHandler : TestMessage.IHandler
     {
-        public async Task<TestMessageResponse> Handle(TestMessage query, CancellationToken cancellationToken = new())
+        public async Task<TestMessageResponse> Handle(
+            TestMessage message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
 
-            return new(query.Value);
+            return new TestMessageResponse(message.Value);
         }
     }
 }

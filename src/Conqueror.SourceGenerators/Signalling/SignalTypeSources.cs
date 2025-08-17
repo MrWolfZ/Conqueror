@@ -1,31 +1,24 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using Conqueror.SourceGenerators.Util;
+﻿namespace Conqueror.SourceGenerators.Signalling;
 
-namespace Conqueror.SourceGenerators.Signalling;
-
-public static class SignalTypeSources
+internal static class SignalTypeSources
 {
     public static (string Content, string FileName) GenerateSignalTypeFile(SignalTypeDescriptor descriptor)
     {
         var sb = new StringBuilder();
 
-        var content = sb.AppendSignalTypeFile(in descriptor)
-                        .ToString();
+        var content = sb.AppendSignalTypeFile(in descriptor).ToString();
 
         _ = sb.Clear();
 
         var filename = sb.Append(descriptor.SignalDescriptor.FullyQualifiedName)
-                         .Append("_ConquerorSignalType.g.cs")
-                         .Replace('<', '_')
-                         .Replace('>', '_')
-                         .Replace(',', '.')
-                         .Replace(' ', '_')
-                         .ToString();
+            .Append("_ConquerorSignalType.g.cs")
+            .Replace(oldChar: '<', newChar: '_')
+            .Replace(oldChar: '>', newChar: '_')
+            .Replace(oldChar: ',', newChar: '.')
+            .Replace(oldChar: ' ', newChar: '_')
+            .ToString();
 
-        return new(content, filename);
+        return (content, filename);
     }
 
     private static StringBuilder AppendSignalTypeFile(this StringBuilder sb, in SignalTypeDescriptor descriptor)
@@ -36,25 +29,27 @@ public static class SignalTypeSources
 
         _ = sb.AppendFileHeader();
 
-        using var ns = string.IsNullOrEmpty(signalTypeDescriptor.Namespace) ? null : sb.AppendNamespace(indentation, signalTypeDescriptor.Namespace);
+        using var ns = string.IsNullOrEmpty(signalTypeDescriptor.Namespace)
+            ? null
+            : sb.AppendNamespace(indentation, signalTypeDescriptor.Namespace);
 
         using var p = sb.AppendParentClasses(indentation, signalTypeDescriptor.ParentClasses);
         using (sb.AppendSignalType(indentation, in signalTypeDescriptor))
         {
             _ = sb.AppendSignalTypesProperty(indentation, in signalTypeDescriptor)
-                  .AppendCoreSignalHandlerTypesInjectorProperty(indentation, in signalTypeDescriptor)
-                  .AppendSignalHandlerInterface(indentation, in signalTypeDescriptor)
-                  .AppendSignalHandlerInvokeMethod(indentation, in signalTypeDescriptor)
-                  .AppendSignalEmptyInstanceProperty(indentation, in signalTypeDescriptor)
-                  .AppendJsonSerializerContext(indentation, in signalTypeDescriptor, descriptor.HasJsonSerializerContext)
-                  .AppendPublicConstructorsProperty(indentation, in signalTypeDescriptor)
-                  .AppendPublicPropertiesProperty(indentation, in signalTypeDescriptor);
+                .AppendCoreSignalHandlerTypesInjectorProperty(indentation, in signalTypeDescriptor)
+                .AppendSignalHandlerInterface(indentation, in signalTypeDescriptor)
+                .AppendSignalHandlerInvokeMethod(indentation, in signalTypeDescriptor)
+                .AppendSignalEmptyInstanceProperty(indentation, in signalTypeDescriptor)
+                .AppendJsonSerializerContext(indentation, in signalTypeDescriptor, descriptor.HasJsonSerializerContext)
+                .AppendPublicConstructorsProperty(indentation, in signalTypeDescriptor)
+                .AppendPublicPropertiesProperty(indentation, in signalTypeDescriptor);
         }
 
         foreach (var attribute in descriptor.Attributes)
         {
             // we are always generating the core types above, so we just skip them here
-            if (attribute.Prefix == "Core")
+            if (string.Equals(attribute.Prefix, "Core", StringComparison.Ordinal))
             {
                 continue;
             }
@@ -62,133 +57,187 @@ public static class SignalTypeSources
             using (sb.AppendLine().AppendTransportSignalType(indentation, in signalTypeDescriptor, in attribute))
             {
                 _ = sb.AppendTransportSignalHandlerInterface(indentation, in signalTypeDescriptor, in attribute)
-                      .AppendTransportSignalTypesProperties(indentation, in signalTypeDescriptor, in attribute);
+                    .AppendTransportSignalTypesProperties(indentation, in signalTypeDescriptor, in attribute);
             }
         }
 
         return sb;
     }
 
-    private static IDisposable AppendSignalType(this StringBuilder sb,
-                                                Indentation indentation,
-                                                in TypeDescriptor signalTypeDescriptor)
+    private static IDisposable AppendSignalType(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor
+    )
     {
         var keyword = signalTypeDescriptor.IsRecord ? "record" : "class";
+
         return sb.AppendIndentation(indentation)
-                 .Append("/// <summary>").AppendLineWithIndentation(indentation)
-                 .Append($"///     Signal types for <see cref=\"global::{signalTypeDescriptor.FullyQualifiedName}\" />.").AppendLineWithIndentation(indentation)
-                 .Append("/// </summary>").AppendLineWithIndentation(indentation)
-                 .Append($"partial {keyword} {signalTypeDescriptor.Name} : global::Conqueror.ISignal<{signalTypeDescriptor.Name}>").AppendLine()
-                 .AppendBlock(indentation);
+            .Append("/// <summary>")
+            .AppendLineWithIndentation(indentation)
+            .Append($"///     Signal types for <see cref=\"global::{signalTypeDescriptor.FullyQualifiedName}\" />.")
+            .AppendLineWithIndentation(indentation)
+            .Append("/// </summary>")
+            .AppendLineWithIndentation(indentation)
+            .AppendLine(
+                $"partial {keyword} {signalTypeDescriptor.Name} : global::Conqueror.ISignal<{signalTypeDescriptor.Name}>"
+            )
+            .AppendBlock(indentation);
     }
 
-    private static IDisposable AppendTransportSignalType(this StringBuilder sb,
-                                                         Indentation indentation,
-                                                         in TypeDescriptor signalTypeDescriptor,
-                                                         in SignalAttributeDescriptor attributeDescriptor)
+    private static IDisposable AppendTransportSignalType(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor,
+        in SignalAttributeDescriptor attributeDescriptor
+    )
     {
         var keyword = signalTypeDescriptor.IsRecord ? "record" : "class";
-        var signalTypeName = attributeDescriptor.FullyQualifiedSignalTypeName ?? $"{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Signal";
+        var signalTypeName =
+            attributeDescriptor.FullyQualifiedSignalTypeName
+            ?? $"{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Signal";
+
         return sb.AppendIndentation(indentation)
-                 .Append($"partial {keyword} {signalTypeDescriptor.Name} : global::{signalTypeName}<{signalTypeDescriptor.Name}>").AppendLine()
-                 .AppendBlock(indentation);
+            .AppendLine(
+                $"partial {keyword} {signalTypeDescriptor.Name} : global::{signalTypeName}<{signalTypeDescriptor.Name}>"
+            )
+            .AppendBlock(indentation);
     }
 
-    private static StringBuilder AppendSignalTypesProperty(this StringBuilder sb,
-                                                           Indentation indentation,
-                                                           in TypeDescriptor signalTypeDescriptor)
+    private static StringBuilder AppendSignalTypesProperty(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor
+    )
     {
         return sb.AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append("public static ").AppendNewKeywordIfNecessary(signalTypeDescriptor).Append($"global::Conqueror.SignalTypes<{signalTypeDescriptor.Name}, IHandler> T => new();").AppendLine();
+            .AppendIndentation(indentation)
+            .Append("public static ")
+            .AppendNewKeywordIfNecessary(signalTypeDescriptor)
+            .AppendLine($"global::Conqueror.SignalTypes<{signalTypeDescriptor.Name}, IHandler> T => new();");
     }
 
-    private static StringBuilder AppendCoreSignalHandlerTypesInjectorProperty(this StringBuilder sb,
-                                                                              Indentation indentation,
-                                                                              in TypeDescriptor signalTypeDescriptor)
+    private static StringBuilder AppendCoreSignalHandlerTypesInjectorProperty(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor
+    )
     {
         return sb.AppendLine()
-                 .AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append($"static global::Conqueror.ISignalHandlerTypesInjector global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.CoreTypesInjector {{ get; }} = IHandler.CreateCoreTypesInjector();").AppendLine();
+            .AppendSignalTypeGeneratedCodeAttribute(indentation)
+            .AppendIndentation(indentation)
+            .AppendLine(
+                $"static global::Conqueror.ISignalHandlerTypesInjector global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.CoreTypesInjector {{ get; }} = IHandler.CreateCoreTypesInjector();"
+            );
     }
 
-    private static StringBuilder AppendSignalHandlerInterface(this StringBuilder sb,
-                                                              Indentation indentation,
-                                                              in TypeDescriptor signalTypeDescriptor)
+    private static StringBuilder AppendSignalHandlerInterface(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor
+    )
     {
         sb = sb.AppendLine()
-               .AppendSignalTypeGeneratedCodeAttribute(indentation)
-               .AppendIndentation(indentation)
-               .Append("public ").AppendNewKeywordIfNecessary(signalTypeDescriptor).Append($"partial interface IHandler : global::Conqueror.ISignalHandler<{signalTypeDescriptor.Name}, IHandler, IHandler.Proxy>").AppendLine();
+            .AppendSignalTypeGeneratedCodeAttribute(indentation)
+            .AppendIndentation(indentation)
+            .Append("public ")
+            .AppendNewKeywordIfNecessary(signalTypeDescriptor)
+            .AppendLine(
+                $"partial interface IHandler : global::Conqueror.ISignalHandler<{signalTypeDescriptor.Name}, IHandler, IHandler.Proxy>"
+            );
 
         using var d = sb.AppendBlock(indentation);
 
         return sb.AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append($"global::System.Threading.Tasks.Task Handle({signalTypeDescriptor.Name} signal, global::System.Threading.CancellationToken cancellationToken = default);").AppendLine()
-                 .AppendLine()
-                 .AppendEditorBrowsableNeverAttribute(indentation)
-                 .AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append($"public sealed class Proxy : global::Conqueror.SignalHandlerProxy<{signalTypeDescriptor.Name}, IHandler, Proxy>, IHandler;").AppendLine();
+            .AppendIndentation(indentation)
+            .AppendLine(
+                $"global::System.Threading.Tasks.Task Handle({signalTypeDescriptor.Name} signal, global::System.Threading.CancellationToken cancellationToken = default);"
+            )
+            .AppendLine()
+            .AppendEditorBrowsableNeverAttribute(indentation)
+            .AppendSignalTypeGeneratedCodeAttribute(indentation)
+            .AppendIndentation(indentation)
+            .AppendLine(
+                $"public sealed class Proxy : global::Conqueror.SignalHandlerProxy<{signalTypeDescriptor.Name}, IHandler, Proxy>, IHandler;"
+            );
     }
 
-    private static StringBuilder AppendSignalHandlerInvokeMethod(this StringBuilder sb,
-                                                                 Indentation indentation,
-                                                                 in TypeDescriptor signalTypeDescriptor)
+    private static StringBuilder AppendSignalHandlerInvokeMethod(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor
+    )
     {
         return sb.AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append($"static global::System.Threading.Tasks.Task global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.InvokeHandler<TIHandler>(TIHandler handler, {signalTypeDescriptor.Name} signal, global::System.Threading.CancellationToken cancellationToken)").AppendLineWithIndentation(indentation)
-                 .AppendSingleIndent()
-                 .Append("=> ((IHandler)handler).Handle(signal, cancellationToken);").AppendLine();
+            .AppendIndentation(indentation)
+            .Append(
+                $"static global::System.Threading.Tasks.Task global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.InvokeHandler<TIHandler>(TIHandler handler, {signalTypeDescriptor.Name} signal, global::System.Threading.CancellationToken cancellationToken)"
+            )
+            .AppendLineWithIndentation(indentation)
+            .AppendSingleIndent()
+            .AppendLine("=> ((IHandler)handler).Handle(signal, cancellationToken);");
     }
 
-    private static StringBuilder AppendTransportSignalHandlerInterface(this StringBuilder sb,
-                                                                       Indentation indentation,
-                                                                       in TypeDescriptor signalTypeDescriptor,
-                                                                       in SignalAttributeDescriptor attributeDescriptor)
+    private static StringBuilder AppendTransportSignalHandlerInterface(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor,
+        in SignalAttributeDescriptor attributeDescriptor
+    )
     {
         return sb.AppendIndentation(indentation)
-                 .Append($"partial interface IHandler : global::{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}SignalHandler<{signalTypeDescriptor.Name}, IHandler>;").AppendLine();
+            .AppendLine(
+                $"partial interface IHandler : global::{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}SignalHandler<{signalTypeDescriptor.Name}, IHandler>;"
+            );
     }
 
-    private static StringBuilder AppendSignalEmptyInstanceProperty(this StringBuilder sb,
-                                                                   Indentation indentation,
-                                                                   in TypeDescriptor signalTypeDescriptor)
+    private static StringBuilder AppendSignalEmptyInstanceProperty(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor
+    )
     {
-        sb = sb.AppendLine()
-               .AppendSignalTypeGeneratedCodeAttribute(indentation)
-               .AppendIndentation(indentation);
+        sb = sb.AppendLine().AppendSignalTypeGeneratedCodeAttribute(indentation).AppendIndentation(indentation);
 
         if (signalTypeDescriptor.HasProperties() || signalTypeDescriptor.IsAbstract)
         {
-            return sb.Append($"static {signalTypeDescriptor.Name}? global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.EmptyInstance => null;").AppendLine();
+            return sb.AppendLine(
+                $"static {signalTypeDescriptor.Name}? global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.EmptyInstance => null;"
+            );
         }
 
-        return sb.Append($"static {signalTypeDescriptor.Name} global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.EmptyInstance => new();").AppendLine();
+        return sb.AppendLine(
+            $"static {signalTypeDescriptor.Name} global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.EmptyInstance => new();"
+        );
     }
 
-    private static StringBuilder AppendAttributeParameterProperty(this StringBuilder sb,
-                                                                  Indentation indentation,
-                                                                  in TypeDescriptor signalTypeDescriptor,
-                                                                  in SignalAttributeDescriptor attributeDescriptor,
-                                                                  in AttributeParameterDescriptor parameterDescriptor)
+    private static StringBuilder AppendAttributeParameterProperty(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor,
+        in SignalAttributeDescriptor attributeDescriptor,
+        in AttributeParameterDescriptor parameterDescriptor
+    )
     {
-        var signalTypeName = attributeDescriptor.FullyQualifiedSignalTypeName ?? $"{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Signal";
+        var signalTypeName =
+            attributeDescriptor.FullyQualifiedSignalTypeName
+            ?? $"{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Signal";
+
         return sb.AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append("static ")
-                 .AppendAttributeParameterPropertyType(in parameterDescriptor)
-                 .Append($" global::{signalTypeName}<{signalTypeDescriptor.Name}>.{parameterDescriptor.Name} => ")
-                 .AppendAttributeParameterValue(in parameterDescriptor.Value).Append(";").AppendLine();
+            .AppendIndentation(indentation)
+            .Append("static ")
+            .AppendAttributeParameterPropertyType(in parameterDescriptor)
+            .Append($" global::{signalTypeName}<{signalTypeDescriptor.Name}>.{parameterDescriptor.Name} => ")
+            .AppendAttributeParameterValue(in parameterDescriptor.Value)
+            .AppendLine(";");
     }
 
-    private static StringBuilder AppendJsonSerializerContext(this StringBuilder sb,
-                                                             Indentation indentation,
-                                                             in TypeDescriptor signalTypeDescriptor,
-                                                             bool hasJsonSerializerContext)
+    private static StringBuilder AppendJsonSerializerContext(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor,
+        bool hasJsonSerializerContext
+    )
     {
         if (!hasJsonSerializerContext)
         {
@@ -196,58 +245,99 @@ public static class SignalTypeSources
         }
 
         return sb.AppendLine()
-                 .AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append($"static global::System.Text.Json.Serialization.JsonSerializerContext global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.JsonSerializerContext")
-                 .AppendLineWithIndentation(indentation)
-                 .AppendSingleIndent().Append($"=> global::{signalTypeDescriptor.FullyQualifiedName}JsonSerializerContext.Default;").AppendLine();
+            .AppendSignalTypeGeneratedCodeAttribute(indentation)
+            .AppendIndentation(indentation)
+            .Append(
+                $"static global::System.Text.Json.Serialization.JsonSerializerContext global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.JsonSerializerContext"
+            )
+            .AppendLineWithIndentation(indentation)
+            .AppendSingleIndent()
+            .AppendLine($"=> global::{signalTypeDescriptor.FullyQualifiedName}JsonSerializerContext.Default;");
     }
 
-    private static StringBuilder AppendPublicConstructorsProperty(this StringBuilder sb,
-                                                                  Indentation indentation,
-                                                                  in TypeDescriptor signalTypeDescriptor)
+    private static StringBuilder AppendPublicConstructorsProperty(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor
+    )
     {
         return sb.AppendLine()
-                 .AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append($"static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.PublicConstructors")
-                 .AppendLineWithIndentation(indentation)
-                 .AppendSingleIndent().Append($"=> typeof({signalTypeDescriptor.Name}).GetConstructors(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);").AppendLine();
+            .AppendSignalTypeGeneratedCodeAttribute(indentation)
+            .AppendIndentation(indentation)
+            .Append(
+                $"static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.PublicConstructors"
+            )
+            .AppendLineWithIndentation(indentation)
+            .AppendSingleIndent()
+            .AppendLine(
+                $"=> typeof({signalTypeDescriptor.Name}).GetConstructors(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);"
+            );
     }
 
-    private static StringBuilder AppendPublicPropertiesProperty(this StringBuilder sb,
-                                                                Indentation indentation,
-                                                                in TypeDescriptor signalTypeDescriptor)
+    private static StringBuilder AppendPublicPropertiesProperty(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor
+    )
     {
         return sb.AppendLine()
-                 .AppendSignalTypeGeneratedCodeAttribute(indentation)
-                 .AppendIndentation(indentation)
-                 .Append($"static global::System.Collections.Generic.IEnumerable<global::System.Reflection.PropertyInfo> global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.PublicProperties")
-                 .AppendLineWithIndentation(indentation)
-                 .AppendSingleIndent().Append($"=> typeof({signalTypeDescriptor.Name}).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);").AppendLine();
+            .AppendSignalTypeGeneratedCodeAttribute(indentation)
+            .AppendIndentation(indentation)
+            .Append(
+                $"static global::System.Collections.Generic.IEnumerable<global::System.Reflection.PropertyInfo> global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.PublicProperties"
+            )
+            .AppendLineWithIndentation(indentation)
+            .AppendSingleIndent()
+            .AppendLine(
+                $"=> typeof({signalTypeDescriptor.Name}).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);"
+            );
     }
 
-    private static StringBuilder AppendNewKeywordIfNecessary(this StringBuilder sb,
-                                                             in TypeDescriptor signalTypeDescriptor)
+    private static StringBuilder AppendNewKeywordIfNecessary(
+        this StringBuilder sb,
+        in TypeDescriptor signalTypeDescriptor
+    )
     {
-        return signalTypeDescriptor.BaseTypes.Any(t => t.Attributes.Any(a => a.Attributes.Any(bt => bt.FullyQualifiedName == "Conqueror.Signalling.SignalTransportAttribute"))) ? sb.Append("new ") : sb;
+        return signalTypeDescriptor.BaseTypes.Any(t =>
+            t.Attributes.Any(a =>
+                a.Attributes.Any(bt =>
+                    string.Equals(
+                        bt.FullyQualifiedName,
+                        "Conqueror.Signalling.SignalTransportAttribute",
+                        StringComparison.Ordinal
+                    )
+                )
+            )
+        )
+            ? sb.Append("new ")
+            : sb;
     }
 
-    private static StringBuilder AppendTransportSignalTypesProperties(this StringBuilder sb,
-                                                                      Indentation indentation,
-                                                                      in TypeDescriptor signalTypeDescriptor,
-                                                                      in SignalAttributeDescriptor attributeDescriptor)
+    private static StringBuilder AppendTransportSignalTypesProperties(
+        this StringBuilder sb,
+        Indentation indentation,
+        in TypeDescriptor signalTypeDescriptor,
+        in SignalAttributeDescriptor attributeDescriptor
+    )
     {
         foreach (var property in attributeDescriptor.Properties)
         {
             _ = sb.AppendLine()
-                  .AppendAttributeParameterProperty(indentation, in signalTypeDescriptor, in attributeDescriptor, in property);
+                .AppendAttributeParameterProperty(
+                    indentation,
+                    in signalTypeDescriptor,
+                    in attributeDescriptor,
+                    in property
+                );
         }
 
         return sb;
     }
 
-    private static StringBuilder AppendAttributeParameterPropertyType(this StringBuilder sb, in AttributeParameterDescriptor parameterDescriptor)
+    private static StringBuilder AppendAttributeParameterPropertyType(
+        this StringBuilder sb,
+        in AttributeParameterDescriptor parameterDescriptor
+    )
     {
         if (parameterDescriptor is { IsPrimitive: false, IsArray: false })
         {
@@ -258,13 +348,16 @@ public static class SignalTypeSources
 
         if (parameterDescriptor.Value.IsNull)
         {
-            _ = sb.Append('?');
+            _ = sb.Append(value: '?');
         }
 
         return sb;
     }
 
-    private static StringBuilder AppendAttributeParameterValue(this StringBuilder sb, in AttributeParameterValueDescriptor valueDescriptor)
+    private static StringBuilder AppendAttributeParameterValue(
+        this StringBuilder sb,
+        in AttributeParameterValueDescriptor valueDescriptor
+    )
     {
         if (valueDescriptor.IsNull)
         {
@@ -286,22 +379,22 @@ public static class SignalTypeSources
 
                 if (i < valueDescriptor.Values.Value.Count - 1)
                 {
-                    _ = sb.Append(',');
+                    _ = sb.Append(value: ',');
                 }
 
-                _ = sb.Append(' ');
+                _ = sb.Append(value: ' ');
             }
 
-            return sb.Append("}");
+            return sb.Append('}');
         }
 
         return sb.Append(valueDescriptor.Value);
     }
 
-    private static StringBuilder AppendSignalTypeGeneratedCodeAttribute(this StringBuilder sb,
-                                                                        Indentation indentation)
+    private static StringBuilder AppendSignalTypeGeneratedCodeAttribute(this StringBuilder sb, Indentation indentation)
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        return sb.AppendGeneratedCodeAttribute(indentation, typeof(SignalTypeGenerator).FullName ?? string.Empty, version);
+        var version = typeof(SignalTypeSources).Assembly.GetName().Version.ToString();
+
+        return sb.AppendGeneratedCodeAttribute(indentation, typeof(SignalTypeGenerator).FullName ?? "", version);
     }
 }

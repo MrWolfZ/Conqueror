@@ -1,6 +1,6 @@
-﻿using System;
+﻿namespace Conqueror.Signalling;
 
-namespace Conqueror.Signalling;
+using System.Globalization;
 
 public sealed record ParallelSignalBroadcastingStrategyConfiguration
 {
@@ -10,10 +10,17 @@ public sealed record ParallelSignalBroadcastingStrategyConfiguration
     {
         if (value <= 0)
         {
-            throw new ArgumentException($"maximum degree of parallelism for parallel in-memory publishing must be a positive integer, but was {value}");
+            throw new ArgumentException(
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"maximum degree of parallelism for parallel in-memory publishing must be a positive integer, but was {value}"
+                ),
+                nameof(value)
+            );
         }
 
         MaxDegreeOfParallelism = value;
+
         return this;
     }
 }

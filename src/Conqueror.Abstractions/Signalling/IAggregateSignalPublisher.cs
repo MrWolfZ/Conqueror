@@ -1,8 +1,6 @@
-﻿using System;
-using Conqueror.Signalling;
+﻿namespace Conqueror;
 
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+using Signalling;
 
 public interface IAggregateSignalPublisher<in TSignal> : ISignalPublisher<TSignal>
     where TSignal : class, ISignal<TSignal>
@@ -11,11 +9,15 @@ public interface IAggregateSignalPublisher<in TSignal> : ISignalPublisher<TSigna
 
     IAggregateSignalPublisher<TSignal> WithSequentialBroadcastingStrategy();
 
-    IAggregateSignalPublisher<TSignal> WithSequentialBroadcastingStrategy(Action<SequentialSignalBroadcastingStrategyConfiguration> configure);
+    IAggregateSignalPublisher<TSignal> WithSequentialBroadcastingStrategy(
+        Action<SequentialSignalBroadcastingStrategyConfiguration> configure
+    );
 
     IAggregateSignalPublisher<TSignal> WithParallelBroadcastingStrategy();
 
-    IAggregateSignalPublisher<TSignal> WithParallelBroadcastingStrategy(Action<ParallelSignalBroadcastingStrategyConfiguration> configure);
+    IAggregateSignalPublisher<TSignal> WithParallelBroadcastingStrategy(
+        Action<ParallelSignalBroadcastingStrategyConfiguration> configure
+    );
 
     // TODO: implement (and test)
     // IAggregateSignalPublisher<TSignal> WithFireAndForgetBroadcastingStrategy();

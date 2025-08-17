@@ -1,8 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 // TODO: make this public once the API is more stable
 internal interface IFileSystemSignalSerializer<TSignal>
@@ -14,10 +10,12 @@ internal interface IFileSystemSignalSerializer<TSignal>
         IServiceProvider serviceProvider,
         TSignal signal,
         Stream fileStream,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     Task<TSignal> DeserializeSignal(
         IServiceProvider serviceProvider,
         Stream fileStream,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 }

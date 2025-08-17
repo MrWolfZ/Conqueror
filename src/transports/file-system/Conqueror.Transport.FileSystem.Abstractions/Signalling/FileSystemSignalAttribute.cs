@@ -1,7 +1,4 @@
-﻿using Conqueror.Signalling;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 /// <summary>
 ///     A signal transport that uses the file system to publish and receive signals.

@@ -1,14 +1,13 @@
 ﻿namespace Conqueror.Transport.Http.Tests.Signalling;
 
-public abstract class HttpSignalConformityTestCase : ISignalTransportConformityTestCase<HttpSignalTransportConformityTestHost>
+public abstract class HttpSignalConformityTestCase
+    : ISignalTransportConformityTestCase<HttpSignalTransportConformityTestHost>
 {
     public enum HttpSignalTransportType
     {
         Sse,
         WebSockets,
     }
-
-    public required string Name { get; init; }
 
     public required HttpSignalTransportType TransportType { get; init; }
 
@@ -22,26 +21,31 @@ public abstract class HttpSignalConformityTestCase : ISignalTransportConformityT
 
     public Action<IHeaderDictionary>? ConfigureHeaders { get; init; }
 
-    public virtual HttpSignalTransportConformityTestHost CreateTestHost() => HttpSignalTransportConformityTestHost.Create(this);
+    public required string Name { get; init; }
+
+    public virtual HttpSignalTransportConformityTestHost CreateTestHost() =>
+        HttpSignalTransportConformityTestHost.Create(this);
 
     Task ISignalTransportConformityTestCase<HttpSignalTransportConformityTestHost>.PublishSignals(
         ISignalPublishers publishers,
-        CancellationToken cancellationToken)
-        => PublishSignals(publishers, cancellationToken);
+        CancellationToken cancellationToken
+    ) => PublishSignals(publishers, cancellationToken);
 
-    public virtual void RegisterServerServices(IServiceCollection services)
+    public virtual void RegisterServerServices(IServiceCollection services) { }
+
+    public virtual void RegisterClientServices(IServiceCollection services) { }
+
+    public virtual void ConfigureSseReceiver(
+        HttpSignalTransportConformityTestHost host,
+        IHttpSseSignalReceiver receiver
+    )
     {
     }
 
-    public virtual void RegisterClientServices(IServiceCollection services)
-    {
-    }
-
-    public virtual void ConfigureSseReceiver(HttpSignalTransportConformityTestHost host, IHttpSseSignalReceiver receiver)
-    {
-    }
-
-    public virtual void ConfigureWebSocketsReceiver(HttpSignalTransportConformityTestHost host, IHttpWebSocketsSignalReceiver receiver)
+    public virtual void ConfigureWebSocketsReceiver(
+        HttpSignalTransportConformityTestHost host,
+        IHttpWebSocketsSignalReceiver receiver
+    )
     {
     }
 }

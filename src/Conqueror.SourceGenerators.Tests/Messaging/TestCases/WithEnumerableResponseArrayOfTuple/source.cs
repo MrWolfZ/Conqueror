@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithEnumerableResponseArrayOfTuple;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithEnumerableResponseArrayOfTuple;
 
 [Message<(TestMessageResponse, int, long[], Payload)[]>]
 public partial record TestMessage;
@@ -13,7 +13,10 @@ public record Payload;
 
 public partial class TestMessageHandler : TestMessage.IHandler
 {
-    public Task<(TestMessageResponse, int, long[], Payload)[]> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task<(TestMessageResponse, int, long[], Payload)[]> Handle(
+        TestMessage message,
+        CancellationToken cancellationToken
+    ) => throw new NotSupportedException();
 }
 
 // make the compiler happy during design time

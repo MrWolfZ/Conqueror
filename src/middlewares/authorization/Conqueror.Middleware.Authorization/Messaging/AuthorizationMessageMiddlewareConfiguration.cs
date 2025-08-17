@@ -1,19 +1,20 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace Conqueror.Middleware.Authorization.Messaging;
 
 public delegate Task<AuthorizationResult> AuthorizationCheckFn<TMessage, TResponse>(
-    MessageAuthorizationContext<TMessage, TResponse> context)
+    MessageAuthorizationContext<TMessage, TResponse> context
+)
     where TMessage : class, IMessage<TMessage, TResponse>;
 
 public delegate AuthorizationResult AuthorizationCheckSyncFn<TMessage, TResponse>(
-    MessageAuthorizationContext<TMessage, TResponse> context)
+    MessageAuthorizationContext<TMessage, TResponse> context
+)
     where TMessage : class, IMessage<TMessage, TResponse>;
 
 /// <summary>
 ///     The configuration options for <see cref="AuthorizationMessageMiddleware{TMessage,TResponse}" />.
 /// </summary>
+/// <typeparam name="TMessage">The message type</typeparam>
+/// <typeparam name="TResponse">The response type</typeparam>
 public sealed class AuthorizationMessageMiddlewareConfiguration<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -27,9 +28,11 @@ public sealed class AuthorizationMessageMiddlewareConfiguration<TMessage, TRespo
     /// <returns>The configuration for chaining</returns>
     public AuthorizationMessageMiddlewareConfiguration<TMessage, TResponse> AddAuthorizationCheck(
         string id,
-        AuthorizationCheckFn<TMessage, TResponse> check)
+        AuthorizationCheckFn<TMessage, TResponse> check
+    )
     {
         AuthorizationChecks.Add((id, check));
+
         return this;
     }
 
@@ -41,8 +44,8 @@ public sealed class AuthorizationMessageMiddlewareConfiguration<TMessage, TRespo
     /// <returns>The configuration for chaining</returns>
     public AuthorizationMessageMiddlewareConfiguration<TMessage, TResponse> AddAuthorizationCheck(
         string id,
-        AuthorizationCheckSyncFn<TMessage, TResponse> check)
-        => AddAuthorizationCheck(id, ctx => Task.FromResult(check(ctx)));
+        AuthorizationCheckSyncFn<TMessage, TResponse> check
+    ) => AddAuthorizationCheck(id, ctx => Task.FromResult(check(ctx)));
 
     /// <summary>
     ///     Remove <b>ALL</b> authorization checks with the given id.
@@ -51,7 +54,8 @@ public sealed class AuthorizationMessageMiddlewareConfiguration<TMessage, TRespo
     /// <returns>The configuration for chaining</returns>
     public AuthorizationMessageMiddlewareConfiguration<TMessage, TResponse> RemoveAuthorizationCheck(string id)
     {
-        _ = AuthorizationChecks.RemoveAll(x => x.Id == id);
+        _ = AuthorizationChecks.RemoveAll(x => string.Equals(x.Id, id, StringComparison.Ordinal));
+
         return this;
     }
 }

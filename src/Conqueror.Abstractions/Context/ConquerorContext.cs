@@ -1,8 +1,6 @@
-using System;
-using System.Security.Claims;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
+
+using System.Security.Claims;
 
 /// <summary>
 ///     Encapsulates contextual information for conqueror operations (i.e. messages, streaming requests, and signals).
@@ -48,7 +46,7 @@ public abstract class ConquerorContext : IDisposable
     /// </summary>
     public void Dispose()
     {
-        Dispose(true);
+        Dispose(isDisposing: true);
         GC.SuppressFinalize(this);
     }
 

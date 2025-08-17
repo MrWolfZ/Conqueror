@@ -1,27 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Net.ServerSentEvents;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Extensions.Logging;
-
-namespace Conqueror.Transport.Http.Server.AspNetCore;
+﻿namespace Conqueror.Transport.Http.Server.AspNetCore;
 
 internal static partial class SseEndpoint
 {
     [SuppressMessage(
         "Minor Code Smell",
         "S6667:Logging in a catch clause should pass the caught exception as a parameter.",
-        Justification = "not necessary for cancellation exceptions")]
-    public static async Task Run(
-        HttpContext context,
-        ILogger logger,
-        Func<IAsyncEnumerable<SseItem<string>>> getItems)
+        Justification = "not necessary for cancellation exceptions"
+    )]
+    public static async Task Run(HttpContext context, ILogger logger, Func<IAsyncEnumerable<SseItem<string>>> getItems)
     {
         try
         {
@@ -38,17 +24,20 @@ internal static partial class SseEndpoint
             // flush the response stream to ensure that the client receives the headers
             await context.Response.Body.FlushAsync(context.RequestAborted).ConfigureAwait(false);
 
-            await SseFormatter.WriteAsync(
-                                  RunWithFlushing(items, context.Response.Body, logger),
-                                  context.Response.Body,
-                                  context.RequestAborted)
-                              .ConfigureAwait(false);
+            await SseFormatter
+                .WriteAsync(
+                    RunWithFlushing(items, context.Response.Body, logger, context.RequestAborted),
+                    context.Response.Body,
+                    context.RequestAborted
+                )
+                .ConfigureAwait(false);
 
             static async IAsyncEnumerable<SseItem<string>> RunWithFlushing(
                 IAsyncEnumerable<SseItem<string>> items,
                 Stream responseBody,
                 ILogger logger,
-                [EnumeratorCancellation] CancellationToken ct = default)
+                [EnumeratorCancellation] CancellationToken ct = default
+            )
             {
                 await foreach (var item in items.ConfigureAwait(false).WithCancellation(ct))
                 {

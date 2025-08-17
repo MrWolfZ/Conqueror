@@ -1,25 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
+#pragma warning disable SA1201 // ElementsMustAppearInTheCorrectOrder
 
-// #pragma warning disable CA1000 // For this particular API it makes sense to have static methods on generic types
-// #pragma warning disable CA1034 // we want to explicitly nest types to hide them from intellisense
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
+
+using System.ComponentModel;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface ISignalHandler
 {
     /// <summary>
     ///     Implemented by source generator for each handler type. Cannot be abstract since otherwise
-    ///     the generated <code>IHandler</code> types could not be used as generic arguments.
+    ///     the generated <c>IHandler</c> types could not be used as generic arguments.
     /// </summary>
-    static virtual IEnumerable<ISignalHandlerTypesInjector> GetTypeInjectors()
-        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler type");
+    /// <returns>The types injectors for all signal types handled by this handler</returns>
+    static virtual IEnumerable<ISignalHandlerTypesInjector> GetTypeInjectors() =>
+        throw new NotSupportedException(
+            "this should be implemented by the source generator for each concrete handler type"
+        );
 
     static virtual void ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
         where T : class, ISignal<T>
@@ -58,16 +54,20 @@ public interface ISignalHandler<TSignal, TIHandler, TProxy> : ISignalHandler<TSi
 {
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    static ISignalHandlerTypesInjector CreateCoreTypesInjector()
-        => new CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy>(null, null);
+    static ISignalHandlerTypesInjector CreateCoreTypesInjector() =>
+        new CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy>(
+            configurePipeline: null,
+            configureInProcessReceiver: null
+        );
 
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
     static ISignalHandlerTypesInjector CreateCoreTypesInjector<THandler>()
-        where THandler : class, TIHandler
-        => new CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy>(
+        where THandler : class, TIHandler =>
+        new CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy>(
             THandler.ConfigurePipeline<TSignal>,
-            THandler.ConfigureInProcessReceiver);
+            THandler.ConfigureInProcessReceiver
+        );
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -85,30 +85,26 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
 
     private ISignalPublisher<TSignal>? Publisher { get; init; }
 
+    [SuppressMessage(
+        "Design",
+        "MA0138:Do not use \'Async\' suffix when a method does not return an awaitable type",
+        Justification = "false positive"
+    )]
     private ConfigureSignalPublisherAsync<TSignal>? ConfigurePublisherAsync { get; init; }
 
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public Task Handle(TSignal signal, CancellationToken cancellationToken = default)
-        => Dispatcher.Dispatch(
-            signal,
-            ServiceProvider,
-            ConfigurePipeline,
-            Publisher,
-            ConfigurePublisherAsync,
-            cancellationToken);
-
-    public TIHandler WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline)
-        => new TProxy
+    public TIHandler WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline) =>
+        new TProxy
         {
             ServiceProvider = ServiceProvider,
             Dispatcher = Dispatcher,
-            ConfigurePipeline = (Action<ISignalPipeline<TSignal>>)Delegate.Combine(ConfigurePipeline, configurePipeline),
+            ConfigurePipeline =
+                (Action<ISignalPipeline<TSignal>>)Delegate.Combine(ConfigurePipeline, configurePipeline),
             Publisher = Publisher,
             ConfigurePublisherAsync = ConfigurePublisherAsync,
         };
 
-    public TIHandler WithTransport(ConfigureSignalPublisher<TSignal> configurePublisher)
-        => new TProxy
+    public TIHandler WithTransport(ConfigureSignalPublisher<TSignal> configurePublisher) =>
+        new TProxy
         {
             ServiceProvider = ServiceProvider,
             Dispatcher = Dispatcher,
@@ -117,8 +113,8 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
             ConfigurePublisherAsync = null,
         };
 
-    public TIHandler WithTransport(ConfigureSignalPublisherAsync<TSignal> configurePublisherAsync)
-        => new TProxy
+    public TIHandler WithTransport(ConfigureSignalPublisherAsync<TSignal> configurePublisherAsync) =>
+        new TProxy
         {
             ServiceProvider = ServiceProvider,
             Dispatcher = Dispatcher,
@@ -127,8 +123,19 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
             ConfigurePublisherAsync = configurePublisherAsync,
         };
 
-    static IEnumerable<ISignalHandlerTypesInjector> ISignalHandler.GetTypeInjectors()
-        => throw new NotSupportedException("this method should never be called on the proxy");
+    static IEnumerable<ISignalHandlerTypesInjector> ISignalHandler.GetTypeInjectors() =>
+        throw new NotSupportedException("this method should never be called on the proxy");
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public Task Handle(TSignal signal, CancellationToken cancellationToken = default) =>
+        Dispatcher.Dispatch(
+            signal,
+            ServiceProvider,
+            ConfigurePipeline,
+            Publisher,
+            ConfigurePublisherAsync,
+            cancellationToken
+        );
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]

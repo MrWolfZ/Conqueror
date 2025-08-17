@@ -1,10 +1,21 @@
 ﻿namespace Conqueror.Transport.FileSystem.Tests.Signalling;
 
+using System.Globalization;
+
 [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "Members are used by ASP.NET Core via reflection")]
 [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Members are used by ASP.NET Core via reflection")]
-[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification = "Members are used by ASP.NET Core via reflection")]
+[SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Members are used by ASP.NET Core via reflection"
+)]
 public static partial class FileSystemSignalTestCases
 {
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
     public static IEnumerable<FileSystemSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases()
     {
         yield return new()
@@ -14,10 +25,8 @@ public static partial class FileSystemSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalHandler>(ct),
         };
@@ -30,10 +39,9 @@ public static partial class FileSystemSignalTestCases
             PublishSignals = async (p, ct) =>
             {
                 await Task.WhenAll(
-                    p.For(TestSignal.T)
-                     .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct),
-                    p.For(TestSignal.T)
-                     .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct));
+                    p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct),
+                    p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct)
+                );
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalHandler>(ct),
             SignalsArePublishedInParallel = true,
@@ -42,24 +50,20 @@ public static partial class FileSystemSignalTestCases
         yield return new()
         {
             Name = "single receiver multiple times",
-            ExpectedReceivedSignals =
-            [
-                new TestSignal { Payload = 10 },
-                new TestSignal { Payload = 20 },
-            ],
+            ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 20 }],
             RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
             },
-            RunReceivers = (r, ct) => r.CombineExecutions(
-            [
-                r.RunFileSystemSignalReceiver<TestSignalHandler>(ct),
-                r.RunFileSystemSignalReceiver<TestSignalHandler>(ct),
-            ]),
+            RunReceivers = (r, ct) =>
+                r.CombineExecutions(
+                    [
+                        r.RunFileSystemSignalReceiver<TestSignalHandler>(ct),
+                        r.RunFileSystemSignalReceiver<TestSignalHandler>(ct),
+                    ]
+                ),
             NumOfReceivers = 2,
         };
 
@@ -74,16 +78,12 @@ public static partial class FileSystemSignalTestCases
                 new TestSignal { Payload = 30 },
                 new TestSignal { Payload = 30 },
             ],
-            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
-                                    .AddSignalHandler<MultiTestSignalHandler>(),
+            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>().AddSignalHandler<MultiTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                await p.For(TestSignal2.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal2.T).WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceivers(ct),
             NumOfReceivers = 2,
@@ -100,17 +100,14 @@ public static partial class FileSystemSignalTestCases
                 new TestSignal { Payload = 30 },
                 new TestSignal { Payload = 30 },
             ],
-            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
-                                    .AddSignalHandler<MultiTestSignalHandler>(),
+            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>().AddSignalHandler<MultiTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
                 await Task.WhenAll(
-                    p.For(TestSignal.T)
-                     .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct),
-                    p.For(TestSignal2.T)
-                     .WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct),
-                    p.For(TestSignal.T)
-                     .WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct));
+                    p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct),
+                    p.For(TestSignal2.T).WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct),
+                    p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct)
+                );
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceivers(ct),
             NumOfReceivers = 2,
@@ -125,10 +122,8 @@ public static partial class FileSystemSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<DisabledTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<DisabledTestSignalHandler>(ct),
         };
@@ -146,14 +141,10 @@ public static partial class FileSystemSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<MultiTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                await p.For(TestSignal2.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 11 }, ct);
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
-                await p.For(TestSignal2.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 21 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal2.T).WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 11 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                await p.For(TestSignal2.T).WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 21 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<MultiTestSignalHandler>(ct),
         };
@@ -165,11 +156,9 @@ public static partial class FileSystemSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<MixedWithNonFileSystemTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
                 await p.For(NonFileSystemTestSignal.T).Handle(new() { Payload = 11 }, ct);
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
                 await p.For(NonFileSystemTestSignal.T).Handle(new() { Payload = 21 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<MixedWithNonFileSystemTestSignalHandler>(ct),
@@ -178,14 +167,20 @@ public static partial class FileSystemSignalTestCases
         yield return new()
         {
             Name = "signal with custom event type or tag",
-            ExpectedReceivedSignals = [new TestSignalWithCustomEventTypeOrTag { Payload = 10 }, new TestSignalWithCustomEventTypeOrTag { Payload = 20 }],
+            ExpectedReceivedSignals =
+            [
+                new TestSignalWithCustomEventTypeOrTag { Payload = 10 },
+                new TestSignalWithCustomEventTypeOrTag { Payload = 20 },
+            ],
             RegisterHandler = s => s.AddSignalHandler<TestSignalWithCustomEventTypeOrTagHandler>(),
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignalWithCustomEventTypeOrTag.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
                 await p.For(TestSignalWithCustomEventTypeOrTag.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalWithCustomEventTypeOrTagHandler>(ct),
         };
@@ -197,10 +192,8 @@ public static partial class FileSystemSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<TestSignalWithoutPayloadHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignalWithoutPayload.T)
-                       .WithDefaultPublisherConfiguration().Handle(new(), ct);
-                await p.For(TestSignalWithoutPayload.T)
-                       .WithDefaultPublisherConfiguration().Handle(new(), ct);
+                await p.For(TestSignalWithoutPayload.T).WithDefaultPublisherConfiguration().Handle(new(), ct);
+                await p.For(TestSignalWithoutPayload.T).WithDefaultPublisherConfiguration().Handle(new(), ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalWithoutPayloadHandler>(ct),
         };
@@ -210,8 +203,8 @@ public static partial class FileSystemSignalTestCases
             Name = "signal with custom serialized payload type",
             ExpectedReceivedSignals =
             [
-                new TestSignalWithCustomSerializedPayloadType { Payload = new(10) },
-                new TestSignalWithCustomSerializedPayloadType { Payload = new(20) },
+                new TestSignalWithCustomSerializedPayloadType { Payload = new(Payload: 10) },
+                new TestSignalWithCustomSerializedPayloadType { Payload = new(Payload: 20) },
             ],
             RegisterHandler = s =>
             {
@@ -223,7 +216,7 @@ public static partial class FileSystemSignalTestCases
                 jsonSerializerOptions.MakeReadOnly(populateMissingResolver: true);
 
                 _ = s.AddSignalHandler<TestSignalWithCustomSerializedPayloadTypeHandler>()
-                     .AddSingleton(jsonSerializerOptions);
+                    .AddSingleton(jsonSerializerOptions);
             },
             RegisterOnPublisher = s =>
             {
@@ -235,16 +228,19 @@ public static partial class FileSystemSignalTestCases
                 jsonSerializerOptions.MakeReadOnly(populateMissingResolver: true);
 
                 _ = s.AddSignalHandler<TestSignalWithCustomSerializedPayloadTypeHandler>()
-                     .AddSingleton(jsonSerializerOptions);
+                    .AddSingleton(jsonSerializerOptions);
             },
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignalWithCustomSerializedPayloadType.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = new(10) }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = new(Payload: 10) }, ct);
                 await p.For(TestSignalWithCustomSerializedPayloadType.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = new(20) }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = new(Payload: 20) }, ct);
             },
-            RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalWithCustomSerializedPayloadTypeHandler>(ct),
+            RunReceivers = (r, ct) =>
+                r.RunFileSystemSignalReceiver<TestSignalWithCustomSerializedPayloadTypeHandler>(ct),
         };
 
         yield return new()
@@ -259,9 +255,11 @@ public static partial class FileSystemSignalTestCases
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignalWithCustomSerializer.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
                 await p.For(TestSignalWithCustomSerializer.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalWithCustomSerializerHandler>(ct),
         };
@@ -278,9 +276,11 @@ public static partial class FileSystemSignalTestCases
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignalWithCustomJsonTypeInfo.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { SignalPayload = 10 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { SignalPayload = 10 }, ct);
                 await p.For(TestSignalWithCustomJsonTypeInfo.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { SignalPayload = 20 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { SignalPayload = 20 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalWithCustomJsonTypeInfoHandler>(ct),
         };
@@ -288,40 +288,60 @@ public static partial class FileSystemSignalTestCases
         yield return new()
         {
             Name = "receiver and publisher with middleware",
-            ExpectedReceivedSignals = [new TestSignalWithMiddleware { Payload = 10 }, new TestSignalWithMiddleware { Payload = 20 }],
-            RegisterHandler = s => s.AddSignalHandler<TestSignalWithMiddlewareHandler>()
-                                    .AddTransient<TestSignalMiddleware<TestSignalWithMiddleware>>()
-                                    .AddSingleton<TestObservations>(),
-            RegisterOnPublisher = s => s.AddTransient<TestSignalMiddleware<TestSignalWithMiddleware>>()
-                                     .AddSingleton<TestObservations>(),
+            ExpectedReceivedSignals =
+            [
+                new TestSignalWithMiddleware { Payload = 10 },
+                new TestSignalWithMiddleware { Payload = 20 },
+            ],
+            RegisterHandler = s =>
+                s.AddSignalHandler<TestSignalWithMiddlewareHandler>()
+                    .AddTransient<TestSignalMiddleware<TestSignalWithMiddleware>>()
+                    .AddSingleton<TestObservations>(),
+            RegisterOnPublisher = s =>
+                s.AddTransient<TestSignalMiddleware<TestSignalWithMiddleware>>().AddSingleton<TestObservations>(),
             PublishSignals = async (sp, ct) =>
             {
                 await sp.For(TestSignalWithMiddleware.T)
-                        .WithDefaultPublisherConfiguration()
-                        .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>()))
-                        .Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>())
+                    )
+                    .Handle(new() { Payload = 10 }, ct);
 
                 await sp.For(TestSignalWithMiddleware.T)
-                        .WithDefaultPublisherConfiguration()
-                        .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>()))
-                        .Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>())
+                    )
+                    .Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalWithMiddlewareHandler>(ct),
-
             AfterSignalsAreReceived = host =>
             {
-                var seenTransportTypeOnServer = host.PublisherHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
+                var seenTransportTypeOnServer = host
+                    .PublisherHost.Resolve<TestObservations>()
+                    .SeenTransportTypeInMiddleware;
                 var isCorrectTransportTypeOnServer = seenTransportTypeOnServer?.IsFileSystem();
 
-                Assert.That(isCorrectTransportTypeOnServer, Is.True, $"transport type is {seenTransportTypeOnServer?.Name}");
+                Assert.That(
+                    isCorrectTransportTypeOnServer,
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnServer?.Name}"
+                );
                 Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(SignalTransportRole.Publisher));
 
                 foreach (var receiverHost in host.ReceiverHosts)
                 {
-                    var seenTransportTypeOnClient = receiverHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
+                    var seenTransportTypeOnClient = receiverHost
+                        .Resolve<TestObservations>()
+                        .SeenTransportTypeInMiddleware;
                     var isCorrectTransportTypeOnClient = seenTransportTypeOnClient?.IsFileSystem();
 
-                    Assert.That(isCorrectTransportTypeOnClient, Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
+                    Assert.That(
+                        isCorrectTransportTypeOnClient,
+                        Is.True,
+                        $"transport type is {seenTransportTypeOnClient?.Name}"
+                    );
                     Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(SignalTransportRole.Receiver));
                 }
 
@@ -332,14 +352,20 @@ public static partial class FileSystemSignalTestCases
         yield return new()
         {
             Name = "handler discovered via assembly scanning",
-            ExpectedReceivedSignals = [new TestSignalForAssemblyScanning { Payload = 10 }, new TestSignalForAssemblyScanning { Payload = 20 }],
+            ExpectedReceivedSignals =
+            [
+                new TestSignalForAssemblyScanning { Payload = 10 },
+                new TestSignalForAssemblyScanning { Payload = 20 },
+            ],
             RegisterHandler = s => s.AddSignalHandlersFromAssembly(typeof(TestSignalForAssemblyScanning).Assembly),
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignalForAssemblyScanning.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
                 await p.For(TestSignalForAssemblyScanning.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalForAssemblyScanningHandler>(ct),
         };
@@ -362,9 +388,11 @@ public static partial class FileSystemSignalTestCases
             PublishSignals = async (p, ct) =>
             {
                 await p.For(TestSignalWithDelegateHandler.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
                 await p.For(TestSignalWithDelegateHandler.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceivers(ct),
             NumOfReceivers = 4,
@@ -384,16 +412,15 @@ public static partial class FileSystemSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<WildMixTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                await p.For(TestSignalWithoutPayload.T)
-                       .WithDefaultPublisherConfiguration().Handle(new(), ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignalWithoutPayload.T).WithDefaultPublisherConfiguration().Handle(new(), ct);
                 await p.For(TestSignalWithCustomSerializer.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
                 await p.For(TestSignalWithCustomJsonTypeInfo.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { SignalPayload = 30 }, ct);
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 40 }, ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new() { SignalPayload = 30 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 40 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<WildMixTestSignalHandler>(ct),
         };
@@ -403,42 +430,47 @@ public static partial class FileSystemSignalTestCases
             Name = "signal with hierarchy",
             ExpectedReceivedSignals =
             [
-                new TestSignalBase(1),
-
+                new TestSignalBase(Payload: 1),
                 // because we publish these events through TestSignalBase, the event type will be "testSignalBase"
                 // and the signal will be deserialized as the base type
-                new TestSignalBase(10),
-                new TestSignalBase(20),
-
+                new TestSignalBase(Payload: 10),
+                new TestSignalBase(Payload: 20),
                 // since the receiver observes multiple types from the type hierarchy, we expect each signal
                 // to be received twice, but the type of the received signal will be the type that the publisher
                 // was using
-                new TestSignalSub(30, 31),
-                new TestSignalSub(30, 31),
-
+                new TestSignalSub(Payload: 30, PayloadSub: 31),
+                new TestSignalSub(Payload: 30, PayloadSub: 31),
                 // because we publish these events through TestSignalSub, the event type will be "testSignalSub"
                 // and the signal will be deserialized as that type instead of TestSignalSubSub
-                new TestSignalSub(40, 41),
-                new TestSignalSub(40, 41),
+                new TestSignalSub(Payload: 40, PayloadSub: 41),
+                new TestSignalSub(Payload: 40, PayloadSub: 41),
             ],
             RegisterHandler = s => s.AddSignalHandler<MultiHierarchyTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
+                await p.For(TestSignalBase.T).WithDefaultPublisherConfiguration().Handle(new(Payload: 1), ct);
                 await p.For(TestSignalBase.T)
-                       .WithDefaultPublisherConfiguration().Handle(new(1), ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new TestSignalSub(Payload: 10, PayloadSub: 11), ct);
                 await p.For(TestSignalBase.T)
-                       .WithDefaultPublisherConfiguration().Handle(new TestSignalSub(10, 11), ct);
-                await p.For(TestSignalBase.T)
-                       .WithDefaultPublisherConfiguration().Handle(new TestSignalSubSub(20, 21, 22), ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new TestSignalSubSub(Payload: 20, PayloadSub: 21, PayloadSubSub: 22), ct);
                 await p.For(TestSignalSub.T)
-                       .WithDefaultPublisherConfiguration().Handle(new(30, 31), ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new(Payload: 30, PayloadSub: 31), ct);
                 await p.For(TestSignalSub.T)
-                       .WithDefaultPublisherConfiguration().Handle(new TestSignalSubSub(40, 41, 42), ct);
+                    .WithDefaultPublisherConfiguration()
+                    .Handle(new TestSignalSubSub(Payload: 40, PayloadSub: 41, PayloadSubSub: 42), ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<MultiHierarchyTestSignalHandler>(ct),
         };
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
     public static IEnumerable<FileSystemSignalConformityExecutionSuccessTestCase> CreateSimpleSuccessTestCases()
     {
         yield return new()
@@ -448,10 +480,8 @@ public static partial class FileSystemSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalHandler>(ct),
         };
@@ -467,22 +497,23 @@ public static partial class FileSystemSignalTestCases
                 new TestSignal { Payload = 30 },
                 new TestSignal { Payload = 30 },
             ],
-            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
-                                    .AddSignalHandler<MultiTestSignalHandler>(),
+            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>().AddSignalHandler<MultiTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                await p.For(TestSignal2.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal2.T).WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceivers(ct),
             NumOfReceivers = 2,
         };
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
     public static IEnumerable<FileSystemSignalConformityExecutionErrorTestCase> CreateErrorTestCases()
     {
         yield return new()
@@ -506,8 +537,8 @@ public static partial class FileSystemSignalTestCases
             NumOfReceivers = 2,
             HandlerExceptions = [],
             PublishSignals = (_, _) => Task.CompletedTask,
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceivers(ct),
         };
 
@@ -523,7 +554,7 @@ public static partial class FileSystemSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
             RunReceivers = (r, ct) =>
             {
-                r.ServiceProvider.GetRequiredService<DirectoryInfo>().Delete(true);
+                r.ServiceProvider.GetRequiredService<DirectoryInfo>().Delete(recursive: true);
 
                 return r.RunFileSystemSignalReceiver<ThrowingTestSignalHandler>(ct);
             },
@@ -539,11 +570,11 @@ public static partial class FileSystemSignalTestCases
             NumOfReceivers = 2,
             HandlerExceptions = [],
             PublishSignals = (_, _) => Task.CompletedTask,
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) =>
             {
-                r.ServiceProvider.GetRequiredService<DirectoryInfo>().Delete(true);
+                r.ServiceProvider.GetRequiredService<DirectoryInfo>().Delete(recursive: true);
 
                 return r.RunFileSystemSignalReceivers(ct);
             },
@@ -559,13 +590,15 @@ public static partial class FileSystemSignalTestCases
             NumOfReceivers = 2,
             HandlerExceptions = [],
             PublishSignals = (_, _) => Task.CompletedTask,
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) =>
             {
                 var handle1 = r.RunFileSystemSignalReceiver<ThrowingTestSignalHandler>(ct);
 
+#pragma warning disable MA0045 // we want to test a sync delegate here
                 handle1.InitialConnectionTask.Wait(ct);
+#pragma warning restore MA0045
 
                 // disposing the file stores will trigger the next handler to throw on startup
                 r.ServiceProvider.GetRequiredService<FileSystemStores>().Dispose();
@@ -579,37 +612,25 @@ public static partial class FileSystemSignalTestCases
         yield return new()
         {
             Name = "single handler with handler exception",
-            ExpectedReceivedSignals =
-            [
-                new TestSignal { Payload = 10 },
-                new TestSignal { Payload = 30 },
-            ],
+            ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 30 }],
             ConfigurationExceptions = [],
             PublishException = null,
-            HandlerExceptions =
-            [
-                null,
-                new InvalidOperationException("handler exception"),
-            ],
+            HandlerExceptions = [null, new InvalidOperationException("handler exception")],
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
-                await p.For(TestSignal2.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
+                await p.For(TestSignal2.T).WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 40 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 40 }, ct);
             },
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<ThrowingTestSignalHandler>(ct),
@@ -639,27 +660,24 @@ public static partial class FileSystemSignalTestCases
             ],
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
-                await p.For(TestSignal2.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
+                await p.For(TestSignal2.T).WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
 
-                await Task.Delay(50, ct);
+                await Task.Delay(millisecondsDelay: 50, ct);
 
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 40 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 40 }, ct);
             },
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>()
-                                    .AddSingleton<ExceptionCoordination>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>()
+                    .AddSignalHandler<ThrowingTestSignalHandler2>()
+                    .AddSingleton<ExceptionCoordination>(),
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceivers(ct),
         };
 
@@ -683,7 +701,6 @@ public static partial class FileSystemSignalTestCases
                 null, // on test signal 1 handler 2
                 null, // on test signal 2 handler 1
                 null, // on test signal 3 handler 1
-
                 // throw the exception only in the second handler to work around rare race condition
                 // where the exception in the first handler is caught, and therefore the client disconnects
                 // before the second handler has a chance to run
@@ -691,27 +708,23 @@ public static partial class FileSystemSignalTestCases
             ],
             PublishSignals = async (p, ct) =>
             {
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
-                await p.For(TestSignal2.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
+                await p.For(TestSignal2.T).WithDefaultPublisherConfiguration().Handle(new() { Payload2 = 20 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
 
                 // give client time to disconnect due to handler failure
-                await Task.Delay(100, ct);
+                await Task.Delay(millisecondsDelay: 100, ct);
 
-                await p.For(TestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new() { Payload = 40 }, ct);
+                await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 40 }, ct);
             },
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceivers(ct),
         };
 
@@ -725,8 +738,7 @@ public static partial class FileSystemSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await p.For(ThrowingTestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new(), ct);
+                await p.For(ThrowingTestSignal.T).WithDefaultPublisherConfiguration().Handle(new(), ct);
             },
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<ThrowingTestSignalHandler>(ct),
         };
@@ -741,21 +753,27 @@ public static partial class FileSystemSignalTestCases
             HandlerExceptions = [],
             PublishSignals = async (p, ct) =>
             {
-                await p.For(ThrowingTestSignal.T)
-                       .WithDefaultPublisherConfiguration().Handle(new(), ct);
+                await p.For(ThrowingTestSignal.T).WithDefaultPublisherConfiguration().Handle(new(), ct);
             },
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => r.RunFileSystemSignalReceivers(ct),
         };
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
     public static IEnumerable<FileSystemSignalConformityContextTestCase> CreateContextTestCases()
     {
-        foreach (var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[] { true, false }
-                                                                       from hasDownstream in new[] { true, false }
-                                                                       from hasBidirectional in new[] { true, false }
-                                                                       select (hasActivity, hasDownstream, hasBidirectional))
+        foreach (
+            var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[] { true, false }
+            from hasDownstream in new[] { true, false }
+            from hasBidirectional in new[] { true, false }
+            select (hasActivity, hasDownstream, hasBidirectional)
+        )
         {
             yield return new()
             {
@@ -767,10 +785,8 @@ public static partial class FileSystemSignalTestCases
                 RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>(),
                 PublishSignals = async (p, ct) =>
                 {
-                    await p.For(TestSignal.T)
-                           .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                    await p.For(TestSignal.T)
-                           .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                    await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                    await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
                 },
                 RunReceivers = (r, ct) => r.RunFileSystemSignalReceiver<TestSignalHandler>(ct),
             };
@@ -782,16 +798,13 @@ public static partial class FileSystemSignalTestCases
                 HasActivity = hasActivity,
                 HasDownstreamData = hasDownstream,
                 HasBidirectionalData = hasBidirectional,
-                RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
-                                        .AddSignalHandler<MultiTestSignalHandler>(),
+                RegisterHandler = s =>
+                    s.AddSignalHandler<TestSignalHandler>().AddSignalHandler<MultiTestSignalHandler>(),
                 PublishSignals = async (p, ct) =>
                 {
-                    await p.For(TestSignal.T)
-                           .WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
-                    await p.For(TestSignal.T)
-                           .WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
-                    await p.For(TestSignal.T)
-                           .WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
+                    await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 10 }, ct);
+                    await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 20 }, ct);
+                    await p.For(TestSignal.T).WithDefaultPublisherConfiguration().Handle(new() { Payload = 30 }, ct);
                 },
                 RunReceivers = (r, ct) => r.RunFileSystemSignalReceivers(ct),
                 NumOfReceivers = 2,
@@ -801,28 +814,40 @@ public static partial class FileSystemSignalTestCases
 
     private static void AddDelegateHandlers<TSignal, TIHandler>(
         IServiceCollection services,
-        SignalTypes<TSignal, TIHandler> signalTypes)
+        SignalTypes<TSignal, TIHandler> signalTypes
+    )
         where TSignal : class, IFileSystemSignal<TSignal>
         where TIHandler : class, IFileSystemSignalHandler<TSignal, TIHandler>
     {
-        _ = services.AddFileSystemSignalHandlerDelegate(
-                        signalTypes,
-                        (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
-                        r => r.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>()(r))
-                    .AddFileSystemSignalHandlerDelegate(
-                        signalTypes,
-                        (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
-                        p => p.UseReceiverLogging(),
-                        r => r.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>()(r))
-                    .AddFileSystemSignalHandlerDelegate(
-                        signalTypes,
-                        (s, p) => p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None),
-                        r => r.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>()(r))
-                    .AddFileSystemSignalHandlerDelegate(
-                        signalTypes,
-                        (s, p) => p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None),
-                        p => p.UseReceiverLogging(),
-                        r => r.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>()(r));
+        _ = services
+            .AddFileSystemSignalHandlerDelegate(
+                signalTypes,
+                (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
+                r => r.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>()(r)
+            )
+            .AddFileSystemSignalHandlerDelegate(
+                signalTypes,
+                (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
+                p => p.UseReceiverLogging(),
+                r => r.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>()(r)
+            )
+            .AddFileSystemSignalHandlerDelegate(
+                signalTypes,
+                (s, p) =>
+#pragma warning disable MA0045 // we want to test a sync delegate here
+                    p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None).Wait(CancellationToken.None),
+#pragma warning restore MA0045
+                r => r.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>()(r)
+            )
+            .AddFileSystemSignalHandlerDelegate(
+                signalTypes,
+                (s, p) =>
+#pragma warning disable MA0045 // we want to test a sync delegate here
+                    p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None).Wait(CancellationToken.None),
+#pragma warning restore MA0045
+                p => p.UseReceiverLogging(),
+                r => r.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>()(r)
+            );
     }
 
     [FileSystemSignal]
@@ -831,14 +856,15 @@ public static partial class FileSystemSignalTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestSignal.IHandler
+    public sealed partial class TestSignalHandler(FnToCallFromHandler funToCallFromHandler) : TestSignal.IHandler
     {
-        static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
-            => pipeline.Use(ctx =>
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
+        static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
+            pipeline.Use(ctx =>
             {
-                ctx.ServiceProvider.GetRequiredService<ILogger>()
-                   .LogInformation("received signal");
+                ctx.ServiceProvider.GetRequiredService<ILogger>().LogInformation("received signal");
 
                 return ctx.Next(ctx.Signal, ctx.CancellationToken);
             });
@@ -847,26 +873,23 @@ public static partial class FileSystemSignalTestCases
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     public sealed partial class DisabledTestSignalHandler : TestSignal.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
+        {
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+            receiver.Disable();
+        }
+
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
             throw new InvalidOperationException("This handler should not be called.");
-        }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-        {
-            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
-            receiver.Disable();
         }
     }
 
@@ -876,26 +899,26 @@ public static partial class FileSystemSignalTestCases
         public required int Payload2 { get; init; }
     }
 
-    public sealed partial class MultiTestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class MultiTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-          TestSignal2.IHandler
+            TestSignal2.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignal2 signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     [Signal]
@@ -904,26 +927,26 @@ public static partial class FileSystemSignalTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class MixedWithNonFileSystemTestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class MixedWithNonFileSystemTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-          NonFileSystemTestSignal.IHandler
+            NonFileSystemTestSignal.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(NonFileSystemTestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     [FileSystemSignal(Tag = "custom")]
@@ -932,35 +955,38 @@ public static partial class FileSystemSignalTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestSignalWithCustomEventTypeOrTagHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithCustomEventTypeOrTagHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithCustomEventTypeOrTag.IHandler
     {
-        public async Task Handle(TestSignalWithCustomEventTypeOrTag signal, CancellationToken cancellationToken = default)
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
+        public async Task Handle(
+            TestSignalWithCustomEventTypeOrTag signal,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     [FileSystemSignal]
     public sealed partial record TestSignalWithoutPayload;
 
-    public sealed partial class TestSignalWithoutPayloadHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithoutPayloadHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithoutPayload.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignalWithoutPayload signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     [FileSystemSignal]
@@ -971,42 +997,45 @@ public static partial class FileSystemSignalTestCases
 
     public sealed record TestSignalWithCustomSerializedPayloadTypePayload(int Payload);
 
-    public sealed partial class TestSignalWithCustomSerializedPayloadTypeHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestSignalWithCustomSerializedPayloadType.IHandler
+    public sealed partial class TestSignalWithCustomSerializedPayloadTypeHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestSignalWithCustomSerializedPayloadType.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(
             TestSignalWithCustomSerializedPayloadType signal,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
 
         internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
         {
-            public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestSignalWithCustomSerializedPayloadTypePayload);
+            public override bool CanConvert(Type typeToConvert) =>
+                typeToConvert == typeof(TestSignalWithCustomSerializedPayloadTypePayload);
 
-            public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
-            {
-                return Activator.CreateInstance(typeof(PayloadJsonConverter)) as JsonConverter;
-            }
+            public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
+                Activator.CreateInstance<PayloadJsonConverter>();
         }
 
         internal sealed class PayloadJsonConverter : JsonConverter<TestSignalWithCustomSerializedPayloadTypePayload>
         {
-            public override TestSignalWithCustomSerializedPayloadTypePayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                return new(reader.GetInt32());
-            }
+            public override TestSignalWithCustomSerializedPayloadTypePayload Read(
+                ref Utf8JsonReader reader,
+                Type typeToConvert,
+                JsonSerializerOptions options
+            ) => new(reader.GetInt32());
 
-            public override void Write(Utf8JsonWriter writer, TestSignalWithCustomSerializedPayloadTypePayload value, JsonSerializerOptions options)
-            {
-                writer.WriteNumberValue(value.Payload);
-            }
+            public override void Write(
+                Utf8JsonWriter writer,
+                TestSignalWithCustomSerializedPayloadTypePayload value,
+                JsonSerializerOptions options
+            ) => writer.WriteNumberValue(value.Payload);
         }
     }
 
@@ -1015,9 +1044,8 @@ public static partial class FileSystemSignalTestCases
     {
         public required int Payload { get; init; }
 
-        static IFileSystemSignalSerializer<TestSignalWithCustomSerializer> IFileSystemSignal<TestSignalWithCustomSerializer>.
-            FileSystemSignalSerializer
-            => new TestSignalCustomSerializer();
+        static IFileSystemSignalSerializer<TestSignalWithCustomSerializer> IFileSystemSignal<TestSignalWithCustomSerializer>.FileSystemSignalSerializer =>
+            new TestSignalCustomSerializer();
     }
 
     private sealed class TestSignalCustomSerializer : IFileSystemSignalSerializer<TestSignalWithCustomSerializer>
@@ -1028,34 +1056,41 @@ public static partial class FileSystemSignalTestCases
             IServiceProvider serviceProvider,
             TestSignalWithCustomSerializer signal,
             Stream fileStream,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
-            return fileStream.WriteAsync(Encoding.UTF8.GetBytes($"payload:{signal.Payload}"), cancellationToken).AsTask();
+            return fileStream
+                .WriteAsync(Encoding.UTF8.GetBytes($"payload:{signal.Payload}"), cancellationToken)
+                .AsTask();
         }
 
-        public async Task<TestSignalWithCustomSerializer> DeserializeSignal(IServiceProvider serviceProvider, Stream fileStream, CancellationToken cancellationToken)
+        public async Task<TestSignalWithCustomSerializer> DeserializeSignal(
+            IServiceProvider serviceProvider,
+            Stream fileStream,
+            CancellationToken cancellationToken
+        )
         {
             using var streamReader = new StreamReader(fileStream, Encoding.UTF8);
             var serializedSignal = await streamReader.ReadToEndAsync(cancellationToken);
 
-            var result = int.Parse(serializedSignal.Split(':')[1]);
+            var result = int.Parse(serializedSignal.Split(':')[1], CultureInfo.InvariantCulture);
 
-            return new() { Payload = result };
+            return new TestSignalWithCustomSerializer { Payload = result };
         }
     }
 
-    public sealed partial class TestSignalWithCustomSerializerHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithCustomSerializerHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithCustomSerializer.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignalWithCustomSerializer signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     [FileSystemSignal]
@@ -1064,20 +1099,18 @@ public static partial class FileSystemSignalTestCases
         public int SignalPayload { get; init; }
     }
 
-    public sealed partial class TestSignalWithCustomJsonTypeInfoHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithCustomJsonTypeInfoHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithCustomJsonTypeInfo.IHandler
     {
-        public async Task Handle(
-            TestSignalWithCustomJsonTypeInfo signal,
-            CancellationToken cancellationToken = default)
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
+        public async Task Handle(TestSignalWithCustomJsonTypeInfo signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseUpper)]
@@ -1090,23 +1123,22 @@ public static partial class FileSystemSignalTestCases
         public int Payload { get; init; }
     }
 
-    public sealed partial class TestSignalWithMiddlewareHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithMiddlewareHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithMiddleware.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignalWithMiddleware signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public static void ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
-            where T : class, ISignal<T>
-            =>
-                pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestSignalMiddleware<T>>());
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+            where T : class, ISignal<T> =>
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestSignalMiddleware<T>>());
     }
 
     public sealed class TestSignalMiddleware<TSignal>(TestObservations observations) : ISignalMiddleware<TSignal>
@@ -1126,18 +1158,18 @@ public static partial class FileSystemSignalTestCases
         public int Payload { get; init; }
     }
 
-    public sealed partial class TestSignalForAssemblyScanningHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalForAssemblyScanningHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalForAssemblyScanning.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignalForAssemblyScanning signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     [FileSystemSignal]
@@ -1146,42 +1178,42 @@ public static partial class FileSystemSignalTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class WildMixTestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class WildMixTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-          TestSignalWithoutPayload.IHandler,
-          TestSignalWithCustomSerializer.IHandler,
-          TestSignalWithCustomJsonTypeInfo.IHandler
+            TestSignalWithoutPayload.IHandler,
+            TestSignalWithCustomSerializer.IHandler,
+            TestSignalWithCustomJsonTypeInfo.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignalWithoutPayload signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignalWithCustomSerializer signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignalWithCustomJsonTypeInfo signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     [FileSystemSignal]
@@ -1190,42 +1222,45 @@ public static partial class FileSystemSignalTestCases
     [FileSystemSignal]
     public partial record TestSignalSub(int Payload, int PayloadSub) : TestSignalBase(Payload);
 
-    public sealed record TestSignalSubSub(int Payload, int PayloadSub, int PayloadSubSub) : TestSignalSub(Payload, PayloadSub);
+    public sealed record TestSignalSubSub(int Payload, int PayloadSub, int PayloadSubSub)
+        : TestSignalSub(Payload, PayloadSub);
 
-    private sealed partial class MultiHierarchyTestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
+    private sealed partial class MultiHierarchyTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalBase.IHandler,
-          TestSignalSub.IHandler
+            TestSignalSub.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignalBase signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignalSub signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     private sealed partial class ThrowingTestSignalHandler(
         ConcurrentQueue<Exception?> exceptions,
-        FnToCallFromHandler fnToCallFromHandler,
-        ExceptionCoordination? exceptionCoordination = null)
-        : TestSignal.IHandler,
-          ThrowingTestSignal.IHandler
+        FnToCallFromHandler funToCallFromHandler,
+        ExceptionCoordination? exceptionCoordination = null
+    ) : TestSignal.IHandler, ThrowingTestSignal.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
-            await Task.Delay(1, cancellationToken);
+            await Task.Delay(millisecondsDelay: 1, cancellationToken);
 
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
@@ -1239,28 +1274,24 @@ public static partial class FileSystemSignalTestCases
             }
         }
 
-        public Task Handle(ThrowingTestSignal signal, CancellationToken cancellationToken = default)
-        {
+        public Task Handle(ThrowingTestSignal signal, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
-        }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     private sealed partial class ThrowingTestSignalHandler2(
         ConcurrentQueue<Exception?> exceptions,
-        FnToCallFromHandler fnToCallFromHandler,
-        ExceptionCoordination? exceptionCoordination = null)
-        : TestSignal.IHandler,
-          TestSignal2.IHandler,
-          ThrowingTestSignal.IHandler
+        FnToCallFromHandler funToCallFromHandler,
+        ExceptionCoordination? exceptionCoordination = null
+    ) : TestSignal.IHandler, TestSignal2.IHandler, ThrowingTestSignal.IHandler
     {
+        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
-            await Task.Delay(1, cancellationToken);
+            await Task.Delay(millisecondsDelay: 1, cancellationToken);
 
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
@@ -1276,9 +1307,9 @@ public static partial class FileSystemSignalTestCases
 
         public async Task Handle(TestSignal2 signal, CancellationToken cancellationToken = default)
         {
-            await Task.Delay(1, cancellationToken);
+            await Task.Delay(millisecondsDelay: 1, cancellationToken);
 
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
@@ -1292,13 +1323,8 @@ public static partial class FileSystemSignalTestCases
             }
         }
 
-        public Task Handle(ThrowingTestSignal signal, CancellationToken cancellationToken = default)
-        {
+        public Task Handle(ThrowingTestSignal signal, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
-        }
-
-        static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
     }
 
     private sealed class ExceptionCoordination
@@ -1320,8 +1346,8 @@ public static partial class FileSystemSignalTestCases
     [FileSystemSignal]
     private sealed partial record ThrowingTestSignal
     {
-        static IFileSystemSignalSerializer<ThrowingTestSignal> IFileSystemSignal<ThrowingTestSignal>.FileSystemSignalSerializer { get; }
-            = new ThrowingTestSignalSerializer();
+        static IFileSystemSignalSerializer<ThrowingTestSignal> IFileSystemSignal<ThrowingTestSignal>.FileSystemSignalSerializer { get; } =
+            new ThrowingTestSignalSerializer();
     }
 
     private sealed class ThrowingTestSignalSerializer : IFileSystemSignalSerializer<ThrowingTestSignal>
@@ -1332,25 +1358,25 @@ public static partial class FileSystemSignalTestCases
             IServiceProvider serviceProvider,
             ThrowingTestSignal signal,
             Stream fileStream,
-            CancellationToken cancellationToken)
-        {
-            throw serviceProvider.GetRequiredService<Exception>();
-        }
+            CancellationToken cancellationToken
+        ) => throw serviceProvider.GetRequiredService<Exception>();
 
-        public Task<ThrowingTestSignal> DeserializeSignal(IServiceProvider serviceProvider, Stream fileStream, CancellationToken cancellationToken)
-        {
-            throw new NotSupportedException();
-        }
+        public Task<ThrowingTestSignal> DeserializeSignal(
+            IServiceProvider serviceProvider,
+            Stream fileStream,
+            CancellationToken cancellationToken
+        ) => throw new NotSupportedException();
     }
 }
 
 file static class PipelineExtensions
 {
-    public static ISignalPipeline<TSignal> UsePublishCallback<TSignal>(
-        this ISignalPipeline<TSignal> pipeline)
+    public static ISignalPipeline<TSignal> UsePublishCallback<TSignal>(this ISignalPipeline<TSignal> pipeline)
         where TSignal : class, ISignal<TSignal>
     {
-        var publishCallback = pipeline.ServiceProvider.GetService<Func<object, ConquerorContext, CancellationToken, Task>>();
+        var publishCallback = pipeline.ServiceProvider.GetService<
+            Func<object, ConquerorContext, CancellationToken, Task>
+        >();
 
         if (publishCallback is null)
         {
@@ -1391,19 +1417,20 @@ file static class PipelineExtensions
     }
 
     public static TIHandler WithDefaultPublisherPipeline<TSignal, TIHandler>(
-        this ISignalHandler<TSignal, TIHandler> handler)
+        this ISignalHandler<TSignal, TIHandler> handler
+    )
         where TSignal : class, ISignal<TSignal>
-        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-    {
-        return handler.WithPipeline(p => _ = p.UseLogging().UsePublishCallback());
-    }
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler> =>
+        handler.WithPipeline(p => _ = p.UseLogging().UsePublishCallback());
 
     public static TIHandler WithDefaultPublisherConfiguration<TSignal, TIHandler>(
-        this ISignalHandler<TSignal, TIHandler> handler)
+        this ISignalHandler<TSignal, TIHandler> handler
+    )
         where TSignal : class, IFileSystemSignal<TSignal>
         where TIHandler : class, IFileSystemSignalHandler<TSignal, TIHandler>
     {
-        return handler.WithDefaultPublisherPipeline()
-                      .WithTransport(b => b.UseFileSystem(b.ServiceProvider.GetRequiredService<DirectoryInfo>().FullName));
+        return handler
+            .WithDefaultPublisherPipeline()
+            .WithTransport(b => b.UseFileSystem(b.ServiceProvider.GetRequiredService<DirectoryInfo>().FullName));
     }
 }

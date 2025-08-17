@@ -1,16 +1,13 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Conqueror.Transport.Http.Client.WebSockets;
 
-namespace Conqueror.Transport.Http.Client.WebSockets;
+using System.Diagnostics.CodeAnalysis;
+using System.Net.WebSockets;
 
 internal sealed class WebSocketReadStream(ConquerorWebSocket socket) : Stream
 {
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "disposed by caller")]
     private readonly ConquerorWebSocket socket = socket ?? throw new ArgumentNullException(nameof(socket));
+
     private bool endOfMessageOnNextRead;
     private bool endOfStream;
 
@@ -25,9 +22,7 @@ internal sealed class WebSocketReadStream(ConquerorWebSocket socket) : Stream
         set => throw new NotSupportedException();
     }
 
-    public override void Flush()
-    {
-    }
+    public override void Flush() { }
 
     public override long Seek(long offset, SeekOrigin origin) =>
         throw new NotSupportedException("This stream does not support seeking");
@@ -41,21 +36,18 @@ internal sealed class WebSocketReadStream(ConquerorWebSocket socket) : Stream
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException("Only async operations are supported");
 
-    public override Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken)
-        => ReadAsyncInternal(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+        ReadAsyncInternal(buffer.AsMemory(offset, count), cancellationToken).AsTask();
 
-    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-        => ReadAsyncInternal(buffer, cancellationToken);
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+        ReadAsyncInternal(buffer, cancellationToken);
 
     private async ValueTask<int> ReadAsyncInternal(Memory<byte> buffer, CancellationToken cancellationToken)
     {
         if (endOfMessageOnNextRead)
         {
             endOfMessageOnNextRead = false;
+
             return 0;
         }
 
@@ -66,9 +58,12 @@ internal sealed class WebSocketReadStream(ConquerorWebSocket socket) : Stream
 
         var receiveResult = await socket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
 
-        if (receiveResult.MessageType != WebSocketMessageType.Binary)
+        if (receiveResult.MessageType is not WebSocketMessageType.Binary)
         {
-            throw new WebSocketException(WebSocketError.InvalidMessageType, $"invalid message type; expected {WebSocketMessageType.Binary}, received {receiveResult.MessageType}");
+            throw new WebSocketException(
+                WebSocketError.InvalidMessageType,
+                $"invalid message type; expected {nameof(WebSocketMessageType.Binary)}, received {receiveResult.MessageType}"
+            );
         }
 
         endOfMessageOnNextRead = receiveResult is { Count: > 0, EndOfMessage: true };

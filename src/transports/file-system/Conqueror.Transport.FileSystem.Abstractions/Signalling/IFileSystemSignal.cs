@@ -1,13 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
-using System.Text.Json.Serialization;
-using Conqueror.Signalling;
+﻿namespace Conqueror;
 
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
-
-[SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
+[SuppressMessage(
+    "ReSharper",
+    "StaticMemberInGenericType",
+    Justification = "The static members are intentionally per generic type"
+)]
 [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty", Justification = "Members are set via code generation")]
 [SuppressMessage("ReSharper", "TypeParameterCanBeVariant", Justification = "false positive")]
 public interface IFileSystemSignal<TSignal> : ISignal<TSignal>
@@ -16,7 +13,8 @@ public interface IFileSystemSignal<TSignal> : ISignal<TSignal>
     /// <summary>
     ///     This tag is used to identify different signal types in the same connection.
     /// </summary>
-    static virtual string Tag { get; } = $"{Dasherize(typeof(TSignal).Name.EndsWith("Signal") ? typeof(TSignal).Name[..^6] : typeof(TSignal).Name)}";
+    static virtual string Tag { get; } =
+        $"{Dasherize(typeof(TSignal).Name.EndsWith("Signal", StringComparison.Ordinal) ? typeof(TSignal).Name[..^6] : typeof(TSignal).Name)}";
 
     static virtual JsonSerializerContext? FileSystemJsonSerializerContext => TSignal.JsonSerializerContext;
 
@@ -37,8 +35,7 @@ public interface IFileSystemSignal<TSignal> : ISignal<TSignal>
         {
             if (char.IsUpper(str[i]))
             {
-                _ = sb.Append('-')
-                      .Append(char.ToLower(str[i], CultureInfo.InvariantCulture));
+                _ = sb.Append(value: '-').Append(char.ToLower(str[i], CultureInfo.InvariantCulture));
             }
             else
             {

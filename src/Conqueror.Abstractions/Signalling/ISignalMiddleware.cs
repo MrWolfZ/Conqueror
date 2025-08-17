@@ -1,6 +1,3 @@
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public interface ISignalMiddleware<TSignal>

@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Conqueror.Transport.FileSystem.Tests;
+﻿namespace Conqueror.Transport.FileSystem.Tests;
 
 [TestFixture]
 internal sealed class InboxTests
@@ -19,10 +17,13 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 100;
-        const int nrOfReaders = 5;
+        const int numOfMessages = 100;
+        const int numOfReaders = 5;
 
-        var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
+        var entryIds = Enumerable
+            .Range(start: 1, numOfMessages)
+            .Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString()))
+            .ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
         var receivedEntryIds = new ConcurrentQueue<EntryId>();
 
@@ -32,40 +33,40 @@ internal sealed class InboxTests
                 var i = 0;
                 while (entryIdsToAppend.TryDequeue(out var entryId))
                 {
-                    inboxFiles.Append(
-                        inboxName,
-                        new((ulong)++i),
-                        entryId,
-                        tag,
-                        cts.Token);
+                    inboxFiles.Append(inboxName, new((ulong)++i), entryId, tag, cts.Token);
                 }
             },
-            cts.Token);
+            cts.Token
+        );
 
         var leaseTask = Parallel.ForEachAsync(
-            Enumerable.Range(1, nrOfReaders),
-            new ParallelOptions { MaxDegreeOfParallelism = nrOfReaders, CancellationToken = cts.Token },
+            Enumerable.Range(start: 1, numOfReaders),
+            new ParallelOptions { MaxDegreeOfParallelism = numOfReaders, CancellationToken = cts.Token },
             async (_, ct) =>
             {
                 var receiveCount = 0;
 
-                await foreach (var (_, seqNr, id) in inboxFiles.LeaseNextMessage(
-                                   inboxName,
-                                   pollingInterval: TimeSpan.FromMilliseconds(10),
-                                   leaseDuration: TimeSpan.FromSeconds(60),
-                                   ct))
+                await foreach (
+                    var (_, seqNr, id) in inboxFiles.LeaseNextMessage(
+                        inboxName,
+                        TimeSpan.FromMilliseconds(value: 10),
+                        TimeSpan.FromSeconds(value: 60),
+                        ct
+                    )
+                )
                 {
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
                     inboxFiles.RemoveEntry(inboxName, seqNr, ct);
 
-                    if (receiveCount == nrOfMessages / nrOfReaders)
+                    if (receiveCount == numOfMessages / numOfReaders)
                     {
                         break;
                     }
                 }
-            });
+            }
+        );
 
         await Assert.MultipleAsync(async () =>
         {
@@ -75,7 +76,12 @@ internal sealed class InboxTests
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
             var inboxContent = inboxFiles.GetContent(inboxName, CancellationToken.None);
-            Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
+            Assert.That(
+                inboxContent,
+                Is.EqualTo(
+                    $"{new SeqNr(numOfMessages).ToPaddedString(length: 12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"
+                )
+            );
         });
     }
 
@@ -91,9 +97,12 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 100;
+        const int numOfMessages = 100;
 
-        var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
+        var entryIds = Enumerable
+            .Range(start: 1, numOfMessages)
+            .Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString()))
+            .ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
         var receivedEntryIds = new ConcurrentQueue<EntryId>();
 
@@ -103,39 +112,39 @@ internal sealed class InboxTests
                 var i = 0;
                 while (entryIdsToAppend.TryDequeue(out var entryId))
                 {
-                    inboxFiles.Append(
-                        inboxName,
-                        new((ulong)++i),
-                        entryId,
-                        tag,
-                        cts.Token);
+                    inboxFiles.Append(inboxName, new((ulong)++i), entryId, tag, cts.Token);
                 }
             },
-            cts.Token);
+            cts.Token
+        );
 
         var leaseTask = Task.Run(
             async () =>
             {
                 var receiveCount = 0;
 
-                await foreach (var (_, seqNr, id) in inboxFiles.LeaseNextMessage(
-                                   inboxName,
-                                   pollingInterval: TimeSpan.FromMilliseconds(10),
-                                   leaseDuration: null,
-                                   cts.Token))
+                await foreach (
+                    var (_, seqNr, id) in inboxFiles.LeaseNextMessage(
+                        inboxName,
+                        TimeSpan.FromMilliseconds(value: 10),
+                        leaseDuration: null,
+                        cts.Token
+                    )
+                )
                 {
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
                     inboxFiles.RemoveEntry(inboxName, seqNr, cts.Token);
 
-                    if (receiveCount == nrOfMessages)
+                    if (receiveCount == numOfMessages)
                     {
                         break;
                     }
                 }
             },
-            cts.Token);
+            cts.Token
+        );
 
         await Assert.MultipleAsync(async () =>
         {
@@ -145,7 +154,12 @@ internal sealed class InboxTests
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
             var inboxContent = inboxFiles.GetContent(inboxName, CancellationToken.None);
-            Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
+            Assert.That(
+                inboxContent,
+                Is.EqualTo(
+                    $"{new SeqNr(numOfMessages).ToPaddedString(length: 12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"
+                )
+            );
         });
     }
 
@@ -161,10 +175,13 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 100;
-        const int nrOfReaders = 5;
+        const int numOfMessages = 100;
+        const int numOfReaders = 5;
 
-        var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
+        var entryIds = Enumerable
+            .Range(start: 1, numOfMessages)
+            .Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString()))
+            .ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
         var receivedEntryIds = new ConcurrentQueue<EntryId>();
 
@@ -174,42 +191,42 @@ internal sealed class InboxTests
                 var i = 0;
                 while (entryIdsToAppend.TryDequeue(out var entryId))
                 {
-                    inboxFilesForAppend.Append(
-                        inboxName,
-                        new((ulong)++i),
-                        entryId,
-                        tag,
-                        cts.Token);
+                    inboxFilesForAppend.Append(inboxName, new((ulong)++i), entryId, tag, cts.Token);
                 }
             },
-            cts.Token);
+            cts.Token
+        );
 
         var leaseTask = Parallel.ForEachAsync(
-            Enumerable.Range(1, nrOfReaders),
-            new ParallelOptions { MaxDegreeOfParallelism = nrOfReaders, CancellationToken = cts.Token },
+            Enumerable.Range(start: 1, numOfReaders),
+            new ParallelOptions { MaxDegreeOfParallelism = numOfReaders, CancellationToken = cts.Token },
             async (_, ct) =>
             {
                 var inboxFilesForLease = new InboxFiles(new(baseDirectory.FullName), tagIdFiles);
 
                 var receiveCount = 0;
 
-                await foreach (var (_, seqNr, id) in inboxFilesForLease.LeaseNextMessage(
-                                   inboxName,
-                                   pollingInterval: TimeSpan.FromMilliseconds(10),
-                                   leaseDuration: TimeSpan.FromSeconds(60),
-                                   ct))
+                await foreach (
+                    var (_, seqNr, id) in inboxFilesForLease.LeaseNextMessage(
+                        inboxName,
+                        TimeSpan.FromMilliseconds(value: 10),
+                        TimeSpan.FromSeconds(value: 60),
+                        ct
+                    )
+                )
                 {
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
                     inboxFilesForLease.RemoveEntry(inboxName, seqNr, ct);
 
-                    if (receiveCount == nrOfMessages / nrOfReaders)
+                    if (receiveCount == numOfMessages / numOfReaders)
                     {
                         break;
                     }
                 }
-            });
+            }
+        );
 
         await Assert.MultipleAsync(async () =>
         {
@@ -219,7 +236,12 @@ internal sealed class InboxTests
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
             var inboxContent = inboxFilesForAppend.GetContent(inboxName, CancellationToken.None);
-            Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
+            Assert.That(
+                inboxContent,
+                Is.EqualTo(
+                    $"{new SeqNr(numOfMessages).ToPaddedString(length: 12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"
+                )
+            );
         });
     }
 
@@ -235,9 +257,12 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 100;
+        const int numOfMessages = 100;
 
-        var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
+        var entryIds = Enumerable
+            .Range(start: 1, numOfMessages)
+            .Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString()))
+            .ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
         var receivedEntryIds = new ConcurrentQueue<EntryId>();
 
@@ -247,15 +272,11 @@ internal sealed class InboxTests
                 var i = 0;
                 while (entryIdsToAppend.TryDequeue(out var entryId))
                 {
-                    inboxFilesForAppend.Append(
-                        inboxName,
-                        new((ulong)++i),
-                        entryId,
-                        tag,
-                        cts.Token);
+                    inboxFilesForAppend.Append(inboxName, new((ulong)++i), entryId, tag, cts.Token);
                 }
             },
-            cts.Token);
+            cts.Token
+        );
 
         var leaseTask = Task.Run(
             async () =>
@@ -264,24 +285,28 @@ internal sealed class InboxTests
 
                 var receiveCount = 0;
 
-                await foreach (var (_, seqNr, id) in inboxFilesForLease.LeaseNextMessage(
-                                   inboxName,
-                                   pollingInterval: TimeSpan.FromMilliseconds(10),
-                                   leaseDuration: TimeSpan.FromSeconds(60),
-                                   cts.Token))
+                await foreach (
+                    var (_, seqNr, id) in inboxFilesForLease.LeaseNextMessage(
+                        inboxName,
+                        TimeSpan.FromMilliseconds(value: 10),
+                        TimeSpan.FromSeconds(value: 60),
+                        cts.Token
+                    )
+                )
                 {
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
                     inboxFilesForLease.RemoveEntry(inboxName, seqNr, cts.Token);
 
-                    if (receiveCount == nrOfMessages)
+                    if (receiveCount == numOfMessages)
                     {
                         break;
                     }
                 }
             },
-            cts.Token);
+            cts.Token
+        );
 
         await Assert.MultipleAsync(async () =>
         {
@@ -291,14 +316,18 @@ internal sealed class InboxTests
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
             var inboxContent = inboxFilesForAppend.GetContent(inboxName, CancellationToken.None);
-            Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
+            Assert.That(
+                inboxContent,
+                Is.EqualTo(
+                    $"{new SeqNr(numOfMessages).ToPaddedString(length: 12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"
+                )
+            );
         });
     }
 
     [Test]
     [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "false positive")]
-    public async Task
-        GivenSeparateInboxFiles_WhenWritingToAndReadingSequentiallyFromInboxWithSingleWriterAndManyParallelReaders_ThenAllWritesAndReadsAreSuccessful()
+    public async Task GivenSeparateInboxFiles_WhenWritingToAndReadingSequentiallyFromInboxWithSingleWriterAndManyParallelReaders_ThenAllWritesAndReadsAreSuccessful()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(Debugger.IsAttached ? 60 : 20));
 
@@ -308,50 +337,52 @@ internal sealed class InboxTests
         var inboxName = new InboxName("test");
         var tag = new Tag("test");
 
-        const int nrOfMessages = 100;
-        const int nrOfReaders = 5;
+        const int numOfMessages = 100;
+        const int numOfReaders = 5;
 
-        var entryIds = Enumerable.Range(1, nrOfMessages).Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString())).ToArray();
+        var entryIds = Enumerable
+            .Range(start: 1, numOfMessages)
+            .Select(_ => new EntryId(ActivitySpanId.CreateRandom().ToHexString()))
+            .ToArray();
         var entryIdsToAppend = new ConcurrentQueue<EntryId>(entryIds);
         var receivedEntryIds = new ConcurrentQueue<EntryId>();
 
         var i = 0;
         while (entryIdsToAppend.TryDequeue(out var entryId))
         {
-            inboxFilesForAppend.Append(
-                inboxName,
-                new((ulong)++i),
-                entryId,
-                tag,
-                cts.Token);
+            inboxFilesForAppend.Append(inboxName, new((ulong)++i), entryId, tag, cts.Token);
         }
 
         await Parallel.ForEachAsync(
-            Enumerable.Range(1, nrOfReaders),
-            new ParallelOptions { MaxDegreeOfParallelism = nrOfReaders, CancellationToken = cts.Token },
+            Enumerable.Range(start: 1, numOfReaders),
+            new ParallelOptions { MaxDegreeOfParallelism = numOfReaders, CancellationToken = cts.Token },
             async (_, ct) =>
             {
                 var inboxFilesForLease = new InboxFiles(new(baseDirectory.FullName), tagIdFiles);
 
                 var receiveCount = 0;
 
-                await foreach (var (_, seqNr, id) in inboxFilesForLease.LeaseNextMessage(
-                                   inboxName,
-                                   pollingInterval: TimeSpan.FromMilliseconds(10),
-                                   leaseDuration: TimeSpan.FromSeconds(60),
-                                   ct))
+                await foreach (
+                    var (_, seqNr, id) in inboxFilesForLease.LeaseNextMessage(
+                        inboxName,
+                        TimeSpan.FromMilliseconds(value: 10),
+                        TimeSpan.FromSeconds(value: 60),
+                        ct
+                    )
+                )
                 {
                     receivedEntryIds.Enqueue(id);
                     receiveCount += 1;
 
                     inboxFilesForLease.RemoveEntry(inboxName, seqNr, ct);
 
-                    if (receiveCount == nrOfMessages / nrOfReaders)
+                    if (receiveCount == numOfMessages / numOfReaders)
                     {
                         break;
                     }
                 }
-            });
+            }
+        );
 
         Assert.Multiple(() =>
         {
@@ -359,7 +390,12 @@ internal sealed class InboxTests
             Assert.That(receivedEntryIds, Is.EquivalentTo(entryIds));
 
             var inboxContent = inboxFilesForAppend.GetContent(inboxName, CancellationToken.None);
-            Assert.That(inboxContent, Is.EqualTo($"{new SeqNr(nrOfMessages).ToPaddedString(12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"));
+            Assert.That(
+                inboxContent,
+                Is.EqualTo(
+                    $"{new SeqNr(numOfMessages).ToPaddedString(length: 12)}|________________|______|M|0000-00-00T00:00:00.000Z\n"
+                )
+            );
         });
     }
 }

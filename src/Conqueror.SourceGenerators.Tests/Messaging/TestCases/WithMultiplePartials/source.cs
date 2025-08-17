@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithMultiplePartials;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithMultiplePartials;
 
 [Message<TestMessageResponse>]
 public partial record TestMessage;
@@ -13,14 +13,13 @@ public record TestMessageResponse;
 
 public partial class TestMessageHandler : TestMessage.IHandler
 {
-    public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 }
 
 // make the compiler happy during design time
 public partial record TestMessage
 {
-    public partial interface IHandler;
-
     public static IMessageHandlerTypesInjector CoreTypesInjector => null!;
 
     public static TestMessage? EmptyInstance => null;
@@ -29,6 +28,11 @@ public partial record TestMessage
 
     public static System.Collections.Generic.IEnumerable<System.Reflection.PropertyInfo> PublicProperties => null!;
 
-    static Task<TestMessageResponse> IMessage<TestMessage, TestMessageResponse>.InvokeHandler<TIHandler>(TIHandler handler, TestMessage message, CancellationToken cancellationToken)
-        => throw new NotSupportedException();
+    static Task<TestMessageResponse> IMessage<TestMessage, TestMessageResponse>.InvokeHandler<TIHandler>(
+        TIHandler handler,
+        TestMessage message,
+        CancellationToken cancellationToken
+    ) => throw new NotSupportedException();
+
+    public partial interface IHandler;
 }

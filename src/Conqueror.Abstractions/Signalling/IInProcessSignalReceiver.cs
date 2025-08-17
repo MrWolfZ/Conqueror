@@ -1,7 +1,4 @@
-﻿using System;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IInProcessSignalReceiver
 {

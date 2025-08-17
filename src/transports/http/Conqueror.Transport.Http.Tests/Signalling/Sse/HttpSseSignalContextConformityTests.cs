@@ -5,11 +5,13 @@ public sealed class HttpSseSignalContextConformityTests
     : SignalTransportContextConformityTests<
           HttpSseSignalContextConformityTests,
           HttpSignalTransportConformityTestHost,
-          HttpSignalConformityContextTestCase>,
+          HttpSignalConformityContextTestCase
+      >,
       ISignalTransportContextConformityTests<
           HttpSignalTransportConformityTestHost,
-          HttpSignalConformityContextTestCase>
+          HttpSignalConformityContextTestCase
+      >
 {
-    public static IEnumerable<HttpSignalConformityContextTestCase> CreateTestCases()
-        => HttpSignalTestCases.CreateContextTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.Sse);
+    public static IEnumerable<HttpSignalConformityContextTestCase> CreateTestCases() =>
+        HttpSignalTestCases.CreateContextTestCases(HttpSignalConformityTestCase.HttpSignalTransportType.Sse);
 }

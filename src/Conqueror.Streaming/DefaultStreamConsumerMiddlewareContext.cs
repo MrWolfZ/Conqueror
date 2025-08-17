@@ -1,7 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Conqueror.Streaming;
 
 internal delegate Task StreamConsumerMiddlewareNext<in TItem>(TItem request, CancellationToken cancellationToken);
@@ -12,8 +8,8 @@ internal sealed class DefaultStreamConsumerMiddlewareContext<TItem, TConfigurati
     TConfiguration configuration,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
-    CancellationToken cancellationToken)
-    : StreamConsumerMiddlewareContext<TItem, TConfiguration>
+    CancellationToken cancellationToken
+) : StreamConsumerMiddlewareContext<TItem, TConfiguration>
 {
     public override TItem Item { get; } = item;
 

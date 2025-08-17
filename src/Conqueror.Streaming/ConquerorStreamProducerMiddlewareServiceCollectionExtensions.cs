@@ -1,40 +1,51 @@
-using System;
-using System.Linq;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
+
+namespace Microsoft.Extensions.DependencyInjection;
+
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Conqueror;
 using Conqueror.Streaming;
 
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
-namespace Microsoft.Extensions.DependencyInjection;
-
 public static class ConquerorStreamProducerMiddlewareServiceCollectionExtensions
 {
-    public static IServiceCollection AddConquerorStreamProducerMiddleware<TMiddleware>(this IServiceCollection services,
-                                                                                       ServiceLifetime lifetime = ServiceLifetime.Transient)
+    public static IServiceCollection AddConquerorStreamProducerMiddleware<TMiddleware>(
+        this IServiceCollection services,
+        ServiceLifetime lifetime = ServiceLifetime.Transient
+    )
         where TMiddleware : class, IStreamProducerMiddlewareMarker
     {
-        return services.AddConquerorStreamProducerMiddleware(typeof(TMiddleware), new(typeof(TMiddleware), typeof(TMiddleware), lifetime));
+        return services.AddConquerorStreamProducerMiddleware(
+            typeof(TMiddleware),
+            new(typeof(TMiddleware), typeof(TMiddleware), lifetime)
+        );
     }
 
-    public static IServiceCollection AddConquerorStreamProducerMiddleware<TMiddleware>(this IServiceCollection services,
-                                                                                       Func<IServiceProvider, TMiddleware> factory,
-                                                                                       ServiceLifetime lifetime = ServiceLifetime.Transient)
+    public static IServiceCollection AddConquerorStreamProducerMiddleware<TMiddleware>(
+        this IServiceCollection services,
+        Func<IServiceProvider, TMiddleware> factory,
+        ServiceLifetime lifetime = ServiceLifetime.Transient
+    )
         where TMiddleware : class, IStreamProducerMiddlewareMarker
     {
-        return services.AddConquerorStreamProducerMiddleware(typeof(TMiddleware), new(typeof(TMiddleware), factory, lifetime));
+        return services.AddConquerorStreamProducerMiddleware(
+            typeof(TMiddleware),
+            new(typeof(TMiddleware), factory, lifetime)
+        );
     }
 
-    public static IServiceCollection AddConquerorStreamProducerMiddleware<TMiddleware>(this IServiceCollection services,
-                                                                                       TMiddleware instance)
-        where TMiddleware : class, IStreamProducerMiddlewareMarker
-    {
-        return services.AddConquerorStreamProducerMiddleware(typeof(TMiddleware), new(typeof(TMiddleware), instance));
-    }
+    public static IServiceCollection AddConquerorStreamProducerMiddleware<TMiddleware>(
+        this IServiceCollection services,
+        TMiddleware instance
+    )
+        where TMiddleware : class, IStreamProducerMiddlewareMarker =>
+        services.AddConquerorStreamProducerMiddleware(typeof(TMiddleware), new(typeof(TMiddleware), instance));
 
-    public static IServiceCollection AddConquerorStreamProducerMiddleware(this IServiceCollection services,
-                                                                          Type middlewareType,
-                                                                          ServiceDescriptor serviceDescriptor)
+    public static IServiceCollection AddConquerorStreamProducerMiddleware(
+        this IServiceCollection services,
+        Type middlewareType,
+        ServiceDescriptor serviceDescriptor
+    )
     {
         if (services.Any(d => d.ServiceType == middlewareType))
         {
@@ -42,39 +53,58 @@ public static class ConquerorStreamProducerMiddlewareServiceCollectionExtensions
         }
 
         services.Add(serviceDescriptor);
+
         return services.AddConquerorStreamProducerMiddleware(middlewareType);
     }
 
-    internal static IServiceCollection AddConquerorStreamProducerMiddleware(this IServiceCollection services,
-                                                                            Type middlewareType)
+    internal static IServiceCollection AddConquerorStreamProducerMiddleware(
+        this IServiceCollection services,
+        Type middlewareType
+    )
     {
         var middlewareInterfaces = middlewareType.GetInterfaces().Where(IsStreamProducerMiddlewareInterface).ToList();
 
         switch (middlewareInterfaces.Count)
         {
             case < 1:
-                throw new ArgumentException($"type '{middlewareType.Name}' implements no stream producer middleware interface");
+                throw new ArgumentException(
+                    $"type '{middlewareType.Name}' implements no stream producer middleware interface",
+                    nameof(middlewareType)
+                );
 
             case > 1:
-                throw new ArgumentException($"type {middlewareType.Name} implements {nameof(IStreamProducerMiddleware)} more than once");
+                throw new ArgumentException(
+                    $"type {middlewareType.Name} implements {nameof(IStreamProducerMiddleware)} more than once",
+                    nameof(middlewareType)
+                );
+            default:
+                // all ok
+                break;
         }
 
         services.AddConquerorStreaming();
 
-        var configurationMethod = typeof(ConquerorStreamProducerMiddlewareServiceCollectionExtensions).GetMethod(nameof(ConfigureMiddleware), BindingFlags.NonPublic | BindingFlags.Static);
+        var configurationMethod =
+            typeof(ConquerorStreamProducerMiddlewareServiceCollectionExtensions).GetMethod(
+                nameof(ConfigureMiddleware),
+#pragma warning disable S3011
+                BindingFlags.NonPublic | BindingFlags.Static
+#pragma warning restore S3011
+            )
+            ?? throw new InvalidOperationException(
+                $"could not find middleware configuration method '{nameof(ConfigureMiddleware)}'"
+            );
 
-        if (configurationMethod == null)
-        {
-            throw new InvalidOperationException($"could not find middleware configuration method '{nameof(ConfigureMiddleware)}'");
-        }
-
-        var genericConfigurationMethod = configurationMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullStreamProducerMiddlewareConfiguration));
+        var genericConfigurationMethod = configurationMethod.MakeGenericMethod(
+            middlewareType,
+            GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullStreamProducerMiddlewareConfiguration)
+        );
 
         try
         {
-            _ = genericConfigurationMethod.Invoke(null, [services]);
+            _ = genericConfigurationMethod.Invoke(obj: null, [services]);
         }
-        catch (TargetInvocationException ex) when (ex.InnerException != null)
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
         {
             ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
         }
@@ -84,10 +114,16 @@ public static class ConquerorStreamProducerMiddlewareServiceCollectionExtensions
 
     private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
     {
-        _ = services.AddSingleton<IStreamProducerMiddlewareInvoker, StreamProducerMiddlewareInvoker<TMiddleware, TConfiguration>>();
+        _ = services.AddSingleton<
+            IStreamProducerMiddlewareInvoker,
+            StreamProducerMiddlewareInvoker<TMiddleware, TConfiguration>
+        >();
     }
 
-    private static Type? GetMiddlewareConfigurationType(Type t) => t.GetInterfaces().First(IsStreamProducerMiddlewareInterface).GetGenericArguments().FirstOrDefault();
+    private static Type? GetMiddlewareConfigurationType(Type t) =>
+        t.GetInterfaces().First(IsStreamProducerMiddlewareInterface).GetGenericArguments().FirstOrDefault();
 
-    private static bool IsStreamProducerMiddlewareInterface(Type i) => i == typeof(IStreamProducerMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStreamProducerMiddleware<>));
+    private static bool IsStreamProducerMiddlewareInterface(Type i) =>
+        i == typeof(IStreamProducerMiddleware)
+        || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStreamProducerMiddleware<>));
 }

@@ -1,10 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 internal sealed class FileSystemMessageJsonSerializer<TMessage, TResponse>
     : IFileSystemMessageSerializer<TMessage, TResponse>
@@ -18,37 +12,33 @@ internal sealed class FileSystemMessageJsonSerializer<TMessage, TResponse>
         IServiceProvider serviceProvider,
         TMessage message,
         Stream fileStream,
-        CancellationToken cancellationToken)
-    {
-        return JsonSerializer.SerializeAsync(
-            fileStream,
-            message,
-            GetJsonTypeInfo(serviceProvider),
-            cancellationToken);
-    }
+        CancellationToken cancellationToken
+    ) => JsonSerializer.SerializeAsync(fileStream, message, GetJsonTypeInfo(serviceProvider), cancellationToken);
 
     public async Task<TMessage> DeserializeMessage(
         IServiceProvider serviceProvider,
         Stream fileStream,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var result = await JsonSerializer.DeserializeAsync(
-                                             fileStream,
-                                             GetJsonTypeInfo(serviceProvider),
-                                             cancellationToken)
-                                         .ConfigureAwait(false);
+        var result = await JsonSerializer
+            .DeserializeAsync(fileStream, GetJsonTypeInfo(serviceProvider), cancellationToken)
+            .ConfigureAwait(false);
 
-        return result ?? throw new IOException($"failed to deserialize file stream to message of type '{typeof(TMessage)}'");
+        return result
+            ?? throw new IOException($"failed to deserialize file stream to message of type '{typeof(TMessage)}'");
     }
 
     private static JsonTypeInfo<TMessage> GetJsonTypeInfo(IServiceProvider serviceProvider)
     {
-        var jsonTypeInfo = (JsonTypeInfo<TMessage>?)TMessage.FileSystemJsonSerializerContext?.GetTypeInfo(typeof(TMessage));
+        var jsonTypeInfo = (JsonTypeInfo<TMessage>?)
+            TMessage.FileSystemJsonSerializerContext?.GetTypeInfo(typeof(TMessage));
 
-        if (jsonTypeInfo == null)
+        if (jsonTypeInfo is null)
         {
-            var jsonSerializerSettings = (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
-                                         ?? FileSystemJsonSerializerOptions.DefaultJsonSerializerOptions;
+            var jsonSerializerSettings =
+                (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
+                ?? FileSystemJsonSerializerOptions.DefaultJsonSerializerOptions;
             jsonTypeInfo = (JsonTypeInfo<TMessage>)jsonSerializerSettings.GetTypeInfo(typeof(TMessage));
         }
 

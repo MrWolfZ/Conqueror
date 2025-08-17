@@ -1,42 +1,60 @@
-using static Conqueror.Transport.Http.Tests.Signalling.HttpSignalConformityTestCase;
-using static Conqueror.Transport.Http.Tests.Signalling.HttpSignalTestCases;
-
 namespace Conqueror.Transport.Http.Tests.Signalling.WebSockets;
+
+using static HttpSignalConformityTestCase;
+using static HttpSignalTestCases;
 
 [TestFixture]
 [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "Members are used by ASP.NET Core via reflection")]
 [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Members are used by ASP.NET Core via reflection")]
-[SuppressMessage("Structure", "NUnit1028:The non-test method is public", Justification = "test case generation methods must be public")]
+[SuppressMessage(
+    "Structure",
+    "NUnit1028:The non-test method is public",
+    Justification = "test case generation methods must be public"
+)]
 public sealed partial class HttpWebSocketsSignalExecutionTests
 {
     [Test]
     [Combinatorial]
-    public void GivenMultipleHttpWebSocketsSignalTypesWithSameTag_WhenRunningReceivers_ThrowsException([Values] bool runIndividually)
+    public void GivenMultipleHttpWebSocketsSignalTypesWithSameTag_WhenRunningReceivers_ThrowsException(
+        [Values] bool runIndividually
+    )
     {
-        var clientServices = new ServiceCollection().AddConquerorHttpClient()
-                                                    .AddSignalHandler<TestSignalWithDuplicateTagHandler>();
+        var clientServices = new ServiceCollection()
+            .AddConquerorHttpClient()
+            .AddSignalHandler<TestSignalWithDuplicateTagHandler>();
 
         var clientServiceProvider = clientServices.BuildServiceProvider();
 
         var signalReceivers = clientServiceProvider.GetRequiredService<ISignalReceivers>();
 
         Assert.That(
-            () => runIndividually
-                ? signalReceivers.RunHttpWebSocketsSignalReceiver<TestSignalWithDuplicateTagHandler>(CancellationToken.None)
-                : signalReceivers.RunHttpWebSocketsSignalReceivers(CancellationToken.None),
-            Throws.InstanceOf<SignalReceiverExecutionFailedException>()
-                  .With.InnerException.InstanceOf<InvalidOperationException>()
-                  .With.InnerException.Message.Contains("is already used by signal type"));
+            () =>
+                runIndividually
+                    ? signalReceivers.RunHttpWebSocketsSignalReceiver<TestSignalWithDuplicateTagHandler>(
+                        CancellationToken.None
+                    )
+                    : signalReceivers.RunHttpWebSocketsSignalReceivers(CancellationToken.None),
+            Throws
+                .InstanceOf<SignalReceiverExecutionFailedException>()
+                .With.InnerException.InstanceOf<InvalidOperationException>()
+                .With.InnerException.Message.Contains("is already used by signal type")
+        );
     }
 
     [Test]
-    [TestCaseSource(typeof(HttpSignalTestCases), nameof(CreateSimpleSuccessTestCases), [HttpSignalTransportType.WebSockets])]
+    [TestCaseSource(
+        typeof(HttpSignalTestCases),
+        nameof(CreateSimpleSuccessTestCases),
+        [HttpSignalTransportType.WebSockets]
+    )]
     [SuppressMessage(
         "Structure",
         "NUnit1018:The number of parameters provided by the TestCaseSource does not match the number of parameters in the target method",
-        Justification = "false positive")]
+        Justification = "false positive"
+    )]
     public async Task GivenHttpWebSocketsSignalHandlerForMultipleSignalTypes_WhenRunningReceiver_OnlyConfiguresReceiverOnce(
-        HttpSignalConformityExecutionSuccessTestCase testCase)
+        HttpSignalConformityExecutionSuccessTestCase testCase
+    )
     {
         await using var host = testCase.CreateTestHost();
 
@@ -44,16 +62,19 @@ public sealed partial class HttpWebSocketsSignalExecutionTests
 
         var configCount = 0;
 
-        var clientServices = new ServiceCollection().AddConquerorHttpClient()
-                                                    .AddSignalHandler<MultiTestSignalHandler>()
-                                                    .AddSingleton<Action<IHttpWebSocketsSignalReceiver>>(r =>
-                                                    {
-                                                        configCount += 1;
-                                                        _ = r.Enable(HttpSignalTransportConformityTestHost.WebSocketsAddress)
-                                                             .WithWebSocketFactory(async (address, _)
-                                                                                       //// ReSharper disable once AccessToDisposedClosure
-                                                                                       => await host.ConnectToWebSocket(address));
-                                                    });
+        var clientServices = new ServiceCollection()
+            .AddConquerorHttpClient()
+            .AddSignalHandler<MultiTestSignalHandler>()
+            .AddSingleton<Action<IHttpWebSocketsSignalReceiver>>(r =>
+            {
+                configCount += 1;
+                _ = r.Enable(HttpSignalTransportConformityTestHost.WebSocketsAddress)
+                    .WithWebSocketFactory(
+                        (address, _)
+                        //// ReSharper disable once AccessToDisposedClosure
+                        => host.ConnectToWebSocket(address)
+                    );
+            });
 
         var clientServiceProvider = clientServices.BuildServiceProvider();
 
@@ -63,16 +84,18 @@ public sealed partial class HttpWebSocketsSignalExecutionTests
         await using var handle = signalReceivers.RunHttpWebSocketsSignalReceivers(cts.Token);
 
         await Assert.ThatAsync(
-            () => handle.InitialConnectionTask.WaitAsync(host.AssertionTimeout, cts.Token),
-            Throws.Nothing);
+            () => handle.InitialConnectionTask.WaitAsync(host.AssertionTimeout, TimeProvider.System, cts.Token),
+            Throws.Nothing
+        );
 
-        Assert.That(configCount, Is.EqualTo(1));
+        Assert.That(configCount, Is.EqualTo(expected: 1));
     }
 
     [Test]
     [TestCaseSource(nameof(CreateReconnectDelayTestCases))]
     public async Task GivenReceiverWithReconnectDelayFn_WhenRunningReceiverWithRecoverableErrors_ReconnectsAreExecutedAfterDelay(
-        HttpSignalConformityExecutionErrorTestCase testCase)
+        HttpSignalConformityExecutionErrorTestCase testCase
+    )
     {
         await using var host = testCase.CreateTestHost();
 
@@ -94,43 +117,55 @@ public sealed partial class HttpWebSocketsSignalExecutionTests
 
                 return Task.CompletedTask;
             },
-            reconnectDelayCallback: async ct =>
+            async ct =>
             {
                 if (taskCompletionSources.TryDequeue(out var tcs))
                 {
                     await tcs.Task.WaitAsync(ct);
                 }
-            });
+            }
+        );
 
         _ = receiverHost.ReceiverExecutionHandle?.CompletionTask.ContinueWith(
-            static (t, l) =>
-            {
-                ((ILogger)l!).LogError(t.Exception!, "error in run");
-            },
+            static (t, l) => ((ILogger)l!).LogError(t.Exception, "error in run"),
             host.Logger,
             host.TestTimeoutToken,
             TaskContinuationOptions.OnlyOnFaulted,
-            TaskScheduler.Default);
+            TaskScheduler.Default
+        );
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.TypeOf<TimeoutException>());
+            () =>
+                receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.TypeOf<TimeoutException>()
+        );
 
         host.Logger.LogInformation("Publishing initial signals...");
 
         await Assert.ThatAsync(
             () => testCase.PublishSignals(publisherHost.SignalPublishers, host.TestTimeoutToken),
-            Throws.Nothing);
+            Throws.Nothing
+        );
 
-        await Task.Delay(host.ShortDelay, host.TestTimeoutToken);
+        await Task.Delay(host.ShortDelay, TimeProvider.System, host.TestTimeoutToken);
 
         Assert.That(receivedSignals, Is.Empty);
 
         taskCompletionSource1.SetResult();
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
 
         await testCase.OnInitialReceiverConnection(host);
 
@@ -138,22 +173,26 @@ public sealed partial class HttpWebSocketsSignalExecutionTests
 
         await Assert.ThatAsync(
             () => testCase.PublishSignals(publisherHost.SignalPublishers, host.TestTimeoutToken),
-            Throws.Nothing);
+            Throws.Nothing
+        );
 
         Assert.That(
             () => receivedSignals,
             Is.EqualTo(testCase.ExpectedReceivedSignals)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+                .After(host.AssertionTimeoutInMs)
+                .MilliSeconds.PollEvery(milliSeconds: 10)
+                .MilliSeconds
+        );
 
         await testCase.TriggerReconnect(host);
 
-        await Task.Delay(host.ShortDelay, host.TestTimeoutToken);
+        await Task.Delay(host.ShortDelay, TimeProvider.System, host.TestTimeoutToken);
 
         // the connection task is not influenced by reconnections
-        Assert.That(receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.IsCompletedSuccessfully ?? true, Is.True);
+        Assert.That(
+            receiverHost.ReceiverExecutionHandle?.InitialConnectionTask.IsCompletedSuccessfully ?? true,
+            Is.True
+        );
 
         taskCompletionSource2.SetResult();
 
@@ -165,26 +204,34 @@ public sealed partial class HttpWebSocketsSignalExecutionTests
 
         await Assert.ThatAsync(
             () => testCase.PublishSignals(publisherHost.SignalPublishers, host.TestTimeoutToken),
-            Throws.Nothing);
+            Throws.Nothing
+        );
 
         Assert.That(
             () => receivedSignals,
             Is.EqualTo(testCase.ExpectedReceivedSignals)
-              .After(host.AssertionTimeoutInMs)
-              .MilliSeconds
-              .PollEvery(10)
-              .MilliSeconds);
+                .After(host.AssertionTimeoutInMs)
+                .MilliSeconds.PollEvery(milliSeconds: 10)
+                .MilliSeconds
+        );
 
         await cts.CancelAsync();
 
         await Assert.ThatAsync(
-            () => receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(host.AssertionTimeout, host.TestTimeoutToken) ?? Task.CompletedTask,
-            Throws.Nothing);
+            () =>
+                receiverHost.ReceiverExecutionHandle?.CompletionTask.WaitAsync(
+                    host.AssertionTimeout,
+                    TimeProvider.System,
+                    host.TestTimeoutToken
+                ) ?? Task.CompletedTask,
+            Throws.Nothing
+        );
     }
 
-    private static IEnumerable<TestCaseData> CreateReconnectDelayTestCases()
-        => HttpSignalTestCases.CreateReconnectDelayTestCases(HttpSignalTransportType.WebSockets)
-                              .Select(tc => new TestCaseData(tc).SetName(tc.Name));
+    private static IEnumerable<TestCaseData> CreateReconnectDelayTestCases() =>
+        HttpSignalTestCases
+            .CreateReconnectDelayTestCases(HttpSignalTransportType.WebSockets)
+            .Select(tc => new TestCaseData(tc).SetName(tc.Name));
 
     [HttpWebSocketsSignal(Tag = "duplicate-tag")]
     private sealed partial record TestSignalWithDuplicateTag1(int Payload);
@@ -194,19 +241,18 @@ public sealed partial class HttpWebSocketsSignalExecutionTests
 
     private sealed partial class TestSignalWithDuplicateTagHandler
         : TestSignalWithDuplicateTag1.IHandler,
-          TestSignalWithDuplicateTag2.IHandler
+            TestSignalWithDuplicateTag2.IHandler
     {
-        public Task Handle(TestSignalWithDuplicateTag1 signal, CancellationToken cancellationToken = default)
-        {
+        public Task Handle(TestSignalWithDuplicateTag1 signal, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
-        }
 
-        Task TestSignalWithDuplicateTag2.IHandler.Handle(TestSignalWithDuplicateTag2 signal, CancellationToken cancellationToken)
-        {
-            throw new NotSupportedException();
-        }
+        Task TestSignalWithDuplicateTag2.IHandler.Handle(
+            TestSignalWithDuplicateTag2 signal,
+            CancellationToken cancellationToken
+        ) => throw new NotSupportedException();
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.Enable(HttpSignalTransportConformityTestHost.WebSocketsAddress);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.Enable(HttpSignalTransportConformityTestHost.WebSocketsAddress);
     }
 }

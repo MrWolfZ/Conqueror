@@ -1,12 +1,12 @@
+namespace Quickstart.Enhanced;
+
 using System.ComponentModel.DataAnnotations;
 using Conqueror;
-
-namespace Quickstart.Enhanced;
 
 [HttpMessage<CounterIncrementedResponse>(Version = "v1")]
 public sealed partial record IncrementCounterByAmount(string CounterName)
 {
-    [Range(1, long.MaxValue)]
+    [Range(minimum: 1, long.MaxValue)]
     public required long IncrementBy { get; init; }
 }
 

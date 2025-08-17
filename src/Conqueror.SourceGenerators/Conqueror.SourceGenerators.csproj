@@ -1,49 +1,43 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <Import Project="../.targets/lib.targets" />
-
-    <PropertyGroup>
-        <Nullable>enable</Nullable>
-        <IsPackable>true</IsPackable>
-        <IncludeBuildOutput>false</IncludeBuildOutput>
-        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-
-        <!--suppress MsbuildTargetFrameworkTagInspection -->
-        <TargetFrameworks>netstandard2.0</TargetFrameworks>
-
-        <!--
+  <Import Project="../.targets/lib.targets" />
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <!--suppress MsbuildTargetFrameworkTagInspection -->
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <!--
             This is required because OmniSharp (VSCode) calls the build in a way
             that will skip resource generation. Without this line, OmniSharp won't
             find the generated .cs files and analysis will fail.
         -->
-        <CoreCompileDependsOn>PrepareResources;$(CompileDependsOn)</CoreCompileDependsOn>
-
-        <!--
+    <CoreCompileDependsOn>PrepareResources;$(CompileDependsOn)</CoreCompileDependsOn>
+    <!--
             Set up build target to copy analyzer DLLs to correct target path in nuget package
         -->
-        <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
-        <RoslynVersion>4.8</RoslynVersion>
-        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    </PropertyGroup>
-
-    <!-- for NuGet -->
-    <PropertyGroup>
-        <Description>Part of the Conqueror library set. Source generators for core abstractions.</Description>
-        <PackageTags>$(PackageTags) analyzers</PackageTags>
-        <DevelopmentDependency>true</DevelopmentDependency>
-        <NoPackageAnalysis>true</NoPackageAnalysis>
-    </PropertyGroup>
-
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
+    <RoslynVersion>4.8</RoslynVersion>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+  </PropertyGroup>
+  <!-- for NuGet -->
+  <PropertyGroup>
+    <Description>Part of the Conqueror library set. Source generators for core abstractions.</Description>
+    <PackageTags>$(PackageTags) analyzers</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+  </ItemGroup>
+  <Target Name="_AddAnalyzersToOutput">
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+      <TfmSpecificPackageFile
+        Include="$(OutputPath)/$(AssemblyName)"
+        PackagePath="analyzers/dotnet/roslyn$(RoslynVersion)/cs"
+      />
     </ItemGroup>
-
-    <Target Name="_AddAnalyzersToOutput">
-        <ItemGroup>
-            <TfmSpecificPackageFile Include="$(OutputPath)/$(AssemblyName)" PackagePath="analyzers/dotnet/roslyn$(RoslynVersion)/cs" />
-        </ItemGroup>
-    </Target>
-
+  </Target>
 </Project>

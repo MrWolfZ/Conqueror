@@ -1,17 +1,16 @@
-using System.Diagnostics;
-
 namespace Conqueror.Tests.Signalling;
 
 public sealed partial class SignalContextTraceAndOperationIdTests
 {
-    private static int testCaseCounter;
+    private static int TestCaseCounter;
 
     [Test]
     [Combinatorial]
     public async Task GivenSetup_WhenExecutingHandler_OperationIdsAreCorrectlyAvailable(
-        [Values(true, false)] bool hasCustomTraceId,
-        [Values(true, false)] bool hasActivity,
-        [Values(true, false)] bool publishNestedWithDifferentTransport)
+        [Values(arg1: true, arg2: false)] bool hasCustomTraceId,
+        [Values(arg1: true, arg2: false)] bool hasActivity,
+        [Values(arg1: true, arg2: false)] bool publishNestedWithDifferentTransport
+    )
     {
         var customTraceId = Guid.NewGuid().ToString();
 
@@ -23,34 +22,42 @@ public sealed partial class SignalContextTraceAndOperationIdTests
 
         var services = new ServiceCollection();
 
-        _ = services.AddSignalHandlerDelegate(
-                        TestSignal.T,
-                        async (_, p, ct) =>
-                        {
-                            await Task.Yield();
-                            traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
-                            messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.SignalId;
+        _ = services
+            .AddSignalHandlerDelegate(
+                TestSignal.T,
+                async (_, p, ct) =>
+                {
+                    await Task.Yield();
+                    traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
+                    messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.SignalId;
 
-                            var handler = p.GetRequiredService<ISignalPublishers>()
-                                           .For(NestedTestSignal.T);
+                    var handler = p.GetRequiredService<ISignalPublishers>().For(NestedTestSignal.T);
 
-                            if (publishNestedWithDifferentTransport)
-                            {
-                                handler = handler.WithTransport(b => new TestSignalPublisher<NestedTestSignal>(b.UseInProcess()));
-                            }
+                    if (publishNestedWithDifferentTransport)
+                    {
+                        handler = handler.WithTransport(b => new TestSignalPublisher<NestedTestSignal>(
+                            b.UseInProcess()
+                        ));
+                    }
 
-                            await handler.Handle(new(), ct);
-                        })
-                    .AddSignalHandlerDelegate(
-                        NestedTestSignal.T,
-                        async (_, p, _) =>
-                        {
-                            await Task.Yield();
-                            traceIdFromNestedSignalHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
-                            messageIdFromNestedSignalHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.SignalId;
-                        });
+                    await handler.Handle(new(), ct);
+                }
+            )
+            .AddSignalHandlerDelegate(
+                NestedTestSignal.T,
+                async (_, p, _) =>
+                {
+                    await Task.Yield();
+                    traceIdFromNestedSignalHandler =
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.TraceId;
+                    messageIdFromNestedSignalHandler =
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.SignalId;
+                }
+            );
 
-        await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+        await using var serviceProvider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateOnBuild = true }
+        );
 
         ConquerorContext? conquerorContext = null;
 
@@ -62,19 +69,25 @@ public sealed partial class SignalContextTraceAndOperationIdTests
 
         using var d = conquerorContext;
 
-        var testCaseIdx = Interlocked.Increment(ref testCaseCounter);
-        using var activity = hasActivity ? StartActivity(nameof(SignalContextTraceAndOperationIdTests) + testCaseIdx) : null;
+        var testCaseIdx = Interlocked.Increment(ref TestCaseCounter);
+        using var activity = hasActivity
+            ? StartActivity($"{nameof(SignalContextTraceAndOperationIdTests)}{testCaseIdx}")
+            : null;
 
-        var handlerSender = serviceProvider.GetRequiredService<ISignalPublishers>()
-                                           .For(TestSignal.T)
-                                           .WithPipeline(p => p.Use(ctx =>
-                                           {
-                                               traceIdFromExecution = ctx.ConquerorContext.TraceId;
-                                               return ctx.Next(ctx.Signal, ctx.CancellationToken);
-                                           }))
-                                           .WithTransport(b => b.UseInProcess());
+        var handlerSender = serviceProvider
+            .GetRequiredService<ISignalPublishers>()
+            .For(TestSignal.T)
+            .WithPipeline(p =>
+                p.Use(ctx =>
+                {
+                    traceIdFromExecution = ctx.ConquerorContext.TraceId;
 
-        await handlerSender.Handle(new());
+                    return ctx.Next(ctx.Signal, ctx.CancellationToken);
+                })
+            )
+            .WithTransport(b => b.UseInProcess());
+
+        await handlerSender.Handle(new(), CancellationToken.None);
 
         var expectedTraceId = (hasCustomTraceId, hasActivity) switch
         {
@@ -108,11 +121,7 @@ public sealed partial class SignalContextTraceAndOperationIdTests
 
         var activity = activitySource.StartActivity()!;
 
-        return new(
-            activity.TraceId.ToString(),
-            activitySource,
-            activityListener,
-            activity);
+        return new DisposableActivity(activity.TraceId.ToString(), activitySource, activityListener, activity);
     }
 
     private sealed class DisposableActivity(string traceId, params IDisposable[] disposables) : IDisposable
@@ -145,9 +154,7 @@ public sealed partial class SignalContextTraceAndOperationIdTests
             TSignal signal,
             IServiceProvider serviceProvider,
             ConquerorContext conquerorContext,
-            CancellationToken cancellationToken)
-        {
-            return wrapped.Publish(signal, serviceProvider, conquerorContext, cancellationToken);
-        }
+            CancellationToken cancellationToken
+        ) => wrapped.Publish(signal, serviceProvider, conquerorContext, cancellationToken);
     }
 }

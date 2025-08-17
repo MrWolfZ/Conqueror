@@ -1,6 +1,3 @@
-using System;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 /// <summary>
@@ -9,18 +6,12 @@ namespace Conqueror;
 public sealed class MessageFailedDueToInvalidFormattedConquerorContextDataException : MessageFailedException
 {
     public MessageFailedDueToInvalidFormattedConquerorContextDataException(string? message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 
     public MessageFailedDueToInvalidFormattedConquerorContextDataException(string? message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
-    public MessageFailedDueToInvalidFormattedConquerorContextDataException()
-    {
-    }
+    public MessageFailedDueToInvalidFormattedConquerorContextDataException() { }
 
     public override string WellKnownReason => WellKnownReasons.InvalidFormattedContextData;
 }

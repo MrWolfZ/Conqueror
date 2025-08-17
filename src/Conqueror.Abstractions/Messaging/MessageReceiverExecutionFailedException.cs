@@ -1,27 +1,17 @@
-using System;
-
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-[Serializable]
 public sealed class MessageReceiverExecutionFailedException : Exception
 {
     public MessageReceiverExecutionFailedException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 
     public MessageReceiverExecutionFailedException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
-    private MessageReceiverExecutionFailedException()
-    {
-    }
+    private MessageReceiverExecutionFailedException() { }
 
     /// <summary>
-    ///     <c>null</c> when the handler is a delegate handler.
+    ///     <see langword="null" /> when the handler is a delegate handler.
     /// </summary>
     public required Type? HandlerType { get; init; }
 

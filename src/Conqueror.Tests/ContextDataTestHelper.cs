@@ -1,8 +1,11 @@
-using System.Text;
-
 namespace Conqueror.Tests;
 
-public sealed class ContextDataTestHelper
+[SuppressMessage(
+    "Roslynator",
+    "RCS1250:Use implicit/explicit object creation",
+    Justification = "we prefer the collection expression syntax here"
+)]
+internal sealed class ContextDataTestHelper
 {
     private const string TestKey = "TestKey";
 
@@ -29,7 +32,8 @@ public sealed class ContextDataTestHelper
 
     private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateDownstreamTestCaseData(
         string dataType,
-        ExecutionOrderItem[] executionOrder)
+        ExecutionOrderItem[] executionOrder
+    )
     {
         var allLocations = executionOrder.Select(t => t.Location).ToList();
 
@@ -39,18 +43,22 @@ public sealed class ContextDataTestHelper
         {
             var (contextDepth, depthInstance, location) = executionOrder[i];
             var whereDataShouldBeAccessible = executionOrder[i..]
-                                              .Where(t => t.ContextDepth > contextDepth || (t.ContextDepth == contextDepth && t.DepthInstance == depthInstance))
-                                              .Select(t => t.Location)
-                                              .ToList();
+                .Where(t =>
+                    t.ContextDepth > contextDepth
+                    || (t.ContextDepth == contextDepth && t.DepthInstance == depthInstance)
+                )
+                .Select(t => t.Location)
+                .ToList();
 
             yield return
             [
                 new(
                     dataType,
                     location,
-                    null,
+                    DataRemovalLocation: null,
                     whereDataShouldBeAccessible,
-                    allLocations.Except(whereDataShouldBeAccessible).ToList()),
+                    allLocations.Except(whereDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase).ToList()
+                ),
             ];
         }
 
@@ -64,34 +72,48 @@ public sealed class ContextDataTestHelper
 
                 for (var j = i + 1; j < executionOrder.Length; j += 1)
                 {
-                    var (overwrittenContextDepth, overwrittenDepthInstance, overwrittenDataSettingLocation) = executionOrder[j];
+                    var (overwrittenContextDepth, overwrittenDepthInstance, overwrittenDataSettingLocation) =
+                        executionOrder[j];
 
                     var whereOverwrittenDataShouldBeAccessible = executionOrder[j..]
-                                                                 .Where(t => t.ContextDepth > overwrittenContextDepth || (t.ContextDepth == overwrittenContextDepth && t.DepthInstance == overwrittenDepthInstance))
-                                                                 .Select(t => t.Location)
-                                                                 .ToList();
+                        .Where(t =>
+                            t.ContextDepth > overwrittenContextDepth
+                            || (
+                                t.ContextDepth == overwrittenContextDepth && t.DepthInstance == overwrittenDepthInstance
+                            )
+                        )
+                        .Select(t => t.Location)
+                        .ToList();
 
                     var whereInitialDataShouldBeAccessible = executionOrder[i..]
-                                                             .Where(t => t.ContextDepth > initialContextDepth || (t.ContextDepth == initialContextDepth && t.DepthInstance == initialDepthInstance))
-                                                             .Select(t => t.Location)
-                                                             .Except(whereOverwrittenDataShouldBeAccessible)
-                                                             .ToList();
+                        .Where(t =>
+                            t.ContextDepth > initialContextDepth
+                            || (t.ContextDepth == initialContextDepth && t.DepthInstance == initialDepthInstance)
+                        )
+                        .Select(t => t.Location)
+                        .Except(whereOverwrittenDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
 
                     yield return
                     [
                         new(
                             dataType,
                             initialDataSettingLocation,
-                            null,
+                            DataRemovalLocation: null,
                             whereInitialDataShouldBeAccessible,
-                            allLocations.Except(whereInitialDataShouldBeAccessible).ToList()),
-
+                            allLocations
+                                .Except(whereInitialDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase)
+                                .ToList()
+                        ),
                         new(
                             overWriteDataType,
                             overwrittenDataSettingLocation,
-                            null,
+                            DataRemovalLocation: null,
                             whereOverwrittenDataShouldBeAccessible,
-                            allLocations.Except(whereOverwrittenDataShouldBeAccessible).ToList()),
+                            allLocations
+                                .Except(whereOverwrittenDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase)
+                                .ToList()
+                        ),
                     ];
                 }
             }
@@ -108,15 +130,21 @@ public sealed class ContextDataTestHelper
                 var (removalContextDepth, removalDepthInstance, removalLocation) = executionOrder[j];
 
                 var whereDataShouldBeRemoved = executionOrder[j..]
-                                               .Where(t => t.ContextDepth > removalContextDepth || (t.ContextDepth == removalContextDepth && t.DepthInstance == removalDepthInstance))
-                                               .Select(t => t.Location)
-                                               .ToList();
+                    .Where(t =>
+                        t.ContextDepth > removalContextDepth
+                        || (t.ContextDepth == removalContextDepth && t.DepthInstance == removalDepthInstance)
+                    )
+                    .Select(t => t.Location)
+                    .ToList();
 
                 var whereDataShouldBeAccessible = executionOrder[i..]
-                                                  .Where(t => t.ContextDepth > contextDepth || (t.ContextDepth == contextDepth && t.DepthInstance == depthInstance))
-                                                  .Select(t => t.Location)
-                                                  .Except(whereDataShouldBeRemoved)
-                                                  .ToList();
+                    .Where(t =>
+                        t.ContextDepth > contextDepth
+                        || (t.ContextDepth == contextDepth && t.DepthInstance == depthInstance)
+                    )
+                    .Select(t => t.Location)
+                    .Except(whereDataShouldBeRemoved, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
 
                 yield return
                 [
@@ -125,7 +153,8 @@ public sealed class ContextDataTestHelper
                         dataSettingLocation,
                         removalLocation,
                         whereDataShouldBeAccessible,
-                        allLocations.Except(whereDataShouldBeAccessible).ToList()),
+                        allLocations.Except(whereDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase).ToList()
+                    ),
                 ];
             }
         }
@@ -133,7 +162,8 @@ public sealed class ContextDataTestHelper
 
     private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateUpstreamTestCaseData(
         string dataType,
-        ExecutionOrderItem[] executionOrder)
+        ExecutionOrderItem[] executionOrder
+    )
     {
         var allLocations = executionOrder.Select(t => t.Location).ToList();
 
@@ -143,18 +173,19 @@ public sealed class ContextDataTestHelper
         {
             var (contextDepth, depthInstance, location) = executionOrder[i];
             var whereDataShouldBeAccessible = executionOrder[i..]
-                                              .Where(t => t.ContextDepth <= contextDepth && t.DepthInstance <= depthInstance)
-                                              .Select(t => t.Location)
-                                              .ToList();
+                .Where(t => t.ContextDepth <= contextDepth && t.DepthInstance <= depthInstance)
+                .Select(t => t.Location)
+                .ToList();
 
             yield return
             [
                 new(
                     dataType,
                     location,
-                    null,
+                    DataRemovalLocation: null,
                     whereDataShouldBeAccessible,
-                    allLocations.Except(whereDataShouldBeAccessible).ToList()),
+                    allLocations.Except(whereDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase).ToList()
+                ),
             ];
         }
 
@@ -168,34 +199,42 @@ public sealed class ContextDataTestHelper
 
                 for (var j = i + 1; j < executionOrder.Length; j += 1)
                 {
-                    var (overwrittenContextDepth, overwrittenDepthInstance, overwrittenDataSettingLocation) = executionOrder[j];
+                    var (overwrittenContextDepth, overwrittenDepthInstance, overwrittenDataSettingLocation) =
+                        executionOrder[j];
 
                     var whereOverwrittenDataShouldBeAccessible = executionOrder[j..]
-                                                                 .Where(t => t.ContextDepth <= overwrittenContextDepth && t.DepthInstance <= overwrittenDepthInstance)
-                                                                 .Select(t => t.Location)
-                                                                 .ToList();
+                        .Where(t =>
+                            t.ContextDepth <= overwrittenContextDepth && t.DepthInstance <= overwrittenDepthInstance
+                        )
+                        .Select(t => t.Location)
+                        .ToList();
 
                     var whereInitialDataShouldBeAccessible = executionOrder[i..]
-                                                             .Where(t => t.ContextDepth <= initialContextDepth && t.DepthInstance <= initialDepthInstance)
-                                                             .Select(t => t.Location)
-                                                             .Except(whereOverwrittenDataShouldBeAccessible)
-                                                             .ToList();
+                        .Where(t => t.ContextDepth <= initialContextDepth && t.DepthInstance <= initialDepthInstance)
+                        .Select(t => t.Location)
+                        .Except(whereOverwrittenDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
 
                     yield return
                     [
                         new(
                             dataType,
                             initialDataSettingLocation,
-                            null,
+                            DataRemovalLocation: null,
                             whereInitialDataShouldBeAccessible,
-                            allLocations.Except(whereInitialDataShouldBeAccessible).ToList()),
-
+                            allLocations
+                                .Except(whereInitialDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase)
+                                .ToList()
+                        ),
                         new(
                             overWriteDataType,
                             overwrittenDataSettingLocation,
-                            null,
+                            DataRemovalLocation: null,
                             whereOverwrittenDataShouldBeAccessible,
-                            allLocations.Except(whereOverwrittenDataShouldBeAccessible).ToList()),
+                            allLocations
+                                .Except(whereOverwrittenDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase)
+                                .ToList()
+                        ),
                     ];
                 }
             }
@@ -211,18 +250,19 @@ public sealed class ContextDataTestHelper
             {
                 var (removalContextDepth, removalDepthInstance, removalLocation) = executionOrder[j];
 
-                var whereDataShouldBeRemoved = settingContextDepth < removalContextDepth || settingDepthInstance < removalDepthInstance
-                    ? []
-                    : executionOrder[j..]
-                      .Where(t => t.ContextDepth <= removalContextDepth)
-                      .Select(t => t.Location)
-                      .ToList();
+                var whereDataShouldBeRemoved =
+                    settingContextDepth < removalContextDepth || settingDepthInstance < removalDepthInstance
+                        ? []
+                        : executionOrder[j..]
+                            .Where(t => t.ContextDepth <= removalContextDepth)
+                            .Select(t => t.Location)
+                            .ToList();
 
                 var whereDataShouldBeAccessible = executionOrder[i..]
-                                                  .Where(t => t.ContextDepth <= settingContextDepth && t.DepthInstance <= settingDepthInstance)
-                                                  .Select(t => t.Location)
-                                                  .Except(whereDataShouldBeRemoved)
-                                                  .ToList();
+                    .Where(t => t.ContextDepth <= settingContextDepth && t.DepthInstance <= settingDepthInstance)
+                    .Select(t => t.Location)
+                    .Except(whereDataShouldBeRemoved, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
 
                 yield return
                 [
@@ -231,7 +271,8 @@ public sealed class ContextDataTestHelper
                         dataSettingLocation,
                         removalLocation,
                         whereDataShouldBeAccessible,
-                        allLocations.Except(whereDataShouldBeAccessible).ToList()),
+                        allLocations.Except(whereDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase).ToList()
+                    ),
                 ];
             }
         }
@@ -239,7 +280,8 @@ public sealed class ContextDataTestHelper
 
     private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateBidirectionalTestCaseData(
         string dataType,
-        ExecutionOrderItem[] executionOrder)
+        ExecutionOrderItem[] executionOrder
+    )
     {
         var allLocations = executionOrder.Select(t => t.Location).ToList();
 
@@ -255,9 +297,10 @@ public sealed class ContextDataTestHelper
                 new(
                     dataType,
                     location,
-                    null,
+                    DataRemovalLocation: null,
                     whereDataShouldBeAccessible,
-                    allLocations.Except(whereDataShouldBeAccessible).ToList()),
+                    allLocations.Except(whereDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase).ToList()
+                ),
             ];
         }
 
@@ -276,25 +319,30 @@ public sealed class ContextDataTestHelper
                     var whereOverwrittenDataShouldBeAccessible = executionOrder[j..].Select(t => t.Location).ToList();
 
                     var whereInitialDataShouldBeAccessible = executionOrder[i..]
-                                                             .Select(t => t.Location)
-                                                             .Except(whereOverwrittenDataShouldBeAccessible)
-                                                             .ToList();
+                        .Select(t => t.Location)
+                        .Except(whereOverwrittenDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
 
                     yield return
                     [
                         new(
                             dataType,
                             initialDataSettingLocation,
-                            null,
+                            DataRemovalLocation: null,
                             whereInitialDataShouldBeAccessible,
-                            allLocations.Except(whereInitialDataShouldBeAccessible).ToList()),
-
+                            allLocations
+                                .Except(whereInitialDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase)
+                                .ToList()
+                        ),
                         new(
                             overWriteDataType,
                             overwrittenDataSettingLocation,
-                            null,
+                            DataRemovalLocation: null,
                             whereOverwrittenDataShouldBeAccessible,
-                            allLocations.Except(whereOverwrittenDataShouldBeAccessible).ToList()),
+                            allLocations
+                                .Except(whereOverwrittenDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase)
+                                .ToList()
+                        ),
                     ];
                 }
             }
@@ -313,9 +361,9 @@ public sealed class ContextDataTestHelper
                 var whereDataShouldBeRemoved = executionOrder[j..].Select(t => t.Location).ToList();
 
                 var whereDataShouldBeAccessible = executionOrder[i..]
-                                                  .Select(t => t.Location)
-                                                  .Except(whereDataShouldBeRemoved)
-                                                  .ToList();
+                    .Select(t => t.Location)
+                    .Except(whereDataShouldBeRemoved, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
 
                 yield return
                 [
@@ -324,54 +372,86 @@ public sealed class ContextDataTestHelper
                         dataSettingLocation,
                         removalLocation,
                         whereDataShouldBeAccessible,
-                        allLocations.Except(whereDataShouldBeAccessible).ToList()),
+                        allLocations.Except(whereDataShouldBeAccessible, StringComparer.OrdinalIgnoreCase).ToList()
+                    ),
                 ];
             }
         }
     }
 
+    [SuppressMessage(
+        "StyleCop.CSharp.OrderingRules",
+        "SA1202:Elements should be ordered by access",
+        Justification = "the order makes sense here"
+    )]
     public static void SetAndObserveContextData(
         ConquerorContext ctx,
         TestDataInstructions testDataInstructions,
         TestObservations testObservations,
-        string location)
+        string location
+    )
     {
-        foreach (var (key, value, _) in testDataInstructions.DownstreamDataToSet.Where(t => t.Location == location))
+        // ReSharper disable RedundantArgumentDefaultValue
+        foreach (
+            var (key, value, _) in testDataInstructions.DownstreamDataToSet.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
-            ctx.InProcessData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
+            ctx.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Downstream);
         }
 
-        foreach (var (key, _) in testDataInstructions.DownstreamDataToRemove.Where(t => t.Location == location))
+        foreach (
+            var (key, _) in testDataInstructions.DownstreamDataToRemove.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
-            _ = ctx.InProcessData.Remove(key, flowDirection: ConquerorContextDataFlowDirection.Downstream);
+            _ = ctx.InProcessData.Remove(key, ConquerorContextDataFlowDirection.Downstream);
         }
 
-        foreach (var (key, value, _) in testDataInstructions.UpstreamDataToSet.Where(t => t.Location == location))
+        foreach (
+            var (key, value, _) in testDataInstructions.UpstreamDataToSet.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
             ctx.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Upstream);
         }
 
-        foreach (var (key, _) in testDataInstructions.UpstreamDataToRemove.Where(t => t.Location == location))
+        foreach (
+            var (key, _) in testDataInstructions.UpstreamDataToRemove.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
             _ = ctx.InProcessData.Remove(key, ConquerorContextDataFlowDirection.Upstream);
         }
 
-        foreach (var (key, value, _) in testDataInstructions.BidirectionalDataToSet.Where(t => t.Location == location))
+        foreach (
+            var (key, value, _) in testDataInstructions.BidirectionalDataToSet.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
             ctx.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Bidirectional);
         }
 
-        foreach (var (key, _) in testDataInstructions.BidirectionalDataToRemove.Where(t => t.Location == location))
+        foreach (
+            var (key, _) in testDataInstructions.BidirectionalDataToRemove.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
             _ = ctx.InProcessData.Remove(key, ConquerorContextDataFlowDirection.Bidirectional);
         }
 
-        foreach (var (key, value) in ctx.InProcessData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Downstream))
+        foreach (var (key, value) in ctx.InProcessData.GetAll(ConquerorContextDataFlowDirection.Downstream))
         {
             testObservations.ObservedDownstreamData.Add((key, value, location));
         }
 
-        if (ctx.InProcessData.Get<object>(TestKey, flowDirection: ConquerorContextDataFlowDirection.Downstream) is { } downstreamValue)
+        if (ctx.InProcessData.Get<object>(TestKey, ConquerorContextDataFlowDirection.Downstream) is { } downstreamValue)
         {
             testObservations.ObservedDownstreamData.Add((TestKey, downstreamValue, location));
         }
@@ -391,42 +471,64 @@ public sealed class ContextDataTestHelper
             testObservations.ObservedBidirectionalData.Add((key, value, location));
         }
 
-        if (ctx.InProcessData.Get<object>(TestKey, ConquerorContextDataFlowDirection.Bidirectional) is { } bidirectionalValue)
+        if (
+            ctx.InProcessData.Get<object>(TestKey, ConquerorContextDataFlowDirection.Bidirectional) is
+            { } bidirectionalValue
+        )
         {
             testObservations.ObservedBidirectionalData.Add((TestKey, bidirectionalValue, location));
         }
+
+        // ReSharper enable RedundantArgumentDefaultValue
     }
 
-    [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
-    [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
-    public sealed record ConquerorContextDataTestCase(string DataDirection, List<ConquerorContextDataTestCaseData> TestData)
+    [SuppressMessage(
+        "Critical Code Smell",
+        "S3218:Inner class members should not shadow outer class \"static\" or type members",
+        Justification = "The name makes sense and there is little risk of confusing a property and a class."
+    )]
+    [SuppressMessage(
+        "ReSharper",
+        "MemberHidesStaticFromOuterClass",
+        Justification = "The name makes sense and there is little risk of confusing a property and a class."
+    )]
+    public sealed record ConquerorContextDataTestCase(
+        string DataDirection,
+        List<ConquerorContextDataTestCaseData> TestData
+    )
     {
         public static implicit operator TestCaseData(ConquerorContextDataTestCase testCase)
         {
-            var testName = new StringBuilder().Append(testCase.DataDirection)
-                                              .Append($",data:{string.Join(",", testCase.TestData)}")
-                                              .ToString();
+            var testName = new StringBuilder()
+                .Append(testCase.DataDirection)
+                .Append($",data:{string.Join(',', testCase.TestData)}")
+                .ToString();
 
-            return new(testCase)
-            {
-                TestName = testName,
-            };
+            return new(testCase) { TestName = testName };
         }
     }
 
-    [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
-    [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
+    [SuppressMessage(
+        "Critical Code Smell",
+        "S3218:Inner class members should not shadow outer class \"static\" or type members",
+        Justification = "The name makes sense and there is little risk of confusing a property and a class."
+    )]
+    [SuppressMessage(
+        "ReSharper",
+        "MemberHidesStaticFromOuterClass",
+        Justification = "The name makes sense and there is little risk of confusing a property and a class."
+    )]
     public sealed record ConquerorContextDataTestCaseData(
         string DataType,
         string DataSettingLocation,
         string? DataRemovalLocation,
         IReadOnlyCollection<string> LocationsWhereDataShouldBeAccessible,
-        IReadOnlyCollection<string> LocationsWhereDataShouldNotBeAccessible)
+        IReadOnlyCollection<string> LocationsWhereDataShouldNotBeAccessible
+    )
     {
         public override string ToString()
         {
-            var sb = new StringBuilder().Append(DataType)
-                                        .Append($",setLoc:{DataSettingLocation}");
+            var sb = new StringBuilder().Append(DataType).Append($",setLoc:{DataSettingLocation}");
 
             if (DataRemovalLocation is not null)
             {

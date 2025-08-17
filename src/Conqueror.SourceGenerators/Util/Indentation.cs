@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-namespace Conqueror.SourceGenerators.Util;
+﻿namespace Conqueror.SourceGenerators.Util;
 
 public sealed class Indentation
 {
@@ -10,8 +7,9 @@ public sealed class Indentation
     public IDisposable Indent()
     {
         Level += 1;
+
         return new AnonymousDisposable(() => Level -= 1);
     }
 
-    public override string ToString() => string.Join(string.Empty, Enumerable.Repeat("    ", Level));
+    public override string ToString() => string.Concat(Enumerable.Repeat("    ", Level));
 }

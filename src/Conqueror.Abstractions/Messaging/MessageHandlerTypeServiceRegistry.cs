@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿#pragma warning disable SA1201 // ElementsMustAppearInTheCorrectOrder
 
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public static class MessageHandlerTypeServiceRegistry
 {
     private static readonly List<Action<IMessageHandlerServiceRegisterable>> RegistrationActions = [];
 
-    public static void RegisterHandlerType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>()
-        where THandler : class, IMessageHandler
-        => RegisterHandlerTypeInternal<THandler>();
+    public static void RegisterHandlerType<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+    >()
+        where THandler : class, IMessageHandler => RegisterHandlerTypeInternal<THandler>();
 
     internal static void RunWithRegisteredTypes(IMessageHandlerServiceRegisterable registerable)
     {
@@ -21,11 +19,10 @@ public static class MessageHandlerTypeServiceRegistry
         }
     }
 
-    private static void RegisterHandlerTypeInternal<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>()
-        where THandler : class, IMessageHandler
-    {
-        RegistrationActions.Add(r => r.Register<THandler>());
-    }
+    private static void RegisterHandlerTypeInternal<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+    >()
+        where THandler : class, IMessageHandler => RegistrationActions.Add(r => r.Register<THandler>());
 }
 
 internal interface IMessageHandlerServiceRegisterable

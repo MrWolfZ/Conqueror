@@ -1,9 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Conqueror.Transport.Http.Server.AspNetCore.Signalling.Sse;
+﻿namespace Conqueror.Transport.Http.Server.AspNetCore.Signalling.Sse;
 
 internal sealed class HttpSseSignalPublisher<TSignal> : IHttpSseSignalPublisher<TSignal>
     where TSignal : class, IHttpSseSignal<TSignal>
@@ -16,9 +11,11 @@ internal sealed class HttpSseSignalPublisher<TSignal> : IHttpSseSignalPublisher<
         TSignal signal,
         IServiceProvider serviceProvider,
         ConquerorContext conquerorContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        return serviceProvider.GetRequiredService<HttpSseSignalBroker>()
-                              .Publish(signal, conquerorContext, cancellationToken);
+        return serviceProvider
+            .GetRequiredService<HttpSseSignalBroker>()
+            .Publish(signal, conquerorContext, cancellationToken);
     }
 }

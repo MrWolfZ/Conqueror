@@ -1,14 +1,12 @@
 ﻿#nullable enable
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Signalling;
-using Signalling.WithCustomTransportWithHierarchy;
-
 namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransportWithHierarchy
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using global::Signalling.WithCustomTransportWithHierarchy;
+
     [TestTransportSignal]
     public abstract partial record TestSignal(int Payload);
 
@@ -17,17 +15,23 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransp
 
     public partial class TestSignalHandler : TestSignal.IHandler
     {
-        public Task Handle(TestSignal message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task Handle(TestSignal message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     public partial class TestSignalSubHandler : TestSignalSub.IHandler
     {
-        public Task Handle(TestSignalSub message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task Handle(TestSignalSub message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 
 namespace Signalling.WithCustomTransportWithHierarchy
 {
+    using System;
+    using Conqueror;
+    using Conqueror.Signalling;
+
     [SignalTransport(Prefix = "TestTransport", Namespace = "Signalling.WithCustomTransportWithHierarchy")]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransportSignalAttribute : Attribute;
@@ -42,8 +46,7 @@ namespace Signalling.WithCustomTransportWithHierarchy
         where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
     {
         static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 

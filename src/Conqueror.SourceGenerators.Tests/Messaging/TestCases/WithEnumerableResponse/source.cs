@@ -1,9 +1,9 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithEnumerableResponse;
+
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithEnumerableResponse;
 
 [Message<IEnumerable<TestMessageResponse>>]
 public partial record TestMessage;
@@ -12,7 +12,8 @@ public record TestMessageResponse;
 
 public partial class TestMessageHandler : TestMessage.IHandler
 {
-    public Task<IEnumerable<TestMessageResponse>> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task<IEnumerable<TestMessageResponse>> Handle(TestMessage message, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 }
 
 // make the compiler happy during design time

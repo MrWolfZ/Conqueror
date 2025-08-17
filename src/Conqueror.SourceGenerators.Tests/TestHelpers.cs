@@ -1,4 +1,6 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests;
+
+using System;
 using System.CodeDom.Compiler;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,29 +10,31 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Conqueror.SourceGenerators.Util;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Conqueror.SourceGenerators.Tests;
+using Util;
 
 public static partial class TestHelpers
 {
     public static string ReplaceGeneratorVersion(this string outputLine)
     {
         var regex = GeneratedCodeAttributeRegex();
+
         return regex.Replace(outputLine, "$1FIXED_VERSION$2");
     }
 
     public static (ImmutableArray<Diagnostic> Diagnostics, string Output) GetGeneratedOutput(
         IEnumerable<IIncrementalGenerator> generators,
         IEnumerable<Assembly> assembliesToLoad,
-        Options opts)
+        Options opts
+    )
     {
         var (diagnostics, trees) = GetGeneratedTrees(generators, assembliesToLoad, [], opts);
 
-        var output = string.Join("\n", trees.Select(t => $"{t.FilePath.Replace(@"\", "/")}:\n{t}"));
+        var output = string.Join('\n', trees.Select(t => $"{t.FilePath.Replace('\\', '/')}:\n{t}"));
+
         return (diagnostics, output);
     }
 
@@ -38,11 +42,13 @@ public static partial class TestHelpers
         IEnumerable<IIncrementalGenerator> generators,
         IEnumerable<Assembly> assembliesToLoad,
         IEnumerable<MetadataReference> additionalReferences,
-        Options opts)
+        Options opts
+    )
     {
         var (diagnostics, trees) = GetGeneratedTrees(generators, assembliesToLoad, additionalReferences, opts);
 
-        var output = string.Join("\n", trees.Select(t => $"{t.FilePath.Replace(@"\", "/")}:\n{t}"));
+        var output = string.Join('\n', trees.Select(t => $"{t.FilePath.Replace('\\', '/')}:\n{t}"));
+
         return (diagnostics, output);
     }
 
@@ -50,7 +56,8 @@ public static partial class TestHelpers
         string assemblyName,
         IEnumerable<IIncrementalGenerator> generators,
         IEnumerable<Assembly> assembliesToLoad,
-        Options opts)
+        Options opts
+    )
     {
         var incrementalGenerators = generators as IIncrementalGenerator[] ?? generators.ToArray();
         var compilation = CreateCompilation(assemblyName, incrementalGenerators, assembliesToLoad, [], opts);
@@ -58,14 +65,15 @@ public static partial class TestHelpers
         var (_, outputCompilation) = RunGeneratorAndAssertOutput(incrementalGenerators, opts, compilation);
 
         using var ms = new MemoryStream();
-        var result = outputCompilation.Emit(ms);
+        var result = outputCompilation.Emit(ms, cancellationToken: CancellationToken.None);
 
         if (!result.Success)
         {
             return (result.Diagnostics, null);
         }
 
-        _ = ms.Seek(0, SeekOrigin.Begin);
+        _ = ms.Seek(offset: 0, SeekOrigin.Begin);
+
         return (result.Diagnostics, ms.ToArray());
     }
 
@@ -73,99 +81,130 @@ public static partial class TestHelpers
         IEnumerable<IIncrementalGenerator> generators,
         IEnumerable<Assembly> assembliesToLoad,
         IEnumerable<MetadataReference> additionalReferences,
-        Options opts)
+        Options opts
+    )
     {
         var incrementalGenerators = generators as IIncrementalGenerator[] ?? generators.ToArray();
-        var compilation = CreateCompilation("generator", incrementalGenerators, assembliesToLoad, additionalReferences, opts);
+        var compilation = CreateCompilation(
+            "generator",
+            incrementalGenerators,
+            assembliesToLoad,
+            additionalReferences,
+            opts
+        );
 
         var (runResult, outputCompilation) = RunGeneratorAndAssertOutput(incrementalGenerators, opts, compilation);
 
-        var combinedDiagnostics = runResult.Diagnostics.AddRange(outputCompilation.GetDiagnostics());
+        var combinedDiagnostics = runResult.Diagnostics.AddRange(
+            outputCompilation.GetDiagnostics(CancellationToken.None)
+        );
 
         return (combinedDiagnostics, runResult.GeneratedTrees);
     }
 
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "method is not async"
+    )]
     private static CSharpCompilation CreateCompilation(
         string assemblyName,
         IEnumerable<IIncrementalGenerator> generators,
         IEnumerable<Assembly> assembliesToLoad,
         IEnumerable<MetadataReference> additionalReferences,
-        Options opts)
+        Options opts
+    )
     {
-        var syntaxTrees = opts.Sources
-                              .Select(x =>
-                              {
-                                  var tree = CSharpSyntaxTree.ParseText(x, path: "Program.cs");
-                                  var options = new CSharpParseOptions(opts.LanguageVersion).WithFeatures(opts.Features);
-                                  return tree.WithRootAndOptions(tree.GetRoot(), options);
-                              });
+        var syntaxTrees = opts.Sources.Select(x =>
+        {
+            var tree = CSharpSyntaxTree.ParseText(x, path: "Program.cs", cancellationToken: CancellationToken.None);
+            var options = new CSharpParseOptions(opts.LanguageVersion).WithFeatures(opts.Features);
 
-        var references = AppDomain.CurrentDomain.GetAssemblies()
-                                  .Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
-                                  .Concat(assembliesToLoad)
-                                  .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
-                                  .Concat([
-                                      ..generators.Select(x => MetadataReference.CreateFromFile(x.GetType().Assembly.Location)),
-                                      MetadataReference.CreateFromFile(typeof(DisplayAttribute).Assembly.Location),
-                                      MetadataReference.CreateFromFile(typeof(GeneratedCodeAttribute).Assembly.Location),
-                                  ])
-                                  .Concat(additionalReferences)
-                                  .Distinct();
+            return tree.WithRootAndOptions(tree.GetRoot(CancellationToken.None), options);
+        });
+
+        var references = AppDomain
+            .CurrentDomain.GetAssemblies()
+            .Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
+            .Concat(assembliesToLoad)
+            .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
+            .Concat(
+                [
+                    .. generators.Select(x => MetadataReference.CreateFromFile(x.GetType().Assembly.Location)),
+                    MetadataReference.CreateFromFile(typeof(DisplayAttribute).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(GeneratedCodeAttribute).Assembly.Location),
+                ]
+            )
+            .Concat(additionalReferences)
+            .Distinct();
 
         return CSharpCompilation.Create(
             assemblyName,
             syntaxTrees,
             references,
-            new(OutputKind.DynamicallyLinkedLibrary));
+            new(OutputKind.DynamicallyLinkedLibrary)
+        );
     }
 
     private static (GeneratorDriverRunResult RunResult, Compilation Compilation) RunGeneratorAndAssertOutput(
         IEnumerable<IIncrementalGenerator> generators,
         Options options,
         CSharpCompilation compilation,
-        bool assertOutput = true)
+        bool assertOutput = true
+    )
     {
         var opts = new GeneratorDriverOptions(
             IncrementalGeneratorOutputKind.None,
-            true);
+            trackIncrementalGeneratorSteps: true
+        );
 
-        GeneratorDriver driver =
-            CSharpGeneratorDriver.Create(
-                generators.Select(x => x.AsSourceGenerator()),
-                driverOptions: opts,
-                optionsProvider: options.OptsProvider,
-                parseOptions: new CSharpParseOptions(options.LanguageVersion).WithFeatures(options.Features));
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators.Select(x => x.AsSourceGenerator()),
+            parseOptions: new CSharpParseOptions(options.LanguageVersion).WithFeatures(options.Features),
+            optionsProvider: options.OptsProvider,
+            driverOptions: opts
+        );
 
         var clone = compilation.Clone();
 
         // Run twice, once with a clone of the compilation
         // Note that we store the returned drive value, as it contains cached previous outputs
-        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out _);
+        driver = driver.RunGeneratorsAndUpdateCompilation(
+            compilation,
+            out var outputCompilation,
+            out _,
+            CancellationToken.None
+        );
 
         var runResult = driver.GetRunResult();
 
         if (assertOutput)
         {
             // Run with a clone of the compilation
-            var runResult2 = driver
-                             .RunGenerators(clone)
-                             .GetRunResult();
+            var runResult2 = driver.RunGenerators(clone, CancellationToken.None).GetRunResult();
 
             AssertRunsEqual(runResult, runResult2, options.Stages ?? GetTrackingNames<DefaultTrackingNames>());
 
             // verify the second run only generated cached source outputs
             Assert.That(
-                runResult2.Results[0]
-                          .TrackedOutputSteps
-                          .SelectMany(x => x.Value) // step executions
-                          .SelectMany(x => x.Outputs), // execution results
-                Is.All.Matches(((object Value, IncrementalStepRunReason Reason) x) => x.Reason == IncrementalStepRunReason.Cached));
+                runResult2
+                    .Results[0]
+                    .TrackedOutputSteps.SelectMany(x => x.Value) // step executions
+                    .SelectMany(x => x.Outputs), // execution results
+                Is.All.Matches(
+                    ((object Value, IncrementalStepRunReason Reason) x) => x.Reason is IncrementalStepRunReason.Cached
+                )
+            );
         }
 
         return (runResult, outputCompilation);
     }
 
-    private static void AssertRunsEqual(GeneratorDriverRunResult runResult1, GeneratorDriverRunResult runResult2, IReadOnlyCollection<string> trackingNames)
+    private static void AssertRunsEqual(
+        GeneratorDriverRunResult runResult1,
+        GeneratorDriverRunResult runResult2,
+        IReadOnlyCollection<string> trackingNames
+    )
     {
         // We're given all the tracking names, but not all the stages have necessarily executed so filter
         var trackedSteps1 = GetTrackedSteps(runResult1, trackingNames);
@@ -184,17 +223,22 @@ public static partial class TestHelpers
         }
 
         static Dictionary<string, ImmutableArray<IncrementalGeneratorRunStep>> GetTrackedSteps(
-            GeneratorDriverRunResult runResult, IReadOnlyCollection<string> trackingNames) =>
-            runResult.Results[0]
-                     .TrackedSteps
-                     .Where(step => trackingNames.Contains(step.Key))
-                     .ToDictionary(x => x.Key, x => x.Value);
+            GeneratorDriverRunResult runResult,
+            IReadOnlyCollection<string> trackingNames
+        )
+        {
+            return runResult
+                .Results[0]
+                .TrackedSteps.Where(step => trackingNames.Contains(step.Key, StringComparer.Ordinal))
+                .ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal);
+        }
     }
 
     private static void AssertEqual(
         ImmutableArray<IncrementalGeneratorRunStep> runSteps1,
         ImmutableArray<IncrementalGeneratorRunStep> runSteps2,
-        string stepName)
+        string stepName
+    )
     {
         Assert.That(runSteps1, Has.Length.EqualTo(runSteps2.Length));
 
@@ -212,9 +256,14 @@ public static partial class TestHelpers
             // Therefore, on the second run the results should always be cached or unchanged!
             // - Unchanged is when the _input_ has changed, but the output hasn't
             // - Cached is when the input has not changed, so the cached output is used
-            Assert.That(runStep2.Outputs,
-                        Is.All.Matches(((object Value, IncrementalStepRunReason Reason) x) => x.Reason == IncrementalStepRunReason.Cached || x.Reason == IncrementalStepRunReason.Unchanged),
-                        $"{stepName} expected to have reason {IncrementalStepRunReason.Cached} or {IncrementalStepRunReason.Unchanged}");
+            Assert.That(
+                runStep2.Outputs,
+                Is.All.Matches(
+                    ((object Value, IncrementalStepRunReason Reason) x) =>
+                        x.Reason is IncrementalStepRunReason.Cached or IncrementalStepRunReason.Unchanged
+                ),
+                $"{stepName} expected to have reason {nameof(IncrementalStepRunReason.Cached)} or {nameof(IncrementalStepRunReason.Unchanged)}"
+            );
 
             // Make sure we're not using anything we shouldn't
             AssertObjectGraph(runStep1, stepName);
@@ -237,10 +286,11 @@ public static partial class TestHelpers
                     return;
                 }
 
-                Assert.That(node, Is.Not.InstanceOf<Compilation>()
-                                    .And.Not.InstanceOf<ISymbol>()
-                                    .And.Not.InstanceOf<SyntaxNode>(),
-                            $"{stepName} shouldn't contain banned symbols");
+                Assert.That(
+                    node,
+                    Is.Not.InstanceOf<Compilation>().And.Not.InstanceOf<ISymbol>().And.Not.InstanceOf<SyntaxNode>(),
+                    $"{stepName} shouldn't contain banned symbols"
+                );
 
                 var type = node.GetType();
                 if (type.IsPrimitive || type.IsEnum || type == typeof(string))
@@ -263,7 +313,9 @@ public static partial class TestHelpers
                     return;
                 }
 
-                foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                foreach (
+                    var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                )
                 {
                     var fieldValue = field.GetValue(node);
                     Visit(fieldValue);
@@ -272,66 +324,86 @@ public static partial class TestHelpers
         }
     }
 
-    private static string[] GetTrackingNames<TTrackingNames>()
-        => typeof(TTrackingNames)
-           .GetFields()
-           .Where(fi => fi is { IsLiteral: true, IsInitOnly: false } && fi.FieldType == typeof(string))
-           .Select(x => (string?)x.GetRawConstantValue()!)
-           .Where(x => !string.IsNullOrEmpty(x))
-           .ToArray();
+    private static string[] GetTrackingNames<TTrackingNames>() =>
+        typeof(TTrackingNames)
+            .GetFields()
+            .Where(fi => fi is { IsLiteral: true, IsInitOnly: false } && fi.FieldType == typeof(string))
+            .Select(x => (string?)x.GetRawConstantValue()!)
+            .Where(x => !string.IsNullOrEmpty(x))
+            .ToArray();
 
-    [GeneratedRegex("""(GeneratedCodeAttribute\("[^"]+",\s*")[^"]+("\))""")]
+    [GeneratedRegex(pattern: """(GeneratedCodeAttribute\("[^"]+",\s*")[^"]+("\))""")]
     private static partial Regex GeneratedCodeAttributeRegex();
 
     private sealed class OptionsProvider(AnalyzerConfigOptions options) : AnalyzerConfigOptionsProvider
     {
         public override AnalyzerConfigOptions GlobalOptions => options;
+
         public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => options;
+
         public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => options;
     }
 
     private sealed class DictionaryAnalyzerOptions(Dictionary<string, string> properties) : AnalyzerConfigOptions
     {
-        public static DictionaryAnalyzerOptions Empty { get; } = new(new());
+        public static DictionaryAnalyzerOptions Empty { get; } = new(new(StringComparer.Ordinal));
 
-        public override bool TryGetValue(string key, out string value)
-            => properties.TryGetValue(key, out value!);
+        public override bool TryGetValue(string key, out string value) => properties.TryGetValue(key, out value!);
     }
 
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "it makes sense for this type to be nested here")]
+    [SuppressMessage(
+        "Design",
+        "CA1034:Nested types should not be visible",
+        Justification = "it makes sense for this type to be nested here"
+    )]
+    [SuppressMessage(
+        "Design",
+        "MA0109:Consider adding an overload with a Span<T> or Memory<T>",
+        Justification = "not necessary"
+    )]
     public sealed record Options
     {
         public Options(params string[] sources)
-            : this(LanguageVersion.Default, null, (string[]?)null, sources, null)
-        {
-        }
+            : this(LanguageVersion.Default, features: null, stages: null, sources, options: null) { }
 
         public Options(string[] stages, params string[] sources)
-            : this(LanguageVersion.Default, null, stages, sources, null)
-        {
-        }
+            : this(LanguageVersion.Default, features: null, stages, sources, options: null) { }
 
         public Options(Dictionary<string, string> options, string[] stages, params string[] sources)
-            : this(LanguageVersion.Default, null, stages, sources, options)
-        {
-        }
+            : this(LanguageVersion.Default, features: null, stages, sources, options) { }
 
-        public Options(LanguageVersion languageVersion, Dictionary<string, string> options, string[] stages, params string[] sources)
-            : this(languageVersion, null, stages, sources, options)
-        {
-        }
+        public Options(
+            LanguageVersion languageVersion,
+            Dictionary<string, string> options,
+            string[] stages,
+            params string[] sources
+        )
+            : this(languageVersion, features: null, stages, sources, options) { }
 
-        public Options(Dictionary<string, string> options, Dictionary<string, string> features, string[] stages, params string[] sources)
-            : this(LanguageVersion.Default, features, stages, sources, options)
-        {
-        }
+        public Options(
+            Dictionary<string, string> options,
+            Dictionary<string, string> features,
+            string[] stages,
+            params string[] sources
+        )
+            : this(LanguageVersion.Default, features, stages, sources, options) { }
 
-        public Options(LanguageVersion languageVersion, Dictionary<string, string> options, Dictionary<string, string> features, string[] stages, params string[] sources)
-            : this(languageVersion, features, stages, sources, options)
-        {
-        }
+        public Options(
+            LanguageVersion languageVersion,
+            Dictionary<string, string> options,
+            Dictionary<string, string> features,
+            string[] stages,
+            params string[] sources
+        )
+            : this(languageVersion, features, stages, sources, options) { }
 
-        private Options(LanguageVersion languageVersion, Dictionary<string, string>? features, string[]? stages, string[] sources, Dictionary<string, string>? options)
+        private Options(
+            LanguageVersion languageVersion,
+            Dictionary<string, string>? features,
+            string[]? stages,
+            string[] sources,
+            Dictionary<string, string>? options
+        )
         {
             LanguageVersion = languageVersion;
             AnalyzerOptions = options;

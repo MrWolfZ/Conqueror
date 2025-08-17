@@ -1,8 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net.Http;
-using System.Net.Http.Headers;
-
-namespace Conqueror.Transport.Http.Client;
+﻿namespace Conqueror.Transport.Http.Client;
 
 internal static class TracingHelper
 {
@@ -10,7 +6,8 @@ internal static class TracingHelper
         string traceVersion = "00",
         string? traceId = null,
         string? spanId = null,
-        string traceFlags = "01")
+        string traceFlags = "01"
+    )
     {
         traceId ??= ActivityTraceId.CreateRandom().ToString();
         spanId ??= ActivitySpanId.CreateRandom().ToString();
@@ -24,9 +21,14 @@ internal static class TracingHelper
     ///     header; to ensure that tracing works correctly during testing with Conqueror, we explicitly set the
     ///     'traceparent' header when we believe that we are running with a test client
     /// </summary>
+    /// <param name="headers">The headers to which to add the traceparent header</param>
+    /// <param name="httpClient">The http client for which to set the header</param>
     public static void SetTraceParentHeaderForTestClient(HttpHeaders headers, HttpClient httpClient)
     {
-        if (Activity.Current?.Id is not { } id || httpClient.BaseAddress?.AbsoluteUri != "http://conqueror.test/")
+        if (
+            Activity.Current?.Id is not { } id
+            || !string.Equals(httpClient.BaseAddress?.AbsoluteUri, "http://conqueror.test/", StringComparison.Ordinal)
+        )
         {
             return;
         }

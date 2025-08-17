@@ -1,27 +1,35 @@
 ﻿#nullable enable
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Messaging;
-using Messaging.WithCustomTransport;
-
 namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport
 {
-    [TestTransportMessage<TestMessageResponse>(StringProperty = "Test", IntProperty = 1, IntArrayProperty = [1, 2, 3], NullProperty = null)]
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using global::Messaging.WithCustomTransport;
+
+    [TestTransportMessage<TestMessageResponse>(
+        StringProperty = "Test",
+        IntProperty = 1,
+        IntArrayProperty = [1, 2, 3],
+        NullProperty = null
+    )]
     public partial record TestMessage;
 
     public record TestMessageResponse;
 
     public partial class TestMessageHandler : TestMessage.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 
 namespace Messaging.WithCustomTransport
 {
+    using System;
+    using Conqueror;
+    using Conqueror.Messaging;
+
     [MessageTransport(Prefix = "TestTransport", Namespace = "Messaging.WithCustomTransport")]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TestTransportMessageAttribute : Attribute
@@ -62,8 +70,7 @@ namespace Messaging.WithCustomTransport
         where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
     {
         static IMessageHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 

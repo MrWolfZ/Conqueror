@@ -1,6 +1,6 @@
-using System.Runtime.CompilerServices;
-
 namespace Conqueror.Streaming.Tests;
+
+using System.Runtime.CompilerServices;
 
 public sealed class StreamProducerClientRegistrationTests
 {
@@ -56,21 +56,28 @@ public sealed class StreamProducerClientRegistrationTests
     public void GivenUnregisteredPlainClient_ThrowsInvalidOperationException()
     {
         using var provider = RegisterClient<ITestStreamProducer>();
-        _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IStreamProducer<UnregisteredTestStreamingRequest, TestItem>>());
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            provider.GetRequiredService<IStreamProducer<UnregisteredTestStreamingRequest, TestItem>>()
+        );
     }
 
     [Test]
     public void GivenUnregisteredCustomClient_ThrowsInvalidOperationException()
     {
         using var provider = RegisterClient<ITestStreamProducer>();
-        _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IUnregisteredTestStreamProducer>());
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            provider.GetRequiredService<IUnregisteredTestStreamProducer>()
+        );
     }
 
     [Test]
     public void GivenRegisteredPlainClient_CanResolvePlainClientWithoutHavingServicesExplicitlyRegistered()
     {
-        var provider = new ServiceCollection().AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(_ => new TestStreamProducerTransport())
-                                              .BuildServiceProvider();
+        var provider = new ServiceCollection()
+            .AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+                _ => new TestStreamProducerTransport()
+            )
+            .BuildServiceProvider();
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>());
     }
@@ -78,12 +85,14 @@ public sealed class StreamProducerClientRegistrationTests
     [Test]
     public void GivenRegisteredPlainClientWithAsyncClientFactory_CanResolvePlainClientWithoutHavingServicesExplicitlyRegistered()
     {
-        var provider = new ServiceCollection().AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
-                                              {
-                                                  await Task.CompletedTask;
-                                                  return new TestStreamProducerTransport();
-                                              })
-                                              .BuildServiceProvider();
+        var provider = new ServiceCollection()
+            .AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+            .BuildServiceProvider();
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>());
     }
@@ -91,8 +100,9 @@ public sealed class StreamProducerClientRegistrationTests
     [Test]
     public void GivenRegisteredCustomClient_CanResolveCustomClientWithoutHavingServicesExplicitlyRegistered()
     {
-        var provider = new ServiceCollection().AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport())
-                                              .BuildServiceProvider();
+        var provider = new ServiceCollection()
+            .AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport())
+            .BuildServiceProvider();
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<ITestStreamProducer>());
     }
@@ -100,12 +110,14 @@ public sealed class StreamProducerClientRegistrationTests
     [Test]
     public void GivenRegisteredCustomClientWithAsyncClientFactory_CanResolveCustomClientWithoutHavingServicesExplicitlyRegistered()
     {
-        var provider = new ServiceCollection().AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
-                                              {
-                                                  await Task.CompletedTask;
-                                                  return new TestStreamProducerTransport();
-                                              })
-                                              .BuildServiceProvider();
+        var provider = new ServiceCollection()
+            .AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+            .BuildServiceProvider();
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<ITestStreamProducer>());
     }
@@ -114,40 +126,74 @@ public sealed class StreamProducerClientRegistrationTests
     public void GivenAlreadyRegisteredPlainClient_WhenRegisteringClientWithSameRequestAndItemType_OverwritesRegistration()
     {
         var services = new ServiceCollection();
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(_ => new TestStreamProducerTransport());
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            _ => new TestStreamProducerTransport()
+        );
 
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>((Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(_ => throw new TestAssertionException()));
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            (Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(
+                _ => throw new TestAssertionException()
+            )
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
     public void GivenAlreadyRegisteredPlainClient_WhenRegisteringProducerWithSameRequestAndItemType_OverwritesRegistration()
     {
         var services = new ServiceCollection();
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(_ => new TestStreamProducerTransport());
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            _ => new TestStreamProducerTransport()
+        );
 
-        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>((_, _, _) => throw new TestAssertionException());
+        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+            (_, _, _) => throw new TestAssertionException()
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
     public void GivenAlreadyRegisteredPlainClient_WhenRegisteringClientWithSameRequestAndDifferentItemType_ThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(_ => new TestStreamProducerTransport());
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            _ => new TestStreamProducerTransport()
+        );
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(_ => new TestStreamProducerTransport()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(
+                _ => new TestStreamProducerTransport()
+            )
+        );
     }
 
     [Test]
     public void GivenAlreadyRegisteredPlainClient_WhenRegisteringProducerWithSameRequestAndDifferentItemType_ThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(_ => new TestStreamProducerTransport());
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            _ => new TestStreamProducerTransport()
+        );
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>((_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>(
+                (_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()
+            )
+        );
     }
 
     [Test]
@@ -157,12 +203,21 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(_ => Task.FromException<IStreamProducerTransportClient>(new TestAssertionException()));
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(_ =>
+            Task.FromException<IStreamProducerTransportClient>(new TestAssertionException())
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -172,12 +227,21 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>((_, _, _) => throw new TestAssertionException());
+        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+            (_, _, _) => throw new TestAssertionException()
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -187,10 +251,15 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(_ => new TestStreamProducerTransport()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(
+                _ => new TestStreamProducerTransport()
+            )
+        );
     }
 
     [Test]
@@ -200,38 +269,57 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>((_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>(
+                (_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()
+            )
+        );
     }
 
     [Test]
     public void GivenAlreadyRegisteredPlainClient_WhenRegisteringClientWithAsyncFactoryWithSameRequestAndItemType_OverwritesRegistration()
     {
         var services = new ServiceCollection();
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(_ => new TestStreamProducerTransport());
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            _ => new TestStreamProducerTransport()
+        );
 
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
     public void GivenAlreadyRegisteredPlainClient_WhenRegisteringClientWithAsyncFactoryWithSameRequestAndDifferentItemType_ThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(_ => new TestStreamProducerTransport());
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            _ => new TestStreamProducerTransport()
+        );
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
-        {
-            await Task.CompletedTask;
-            return new TestStreamProducerTransport();
-        }));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+        );
     }
 
     [Test]
@@ -241,16 +329,24 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -260,14 +356,18 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
-        {
-            await Task.CompletedTask;
-            return new TestStreamProducerTransport();
-        }));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+        );
     }
 
     [Test]
@@ -276,9 +376,19 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport());
 
-        _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>((Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(_ => throw new TestAssertionException()));
+        _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(
+            (Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(
+                _ => throw new TestAssertionException()
+            )
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -287,9 +397,19 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport());
 
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>((Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(_ => throw new TestAssertionException()));
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            (Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(
+                _ => throw new TestAssertionException()
+            )
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -298,9 +418,17 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport());
 
-        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>((_, _, _) => throw new TestAssertionException());
+        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+            (_, _, _) => throw new TestAssertionException()
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -309,7 +437,9 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport());
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<ITestStreamProducer2>(_ => new TestStreamProducerTransport()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<ITestStreamProducer2>(_ => new TestStreamProducerTransport())
+        );
     }
 
     [Test]
@@ -318,7 +448,11 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport());
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>((_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>(
+                (_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()
+            )
+        );
     }
 
     [Test]
@@ -327,7 +461,11 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport());
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(_ => new TestStreamProducerTransport()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(
+                _ => new TestStreamProducerTransport()
+            )
+        );
     }
 
     [Test]
@@ -337,12 +475,23 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>((Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(_ => throw new TestAssertionException()));
+        _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(
+            (Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(
+                _ => throw new TestAssertionException()
+            )
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -352,12 +501,23 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>((Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(_ => throw new TestAssertionException()));
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            (Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(
+                _ => throw new TestAssertionException()
+            )
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -367,12 +527,21 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>((_, _, _) => throw new TestAssertionException());
+        _ = services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+            (_, _, _) => throw new TestAssertionException()
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -382,10 +551,13 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<ITestStreamProducer2>(_ => new TestStreamProducerTransport()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<ITestStreamProducer2>(_ => new TestStreamProducerTransport())
+        );
     }
 
     [Test]
@@ -395,10 +567,15 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>((_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>(
+                (_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()
+            )
+        );
     }
 
     [Test]
@@ -408,10 +585,15 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(_ => new TestStreamProducerTransport()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(
+                _ => new TestStreamProducerTransport()
+            )
+        );
     }
 
     [Test]
@@ -423,10 +605,17 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -438,10 +627,17 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -450,11 +646,14 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport());
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<ITestStreamProducer2>(async _ =>
-        {
-            await Task.CompletedTask;
-            return new TestStreamProducerTransport();
-        }));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<ITestStreamProducer2>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+        );
     }
 
     [Test]
@@ -463,11 +662,14 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(_ => new TestStreamProducerTransport());
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
-        {
-            await Task.CompletedTask;
-            return new TestStreamProducerTransport();
-        }));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+        );
     }
 
     [Test]
@@ -477,16 +679,24 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -496,16 +706,24 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -515,14 +733,18 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<ITestStreamProducer2>(async _ =>
-        {
-            await Task.CompletedTask;
-            return new TestStreamProducerTransport();
-        }));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<ITestStreamProducer2>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+        );
     }
 
     [Test]
@@ -532,14 +754,18 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             return new TestStreamProducerTransport();
         });
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
-        {
-            await Task.CompletedTask;
-            return new TestStreamProducerTransport();
-        }));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+        );
     }
 
     [Test]
@@ -548,9 +774,19 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducer<TestStreamProducer>();
 
-        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>((Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(_ => throw new TestAssertionException()));
+        _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(
+            (Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(
+                _ => throw new TestAssertionException()
+            )
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -559,7 +795,11 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducer<TestStreamProducer>();
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(_ => new TestStreamProducerTransport()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(
+                _ => new TestStreamProducerTransport()
+            )
+        );
     }
 
     [Test]
@@ -568,7 +808,11 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducer<TestStreamProducer>();
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>((_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem2>(
+                (_, _, _) => AsyncEnumerableHelper.Empty<TestItem2>()
+            )
+        );
     }
 
     [Test]
@@ -580,10 +824,17 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem>>(async _ =>
         {
             await Task.CompletedTask;
+
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -592,11 +843,14 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducer<TestStreamProducer>();
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
-        {
-            await Task.CompletedTask;
-            return new TestStreamProducerTransport();
-        }));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<IStreamProducer<TestStreamingRequest, TestItem2>>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+        );
     }
 
     [Test]
@@ -605,9 +859,19 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducer<TestStreamProducer>();
 
-        _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>((Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(_ => throw new TestAssertionException()));
+        _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(
+            (Func<IStreamProducerTransportClientBuilder, IStreamProducerTransportClient>)(
+                _ => throw new TestAssertionException()
+            )
+        );
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -616,7 +880,9 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducer<TestStreamProducer>();
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<ITestStreamProducer2>(_ => new TestStreamProducerTransport()));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<ITestStreamProducer2>(_ => new TestStreamProducerTransport())
+        );
     }
 
     [Test]
@@ -628,10 +894,17 @@ public sealed class StreamProducerClientRegistrationTests
         _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(async _ =>
         {
             await Task.CompletedTask;
+
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestStreamProducer>().ExecuteRequest(new()).Drain());
+        _ = Assert.ThrowsAsync<TestAssertionException>(() =>
+            services
+                .BuildServiceProvider()
+                .GetRequiredService<ITestStreamProducer>()
+                .ExecuteRequest(new(), CancellationToken.None)
+                .Drain(CancellationToken.None)
+        );
     }
 
     [Test]
@@ -640,11 +913,14 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamProducer<TestStreamProducer>();
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamProducerClient<ITestStreamProducer2>(async _ =>
-        {
-            await Task.CompletedTask;
-            return new TestStreamProducerTransport();
-        }));
+        _ = Assert.Throws<InvalidOperationException>(() =>
+            services.AddConquerorStreamProducerClient<ITestStreamProducer2>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+        );
     }
 
     [Test]
@@ -653,7 +929,11 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services;
 
-        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorStreamProducerClient<ITestStreamProducerWithExtraMethod>(_ => new TestStreamProducerTransport()));
+        _ = Assert.Throws<ArgumentException>(() =>
+            services.AddConquerorStreamProducerClient<ITestStreamProducerWithExtraMethod>(
+                _ => new TestStreamProducerTransport()
+            )
+        );
     }
 
     [Test]
@@ -662,11 +942,14 @@ public sealed class StreamProducerClientRegistrationTests
         var services = new ServiceCollection();
         _ = services;
 
-        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorStreamProducerClient<ITestStreamProducerWithExtraMethod>(async _ =>
-        {
-            await Task.CompletedTask;
-            return new TestStreamProducerTransport();
-        }));
+        _ = Assert.Throws<ArgumentException>(() =>
+            services.AddConquerorStreamProducerClient<ITestStreamProducerWithExtraMethod>(async _ =>
+            {
+                await Task.CompletedTask;
+
+                return new TestStreamProducerTransport();
+            })
+        );
     }
 
     [Test]
@@ -680,15 +963,19 @@ public sealed class StreamProducerClientRegistrationTests
     private static ServiceProvider RegisterClient<TProducer>()
         where TProducer : class, IStreamProducer
     {
-        return new ServiceCollection().AddConquerorStreamProducerClient<TProducer>(_ => new TestStreamProducerTransport())
-                                      .BuildServiceProvider();
+        return new ServiceCollection()
+            .AddConquerorStreamProducerClient<TProducer>(_ => new TestStreamProducerTransport())
+            .BuildServiceProvider();
     }
 
     private static ServiceProvider RegisterClientWithAsyncClientFactory<TProducer>()
         where TProducer : class, IStreamProducer
     {
-        return new ServiceCollection().AddConquerorStreamProducerClient<TProducer>(_ => Task.FromResult(new TestStreamProducerTransport() as IStreamProducerTransportClient))
-                                      .BuildServiceProvider();
+        return new ServiceCollection()
+            .AddConquerorStreamProducerClient<TProducer>(_ =>
+                Task.FromResult(new TestStreamProducerTransport() as IStreamProducerTransportClient)
+            )
+            .BuildServiceProvider();
     }
 
     public sealed record TestStreamingRequest;
@@ -716,14 +1003,16 @@ public sealed class StreamProducerClientRegistrationTests
 
     private sealed class TestStreamProducerTransport : IStreamProducerTransportClient
     {
-        public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
-                                                                             IServiceProvider serviceProvider,
-                                                                             [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(
+            TRequest request,
+            IServiceProvider serviceProvider,
+            [EnumeratorCancellation] CancellationToken cancellationToken
+        )
             where TRequest : class
         {
             await Task.Yield();
 
-            if (request != null)
+            if (request is not null)
             {
                 throw new NotSupportedException("should never be called");
             }
@@ -734,11 +1023,14 @@ public sealed class StreamProducerClientRegistrationTests
 
     private sealed class TestStreamProducer : ITestStreamProducer
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(
+            TestStreamingRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
 
-            if (request != null)
+            if (request is not null)
             {
                 throw new NotSupportedException("should never be called");
             }

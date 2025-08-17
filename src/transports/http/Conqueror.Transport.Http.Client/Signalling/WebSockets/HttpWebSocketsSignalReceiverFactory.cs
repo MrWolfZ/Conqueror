@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Conqueror.Transport.Http.Client.Signalling.WebSockets;
+﻿namespace Conqueror.Transport.Http.Client.Signalling.WebSockets;
 
 internal sealed class HttpWebSocketsSignalReceiverFactory(IServiceProvider serviceProvider)
     : ISignalReceiverFactory<IHttpWebSocketsSignalHandlerTypesInjector, HttpWebSocketsSignalReceiver>
@@ -14,9 +10,14 @@ internal sealed class HttpWebSocketsSignalReceiverFactory(IServiceProvider servi
     public HttpWebSocketsSignalReceiver? CreateReceiverForHandlerType(
         Type? handlerType,
         IReadOnlyCollection<ISignalReceiverHandlerInvoker<IHttpWebSocketsSignalHandlerTypesInjector>> invokers,
-        IHttpWebSocketsSignalHandlerTypesInjector typesInjector)
+        IHttpWebSocketsSignalHandlerTypesInjector typesInjector
+    )
     {
-        var receiver = new HttpWebSocketsSignalReceiver(serviceProvider, invokers.Select(i => i.SignalType).ToArray(), handlerType);
+        var receiver = new HttpWebSocketsSignalReceiver(
+            serviceProvider,
+            invokers.Select(i => i.SignalType).ToArray(),
+            handlerType
+        );
         typesInjector.ConfigureHttpWebSocketsReceiver(receiver);
 
         if (!receiver.IsEnabled)
@@ -32,12 +33,18 @@ internal sealed class HttpWebSocketsSignalReceiverFactory(IServiceProvider servi
         return receiver;
     }
 
-    private readonly record struct ConfigurationInjectableArg(ISignalReceiverHandlerInvoker Invoker, HttpWebSocketsSignalReceiver Receiver);
+    private readonly record struct ConfigurationInjectableArg(
+        ISignalReceiverHandlerInvoker Invoker,
+        HttpWebSocketsSignalReceiver Receiver
+    );
 
-    private sealed class ConfigurationInjectable : IHttpWebSocketsSignalTypesInjectable<ConfigurationInjectableArg, object?>
+    private sealed class ConfigurationInjectable
+        : IHttpWebSocketsSignalTypesInjectable<ConfigurationInjectableArg, object?>
     {
-        object? IHttpWebSocketsSignalTypesInjectable<ConfigurationInjectableArg, object?>
-            .WithInjectedTypes<TSignal, TIHandler>(ConfigurationInjectableArg arg)
+        object? IHttpWebSocketsSignalTypesInjectable<ConfigurationInjectableArg, object?>.WithInjectedTypes<
+            TSignal,
+            TIHandler
+        >(ConfigurationInjectableArg arg)
         {
             arg.Receiver.AddSignalType<TSignal>(arg.Invoker);
 

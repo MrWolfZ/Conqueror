@@ -4,9 +4,8 @@ public sealed class FileSystemSignalConformityExecutionErrorTestCase
     : FileSystemSignalConformityExecutionTestCase,
       ISignalTransportConformityExecutionErrorTestCase<FileSystemSignalTransportConformityTestHost>
 {
-    public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
-
     public required IReadOnlyCollection<Exception?> ConfigurationExceptions { get; init; }
+    public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();
 
     public required Exception? PublishException { get; init; }
 
@@ -43,7 +42,10 @@ public sealed class FileSystemSignalConformityExecutionErrorTestCase
         base.RegisterClientServices(services);
     }
 
-    public override void ConfigureReceiver(FileSystemSignalTransportConformityTestHost host, IFileSystemSignalReceiver receiver)
+    public override void ConfigureReceiver(
+        FileSystemSignalTransportConformityTestHost host,
+        IFileSystemSignalReceiver receiver
+    )
     {
         if (host.ReceiverConfigurationExceptions.TryDequeue(out var ex) && ex is not null)
         {

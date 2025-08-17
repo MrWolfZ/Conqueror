@@ -1,34 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
-using Microsoft.AspNetCore.Routing;
-
-namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
+﻿namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 
 internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescriptionProvider(
-    EndpointDataSource endpointDataSource) : IApiDescriptionProvider
+    EndpointDataSource endpointDataSource
+) : IApiDescriptionProvider
 {
     public int Order => 0;
 
-    public void OnProvidersExecuting(ApiDescriptionProviderContext context)
-    {
-        _ = endpointDataSource;
-    }
+    public void OnProvidersExecuting(ApiDescriptionProviderContext context) => _ = endpointDataSource;
 
     public void OnProvidersExecuted(ApiDescriptionProviderContext context)
     {
         foreach (var endpoint in endpointDataSource.Endpoints)
         {
-            if (endpoint is RouteEndpoint routeEndpoint &&
-                routeEndpoint.Metadata.GetMetadata<ConquerorHttpMessageEndpointMetadata>() is { } endpointMetadata &&
-                routeEndpoint.Metadata.GetMetadata<IHttpMethodMetadata>() is { } httpMethodMetadata &&
-                routeEndpoint.Metadata.GetMetadata<IExcludeFromDescriptionMetadata>() is null or { ExcludeFromDescription: false })
+            if (
+                endpoint is RouteEndpoint routeEndpoint
+                && routeEndpoint.Metadata.GetMetadata<ConquerorHttpMessageEndpointMetadata>() is { } endpointMetadata
+                && routeEndpoint.Metadata.GetMetadata<IHttpMethodMetadata>() is { } httpMethodMetadata
+                && routeEndpoint.Metadata.GetMetadata<IExcludeFromDescriptionMetadata>()
+                    is null
+                        or { ExcludeFromDescription: false }
+            )
             {
                 // REVIEW: Should we add an ApiDescription for endpoints without IHttpMethodMetadata? Swagger doesn't handle
                 // a null HttpMethod even though it's nullable on ApiDescription, so we'd need to define "default" HTTP methods.
@@ -41,20 +32,21 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
         }
     }
 
-    private ApiDescription CreateApiDescription(RouteEndpoint routeEndpoint, string httpMethod, ConquerorHttpMessageEndpointMetadata endpointMetadata)
+    private ApiDescription CreateApiDescription(
+        RouteEndpoint routeEndpoint,
+        string httpMethod,
+        ConquerorHttpMessageEndpointMetadata endpointMetadata
+    )
     {
         var apiDescription = new ApiDescription
         {
             HttpMethod = httpMethod,
             GroupName = routeEndpoint.Metadata.GetMetadata<IEndpointGroupNameMetadata>()?.EndpointGroupName,
-            RelativePath = routeEndpoint.RoutePattern.RawText?.TrimStart('/'),
-            ActionDescriptor = new()
+            RelativePath = routeEndpoint.RoutePattern.RawText?.TrimStart(trimChar: '/'),
+            ActionDescriptor = new ActionDescriptor
             {
                 DisplayName = routeEndpoint.DisplayName,
-                RouteValues =
-                {
-                    ["controller"] = endpointMetadata.ApiGroupName ?? endpointMetadata.Name,
-                },
+                RouteValues = { ["controller"] = endpointMetadata.ApiGroupName ?? endpointMetadata.Name },
             },
         };
 
@@ -68,20 +60,22 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
 
     private static void AddSupportedRequestFormats(
         IList<ApiRequestFormat> supportedRequestFormats,
-        ConquerorHttpMessageEndpointMetadata endpointMetadata)
+        ConquerorHttpMessageEndpointMetadata endpointMetadata
+    )
     {
-        if (endpointMetadata.HasPayload && endpointMetadata.HttpMethod != HttpMethods.Get)
+        if (
+            endpointMetadata.HasPayload
+            && !string.Equals(endpointMetadata.HttpMethod, HttpMethods.Get, StringComparison.Ordinal)
+        )
         {
-            supportedRequestFormats.Add(new()
-            {
-                MediaType = endpointMetadata.MessageContentType,
-            });
+            supportedRequestFormats.Add(new() { MediaType = endpointMetadata.MessageContentType });
         }
     }
 
     private static void AddParameterDescriptions(
         IList<ApiParameterDescription> parameterDescriptions,
-        ConquerorHttpMessageEndpointMetadata endpointMetadata)
+        ConquerorHttpMessageEndpointMetadata endpointMetadata
+    )
     {
         if (!endpointMetadata.HasPayload)
         {
@@ -90,34 +84,39 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
 
         foreach (var param in endpointMetadata.QueryParams)
         {
-            parameterDescriptions.Add(new()
-            {
-                Name = param.Name,
-                ModelMetadata = new EndpointModelMetadata(ModelMetadataIdentity.ForType(param.PropertyType)),
-                Source = BindingSource.Query,
-                Type = param.PropertyType,
-                IsRequired = param.IsRequired,
-            });
+            parameterDescriptions.Add(
+                new()
+                {
+                    Name = param.Name,
+                    ModelMetadata = new EndpointModelMetadata(ModelMetadataIdentity.ForType(param.PropertyType)),
+                    Source = BindingSource.Query,
+                    Type = param.PropertyType,
+                    IsRequired = param.IsRequired,
+                }
+            );
         }
 
-        if (endpointMetadata.HttpMethod == MethodNames.Get)
+        if (string.Equals(endpointMetadata.HttpMethod, MethodNames.Get, StringComparison.Ordinal))
         {
             return;
         }
 
-        parameterDescriptions.Add(new()
-        {
-            Name = endpointMetadata.MessageType.Name,
-            ModelMetadata = new EndpointModelMetadata(ModelMetadataIdentity.ForType(endpointMetadata.MessageType)),
-            Source = BindingSource.Body,
-            Type = endpointMetadata.MessageType,
-            IsRequired = true,
-        });
+        parameterDescriptions.Add(
+            new()
+            {
+                Name = endpointMetadata.MessageType.Name,
+                ModelMetadata = new EndpointModelMetadata(ModelMetadataIdentity.ForType(endpointMetadata.MessageType)),
+                Source = BindingSource.Body,
+                Type = endpointMetadata.MessageType,
+                IsRequired = true,
+            }
+        );
     }
 
     private static void AddSupportedResponseTypes(
         IList<ApiResponseType> supportedResponseTypes,
-        ConquerorHttpMessageEndpointMetadata endpointMetadata)
+        ConquerorHttpMessageEndpointMetadata endpointMetadata
+    )
     {
         // TODO: add proper error metadata
         // var errorMetadata = endpointMetadata.GetMetadata<ProducesErrorResponseTypeAttribute>();
@@ -125,35 +124,38 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
 
         if (endpointMetadata.ResponseType == typeof(UnitMessageResponse))
         {
-            supportedResponseTypes.Add(new()
-            {
-                StatusCode = endpointMetadata.SuccessStatusCode,
-                Type = typeof(void),
-                ApiResponseFormats = [],
-                IsDefaultResponse = false,
-            });
+            supportedResponseTypes.Add(
+                new()
+                {
+                    StatusCode = endpointMetadata.SuccessStatusCode,
+                    Type = typeof(void),
+                    ApiResponseFormats = new List<ApiResponseFormat>(),
+                    IsDefaultResponse = false,
+                }
+            );
 
             return;
         }
 
-        supportedResponseTypes.Add(new()
-        {
-            StatusCode = endpointMetadata.SuccessStatusCode,
-            Type = endpointMetadata.ResponseType,
-            ApiResponseFormats =
-            [
-                new()
+        supportedResponseTypes.Add(
+            new()
+            {
+                StatusCode = endpointMetadata.SuccessStatusCode,
+                Type = endpointMetadata.ResponseType,
+                ApiResponseFormats = new List<ApiResponseFormat>
                 {
-                    MediaType = endpointMetadata.ResponseContentType,
+                    new() { MediaType = endpointMetadata.ResponseContentType },
                 },
-            ],
-            IsDefaultResponse = false,
-        });
+                IsDefaultResponse = false,
+            }
+        );
     }
 
+    [SuppressMessage("Style", "IDE0306:Simplify collection initialization", Justification = "formatting conflict")]
     private static void AddActionDescriptorEndpointMetadata(
         ActionDescriptor actionDescriptor,
-        EndpointMetadataCollection endpointMetadata)
+        EndpointMetadataCollection endpointMetadata
+    )
     {
         if (endpointMetadata.Count > 0)
         {
@@ -166,7 +168,9 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
     [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty", Justification = "abstract properties are not used")]
     private sealed class EndpointModelMetadata(ModelMetadataIdentity identity) : ModelMetadata(identity)
     {
-        public override IReadOnlyDictionary<object, object> AdditionalValues { get; } = ImmutableDictionary<object, object>.Empty;
+        public override IReadOnlyDictionary<object, object> AdditionalValues { get; } =
+            ImmutableDictionary<object, object>.Empty;
+
         public override ModelPropertyCollection Properties { get; } = new([]);
         public override string? BinderModelName { get; }
         public override Type? BinderType { get; }
@@ -189,7 +193,10 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
         public override bool IsFlagsEnum { get; }
         public override bool IsReadOnly { get; }
         public override bool IsRequired { get; }
-        public override ModelBindingMessageProvider ModelBindingMessageProvider { get; } = new DefaultModelBindingMessageProvider();
+
+        public override ModelBindingMessageProvider ModelBindingMessageProvider { get; } =
+            new DefaultModelBindingMessageProvider();
+
         public override int Order { get; }
         public override string? Placeholder { get; }
         public override string? NullDisplayText { get; }

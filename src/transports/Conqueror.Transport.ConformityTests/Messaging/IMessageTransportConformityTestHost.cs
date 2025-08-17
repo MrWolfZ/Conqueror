@@ -4,11 +4,13 @@ public interface IMessageTransportConformityTestHost : ITransportConformityTestH
 {
     Task<IMessageTransportConformityReceiverTestHost> CreateReceiverTestHost(
         CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? messageCallback = null);
+        Func<object, ConquerorContext, CancellationToken, Task>? messageCallback = null
+    );
 
     Task<IMessageTransportConformitySenderTestHost> CreateSenderTestHost(
         CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? sendCallback = null);
+        Func<object, ConquerorContext, CancellationToken, Task>? sendCallback = null
+    );
 }
 
 public interface IMessageTransportConformitySenderTestHost : IAsyncDisposable

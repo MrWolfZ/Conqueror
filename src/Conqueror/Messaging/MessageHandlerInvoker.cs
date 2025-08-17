@@ -1,9 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Conqueror.Messaging;
+﻿namespace Conqueror.Messaging;
 
 internal sealed class MessageHandlerInvoker<TMessage, TResponse> : IMessageHandlerInvoker
     where TMessage : class, IMessage<TMessage, TResponse>
@@ -18,11 +13,12 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse> : IMessageHandl
         IMessageIdFactory messageIdFactory,
         Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline,
         MessageHandlerFn<TMessage, TResponse> handlerFn,
-        Type? handlerType)
+        Type? handlerType
+    )
     {
         this.handlerFn = handlerFn;
-        dispatcher = new(conquerorContextAccessor, messageIdFactory, MessageTransportRole.Receiver);
-        pipeline = new(handlerType, serviceProvider);
+        dispatcher = new MessageDispatcher(conquerorContextAccessor, messageIdFactory, MessageTransportRole.Receiver);
+        pipeline = new MessagePipeline<TMessage, TResponse>(handlerType, serviceProvider);
 
         configurePipeline?.Invoke(pipeline);
     }
@@ -31,22 +27,33 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse> : IMessageHandl
         TM message,
         IServiceProvider serviceProvider,
         string transportTypeName,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         where TM : class, IMessage<TM, TR>
     {
-        Debug.Assert(typeof(TM) == typeof(TMessage), $"the message type was expected to be {typeof(TMessage)}, but was {typeof(TM)} instead.");
-        Debug.Assert(typeof(TR) == typeof(TResponse), $"the response type was expected to be {typeof(TResponse)}, but was {typeof(TR)} instead.");
+        Debug.Assert(
+            typeof(TM) == typeof(TMessage),
+            $"the message type was expected to be {typeof(TMessage)}, but was {typeof(TM)} instead."
+        );
+        Debug.Assert(
+            typeof(TR) == typeof(TResponse),
+            $"the response type was expected to be {typeof(TResponse)}, but was {typeof(TR)} instead."
+        );
 
-        return (Task<TR>)(object)dispatcher.Dispatch(
-            (message as TMessage)!,
-            serviceProvider,
-            pipeline,
-            new Sender(handlerFn, transportTypeName),
-            configureSenderAsync: null,
-            cancellationToken);
+        return (Task<TR>)
+            (object)
+                dispatcher.Dispatch(
+                    (message as TMessage)!,
+                    serviceProvider,
+                    pipeline,
+                    new Sender(handlerFn, transportTypeName),
+                    configureSenderAsync: null,
+                    cancellationToken
+                );
     }
 
-    private sealed class Sender(MessageHandlerFn<TMessage, TResponse> handlerFn, string transportTypeName) : IMessageSender<TMessage, TResponse>
+    private sealed class Sender(MessageHandlerFn<TMessage, TResponse> handlerFn, string transportTypeName)
+        : IMessageSender<TMessage, TResponse>
     {
         public string TransportTypeName { get; } = transportTypeName;
 
@@ -54,17 +61,7 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse> : IMessageHandl
             TMessage message,
             IServiceProvider serviceProvider,
             ConquerorContext conquerorContext,
-            CancellationToken cancellationToken)
-            => handlerFn(message, serviceProvider, cancellationToken);
+            CancellationToken cancellationToken
+        ) => handlerFn(message, serviceProvider, cancellationToken);
     }
-}
-
-internal interface IMessageHandlerInvoker
-{
-    Task<TResponse> Invoke<TMessage, TResponse>(
-        TMessage message,
-        IServiceProvider serviceProvider,
-        string transportTypeName,
-        CancellationToken cancellationToken)
-        where TMessage : class, IMessage<TMessage, TResponse>;
 }

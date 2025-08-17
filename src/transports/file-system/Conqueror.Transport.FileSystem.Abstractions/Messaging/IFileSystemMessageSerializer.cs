@@ -1,8 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 // TODO: make this public once the API is more stable
 internal interface IFileSystemMessageSerializer<TMessage, TResponse>
@@ -14,12 +10,14 @@ internal interface IFileSystemMessageSerializer<TMessage, TResponse>
         IServiceProvider serviceProvider,
         TMessage message,
         Stream fileStream,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     Task<TMessage> DeserializeMessage(
         IServiceProvider serviceProvider,
         Stream fileStream,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 }
 
 internal interface IFileSystemMessageResponseSerializer<TMessage, TResponse>
@@ -31,10 +29,12 @@ internal interface IFileSystemMessageResponseSerializer<TMessage, TResponse>
         IServiceProvider serviceProvider,
         TResponse response,
         Stream fileStream,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     Task<TResponse> DeserializeResponse(
         IServiceProvider serviceProvider,
         Stream fileStream,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 }

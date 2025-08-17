@@ -1,7 +1,3 @@
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Threading;
-
 namespace Conqueror.Context;
 
 /// <summary>
@@ -16,13 +12,11 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
     public ConquerorContext GetOrCreate()
     {
         // if there already is a context, we just wrap it without any disposal action
-        return ConquerorContext != null ? new NoOpDisposeConquerorContext(ConquerorContext) : CreateContext();
+        return ConquerorContext is not null ? new NoOpDisposeConquerorContext(ConquerorContext) : CreateContext();
     }
 
-    public ConquerorContext CloneOrCreate()
-    {
-        return ConquerorContextCurrent.Value?.Context is { } ctx ? CreateChildContext(ctx) : CreateContext();
-    }
+    public ConquerorContext CloneOrCreate() =>
+        ConquerorContextCurrent.Value?.Context is { } ctx ? CreateChildContext(ctx) : CreateContext();
 
     private static DefaultConquerorContext CreateContext()
     {
@@ -30,13 +24,15 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
 
         var context = DefaultConquerorContext.CreateRootContext(traceId, static _ => ClearContextFromAsyncLocal());
         SetContextInAsyncLocal(context);
+
         return context;
     }
 
     private static DefaultConquerorContext CreateChildContext(DefaultConquerorContext parentContext)
     {
-        var childContext = parentContext.CreateChildContext(static () => ClearContextFromAsyncLocal());
+        var childContext = parentContext.CreateChildContext(ClearContextFromAsyncLocal);
         SetContextInAsyncLocal(childContext);
+
         return childContext;
     }
 
@@ -44,7 +40,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
     {
         // Use an object indirection to hold the ConquerorContext in the AsyncLocal,
         // so it can be cleared in all ExecutionContexts when it's cleared.
-        ConquerorContextCurrent.Value = new() { Context = context };
+        ConquerorContextCurrent.Value = new ConquerorContextHolder { Context = context };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -52,7 +48,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
     {
         var holder = ConquerorContextCurrent.Value;
 
-        if (holder != null)
+        if (holder is not null)
         {
             // Clear current ConquerorContext trapped in the AsyncLocals, as it's done.
             holder.Context = null;

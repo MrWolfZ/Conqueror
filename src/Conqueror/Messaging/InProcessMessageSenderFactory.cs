@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿namespace Conqueror.Messaging;
 
-namespace Conqueror.Messaging;
-
-internal sealed class InProcessMessageSenderFactory(
-    IServiceProvider serviceProvider,
-    MessageHandlerRegistry registry)
+internal sealed class InProcessMessageSenderFactory(IServiceProvider serviceProvider, MessageHandlerRegistry registry)
     : IInProcessMessageSenderFactory
 {
-    private readonly ConcurrentDictionary<Type, object?> senderByMessageType = new();
+    private readonly ConcurrentDictionary<Type, object?> senderByMessageType = [];
 
     public IMessageSender<TMessage, TResponse> Get<TMessage, TResponse>()
         where TMessage : class, IMessage<TMessage, TResponse>
@@ -17,16 +12,22 @@ internal sealed class InProcessMessageSenderFactory(
 
         if (isDisabled)
         {
-            throw new InvalidOperationException($"in-process transport is disabled for message type '{typeof(TMessage)}'");
+            throw new InvalidOperationException(
+                $"in-process transport is disabled for message type '{typeof(TMessage)}'"
+            );
         }
 
-        return handler ?? throw new InvalidOperationException($"there is no handler registered for message type '{typeof(TMessage)}'");
+        return handler
+            ?? throw new InvalidOperationException(
+                $"there is no handler registered for message type '{typeof(TMessage)}'"
+            );
     }
 
     public IMessageSender<TMessage, TResponse>? GetIfAvailable<TMessage, TResponse>()
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         var (handler, _) = GetInternal<TMessage, TResponse>();
+
         return handler;
     }
 

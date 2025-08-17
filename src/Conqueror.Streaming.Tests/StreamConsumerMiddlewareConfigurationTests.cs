@@ -8,19 +8,25 @@ public sealed class StreamConsumerMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumer>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddSingleton(observations);
 
-        var initialConfiguration = new TestStreamConsumerMiddlewareConfiguration(10);
+        var initialConfiguration = new TestStreamConsumerMiddlewareConfiguration(parameter: 10);
 
-        _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline => { _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(initialConfiguration); });
+        _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
+        {
+            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(
+                initialConfiguration
+            );
+        });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer.HandleItem(new());
+        await consumer.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.Configurations, Is.EquivalentTo(new[] { initialConfiguration }));
     }
@@ -31,25 +37,30 @@ public sealed class StreamConsumerMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumer>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddSingleton(observations);
 
-        var initialConfiguration = new TestStreamConsumerMiddlewareConfiguration(10);
-        var overwrittenConfiguration = new TestStreamConsumerMiddlewareConfiguration(20);
+        var initialConfiguration = new TestStreamConsumerMiddlewareConfiguration(parameter: 10);
+        var overwrittenConfiguration = new TestStreamConsumerMiddlewareConfiguration(parameter: 20);
 
         _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
         {
-            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(initialConfiguration);
+            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(
+                initialConfiguration
+            );
 
-            _ = pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(overwrittenConfiguration);
+            _ = pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(
+                overwrittenConfiguration
+            );
         });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer.HandleItem(new());
+        await consumer.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.Configurations, Is.EquivalentTo(new[] { overwrittenConfiguration }));
     }
@@ -60,28 +71,33 @@ public sealed class StreamConsumerMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumer>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddSingleton(observations);
 
-        var initialConfiguration = new TestStreamConsumerMiddlewareConfiguration(10);
+        var initialConfiguration = new TestStreamConsumerMiddlewareConfiguration(parameter: 10);
 
         _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
         {
-            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(initialConfiguration);
+            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(
+                initialConfiguration
+            );
 
-            _ = pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(c => c.Parameter += 10);
+            _ = pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(c =>
+                c.Parameter += 10
+            );
         });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer.HandleItem(new());
+        await consumer.HandleItem(new(), CancellationToken.None);
 
         Assert.That(observations.Configurations, Is.EquivalentTo(new[] { initialConfiguration }));
 
-        Assert.That(initialConfiguration.Parameter, Is.EqualTo(20));
+        Assert.That(initialConfiguration.Parameter, Is.EqualTo(expected: 20));
     }
 
     [Test]
@@ -90,28 +106,33 @@ public sealed class StreamConsumerMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumer>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddSingleton(observations);
 
-        var initialConfiguration = new TestStreamConsumerMiddlewareConfiguration(10);
+        var initialConfiguration = new TestStreamConsumerMiddlewareConfiguration(parameter: 10);
 
         _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
         {
-            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(initialConfiguration);
+            _ = pipeline.Use<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(
+                initialConfiguration
+            );
 
-            _ = pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(c => new(c.Parameter + 10));
+            _ = pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(c =>
+                new(c.Parameter + 10)
+            );
         });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer.HandleItem(new());
+        await consumer.HandleItem(new(), CancellationToken.None);
 
-        Assert.That(observations.Configurations, Has.Count.EqualTo(1));
+        Assert.That(observations.Configurations, Has.Count.EqualTo(expected: 1));
 
-        Assert.That(observations.Configurations[0].Parameter, Is.EqualTo(20));
+        Assert.That(observations.Configurations[0].Parameter, Is.EqualTo(expected: 20));
     }
 
     [Test]
@@ -120,37 +141,46 @@ public sealed class StreamConsumerMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorStreamConsumer<TestStreamConsumer>()
-                    .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
-                    .AddSingleton(observations);
+        _ = services
+            .AddConquerorStreamConsumer<TestStreamConsumer>()
+            .AddConquerorStreamConsumerMiddleware<TestStreamConsumerMiddleware>()
+            .AddSingleton(observations);
 
         _ = services.AddSingleton<Action<IStreamConsumerPipelineBuilder>>(pipeline =>
         {
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(new TestStreamConsumerMiddlewareConfiguration(20)));
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(c => c.Parameter += 10));
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(c => new(c.Parameter + 10)));
+            _ = Assert.Throws<InvalidOperationException>(() =>
+                pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(
+                    new TestStreamConsumerMiddlewareConfiguration(parameter: 20)
+                )
+            );
+            _ = Assert.Throws<InvalidOperationException>(() =>
+                pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(c =>
+                    c.Parameter += 10
+                )
+            );
+            _ = Assert.Throws<InvalidOperationException>(() =>
+                pipeline.Configure<TestStreamConsumerMiddleware, TestStreamConsumerMiddlewareConfiguration>(c =>
+                    new(c.Parameter + 10)
+                )
+            );
         });
 
         var provider = services.BuildServiceProvider();
 
         var consumer = provider.GetRequiredService<IStreamConsumer<TestItem>>();
 
-        await consumer.HandleItem(new());
+        await consumer.HandleItem(new(), CancellationToken.None);
     }
 
     private sealed record TestItem;
 
     private sealed class TestStreamConsumer : IStreamConsumer<TestItem>
     {
-        public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
-        {
+        public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default) =>
             await Task.Yield();
-        }
 
-        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline)
-        {
+        public static void ConfigurePipeline(IStreamConsumerPipelineBuilder pipeline) =>
             pipeline.ServiceProvider.GetService<Action<IStreamConsumerPipelineBuilder>>()?.Invoke(pipeline);
-        }
     }
 
     private sealed class TestStreamConsumerMiddlewareConfiguration(int parameter)
@@ -158,9 +188,12 @@ public sealed class StreamConsumerMiddlewareConfigurationTests
         public int Parameter { get; set; } = parameter;
     }
 
-    private sealed class TestStreamConsumerMiddleware(TestObservations observations) : IStreamConsumerMiddleware<TestStreamConsumerMiddlewareConfiguration>
+    private sealed class TestStreamConsumerMiddleware(TestObservations observations)
+        : IStreamConsumerMiddleware<TestStreamConsumerMiddlewareConfiguration>
     {
-        public async Task Execute<TItem>(StreamConsumerMiddlewareContext<TItem, TestStreamConsumerMiddlewareConfiguration> ctx)
+        public async Task Execute<TItem>(
+            StreamConsumerMiddlewareContext<TItem, TestStreamConsumerMiddlewareConfiguration> ctx
+        )
         {
             await Task.Yield();
             observations.Configurations.Add(ctx.Configuration);

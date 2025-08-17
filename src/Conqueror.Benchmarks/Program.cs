@@ -17,7 +17,11 @@ switch (toRun)
     case "message-manual":
     {
         var sw = Stopwatch.StartNew();
-        new MessageBenchmarks().RunWithConquerorPreBuiltSender(numOfExecutions: 100_000, parallelism: 16, numOfMiddlewares: 20);
+        new MessageBenchmarks().RunWithConquerorPreBuiltSender(
+            numOfExecutions: 100_000,
+            parallelism: 16,
+            numOfMiddlewares: 20
+        );
         Console.WriteLine(sw.Elapsed);
 
         break;
@@ -49,10 +53,11 @@ switch (toRun)
 
         var sw = Stopwatch.StartNew();
         new FileSystemMessageBenchmarks().Run(
-            nrOfMessages: 1_000,
-            nrOfSenders: 4,
-            nrOfReceivers: 4,
-            runSendersAndReceiversInSameProvider: false);
+            numOfMessages: 1_000,
+            numOfSenders: 4,
+            numOfReceivers: 4,
+            runSendersAndReceiversInSameProvider: false
+        );
 
         Console.WriteLine(sw.Elapsed);
 
@@ -65,10 +70,11 @@ switch (toRun)
 
         var sw = Stopwatch.StartNew();
         new FileSystemMessageBenchmarks().RunWithoutResponse(
-            nrOfMessages: 1_000,
-            nrOfSenders: 4,
-            nrOfReceivers: 4,
-            runSendersAndReceiversInSameProvider: false);
+            numOfMessages: 1_000,
+            numOfSenders: 4,
+            numOfReceivers: 4,
+            runSendersAndReceiversInSameProvider: false
+        );
 
         Console.WriteLine(sw.Elapsed);
 
@@ -81,10 +87,11 @@ switch (toRun)
 
         var sw = Stopwatch.StartNew();
         new FileSystemMessageBenchmarks().RunWithoutResponse(
-            nrOfMessages: 1_000,
-            nrOfSenders: 4,
-            nrOfReceivers: 1,
-            runSendersAndReceiversInSameProvider: false);
+            numOfMessages: 1_000,
+            numOfSenders: 4,
+            numOfReceivers: 1,
+            runSendersAndReceiversInSameProvider: false
+        );
 
         Console.WriteLine(sw.Elapsed);
 
@@ -92,5 +99,5 @@ switch (toRun)
     }
 
     default:
-        throw new ArgumentOutOfRangeException(nameof(toRun), toRun, $"unknown benchmark to run: {toRun}");
+        throw new ArgumentOutOfRangeException(nameof(args), toRun, $"unknown benchmark to run: {toRun}");
 }

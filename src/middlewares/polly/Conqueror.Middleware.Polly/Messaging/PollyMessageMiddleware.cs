@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace Conqueror.Middleware.Polly.Messaging;
 
 internal sealed class PollyMessageMiddleware<TMessage, TResponse> : IMessageMiddleware<TMessage, TResponse>
@@ -15,9 +13,9 @@ internal sealed class PollyMessageMiddleware<TMessage, TResponse> : IMessageMidd
             return await ctx.Next(ctx.Message, ctx.CancellationToken).ConfigureAwait(false);
         }
 
-        return await Configuration.ResiliencePipelineBuilder
-                                  .Build()
-                                  .ExecuteAsync(async ct => await ctx.Next(ctx.Message, ct).ConfigureAwait(false), ctx.CancellationToken)
-                                  .ConfigureAwait(false);
+        return await Configuration
+            .ResiliencePipelineBuilder.Build()
+            .ExecuteAsync(async ct => await ctx.Next(ctx.Message, ct).ConfigureAwait(false), ctx.CancellationToken)
+            .ConfigureAwait(false);
     }
 }

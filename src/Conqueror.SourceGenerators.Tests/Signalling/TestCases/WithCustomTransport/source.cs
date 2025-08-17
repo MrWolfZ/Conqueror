@@ -1,25 +1,28 @@
 ﻿#nullable enable
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Signalling;
-using Signalling.WithCustomTransport;
-
 namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransport
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using global::Signalling.WithCustomTransport;
+
     [TestTransportSignal(StringProperty = "Test", IntProperty = 1, IntArrayProperty = [1, 2, 3], NullProperty = null)]
     public partial record TestSignal;
 
     public partial class TestSignalHandler : TestSignal.IHandler
     {
-        public Task Handle(TestSignal message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task Handle(TestSignal message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 
 namespace Signalling.WithCustomTransport
 {
+    using System;
+    using Conqueror;
+    using Conqueror.Signalling;
+
     [SignalTransport(Prefix = "TestTransport", Namespace = "Signalling.WithCustomTransport")]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class TestTransportSignalAttribute : Attribute
@@ -56,8 +59,7 @@ namespace Signalling.WithCustomTransport
         where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
     {
         static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-            where THandler : class, TIHandler
-            => throw new NotSupportedException();
+            where THandler : class, TIHandler => throw new NotSupportedException();
     }
 }
 

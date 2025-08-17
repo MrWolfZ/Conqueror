@@ -1,8 +1,15 @@
 ﻿namespace Conqueror.Transport.FileSystem;
 
+using System.Runtime.InteropServices;
+
 [SuppressMessage("Major Code Smell", "S6966:Awaitable method should be used", Justification = "for performance")]
 [SuppressMessage("ReSharper", "MethodHasAsyncOverloadWithCancellation", Justification = "for performance")]
 [SuppressMessage("ReSharper", "MethodHasAsyncOverload", Justification = "for performance")]
+[SuppressMessage(
+    "Design",
+    "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+    Justification = "we want this to be sync for performance reasons"
+)]
 internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tagIdFiles)
 {
     private const int SeqNrLength = 12; // up to 1 trillion messages
@@ -13,30 +20,26 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
     private const string EmptyTimestamp = "0000-00-00T00:00:00.000Z";
 
-    private const int EntryLength = SeqNrLength
-                                    + SeparatorLength
-                                    + EntryId.IdLength
-                                    + SeparatorLength
-                                    + TagIdLength
-                                    + SeparatorLength
-                                    + StatusLength
-                                    + SeparatorLength
-                                    + TimestampLength
-                                    + 1; // 1 for the newline
+    private const int EntryLength =
+        SeqNrLength
+        + SeparatorLength
+        + EntryId.IdLength
+        + SeparatorLength
+        + TagIdLength
+        + SeparatorLength
+        + StatusLength
+        + SeparatorLength
+        + TimestampLength
+        + 1; // 1 for the newline
 
     private const char Separator = '|';
     private const char StateMarker = 'M';
     private const char StateAvailable = 'A';
     private const char StateLeased = 'L';
 
-    private event OnAppendHandler? OnAppend;
+    private event EventHandler<InboxName>? OnAppend;
 
-    public void Append(
-        InboxName inboxName,
-        SeqNr seqNr,
-        EntryId id,
-        Tag tag,
-        CancellationToken cancellationToken)
+    public void Append(InboxName inboxName, SeqNr seqNr, EntryId id, Tag tag, CancellationToken cancellationToken)
     {
         baseDirectoryPath.AssertExists();
 
@@ -53,12 +56,15 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         // if we just created the file, we need to create the initial marker entry
         if (handle.Stream.Length == 0)
         {
-            var emptyId = new string('_', EntryId.IdLength);
-            var emptyTagId = new string('_', TagIdLength);
+            var emptyId = new string(c: '_', EntryId.IdLength);
+            var emptyTagId = new string(c: '_', TagIdLength);
             var markerEntry =
                 $"{seqNr.ToPaddedString(SeqNrLength)}{Separator}{emptyId}{Separator}{emptyTagId}{Separator}{StateMarker}{Separator}{EmptyTimestamp}\n";
 
-            Debug.Assert(markerEntry.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {markerEntry.Length}");
+            Debug.Assert(
+                markerEntry.Length == EntryLength,
+                $"expected entry length to be {EntryLength}, but it was {markerEntry.Length}"
+            );
 
             // we do not allow cancellation here to prevent corruption of the file
             handle.Writer.Write(markerEntry);
@@ -75,7 +81,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
             Debug.Assert(seqNr > prevSeqNr, $"expected seq nr to be greater than {prevSeqNr}, but it was {seqNr}");
 
-            var seekResult = handle.Stream.Seek(0, SeekOrigin.Begin);
+            var seekResult = handle.Stream.Seek(offset: 0, SeekOrigin.Begin);
 
             Debug.Assert(seekResult == 0, $"expected to seek to start of file, but got {seekResult}");
 
@@ -85,29 +91,34 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
         handle.Writer.Flush();
 
-        _ = handle.Stream.Seek(0, SeekOrigin.End);
+        _ = handle.Stream.Seek(offset: 0, SeekOrigin.End);
 
         var entry =
             $"{seqNr.ToPaddedString(SeqNrLength)}{Separator}{id}{Separator}{tagId.ToPaddedString(TagIdLength)}{Separator}{StateAvailable}{Separator}{EmptyTimestamp}\n";
 
-        Debug.Assert(entry.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {entry.Length}");
+        Debug.Assert(
+            entry.Length == EntryLength,
+            $"expected entry length to be {EntryLength}, but it was {entry.Length}"
+        );
 
         // we do not allow cancellation here to prevent corruption of the file
         handle.Writer.Write(entry);
 
-        OnAppend?.Invoke(inboxName);
+        OnAppend?.Invoke(this, inboxName);
     }
 
     [SuppressMessage(
         "ReSharper",
         "PossiblyMistakenUseOfCancellationToken",
-        Justification = "we are using different tokens for different purposes")]
+        Justification = "we are using different tokens for different purposes"
+    )]
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
     public async IAsyncEnumerable<(Tag Tag, SeqNr SeqNr, EntryId Id)> LeaseNextMessage(
         InboxName inboxName,
         TimeSpan pollingInterval,
         TimeSpan? leaseDuration,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken
+    )
     {
         var inboxFilePath = GetInboxFilePath(inboxName);
 
@@ -116,8 +127,9 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         [SuppressMessage(
             "ReSharper",
             "AccessToDisposedClosure",
-            Justification = "false positive, the event handler is removed before the cts is disposed")]
-        void NotifyOnAppend(InboxName inboxNameFromEvent)
+            Justification = "false positive, the event handler is removed before the cts is disposed"
+        )]
+        void NotifyOnAppend(object? _, InboxName inboxNameFromEvent)
         {
             if (inboxNameFromEvent == inboxName)
             {
@@ -131,7 +143,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var now = DateTime.UtcNow;
+                var now = TimeProvider.System.GetUtcNow();
                 var leaseExpiresAt = now + leaseDuration;
 
                 (Tag Tag, SeqNr SeqNr, EntryId Id)? nextEntryToYield = null;
@@ -143,20 +155,27 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                         ? inboxFilePath.OpenRead(cancellationToken)
                         : inboxFilePath.OpenReadWrite(cancellationToken);
 
-                    Debug.Assert(handle is not null, $"expected the inbox file handle for file '{inboxFilePath}' to be non-null");
+                    Debug.Assert(
+                        handle is not null,
+                        $"expected the inbox file handle for file '{inboxFilePath}' to be non-null"
+                    );
 
                     var nextAvailableEntry = FindNextAvailableEntry(handle, now);
 
                     if (nextAvailableEntry is { Entry: var entry, EntryLineNrInFile: var entryLineNrInFile })
                     {
 #if DEBUG
-                        if (Environment.GetEnvironmentVariable("CONQUEROR_INBOX_LOGGING") == "true")
+                        if (
+                            string.Equals(
+                                Environment.GetEnvironmentVariable("CONQUEROR_INBOX_LOGGING"),
+                                "true",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
                         {
                             Console.WriteLine($"{nextAvailableEntry}");
                         }
 #endif
-
-                        Debug.Assert(handle is not null, $"expected the inbox file handle for file '{inboxFilePath}' to be non-null");
 
                         // performance: when the lease duration is null (i.e. there is only a single reader) we do not need to
                         // write the lease to the file
@@ -165,7 +184,12 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                             UpdateInboxEntry(
                                 (ReadWriteFileHandle)handle,
                                 entryLineNrInFile,
-                                entry with { State = StateLeased, LeaseExpiresAt = leaseExpiresAt });
+                                entry with
+                                {
+                                    State = StateLeased,
+                                    LeaseExpiresAt = leaseExpiresAt?.UtcDateTime,
+                                }
+                            );
                         }
 
                         var tag = tagIdFiles.GetById(entry.TagId, cancellationToken);
@@ -174,7 +198,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                     }
                 }
 
-                if (nextEntryToYield is not null)
+                if (nextEntryToYield.HasValue)
                 {
                     yield return nextEntryToYield.Value;
 
@@ -185,7 +209,8 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
                 try
                 {
-                    await Task.Delay(pollingInterval, appendNotificationCts.Token).ConfigureAwait(false);
+                    await Task.Delay(pollingInterval, TimeProvider.System, appendNotificationCts.Token)
+                        .ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
                 {
@@ -194,7 +219,10 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                 }
             }
 
-            static (Entry Entry, int EntryLineNrInFile)? FindNextAvailableEntry(ReadOnlyFileHandle handle, DateTime now)
+            static (Entry Entry, int EntryLineNrInFile)? FindNextAvailableEntry(
+                ReadOnlyFileHandle handle,
+                DateTimeOffset now
+            )
             {
                 ThrowOnInvalidLength(handle);
 
@@ -208,7 +236,10 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
                 {
                     var readBytes = handle.Reader.Read(buffer);
 
-                    Debug.Assert(readBytes == EntryLength, $"expected to read {EntryLength} bytes, but read {readBytes}");
+                    Debug.Assert(
+                        readBytes == EntryLength,
+                        $"expected to read {EntryLength} bytes, but read {readBytes}"
+                    );
 
                     var entry = Entry.Parse(buffer);
                     var entryIsAvailable = entry.State == StateAvailable || now >= entry.LeaseExpiresAt;
@@ -238,7 +269,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
         if (handle is null)
         {
-            return new(0);
+            return new SeqNr(0);
         }
 
         Span<char> buffer = stackalloc char[SeqNrLength];
@@ -247,7 +278,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
         Debug.Assert(readChars == SeqNrLength, $"expected to read {EntryLength} chars but got {readChars}");
 
-        return new(ulong.Parse(buffer));
+        return new SeqNr(ulong.Parse(buffer));
     }
 
     public void GiveUpLease(InboxName inboxName, SeqNr seqNr, CancellationToken cancellationToken)
@@ -277,7 +308,15 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
             if (entry.SeqNr == seqNr)
             {
-                UpdateInboxEntry(handle, entryLineNrInFile, entry with { State = StateAvailable, LeaseExpiresAt = null });
+                UpdateInboxEntry(
+                    handle,
+                    entryLineNrInFile,
+                    entry with
+                    {
+                        State = StateAvailable,
+                        LeaseExpiresAt = null,
+                    }
+                );
 
                 break;
             }
@@ -322,11 +361,16 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         }
     }
 
-    [SuppressMessage("Security", "CA5394:Do not use insecure randomness", Justification = "we don't need security here")]
+    [SuppressMessage(
+        "Security",
+        "CA5394:Do not use insecure randomness",
+        Justification = "we don't need security here"
+    )]
     public async ValueTask<IDisposable> GetWriteLock(
         InboxName inboxName,
         TimeSpan pollingInterval,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var writeLockFilePath = GetInboxWriteLockFilePath(inboxName);
 
@@ -335,7 +379,7 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         var delayMs = (int)pollingInterval.TotalMilliseconds;
         var maxDelayMs = delayMs * 32;
 
-        while (handle == null)
+        while (handle is null)
         {
             handle = writeLockFilePath.TryOpenRead();
 
@@ -362,7 +406,8 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
 
     private FilePath GetInboxFilePath(InboxName inboxName) => baseDirectoryPath.File($".{inboxName}.inbox.txt");
 
-    private FilePath GetInboxWriteLockFilePath(InboxName inboxName) => baseDirectoryPath.File($".{inboxName}.write.lock");
+    private FilePath GetInboxWriteLockFilePath(InboxName inboxName) =>
+        baseDirectoryPath.File($".{inboxName}.write.lock");
 
     private static void UpdateInboxEntry(ReadWriteFileHandle inboxFileHandle, int entryLineNrInFile, Entry entry)
     {
@@ -378,7 +423,10 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
         var lineContent =
             $"{entry.SeqNr.ToPaddedString(SeqNrLength)}{Separator}{entry.Id}{Separator}{entry.TagId.ToPaddedString(TagIdLength)}{Separator}{entry.State}{Separator}{leaseExpiresAt}\n";
 
-        Debug.Assert(lineContent.Length == EntryLength, $"expected entry length to be {EntryLength}, but it was {lineContent.Length}");
+        Debug.Assert(
+            lineContent.Length == EntryLength,
+            $"expected entry length to be {EntryLength}, but it was {lineContent.Length}"
+        );
 
         // we do not allow cancellation here to prevent corruption of the file
         inboxFileHandle.Writer.Write(lineContent);
@@ -392,19 +440,16 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
             var buffer = new char[1024];
             var readBytes = handle.Reader.Read(buffer);
 
-            var content = new string(buffer, 0, readBytes);
+            var content = new string(buffer, startIndex: 0, readBytes);
 
             throw new InvalidOperationException(
-                $"message queue inbox file '{handle.FilePath}' is corrupted, expected length to be a multiple of {EntryLength}, but it was {handle.Stream.Length} with content:\n{content}");
+                $"message queue inbox file '{handle.FilePath}' is corrupted, expected length to be a multiple of {EntryLength}, but it was {handle.Stream.Length} with content:\n{content}"
+            );
         }
     }
 
-    private readonly record struct Entry(
-        SeqNr SeqNr,
-        EntryId Id,
-        TagId TagId,
-        char State,
-        DateTime? LeaseExpiresAt)
+    [StructLayout(LayoutKind.Auto)]
+    private readonly record struct Entry(SeqNr SeqNr, EntryId Id, TagId TagId, char State, DateTime? LeaseExpiresAt)
     {
         public static Entry Parse(ReadOnlySpan<char> span)
         {
@@ -413,42 +458,56 @@ internal sealed class InboxFiles(DirectoryPath baseDirectoryPath, TagIdFiles tag
             var seqNr = ulong.Parse(span.Slice(index, SeqNrLength));
             index += SeqNrLength;
 
-            Debug.Assert(span[index] == Separator, $"expected separator '{Separator}' at index {index}, but found '{span[index]}' in string {span.ToString()}");
+            Debug.Assert(
+                span[index] == Separator,
+                $"expected separator '{Separator}' at index {index}, but found '{span[index]}' in string {span.ToString()}"
+            );
             index += 1;
 
             var id = span.Slice(index, EntryId.IdLength);
             index += EntryId.IdLength;
 
-            Debug.Assert(span[index] == Separator, $"expected separator '{Separator}' at index {index}, but found '{span[index]}' in string {span.ToString()}");
+            Debug.Assert(
+                span[index] == Separator,
+                $"expected separator '{Separator}' at index {index}, but found '{span[index]}' in string {span.ToString()}"
+            );
             index += 1;
 
             var tagId = span.Slice(index, TagIdLength);
             index += TagIdLength;
 
-            Debug.Assert(span[index] == Separator, $"expected separator '{Separator}' at index {index}, but found '{span[index]}' in string {span.ToString()}");
+            Debug.Assert(
+                span[index] == Separator,
+                $"expected separator '{Separator}' at index {index}, but found '{span[index]}' in string {span.ToString()}"
+            );
             index += 1;
 
             var state = span[index];
             index += 1;
 
-            Debug.Assert(span[index] == Separator, $"expected separator '{Separator}' at index {index}, but found '{span[index]}' in string {span.ToString()}");
+            Debug.Assert(
+                span[index] == Separator,
+                $"expected separator '{Separator}' at index {index}, but found '{span[index]}' in string {span.ToString()}"
+            );
             index += 1;
 
             var leaseExpiresAt = span.Slice(index, TimestampLength);
             index += TimestampLength;
 
-            Debug.Assert(span[index] == '\n', $"expected newline, but found '{span[index]}' at index {index}, in string {span.ToString()}");
+            Debug.Assert(
+                span[index] == '\n',
+                $"expected newline, but found '{span[index]}' at index {index}, in string {span.ToString()}"
+            );
 
-            return new(
-                SeqNr: new(seqNr),
-                Id: new(new(id)),
-                TagId: new(uint.Parse(tagId)),
-                State: state,
-                LeaseExpiresAt: leaseExpiresAt.StartsWith("0000")
+            return new Entry(
+                new(seqNr),
+                new(new(id)),
+                new(uint.Parse(tagId)),
+                state,
+                leaseExpiresAt.StartsWith("0000")
                     ? null
-                    : DateTime.ParseExact(leaseExpiresAt, "yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture));
+                    : DateTime.ParseExact(leaseExpiresAt, "yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+            );
         }
     }
-
-    private delegate void OnAppendHandler(InboxName inboxName);
 }

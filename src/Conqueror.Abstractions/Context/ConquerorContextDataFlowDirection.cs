@@ -1,5 +1,4 @@
-﻿// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 /// <summary>
 ///     The direction in which context data flows.
@@ -17,7 +16,7 @@ public enum ConquerorContextDataFlowDirection
     ///     code is logically upstream. For example, downstream data set in a command handler is available to a
     ///     command middleware that is part of the handler's pipeline.
     /// </summary>
-    Downstream = 1,
+    Downstream = 0,
 
     /// <summary>
     ///     The context data flows only to upstream Conqueror operations.<br />
@@ -30,7 +29,7 @@ public enum ConquerorContextDataFlowDirection
     ///     code is logically downstream. For example, upstream data set in a command middleware is available to the
     ///     command handler.
     /// </summary>
-    Upstream = 2,
+    Upstream = 1,
 
     /// <summary>
     ///     The context data flows to up- and downstream Conqueror operations.<br />
@@ -40,5 +39,5 @@ public enum ConquerorContextDataFlowDirection
     ///     flows to siblings. For example, if command handler D first calls query handler E and then calls query
     ///     handler F, then data set in query handler E will be available in query handler F and command handler D.
     /// </summary>
-    Bidirectional = 3,
+    Bidirectional = 2,
 }

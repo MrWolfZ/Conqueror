@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Conqueror.Transport.ConformityTests;
+﻿namespace Conqueror.Transport.ConformityTests;
 
 public sealed class DisposableActivity(Activity activity, params IDisposable[] disposables) : IDisposable
 {
@@ -32,6 +30,7 @@ public sealed class DisposableActivity(Activity activity, params IDisposable[] d
         ActivitySource.AddActivityListener(activityListener);
 
         var a = activitySource.CreateActivity(name, ActivityKind.Server)!;
-        return new(a, activitySource, activityListener, a);
+
+        return new DisposableActivity(a, activitySource, activityListener, a);
     }
 }

@@ -1,3 +1,5 @@
+namespace Conqueror.Middleware.Logging.Tests.Signalling;
+
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
@@ -6,10 +8,8 @@ using Serilog.Debugging;
 using Serilog.Extensions.Logging;
 using Serilog.Filters;
 using Serilog.Formatting.Compact;
-using static Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals;
-using Throws = NUnit.Framework.Throws;
-
-namespace Conqueror.Middleware.Logging.Tests.Signalling;
+using static LoggingMiddlewareTestSignals;
+using Throws = Throws;
 
 [TestFixture]
 public sealed class LoggingSignalMiddlewareTests
@@ -20,8 +20,11 @@ public sealed class LoggingSignalMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddleware_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
-        SignalTestCase<TSignal, TIHandler, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddleware_WhenCallingHandler_CorrectMessagesGetLogged<
+        TSignal,
+        TIHandler,
+        THandler
+    >(SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
         where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
@@ -30,23 +33,28 @@ public sealed class LoggingSignalMiddlewareTests
             services => services.RegisterSignalType(testCase),
             logging =>
             {
-                _ = logging.AddTestLogger()
-
-                           // log to console during local development for easier debugging
-                           .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
-                           .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
-                           .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
+                _ = logging
+                    .AddTestLogger()
+                    // log to console during local development for easier debugging
+                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
+                    .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
+                    .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
 
                 if (IsRunningInGithubAction)
                 {
-                    _ = logging.Services.Remove(logging.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
-                                                                             && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+                    _ = logging.Services.Remove(
+                        logging.Services.Single(s =>
+                            s.ServiceType == typeof(ILoggerProvider)
+                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
+                        )
+                    );
                 }
-            });
+            }
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
+            .For(TIHandler.SignalTypes)
+            .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
@@ -57,7 +65,7 @@ public sealed class LoggingSignalMiddlewareTests
         {
             await TSignal.InvokeHandler(handler, testCase.Signal, host.TestTimeoutToken);
 
-            if (testCase.Exception != null)
+            if (testCase.Exception is not null)
             {
                 Assert.Fail("should have thrown exception");
             }
@@ -76,16 +84,27 @@ public sealed class LoggingSignalMiddlewareTests
         {
             foreach (var (cat, lvl, messagePattern) in testCase.ExpectedLogMessages)
             {
-                Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Cat == cat && e.Lvl == lvl && messagePattern.IsMatch(e.Msg)),
-                            $"expected cat={cat}, lvl={lvl}, message pattern={messagePattern}");
+                Assert.That(
+                    logEntries,
+                    Has.Exactly(expectedCount: 1)
+                        .Matches<(string Cat, LogLevel Lvl, string Msg)>(e =>
+                            string.Equals(e.Cat, cat, StringComparison.Ordinal)
+                            && e.Lvl == lvl
+                            && messagePattern.IsMatch(e.Msg)
+                        ),
+                    $"expected cat={cat}, lvl={lvl}, message pattern={messagePattern}"
+                );
             }
         });
     }
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSimpleLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
-        SignalTestCase<TSignal, TIHandler, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSimpleLogger_WhenCallingHandler_CorrectMessagesGetLogged<
+        TSignal,
+        TIHandler,
+        THandler
+    >(SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
         where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
@@ -98,30 +117,37 @@ public sealed class LoggingSignalMiddlewareTests
             },
             logging =>
             {
-                _ = logging.AddTestLogger()
-
-                           // log to console during local development for easier debugging
-                           .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
-                           .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
-                           .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
+                _ = logging
+                    .AddTestLogger()
+                    // log to console during local development for easier debugging
+                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
+                    .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
+                    .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
 
                 if (IsRunningInGithubAction)
                 {
-                    _ = logging.Services.Remove(logging.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
-                                                                             && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+                    _ = logging.Services.Remove(
+                        logging.Services.Single(s =>
+                            s.ServiceType == typeof(ILoggerProvider)
+                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
+                        )
+                    );
                 }
-            });
+            }
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
+            .For(TIHandler.SignalTypes)
+            .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
             handler = handler.WithTransport(_ => new TestSignalPublisher<TSignal>());
         }
 
-        using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
+        using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() =>
+            TimeSpan.FromMilliseconds(value: 123.456)
+        );
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
         conquerorContext.TraceId = TestTraceId;
@@ -136,15 +162,21 @@ public sealed class LoggingSignalMiddlewareTests
         }
 
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
-        var logOutput = string.Join(string.Empty, logEntries.Select(e => e.Message));
+        var logOutput = string.Concat(logEntries.Select(e => e.Message));
 
-        _ = await Verify(logOutput.NormalizeLogOutput(), CreateVerifySettings("MicrosoftSimple", testCase.TestLabelShort));
+        _ = await Verify(
+            logOutput.NormalizeLogOutput(),
+            CreateVerifySettings("MicrosoftSimple", testCase.TestLabelShort)
+        );
     }
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
-        SignalTestCase<TSignal, TIHandler, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<
+        TSignal,
+        TIHandler,
+        THandler
+    >(SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
         where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
@@ -157,30 +189,37 @@ public sealed class LoggingSignalMiddlewareTests
             },
             logging =>
             {
-                _ = logging.AddTestLogger()
-
-                           // log to console during local development for easier debugging
-                           .AddJsonConsole()
-                           .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
-                           .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
+                _ = logging
+                    .AddTestLogger()
+                    // log to console during local development for easier debugging
+                    .AddJsonConsole()
+                    .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
+                    .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
 
                 if (IsRunningInGithubAction)
                 {
-                    _ = logging.Services.Remove(logging.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
-                                                                             && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+                    _ = logging.Services.Remove(
+                        logging.Services.Single(s =>
+                            s.ServiceType == typeof(ILoggerProvider)
+                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
+                        )
+                    );
                 }
-            });
+            }
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
+            .For(TIHandler.SignalTypes)
+            .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
             handler = handler.WithTransport(_ => new TestSignalPublisher<TSignal>());
         }
 
-        using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
+        using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() =>
+            TimeSpan.FromMilliseconds(value: 123.456)
+        );
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
         conquerorContext.TraceId = TestTraceId;
@@ -195,15 +234,21 @@ public sealed class LoggingSignalMiddlewareTests
         }
 
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
-        var logOutput = string.Join(string.Empty, logEntries.Select(e => e.Message));
+        var logOutput = string.Concat(logEntries.Select(e => e.Message));
 
-        _ = await Verify(logOutput.NormalizeLogOutput(), CreateVerifySettings("MicrosoftJson", testCase.TestLabelShort));
+        _ = await Verify(
+            logOutput.NormalizeLogOutput(),
+            CreateVerifySettings("MicrosoftJson", testCase.TestLabelShort)
+        );
     }
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
-        SignalTestCase<TSignal, TIHandler, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogLogger_WhenCallingHandler_CorrectMessagesGetLogged<
+        TSignal,
+        TIHandler,
+        THandler
+    >(SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
         where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
@@ -212,18 +257,18 @@ public sealed class LoggingSignalMiddlewareTests
 
         await using var defaultWriter = new StringWriter();
 
-        var timestamp = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var timestamp = new DateTimeOffset(year: 2020, month: 1, day: 1, hour: 0, minute: 0, second: 0, TimeSpan.Zero);
 
-        var loggerConfiguration = new LoggerConfiguration().WriteTo.TestSink(timestamp, defaultWriter)
+        var loggerConfiguration = new LoggerConfiguration()
+            .WriteTo.TestSink(timestamp, defaultWriter)
+            // for debugging also write to console
+            .WriteTo.Conditional(_ => !IsRunningInGithubAction, sinks => sinks.Console())
+            .MinimumLevel.Is(LevelConvert.ToSerilogLevel(testCase.ConfiguredLogLevel))
+            .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions.Hosting.Internal.Host"))
+            .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting.Lifetime"))
+            .Enrich.With();
 
-                                                           // for debugging also write to console
-                                                           .WriteTo.Conditional(_ => !IsRunningInGithubAction, sinks => sinks.Console())
-                                                           .MinimumLevel.Is(LevelConvert.ToSerilogLevel(testCase.ConfiguredLogLevel))
-                                                           .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions.Hosting.Internal.Host"))
-                                                           .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting.Lifetime"))
-                                                           .Enrich.With();
-
-        if (testCase.ConfiguredLogLevel == LogLevel.None)
+        if (testCase.ConfiguredLogLevel is LogLevel.None)
         {
             loggerConfiguration = loggerConfiguration.Filter.ByExcluding(_ => false);
         }
@@ -236,18 +281,21 @@ public sealed class LoggingSignalMiddlewareTests
                 services.RegisterSignalType(testCase);
                 _ = services.Replace(ServiceDescriptor.Transient<ISignalIdFactory, TestSignalIdFactory>());
             },
-            logging => logging.AddSerilog(serilogLogger));
+            logging => logging.AddSerilog(serilogLogger)
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
+            .For(TIHandler.SignalTypes)
+            .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
             handler = handler.WithTransport(_ => new TestSignalPublisher<TSignal>());
         }
 
-        using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
+        using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() =>
+            TimeSpan.FromMilliseconds(value: 123.456)
+        );
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
         conquerorContext.TraceId = TestTraceId;
@@ -264,13 +312,19 @@ public sealed class LoggingSignalMiddlewareTests
         // ReSharper disable once DisposeOnUsingVariable (intentionally done to force a flush)
         await serilogLogger.DisposeAsync();
 
-        _ = await Verify(defaultWriter.ToString().NormalizeLogOutput(), CreateVerifySettings("Serilog", testCase.TestLabelShort));
+        _ = await Verify(
+            defaultWriter.ToString().NormalizeLogOutput(),
+            CreateVerifySettings("Serilog", testCase.TestLabelShort)
+        );
     }
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
-        SignalTestCase<TSignal, TIHandler, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<
+        TSignal,
+        TIHandler,
+        THandler
+    >(SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
         where THandler : class, TIHandler, ISignalHandlerWithSourceGeneration
@@ -281,17 +335,17 @@ public sealed class LoggingSignalMiddlewareTests
 
         await using var jsonWriter = new StringWriter();
 
-        var timestamp = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var timestamp = new DateTimeOffset(year: 2020, month: 1, day: 1, hour: 0, minute: 0, second: 0, TimeSpan.Zero);
 
-        var loggerConfiguration = new LoggerConfiguration().WriteTo.TestSink(timestamp, jsonFormatter, jsonWriter)
+        var loggerConfiguration = new LoggerConfiguration()
+            .WriteTo.TestSink(timestamp, jsonFormatter, jsonWriter)
+            // for debugging also write to console
+            .WriteTo.Conditional(_ => !IsRunningInGithubAction, sinks => sinks.Console(jsonFormatter))
+            .MinimumLevel.Is(LevelConvert.ToSerilogLevel(testCase.ConfiguredLogLevel))
+            .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions.Hosting.Internal.Host"))
+            .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting.Lifetime"));
 
-                                                           // for debugging also write to console
-                                                           .WriteTo.Conditional(_ => !IsRunningInGithubAction, sinks => sinks.Console(jsonFormatter))
-                                                           .MinimumLevel.Is(LevelConvert.ToSerilogLevel(testCase.ConfiguredLogLevel))
-                                                           .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions.Hosting.Internal.Host"))
-                                                           .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting.Lifetime"));
-
-        if (testCase.ConfiguredLogLevel == LogLevel.None)
+        if (testCase.ConfiguredLogLevel is LogLevel.None)
         {
             loggerConfiguration = loggerConfiguration.Filter.ByExcluding(_ => false);
         }
@@ -304,18 +358,21 @@ public sealed class LoggingSignalMiddlewareTests
                 services.RegisterSignalType(testCase);
                 _ = services.Replace(ServiceDescriptor.Transient<ISignalIdFactory, TestSignalIdFactory>());
             },
-            logging => logging.AddSerilog(serilogLogger));
+            logging => logging.AddSerilog(serilogLogger)
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
+            .For(TIHandler.SignalTypes)
+            .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
             handler = handler.WithTransport(_ => new TestSignalPublisher<TSignal>());
         }
 
-        using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
+        using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() =>
+            TimeSpan.FromMilliseconds(value: 123.456)
+        );
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
         conquerorContext.TraceId = TestTraceId;
@@ -350,7 +407,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         var testCase = new SignalTestCase<TestSignal, TestSignal.IHandler, TestSignalHandler>
         {
-            Signal = new() { Payload = 10 },
+            Signal = new TestSignal { Payload = 10 },
             SignalJson = "{\"Payload\":10}",
             Exception = exception,
             StackTraceCaptureIsDisabled = false,
@@ -369,23 +426,28 @@ public sealed class LoggingSignalMiddlewareTests
             services => services.RegisterSignalType(testCase),
             logging =>
             {
-                _ = logging.AddTestLogger(shouldTruncate: false)
-
-                           // log to console during local development for easier debugging
-                           .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
-                           .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
-                           .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
+                _ = logging
+                    .AddTestLogger(shouldTruncate: false)
+                    // log to console during local development for easier debugging
+                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
+                    .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
+                    .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
 
                 if (IsRunningInGithubAction)
                 {
-                    _ = logging.Services.Remove(logging.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
-                                                                             && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+                    _ = logging.Services.Remove(
+                        logging.Services.Single(s =>
+                            s.ServiceType == typeof(ILoggerProvider)
+                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
+                        )
+                    );
                 }
-            });
+            }
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TestSignal.T)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
+            .For(TestSignal.T)
+            .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         try
         {
@@ -402,13 +464,34 @@ public sealed class LoggingSignalMiddlewareTests
             var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
             // four matches: server, hook on server, client, hook on client
-            Assert.That(logEntries, Has.Exactly(4).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Error && e.Msg.Contains(nameof(GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace))));
+            Assert.That(
+                logEntries,
+                Has.Exactly(expectedCount: 4)
+                    .Matches<(string Cat, LogLevel Lvl, string Msg)>(e =>
+                        e.Lvl is LogLevel.Error
+                        && e.Msg.Contains(
+                            nameof(
+                                GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace
+                            ),
+                            StringComparison.Ordinal
+                        )
+                    )
+            );
 
-            var numberOfTimesExceptionMessageContainsStack = thrownException.ToString()
-                                                                            .Split([nameof(GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace)],
-                                                                                   StringSplitOptions.None).Length - 1;
+            var numberOfTimesExceptionMessageContainsStack =
+                thrownException
+                    .ToString()
+                    .Split(
+                        [
+                            nameof(
+                                GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace
+                            ),
+                        ],
+                        StringSplitOptions.None
+                    )
+                    .Length - 1;
 
-            Assert.That(numberOfTimesExceptionMessageContainsStack, Is.EqualTo(1));
+            Assert.That(numberOfTimesExceptionMessageContainsStack, Is.EqualTo(expected: 1));
         }
     }
 
@@ -419,7 +502,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         var testCase = new SignalTestCase<TestSignal, TestSignal.IHandler, TestSignalHandler>
         {
-            Signal = new() { Payload = 10 },
+            Signal = new TestSignal { Payload = 10 },
             SignalJson = "{\"Payload\":10}",
             Exception = exception,
             StackTraceCaptureIsDisabled = true,
@@ -438,23 +521,28 @@ public sealed class LoggingSignalMiddlewareTests
             services => services.RegisterSignalType(testCase),
             logging =>
             {
-                _ = logging.AddTestLogger(shouldTruncate: false)
-
-                           // log to console during local development for easier debugging
-                           .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
-                           .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
-                           .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
+                _ = logging
+                    .AddTestLogger(shouldTruncate: false)
+                    // log to console during local development for easier debugging
+                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
+                    .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
+                    .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
 
                 if (IsRunningInGithubAction)
                 {
-                    _ = logging.Services.Remove(logging.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
-                                                                             && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+                    _ = logging.Services.Remove(
+                        logging.Services.Single(s =>
+                            s.ServiceType == typeof(ILoggerProvider)
+                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
+                        )
+                    );
                 }
-            });
+            }
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TestSignal.T)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
+            .For(TestSignal.T)
+            .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         try
         {
@@ -471,23 +559,38 @@ public sealed class LoggingSignalMiddlewareTests
             var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
             // the test method should be missing from the stack trace since the caller capture is disabled
-            Assert.That(logEntries, Has.Exactly(0).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Error && e.Msg.Contains(nameof(GivenHandlerWithLoggingMiddlewareWithStackTraceCaptureDisabled_WhenHandlerThrows_ExceptionGetsLoggedWithReducedStackTrace))));
+            Assert.That(
+                logEntries,
+                Has.Exactly(expectedCount: 0)
+                    .Matches<(string Cat, LogLevel Lvl, string Msg)>(e =>
+                        e.Lvl is LogLevel.Error
+                        && e.Msg.Contains(
+                            nameof(
+                                GivenHandlerWithLoggingMiddlewareWithStackTraceCaptureDisabled_WhenHandlerThrows_ExceptionGetsLoggedWithReducedStackTrace
+                            ),
+                            StringComparison.Ordinal
+                        )
+                    )
+            );
         }
     }
 
     [Test]
     [Combinatorial]
     public async Task GivenHandlerWithLoggingMiddleware_WhenLoggingHookThrows_ThatFailureIsLoggedSeparatelyAndExecutionProceedsNormally(
-        [Values("pre", "post", "exception")] string hookThrowLocation)
+        [Values("pre", "post", "exception")] string hookThrowLocation
+    )
     {
         var hookException = new TestException();
         var handlerException = new Exception("from handler");
 
         var testCase = new SignalTestCase<TestSignal, TestSignal.IHandler, TestSignalHandler>
         {
-            Signal = new() { Payload = 10 },
+            Signal = new TestSignal { Payload = 10 },
             SignalJson = "{\"Payload\":10}",
-            Exception = hookThrowLocation is "exception" ? handlerException : null,
+            Exception = string.Equals(hookThrowLocation, "exception", StringComparison.Ordinal)
+                ? handlerException
+                : null,
             StackTraceCaptureIsDisabled = false,
             ConfiguredLogLevel = LogLevel.Information,
             PreExecutionLogLevel = null,
@@ -504,43 +607,52 @@ public sealed class LoggingSignalMiddlewareTests
             services => services.RegisterSignalType(testCase),
             logging =>
             {
-                _ = logging.AddTestLogger()
-
-                           // log to console during local development for easier debugging
-                           .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
-                           .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
-                           .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
+                _ = logging
+                    .AddTestLogger()
+                    // log to console during local development for easier debugging
+                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
+                    .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
+                    .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
 
                 if (IsRunningInGithubAction)
                 {
-                    _ = logging.Services.Remove(logging.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
-                                                                             && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+                    _ = logging.Services.Remove(
+                        logging.Services.Single(s =>
+                            s.ServiceType == typeof(ILoggerProvider)
+                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
+                        )
+                    );
                 }
-            });
+            }
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TestSignal.T)
-                          .WithPipeline(p => p.UseLogging(o =>
-                          {
-                              if (hookThrowLocation is "pre")
-                              {
-                                  o.PreExecutionHook = _ => throw hookException;
-                              }
+            .For(TestSignal.T)
+            .WithPipeline(p =>
+                p.UseLogging(o =>
+                {
+                    if (string.Equals(hookThrowLocation, "pre", StringComparison.Ordinal))
+                    {
+                        o.PreExecutionHook = _ => throw hookException;
+                    }
 
-                              if (hookThrowLocation is "post")
-                              {
-                                  o.PostExecutionHook = _ => throw hookException;
-                              }
+                    if (string.Equals(hookThrowLocation, "post", StringComparison.Ordinal))
+                    {
+                        o.PostExecutionHook = _ => throw hookException;
+                    }
 
-                              if (hookThrowLocation is "exception")
-                              {
-                                  o.ExceptionHook = _ => throw hookException;
-                              }
-                          }));
+                    if (string.Equals(hookThrowLocation, "exception", StringComparison.Ordinal))
+                    {
+                        o.ExceptionHook = _ => throw hookException;
+                    }
+                })
+            );
 
-        if (hookThrowLocation is "exception")
+        if (string.Equals(hookThrowLocation, "exception", StringComparison.Ordinal))
         {
-            var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(testCase.Signal, host.TestTimeoutToken));
+            var thrownException = Assert.ThrowsAsync<Exception>(() =>
+                handler.Handle(testCase.Signal, host.TestTimeoutToken)
+            );
 
             if (!IsRunningInGithubAction)
             {
@@ -556,7 +668,14 @@ public sealed class LoggingSignalMiddlewareTests
 
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
-        Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Error && e.Msg.Contains("An exception occurred while executing logging hook")));
+        Assert.That(
+            logEntries,
+            Has.Exactly(expectedCount: 1)
+                .Matches<(string Cat, LogLevel Lvl, string Msg)>(e =>
+                    e.Lvl is LogLevel.Error
+                    && e.Msg.Contains("An exception occurred while executing logging hook", StringComparison.Ordinal)
+                )
+        );
     }
 
     [Test]
@@ -566,30 +685,43 @@ public sealed class LoggingSignalMiddlewareTests
             services => services.AddSignalHandler<TestSignalHandler>(),
             logging =>
             {
-                _ = logging.AddTestLogger(shouldTruncate: false)
-
-                           // log to console during local development for easier debugging
-                           .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
-                           .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
-                           .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
+                _ = logging
+                    .AddTestLogger(shouldTruncate: false)
+                    // log to console during local development for easier debugging
+                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
+                    .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
+                    .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
 
                 if (IsRunningInGithubAction)
                 {
-                    _ = logging.Services.Remove(logging.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
-                                                                             && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+                    _ = logging.Services.Remove(
+                        logging.Services.Single(s =>
+                            s.ServiceType == typeof(ILoggerProvider)
+                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
+                        )
+                    );
                 }
-            });
+            }
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TestSignal.T)
-                          .WithPipeline(p => p.UseLogging(c => c.PreExecutionLogLevel = LogLevel.Warning)
-                                              .ConfigureLogging(c => c.PreExecutionLogLevel = LogLevel.Debug));
+            .For(TestSignal.T)
+            .WithPipeline(p =>
+                p.UseLogging(c => c.PreExecutionLogLevel = LogLevel.Warning)
+                    .ConfigureLogging(c => c.PreExecutionLogLevel = LogLevel.Debug)
+            );
 
         await handler.Handle(new() { Payload = 10 }, host.TestTimeoutToken);
 
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
-        Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Debug && e.Msg.Contains("{\"Payload\":10}")));
+        Assert.That(
+            logEntries,
+            Has.Exactly(expectedCount: 1)
+                .Matches<(string Cat, LogLevel Lvl, string Msg)>(e =>
+                    e.Lvl is LogLevel.Debug && e.Msg.Contains("{\"Payload\":10}", StringComparison.Ordinal)
+                )
+        );
     }
 
     [Test]
@@ -599,23 +731,28 @@ public sealed class LoggingSignalMiddlewareTests
             services => services.AddSignalHandler<TestSignalHandler>(),
             logging =>
             {
-                _ = logging.AddTestLogger(shouldTruncate: false)
-
-                           // log to console during local development for easier debugging
-                           .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
-                           .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
-                           .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
+                _ = logging
+                    .AddTestLogger(shouldTruncate: false)
+                    // log to console during local development for easier debugging
+                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
+                    .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
+                    .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
 
                 if (IsRunningInGithubAction)
                 {
-                    _ = logging.Services.Remove(logging.Services.Single(s => s.ServiceType == typeof(ILoggerProvider)
-                                                                             && s.ImplementationType == typeof(ConsoleLoggerProvider)));
+                    _ = logging.Services.Remove(
+                        logging.Services.Single(s =>
+                            s.ServiceType == typeof(ILoggerProvider)
+                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
+                        )
+                    );
                 }
-            });
+            }
+        );
 
         var handler = host.Resolve<ISignalPublishers>()
-                          .For(TestSignal.T)
-                          .WithPipeline(p => p.UseLogging().WithoutLogging());
+            .For(TestSignal.T)
+            .WithPipeline(p => p.UseLogging().WithoutLogging());
 
         await handler.Handle(new() { Payload = 10 }, host.TestTimeoutToken);
 
@@ -628,7 +765,9 @@ public sealed class LoggingSignalMiddlewareTests
     {
         var settings = new VerifySettings();
         settings.UseDirectory("Snapshots");
-        settings.UseFileName($"{testLoggerType}={testCaseLabel.Replace(':', '=').Replace(' ', '_')}");
+        settings.UseFileName(
+            $"{testLoggerType}={testCaseLabel.Replace(oldChar: ':', newChar: '=').Replace(oldChar: ' ', newChar: '_')}"
+        );
         settings.DisableRequireUniquePrefix();
         settings.DisableDiff();
 

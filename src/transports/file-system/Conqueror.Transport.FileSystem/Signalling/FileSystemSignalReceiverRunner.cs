@@ -1,34 +1,40 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿namespace Conqueror.Transport.FileSystem.Signalling;
 
-namespace Conqueror.Transport.FileSystem.Signalling;
-
-internal sealed class FileSystemSignalReceiverRunner(
-    IConquerorContextAccessor conquerorContextAccessor)
+internal sealed class FileSystemSignalReceiverRunner(IConquerorContextAccessor conquerorContextAccessor)
     : ISignalReceiverRunner<FileSystemSignalReceiver>
 {
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
-        Justification = "false positive, the source is returned to the caller")]
+        Justification = "false positive, the source is returned to the caller"
+    )]
     public ReceiverExecutionHandle RunReceiver(FileSystemSignalReceiver receiver, CancellationToken cancellationToken)
     {
         var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var connectionTaskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var connectionTaskCompletionSource = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
 
-        return new(
+        return new ReceiverExecutionHandle(
             connectionTaskCompletionSource.Task,
             Run(receiver, connectionTaskCompletionSource, linkedSource.Token),
             linkedSource,
-            onDispose: null);
+            onDispose: null
+        );
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
     private async Task Run(
         FileSystemSignalReceiver receiver,
         TaskCompletionSource connectionTaskCompletionSource,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var config = receiver.Configuration ?? throw new InvalidOperationException($"the receiver for handler type '{receiver.HandlerType}' is not enabled");
+        var config =
+            receiver.Configuration
+            ?? throw new InvalidOperationException(
+                $"the receiver for handler type '{receiver.HandlerType}' is not enabled"
+            );
 
         var tags = receiver.Tags.Select(t => new Tag(t)).ToArray();
 
@@ -57,7 +63,8 @@ internal sealed class FileSystemSignalReceiverRunner(
                         inboxName,
                         tags,
                         config.PollingInterval,
-                        cts.Token);
+                        cts.Token
+                    );
 
                     inboxFileProcessingTask = ProcessInbox(
                         receiver,
@@ -67,12 +74,14 @@ internal sealed class FileSystemSignalReceiverRunner(
                         config.PollingInterval,
                         config.LeaseDuration,
                         config.SignalCallback,
-                        cts.Token);
+                        cts.Token
+                    );
 
                     _ = connectionTaskCompletionSource.TrySetResult();
 
                     // if any of the two processing tasks completes, we need to stop
-                    var completedTask = await Task.WhenAny(seqFileProcessingTask, inboxFileProcessingTask).ConfigureAwait(false);
+                    var completedTask = await Task.WhenAny(seqFileProcessingTask, inboxFileProcessingTask)
+                        .ConfigureAwait(false);
 
                     // await the completed task to propagate any exception
                     await completedTask.ConfigureAwait(false);
@@ -93,11 +102,12 @@ internal sealed class FileSystemSignalReceiverRunner(
                 catch (Exception ex)
                 {
                     throw new SignalReceiverExecutionFailedException(
-                        $"an exception occured while running receiver for signal handler type '{receiver.HandlerType}'",
-                        ex)
+                        $"an exception occured while running {nameof(receiver)} for signal handler type '{receiver.HandlerType}'",
+                        ex
+                    )
                     {
                         HandlerType = receiver.HandlerType,
-                        SignalTransportType = new(TransportName, SignalTransportRole.Receiver),
+                        SignalTransportType = new SignalTransportType(TransportName, SignalTransportRole.Receiver),
                     };
                 }
                 finally
@@ -136,25 +146,31 @@ internal sealed class FileSystemSignalReceiverRunner(
         InboxName inboxName,
         Tag[] tags,
         TimeSpan pollingInterval,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         try
         {
-            using var disposable = await inboxFiles.GetWriteLock(inboxName, pollingInterval, cancellationToken).ConfigureAwait(false);
+            using var disposable = await inboxFiles
+                .GetWriteLock(inboxName, pollingInterval, cancellationToken)
+                .ConfigureAwait(false);
 
             var startAtSeqNr = inboxFiles.GetCurrentSeqNr(inboxName, cancellationToken);
 
             var latestSeqNr = new SeqNr(0);
 
-            await foreach (var entry in seqIndexFile.ReadChanges(
-                                                        startAtSeqNr,
-                                                        pollingInterval,
-                                                        cancellationToken)
-                                                    .ConfigureAwait(false))
+            await foreach (
+                var entry in seqIndexFile
+                    .ReadChanges(startAtSeqNr, pollingInterval, cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 foreach (var (newEntryId, signalTag, seqNr) in entry)
                 {
-                    Debug.Assert(seqNr > latestSeqNr, $"expected the next seq nr {seqNr} to be greater than latest seq nr {latestSeqNr}");
+                    Debug.Assert(
+                        seqNr > latestSeqNr,
+                        $"expected the next seq nr {seqNr} to be greater than latest seq nr {latestSeqNr}"
+                    );
 
                     latestSeqNr = seqNr;
 
@@ -162,12 +178,7 @@ internal sealed class FileSystemSignalReceiverRunner(
 
                     if (isRelevantEntry)
                     {
-                        inboxFiles.Append(
-                            inboxName,
-                            seqNr,
-                            newEntryId,
-                            signalTag,
-                            cancellationToken);
+                        inboxFiles.Append(inboxName, seqNr, newEntryId, signalTag, cancellationToken);
                     }
                 }
             }
@@ -186,38 +197,44 @@ internal sealed class FileSystemSignalReceiverRunner(
         TimeSpan pollingInterval,
         TimeSpan? leaseDuration,
         Action<object>? signalCallback,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         try
         {
-            await foreach (var (tag, seqNr, entryId) in inboxFiles.LeaseNextMessage(
-                                                                      inboxName,
-                                                                      pollingInterval,
-                                                                      leaseDuration,
-                                                                      cancellationToken)
-                                                                  .ConfigureAwait(false))
+            await foreach (
+                var (tag, seqNr, entryId) in inboxFiles
+                    .LeaseNextMessage(inboxName, pollingInterval, leaseDuration, cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 try
                 {
                     var fileExtension = receiver.GetFileExtension(tag);
 
-                    var signal = await contentFiles.ReadPayload(
-                                                       tag,
-                                                       entryId,
-                                                       fileExtension,
-                                                       static (s, stream, ct) => s.receiver.ReadSignal(s.tag, stream, ct),
-                                                       (tag, receiver),
-                                                       cancellationToken)
-                                                   .ConfigureAwait(false);
+                    var signal = await contentFiles
+                        .ReadPayload(
+                            tag,
+                            entryId,
+                            fileExtension,
+                            static (s, stream, ct) => s.receiver.ReadSignal(s.tag, stream, ct),
+                            (tag, receiver),
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
 
-                    Debug.Assert(signal is not null, $"the signal payload file for tag '{tag}' and ID '{entryId}' should exist");
+                    Debug.Assert(
+                        signal is not null,
+                        $"the signal payload file for tag '{tag}' and ID '{entryId}' should exist"
+                    );
 
                     var metadata = contentFiles.ReadMetadata(
-                                                         tag,
-                                                         entryId,
-                                                         fileNameSuffix: null,
-                                                         SignalMetadataJsonSerializerContext.Default.SignalMetadata,
-                                                         cancellationToken);
+                        tag,
+                        entryId,
+                        fileNameSuffix: null,
+                        SignalMetadataJsonSerializerContext.Default.SignalMetadata,
+                        cancellationToken
+                    );
 
                     using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 

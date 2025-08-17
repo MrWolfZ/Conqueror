@@ -1,14 +1,11 @@
-using System.Diagnostics;
-
 namespace Conqueror.Transport.Http.Tests;
 
 public sealed class HttpTransportTestTimeouts : IDisposable
 {
-    private static readonly bool IsRunningInGithubActionField = Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
+    private static readonly bool IsRunningInGithubActionField =
+        Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
 
-    private HttpTransportTestTimeouts()
-    {
-    }
+    private HttpTransportTestTimeouts() { }
 
     public required TimeSpan TestTimeout { get; init; }
 
@@ -24,10 +21,17 @@ public sealed class HttpTransportTestTimeouts : IDisposable
 
     public bool IsRunningInGithubAction => IsRunningInGithubActionField;
 
+    public void Dispose()
+    {
+        TimeoutCancellationTokenSource.Cancel();
+
+        TimeoutCancellationTokenSource.Dispose();
+    }
+
     public static HttpTransportTestTimeouts Create(TimeSpan? testTimeout = null)
     {
         var assertionTimeout = Debugger.IsAttached
-            ? TimeSpan.FromMinutes(1)
+            ? TimeSpan.FromMinutes(value: 1)
             : TimeSpan.FromMilliseconds(IsRunningInGithubActionField ? 10_000 : 1_000);
 
         var testHost = new HttpTransportTestTimeouts
@@ -43,12 +47,5 @@ public sealed class HttpTransportTestTimeouts : IDisposable
         }
 
         return testHost;
-    }
-
-    public void Dispose()
-    {
-        TimeoutCancellationTokenSource.Cancel();
-
-        TimeoutCancellationTokenSource.Dispose();
     }
 }

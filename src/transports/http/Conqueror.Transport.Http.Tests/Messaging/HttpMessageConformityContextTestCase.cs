@@ -1,9 +1,8 @@
-﻿using Conqueror.Transport.ConformityTests.Messaging;
+﻿namespace Conqueror.Transport.Http.Tests.Messaging;
 
-namespace Conqueror.Transport.Http.Tests.Messaging;
-
-public sealed class HttpMessageConformityContextTestCase : HttpMessageConformityTestCase,
-                                                           IMessageTransportConformityContextTestCase<HttpMessageTransportConformityTestHost>
+public sealed class HttpMessageConformityContextTestCase
+    : HttpMessageConformityTestCase,
+        IMessageTransportConformityContextTestCase<HttpMessageTransportConformityTestHost>
 {
     public required bool HasActivity { get; init; }
 

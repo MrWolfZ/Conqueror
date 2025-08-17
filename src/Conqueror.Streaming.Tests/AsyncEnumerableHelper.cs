@@ -5,6 +5,7 @@ internal static class AsyncEnumerableHelper
     public static async IAsyncEnumerable<TItem> Empty<TItem>()
     {
         await Task.Yield();
+
         yield break;
     }
 

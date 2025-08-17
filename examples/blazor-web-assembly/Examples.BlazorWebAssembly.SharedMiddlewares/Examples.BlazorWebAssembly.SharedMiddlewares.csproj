@@ -1,19 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../../.targets/common.targets" />
+  <Import Project="../../.targets/common.targets" />
 
-    <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Conqueror.Middleware.Logging" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Conqueror.Middleware.Logging" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="../../../src/middlewares/logging/Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" Condition="$(ShouldReferenceProject)" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/middlewares/logging/Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" Condition="$(ShouldReferenceProject)" />
+  </ItemGroup>
 
 </Project>

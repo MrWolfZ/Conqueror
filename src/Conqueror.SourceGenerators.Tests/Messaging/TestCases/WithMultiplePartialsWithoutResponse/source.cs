@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithMultiplePartialsWithoutResponse;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithMultiplePartialsWithoutResponse;
 
 [Message]
 public partial record TestMessage;
@@ -17,8 +17,6 @@ public partial class TestMessageHandler : TestMessage.IHandler
 // make the compiler happy during design time
 public partial record TestMessage
 {
-    public partial interface IHandler;
-
     public static IMessageHandlerTypesInjector CoreTypesInjector => null!;
 
     public static TestMessage? EmptyInstance => null;
@@ -30,6 +28,8 @@ public partial record TestMessage
     static Task<UnitMessageResponse> IMessage<TestMessage, UnitMessageResponse>.InvokeHandler<TIHandler>(
         TIHandler handler,
         TestMessage message,
-        CancellationToken cancellationToken)
-        => throw new NotSupportedException();
+        CancellationToken cancellationToken
+    ) => throw new NotSupportedException();
+
+    public partial interface IHandler;
 }

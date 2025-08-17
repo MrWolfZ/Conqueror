@@ -1,8 +1,4 @@
-﻿using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IHttpMessageHandler
 {
@@ -19,6 +15,6 @@ public interface IHttpMessageHandler<TMessage, TResponse, TIHandler> : IMessageH
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
     static IMessageHandlerTypesInjector CreateHttpTypesInjector<THandler>()
-        where THandler : class, TIHandler, IHttpMessageHandler
-        => new HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(THandler.ConfigureHttpReceiver);
+        where THandler : class, TIHandler, IHttpMessageHandler =>
+        new HttpMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(THandler.ConfigureHttpReceiver);
 }

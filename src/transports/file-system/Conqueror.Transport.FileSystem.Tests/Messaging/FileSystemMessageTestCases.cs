@@ -1,10 +1,26 @@
 ﻿namespace Conqueror.Transport.FileSystem.Tests.Messaging;
 
+using System.Globalization;
+
 [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "Members are used by ASP.NET Core via reflection")]
 [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Members are used by ASP.NET Core via reflection")]
-[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification = "Members are used by ASP.NET Core via reflection")]
+[SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Members are used by ASP.NET Core via reflection"
+)]
 public static partial class FileSystemMessageTestCases
 {
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what object is being created here"
+    )]
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "we want to explicitly test sync delegates"
+    )]
     public static IEnumerable<FileSystemMessageConformityExecutionSuccessTestCase> CreateSuccessTestCases()
     {
         yield return new()
@@ -60,13 +76,21 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "without response",
             Tag = "testMessageWithoutResponse",
-            ExpectedReceivedMessages = [new TestMessageWithoutResponse { Payload = 10 }, new TestMessageWithoutResponse { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithoutResponse { Payload = 10 },
+                new TestMessageWithoutResponse { Payload = 20 },
+            ],
             ExpectedResponses = [],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithoutResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                await s.For(TestMessageWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                await s.For(TestMessageWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                await s.For(TestMessageWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                await s.For(TestMessageWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [];
             },
@@ -90,31 +114,48 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "without payload without response",
             Tag = "testMessageWithoutResponseWithoutPayload",
-            ExpectedReceivedMessages = [new TestMessageWithoutResponseWithoutPayload(), new TestMessageWithoutResponseWithoutPayload()],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithoutResponseWithoutPayload(),
+                new TestMessageWithoutResponseWithoutPayload(),
+            ],
             ExpectedResponses = [],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithoutResponseWithoutPayloadHandler>(),
             SendMessages = async (s, ct) =>
             {
-                await s.For(TestMessageWithoutResponseWithoutPayload.T).WithDefaultSenderConfiguration().Handle(new(), ct);
-                await s.For(TestMessageWithoutResponseWithoutPayload.T).WithDefaultSenderConfiguration().Handle(new(), ct);
+                await s.For(TestMessageWithoutResponseWithoutPayload.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(), ct);
+                await s.For(TestMessageWithoutResponseWithoutPayload.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(), ct);
 
                 return [];
             },
             MessagePayloads = [null, null],
-            RunReceivers = (r, ct) => r.RunFileSystemMessageReceiver<TestMessageWithoutResponseWithoutPayloadHandler>(ct),
+            RunReceivers = (r, ct) =>
+                r.RunFileSystemMessageReceiver<TestMessageWithoutResponseWithoutPayloadHandler>(ct),
         };
 
         yield return new()
         {
             Name = "with tag",
             Tag = "custom-tag",
-            ExpectedReceivedMessages = [new TestMessageWithTag { Payload = 10 }, new TestMessageWithTag { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithTag { Payload = 10 },
+                new TestMessageWithTag { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithTagHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithTag.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithTag.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithTag.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithTag.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -125,13 +166,21 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "with version",
             Tag = "test-message-with-version-v2",
-            ExpectedReceivedMessages = [new TestMessageWithVersion { Payload = 10 }, new TestMessageWithVersion { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithVersion { Payload = 10 },
+                new TestMessageWithVersion { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithVersionHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithVersion.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithVersion.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithVersion.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithVersion.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -147,8 +196,12 @@ public static partial class FileSystemMessageTestCases
             RegisterHandler = s => s.AddMessageHandler<TestMessageV2Handler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageV2.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageV2.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageV2.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageV2.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -160,11 +213,14 @@ public static partial class FileSystemMessageTestCases
             Name = "with custom serialized payload type",
             Tag = "testMessageWithCustomSerializedPayloadType",
             ExpectedReceivedMessages =
-                [new TestMessageWithCustomSerializedPayloadType { Payload = new(10) }, new TestMessageWithCustomSerializedPayloadType { Payload = new(20) }],
+            [
+                new TestMessageWithCustomSerializedPayloadType { Payload = new(Payload: 10) },
+                new TestMessageWithCustomSerializedPayloadType { Payload = new(Payload: 20) },
+            ],
             ExpectedResponses =
             [
-                new TestMessageWithCustomSerializedPayloadTypeResponse { Payload = new(11) },
-                new TestMessageWithCustomSerializedPayloadTypeResponse { Payload = new(21) },
+                new TestMessageWithCustomSerializedPayloadTypeResponse { Payload = new(Payload: 11) },
+                new TestMessageWithCustomSerializedPayloadTypeResponse { Payload = new(Payload: 21) },
             ],
             RegisterHandler = services =>
             {
@@ -176,20 +232,26 @@ public static partial class FileSystemMessageTestCases
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 };
 
-                jsonSerializerOptions.Converters.Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
-                jsonSerializerOptions.MakeReadOnly(true);
+                jsonSerializerOptions.Converters.Add(
+                    new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()
+                );
+                jsonSerializerOptions.MakeReadOnly(populateMissingResolver: true);
 
                 _ = services.AddSingleton(jsonSerializerOptions);
             },
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithCustomSerializedPayloadType.T).WithDefaultSenderConfiguration().Handle(new() { Payload = new(10) }, ct);
-                var r2 = await s.For(TestMessageWithCustomSerializedPayloadType.T).WithDefaultSenderConfiguration().Handle(new() { Payload = new(20) }, ct);
+                var r1 = await s.For(TestMessageWithCustomSerializedPayloadType.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = new(Payload: 10) }, ct);
+                var r2 = await s.For(TestMessageWithCustomSerializedPayloadType.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = new(Payload: 20) }, ct);
 
                 return [r1, r2];
             },
-            RunReceivers = (r, ct) => r.RunFileSystemMessageReceiver<TestMessageWithCustomSerializedPayloadTypeHandler>(ct),
-
+            RunReceivers = (r, ct) =>
+                r.RunFileSystemMessageReceiver<TestMessageWithCustomSerializedPayloadTypeHandler>(ct),
             RegisterOnSender = services =>
             {
                 var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -198,8 +260,10 @@ public static partial class FileSystemMessageTestCases
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 };
 
-                jsonSerializerOptions.Converters.Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
-                jsonSerializerOptions.MakeReadOnly(true);
+                jsonSerializerOptions.Converters.Add(
+                    new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()
+                );
+                jsonSerializerOptions.MakeReadOnly(populateMissingResolver: true);
 
                 _ = services.AddSingleton(jsonSerializerOptions);
             },
@@ -216,16 +280,20 @@ public static partial class FileSystemMessageTestCases
                 new TestMessageWithCustomSerializer { Payload = 10 },
                 new TestMessageWithCustomSerializer { Payload = 20 },
             ],
-            ExpectedResponses = [new TestMessageWithCustomSerializerResponse { Payload = 11 }, new TestMessageWithCustomSerializerResponse { Payload = 21 }],
+            ExpectedResponses =
+            [
+                new TestMessageWithCustomSerializerResponse { Payload = 11 },
+                new TestMessageWithCustomSerializerResponse { Payload = 21 },
+            ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithCustomSerializerHandler>(),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessageWithCustomSerializer.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
                 var r2 = await s.For(TestMessageWithCustomSerializer.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -245,17 +313,18 @@ public static partial class FileSystemMessageTestCases
             ],
             ExpectedResponses =
             [
-                new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 11 }, new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 21 },
+                new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 11 },
+                new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 21 },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithCustomJsonTypeInfoHandler>(),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessageWithCustomJsonTypeInfo.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { MessagePayload = 10 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { MessagePayload = 10 }, ct);
                 var r2 = await s.For(TestMessageWithCustomJsonTypeInfo.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { MessagePayload = 20 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { MessagePayload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -268,42 +337,63 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "with middleware",
             Tag = "testMessageWithMiddleware",
-            ExpectedReceivedMessages = [new TestMessageWithMiddleware { Payload = 10 }, new TestMessageWithMiddleware { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithMiddleware { Payload = 10 },
+                new TestMessageWithMiddleware { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
-            RegisterHandler = s => s.AddMessageHandler<TestMessageWithMiddlewareHandler>()
-                                    .AddSingleton<TestObservations>()
-                                    .AddTransient(typeof(TestMessageMiddleware<,>)),
+            RegisterHandler = s =>
+                s.AddMessageHandler<TestMessageWithMiddlewareHandler>()
+                    .AddSingleton<TestObservations>()
+                    .AddTransient(typeof(TestMessageMiddleware<,>)),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessageWithMiddleware.T)
-                                .WithDefaultSenderConfiguration()
-                                .WithPipeline(p => p.Use(
-                                                  p.ServiceProvider
-                                                   .GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>()))
-                                .Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(
+                            p.ServiceProvider.GetRequiredService<
+                                TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>
+                            >()
+                        )
+                    )
+                    .Handle(new() { Payload = 10 }, ct);
 
                 var r2 = await s.For(TestMessageWithMiddleware.T)
-                                .WithDefaultSenderConfiguration()
-                                .WithPipeline(p => p.Use(
-                                                  p.ServiceProvider
-                                                   .GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>()))
-                                .Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(
+                            p.ServiceProvider.GetRequiredService<
+                                TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>
+                            >()
+                        )
+                    )
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
             RunReceivers = (r, ct) => r.RunFileSystemMessageReceiver<TestMessageWithMiddlewareHandler>(ct),
-
-            RegisterOnSender = s => s.AddSingleton<TestObservations>()
-                                     .AddTransient(typeof(TestMessageMiddleware<,>)),
-
+            RegisterOnSender = s => s.AddSingleton<TestObservations>().AddTransient(typeof(TestMessageMiddleware<,>)),
             AfterMessagesAreReceived = h =>
             {
-                var seenTransportTypeOnServer = h.ReceiverHosts.First().Resolve<TestObservations>().SeenTransportTypeInMiddleware;
-                Assert.That(seenTransportTypeOnServer?.IsFileSystem(), Is.True, $"transport type is {seenTransportTypeOnServer?.Name}");
+                var seenTransportTypeOnServer = h
+                    .ReceiverHosts.First()
+                    .Resolve<TestObservations>()
+                    .SeenTransportTypeInMiddleware;
+                Assert.That(
+                    seenTransportTypeOnServer?.IsFileSystem(),
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnServer?.Name}"
+                );
                 Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(MessageTransportRole.Receiver));
 
                 var seenTransportTypeOnClient = h.SenderHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
-                Assert.That(seenTransportTypeOnClient?.IsFileSystem(), Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
+                Assert.That(
+                    seenTransportTypeOnClient?.IsFileSystem(),
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnClient?.Name}"
+                );
                 Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(MessageTransportRole.Sender));
 
                 return Task.CompletedTask;
@@ -315,42 +405,63 @@ public static partial class FileSystemMessageTestCases
             Name = "without response with middleware",
             Tag = "testMessageWithMiddlewareWithoutResponse",
             ExpectedReceivedMessages =
-                [new TestMessageWithMiddlewareWithoutResponse { Payload = 10 }, new TestMessageWithMiddlewareWithoutResponse { Payload = 20 }],
+            [
+                new TestMessageWithMiddlewareWithoutResponse { Payload = 10 },
+                new TestMessageWithMiddlewareWithoutResponse { Payload = 20 },
+            ],
             ExpectedResponses = [],
-            RegisterHandler = s => s.AddMessageHandler<TestMessageWithMiddlewareWithoutResponseHandler>()
-                                    .AddSingleton<TestObservations>()
-                                    .AddTransient(typeof(TestMessageMiddleware<,>)),
+            RegisterHandler = s =>
+                s.AddMessageHandler<TestMessageWithMiddlewareWithoutResponseHandler>()
+                    .AddSingleton<TestObservations>()
+                    .AddTransient(typeof(TestMessageMiddleware<,>)),
             SendMessages = async (s, ct) =>
             {
                 await s.For(TestMessageWithMiddlewareWithoutResponse.T)
-                       .WithDefaultSenderConfiguration()
-                       .WithPipeline(p => p.Use(
-                                         p.ServiceProvider
-                                          .GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
-                       .Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(
+                            p.ServiceProvider.GetRequiredService<
+                                TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>
+                            >()
+                        )
+                    )
+                    .Handle(new() { Payload = 10 }, ct);
 
                 await s.For(TestMessageWithMiddlewareWithoutResponse.T)
-                       .WithDefaultSenderConfiguration()
-                       .WithPipeline(p => p.Use(
-                                         p.ServiceProvider
-                                          .GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
-                       .Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(
+                            p.ServiceProvider.GetRequiredService<
+                                TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>
+                            >()
+                        )
+                    )
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [];
             },
-            RunReceivers = (r, ct) => r.RunFileSystemMessageReceiver<TestMessageWithMiddlewareWithoutResponseHandler>(ct),
-
-            RegisterOnSender = s => s.AddSingleton<TestObservations>()
-                                     .AddTransient(typeof(TestMessageMiddleware<,>)),
-
+            RunReceivers = (r, ct) =>
+                r.RunFileSystemMessageReceiver<TestMessageWithMiddlewareWithoutResponseHandler>(ct),
+            RegisterOnSender = s => s.AddSingleton<TestObservations>().AddTransient(typeof(TestMessageMiddleware<,>)),
             AfterMessagesAreReceived = h =>
             {
-                var seenTransportTypeOnServer = h.ReceiverHosts.First().Resolve<TestObservations>().SeenTransportTypeInMiddleware;
-                Assert.That(seenTransportTypeOnServer?.IsFileSystem(), Is.True, $"transport type is {seenTransportTypeOnServer?.Name}");
+                var seenTransportTypeOnServer = h
+                    .ReceiverHosts.First()
+                    .Resolve<TestObservations>()
+                    .SeenTransportTypeInMiddleware;
+                Assert.That(
+                    seenTransportTypeOnServer?.IsFileSystem(),
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnServer?.Name}"
+                );
                 Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(MessageTransportRole.Receiver));
 
                 var seenTransportTypeOnClient = h.SenderHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
-                Assert.That(seenTransportTypeOnClient?.IsFileSystem(), Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
+                Assert.That(
+                    seenTransportTypeOnClient?.IsFileSystem(),
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnClient?.Name}"
+                );
                 Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(MessageTransportRole.Sender));
 
                 return Task.CompletedTask;
@@ -361,17 +472,33 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "with array response",
             Tag = "testMessageWithArrayResponse",
-            ExpectedReceivedMessages = [new TestMessageWithArrayResponse { Payload = 10 }, new TestMessageWithArrayResponse { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithArrayResponse { Payload = 10 },
+                new TestMessageWithArrayResponse { Payload = 20 },
+            ],
             ExpectedResponses =
             [
-                new TestMessageResponse[] { new() { Payload = 11 }, new() { Payload = 12 } },
-                new TestMessageResponse[] { new() { Payload = 21 }, new() { Payload = 22 } },
+                new TestMessageResponse[]
+                {
+                    new() { Payload = 11 },
+                    new() { Payload = 12 },
+                },
+                new TestMessageResponse[]
+                {
+                    new() { Payload = 21 },
+                    new() { Payload = 22 },
+                },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithArrayResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithArrayResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithArrayResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithArrayResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithArrayResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -383,17 +510,33 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "with list response",
             Tag = "testMessageWithListResponse",
-            ExpectedReceivedMessages = [new TestMessageWithListResponse { Payload = 10 }, new TestMessageWithListResponse { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithListResponse { Payload = 10 },
+                new TestMessageWithListResponse { Payload = 20 },
+            ],
             ExpectedResponses =
             [
-                new List<TestMessageResponse> { new() { Payload = 11 }, new() { Payload = 12 } },
-                new List<TestMessageResponse> { new() { Payload = 21 }, new() { Payload = 22 } },
+                new List<TestMessageResponse>
+                {
+                    new() { Payload = 11 },
+                    new() { Payload = 12 },
+                },
+                new List<TestMessageResponse>
+                {
+                    new() { Payload = 21 },
+                    new() { Payload = 22 },
+                },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithListResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithListResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithListResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithListResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithListResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -406,17 +549,33 @@ public static partial class FileSystemMessageTestCases
             Name = "with enumerable response",
             Tag = "testMessageWithEnumerableResponse",
             SingleResponseType = typeof(IEnumerable<TestMessageResponse>),
-            ExpectedReceivedMessages = [new TestMessageWithEnumerableResponse { Payload = 10 }, new TestMessageWithEnumerableResponse { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithEnumerableResponse { Payload = 10 },
+                new TestMessageWithEnumerableResponse { Payload = 20 },
+            ],
             ExpectedResponses =
             [
-                new List<TestMessageResponse> { new() { Payload = 11 }, new() { Payload = 12 } },
-                new List<TestMessageResponse> { new() { Payload = 21 }, new() { Payload = 22 } },
+                new List<TestMessageResponse>
+                {
+                    new() { Payload = 11 },
+                    new() { Payload = 12 },
+                },
+                new List<TestMessageResponse>
+                {
+                    new() { Payload = 21 },
+                    new() { Payload = 22 },
+                },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithEnumerableResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithEnumerableResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithEnumerableResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithEnumerableResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithEnumerableResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -428,15 +587,28 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "from assembly scanning",
             Tag = "testMessageForAssemblyScanning",
-            ExpectedReceivedMessages = [new TestMessageForAssemblyScanning { Payload = 10 }, new TestMessageForAssemblyScanning { Payload = 20 }],
-            ExpectedResponses = [new TestMessageForAssemblyScanningResponse { Payload = 11 }, new TestMessageForAssemblyScanningResponse { Payload = 21 }],
-            RegisterHandler = s => s.AddMessageHandlersFromAssembly(typeof(TestMessageForAssemblyScanningHandler).Assembly)
-                                    .AddSingleton<TestObservations>()
-                                    .AddTransient(typeof(TestMessageMiddleware<,>)),
+            ExpectedReceivedMessages =
+            [
+                new TestMessageForAssemblyScanning { Payload = 10 },
+                new TestMessageForAssemblyScanning { Payload = 20 },
+            ],
+            ExpectedResponses =
+            [
+                new TestMessageForAssemblyScanningResponse { Payload = 11 },
+                new TestMessageForAssemblyScanningResponse { Payload = 21 },
+            ],
+            RegisterHandler = s =>
+                s.AddMessageHandlersFromAssembly(typeof(TestMessageForAssemblyScanningHandler).Assembly)
+                    .AddSingleton<TestObservations>()
+                    .AddTransient(typeof(TestMessageMiddleware<,>)),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageForAssemblyScanning.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageForAssemblyScanning.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageForAssemblyScanning.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageForAssemblyScanning.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -448,25 +620,36 @@ public static partial class FileSystemMessageTestCases
             Name = "without response from assembly scanning",
             Tag = "testMessageWithoutResponseForAssemblyScanning",
             ExpectedReceivedMessages =
-                [new TestMessageWithoutResponseForAssemblyScanning { Payload = 10 }, new TestMessageWithoutResponseForAssemblyScanning { Payload = 20 }],
+            [
+                new TestMessageWithoutResponseForAssemblyScanning { Payload = 10 },
+                new TestMessageWithoutResponseForAssemblyScanning { Payload = 20 },
+            ],
             ExpectedResponses = [],
-            RegisterHandler = s => s.AddMessageHandlersFromAssembly(typeof(TestMessageWithoutResponseForAssemblyScanningHandler).Assembly)
-                                    .AddSingleton<TestObservations>()
-                                    .AddTransient(typeof(TestMessageMiddleware<,>)),
+            RegisterHandler = s =>
+                s.AddMessageHandlersFromAssembly(typeof(TestMessageWithoutResponseForAssemblyScanningHandler).Assembly)
+                    .AddSingleton<TestObservations>()
+                    .AddTransient(typeof(TestMessageMiddleware<,>)),
             SendMessages = async (s, ct) =>
             {
-                await s.For(TestMessageWithoutResponseForAssemblyScanning.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                await s.For(TestMessageWithoutResponseForAssemblyScanning.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                await s.For(TestMessageWithoutResponseForAssemblyScanning.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                await s.For(TestMessageWithoutResponseForAssemblyScanning.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [];
             },
-            RunReceivers = (r, ct) => r.RunFileSystemMessageReceiver<TestMessageWithoutResponseForAssemblyScanningHandler>(ct),
+            RunReceivers = (r, ct) =>
+                r.RunFileSystemMessageReceiver<TestMessageWithoutResponseForAssemblyScanningHandler>(ct),
         };
 
-        foreach (var t in from hasResponse in new[] { true, false }
-                          from isSync in new[] { true, false }
-                          from configuresPipeline in new[] { true, false }
-                          select (hasResponse, isSync, configuresPipeline))
+        foreach (
+            var t in from hasResponse in new[] { true, false }
+            from isSync in new[] { true, false }
+            from configuresPipeline in new[] { true, false }
+            select (hasResponse, isSync, configuresPipeline)
+        )
         {
             var middlewareCallCount = 0;
             var receiverConfigurationCount = 0;
@@ -475,10 +658,20 @@ public static partial class FileSystemMessageTestCases
             {
                 Name =
                     $"with delegate (hasResponse: {t.hasResponse}, isSync: {t.isSync}, configuresPipeline: {t.configuresPipeline})",
-                Tag = t.hasResponse ? "testMessageWithDelegateHandler" : "testMessageWithDelegateHandlerWithoutResponse",
+                Tag = t.hasResponse
+                    ? "testMessageWithDelegateHandler"
+                    : "testMessageWithDelegateHandlerWithoutResponse",
                 ExpectedReceivedMessages = t.hasResponse
-                    ? [new TestMessageWithDelegateHandler { Payload = 10 }, new TestMessageWithDelegateHandler { Payload = 20 }]
-                    : [new TestMessageWithDelegateHandlerWithoutResponse { Payload = 10 }, new TestMessageWithDelegateHandlerWithoutResponse { Payload = 20 }],
+                    ?
+                    [
+                        new TestMessageWithDelegateHandler { Payload = 10 },
+                        new TestMessageWithDelegateHandler { Payload = 20 },
+                    ]
+                    :
+                    [
+                        new TestMessageWithDelegateHandlerWithoutResponse { Payload = 10 },
+                        new TestMessageWithDelegateHandlerWithoutResponse { Payload = 20 },
+                    ],
                 ExpectedResponses = t.hasResponse
                     ? [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }]
                     : [],
@@ -489,12 +682,13 @@ public static partial class FileSystemMessageTestCases
                         (false, false, false) => s.AddFileSystemMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
                             (m, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(m, ct),
-                            configureReceiver: r =>
+                            r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(r);
-                            }),
+                            }
+                        ),
                         (true, false, false) => s.AddFileSystemMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             async (m, p, ct) =>
@@ -503,21 +697,26 @@ public static partial class FileSystemMessageTestCases
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            configureReceiver: r =>
+                            r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(r);
-                            }),
+                            }
+                        ),
                         (false, true, false) => s.AddFileSystemMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
-                            (m, p) => p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult(),
-                            configureReceiver: r =>
+                            (m, p) =>
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None)
+                                    .GetAwaiter()
+                                    .GetResult(),
+                            r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(r);
-                            }),
+                            }
+                        ),
                         (true, true, false) => s.AddFileSystemMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             async (m, p, ct) =>
@@ -526,27 +725,30 @@ public static partial class FileSystemMessageTestCases
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            configureReceiver: r =>
-                            {
-                                _ = Interlocked.Increment(ref receiverConfigurationCount);
-
-                                r.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(r);
-                            }),
-                        (false, false, true) => s.AddFileSystemMessageHandlerDelegate(
-                            TestMessageWithDelegateHandlerWithoutResponse.T,
-                            (m, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(m, ct),
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
-
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            }),
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(r);
-                            }),
+                            }
+                        ),
+                        (false, false, true) => s.AddFileSystemMessageHandlerDelegate(
+                            TestMessageWithDelegateHandlerWithoutResponse.T,
+                            (m, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(m, ct),
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
+
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                }),
+                            r =>
+                            {
+                                _ = Interlocked.Increment(ref receiverConfigurationCount);
+
+                                r.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(r);
+                            }
+                        ),
                         (true, false, true) => s.AddFileSystemMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             async (m, p, ct) =>
@@ -555,67 +757,86 @@ public static partial class FileSystemMessageTestCases
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            }),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                }),
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(r);
-                            }),
+                            }
+                        ),
                         (false, true, true) => s.AddFileSystemMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
-                            (m, p) => p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult(),
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            (m, p) =>
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None)
+                                    .GetAwaiter()
+                                    .GetResult(),
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            }),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                }),
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(r);
-                            }),
+                            }
+                        ),
                         (true, true, true) => s.AddFileSystemMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             (m, p) =>
                             {
-                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult();
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None)
+                                    .GetAwaiter()
+                                    .GetResult();
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            }),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                }),
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(r);
-                            }),
+                            }
+                        ),
                     };
                 },
                 SendMessages = async (s, ct) =>
                 {
                     if (t.hasResponse)
                     {
-                        var r1 = await s.For(TestMessageWithDelegateHandler.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                        var r2 = await s.For(TestMessageWithDelegateHandler.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                        var r1 = await s.For(TestMessageWithDelegateHandler.T)
+                            .WithDefaultSenderConfiguration()
+                            .Handle(new() { Payload = 10 }, ct);
+                        var r2 = await s.For(TestMessageWithDelegateHandler.T)
+                            .WithDefaultSenderConfiguration()
+                            .Handle(new() { Payload = 20 }, ct);
 
                         return [r1, r2];
                     }
 
-                    await s.For(TestMessageWithDelegateHandlerWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                    await s.For(TestMessageWithDelegateHandlerWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                    await s.For(TestMessageWithDelegateHandlerWithoutResponse.T)
+                        .WithDefaultSenderConfiguration()
+                        .Handle(new() { Payload = 10 }, ct);
+                    await s.For(TestMessageWithDelegateHandlerWithoutResponse.T)
+                        .WithDefaultSenderConfiguration()
+                        .Handle(new() { Payload = 20 }, ct);
 
                     return [];
                 },
@@ -623,7 +844,7 @@ public static partial class FileSystemMessageTestCases
                 AfterMessagesAreReceived = _ =>
                 {
                     Assert.That(middlewareCallCount, Is.EqualTo(t.configuresPipeline ? 2 : 0));
-                    Assert.That(receiverConfigurationCount, Is.EqualTo(1));
+                    Assert.That(receiverConfigurationCount, Is.EqualTo(expected: 1));
 
                     middlewareCallCount = 0;
                     receiverConfigurationCount = 0;
@@ -645,7 +866,8 @@ public static partial class FileSystemMessageTestCases
             {
                 var responses = await Task.WhenAll(
                     s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct),
-                    s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct));
+                    s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct)
+                );
 
                 return responses;
             },
@@ -656,15 +878,17 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "multiple independent receivers",
             NumOfReceivers = 2,
-            Tag = string.Empty, // makes no sense with multiple different message types
+            Tag = "", // makes no sense with multiple different message types
             ExpectedReceivedMessages = [new TestMessage { Payload = 10 }, new TestMessageWithTag { Payload = 20 }],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
-            RegisterHandler = s => s.AddMessageHandler<TestMessageHandler>()
-                                    .AddMessageHandler<TestMessageWithTagHandler>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<TestMessageHandler>().AddMessageHandler<TestMessageWithTagHandler>(),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithTag.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r2 = await s.For(TestMessageWithTag.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -675,9 +899,19 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "multiple competing receivers",
             NumOfReceivers = 2,
-            Tag = string.Empty, // makes no sense with multiple different message types
-            ExpectedReceivedMessages = [new TestMessage { Payload = 10 }, new TestMessage { Payload = 20 }, new TestMessage { Payload = 30 }],
-            ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }, new TestMessageResponse { Payload = 31 }],
+            Tag = "", // makes no sense with multiple different message types
+            ExpectedReceivedMessages =
+            [
+                new TestMessage { Payload = 10 },
+                new TestMessage { Payload = 20 },
+                new TestMessage { Payload = 30 },
+            ],
+            ExpectedResponses =
+            [
+                new TestMessageResponse { Payload = 11 },
+                new TestMessageResponse { Payload = 21 },
+                new TestMessageResponse { Payload = 31 },
+            ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageHandler>(),
             SendMessages = async (s, ct) =>
             {
@@ -699,8 +933,13 @@ public static partial class FileSystemMessageTestCases
         yield return new()
         {
             Name = "type hierarchy with response",
-            Tag = string.Empty, // makes no sense with multiple different message types
-            ExpectedReceivedMessages = [new TestMessageBase(10), new TestMessageSub(20, 30), new TestMessageSub(40, 50)],
+            Tag = "", // makes no sense with multiple different message types
+            ExpectedReceivedMessages =
+            [
+                new TestMessageBase(Payload: 10),
+                new TestMessageSub(Payload: 20, PayloadSub: 30),
+                new TestMessageSub(Payload: 40, PayloadSub: 50),
+            ],
             ExpectedResponses =
             [
                 new TestMessageResponse { Payload = 11 },
@@ -710,9 +949,13 @@ public static partial class FileSystemMessageTestCases
             RegisterHandler = s => s.AddMessageHandler<MultiHierarchyTestMessageHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageBase.T).WithDefaultSenderConfiguration().Handle(new(10), ct);
-                var r2 = await s.For(TestMessageSub.T).WithDefaultSenderConfiguration().Handle(new(20, 30), ct);
-                var r3 = await s.For(TestMessageSub.T).WithDefaultSenderConfiguration().Handle(new TestMessageSubSub(40, 50, 60), ct);
+                var r1 = await s.For(TestMessageBase.T).WithDefaultSenderConfiguration().Handle(new(Payload: 10), ct);
+                var r2 = await s.For(TestMessageSub.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(Payload: 20, PayloadSub: 30), ct);
+                var r3 = await s.For(TestMessageSub.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new TestMessageSubSub(Payload: 40, PayloadSub: 50, PayloadSubSub: 60), ct);
 
                 return [r1, r2, r3];
             },
@@ -722,23 +965,39 @@ public static partial class FileSystemMessageTestCases
         yield return new()
         {
             Name = "type hierarchy without response",
-            Tag = string.Empty, // makes no sense with multiple different message types
+            Tag = "", // makes no sense with multiple different message types
             ExpectedReceivedMessages =
-                [new TestMessageBaseWithoutResponse(10), new TestMessageSubWithoutResponse(20, 30), new TestMessageSubWithoutResponse(40, 50)],
+            [
+                new TestMessageBaseWithoutResponse(Payload: 10),
+                new TestMessageSubWithoutResponse(Payload: 20, PayloadSub: 30),
+                new TestMessageSubWithoutResponse(Payload: 40, PayloadSub: 50),
+            ],
             ExpectedResponses = [],
             RegisterHandler = s => s.AddMessageHandler<MultiHierarchyTestMessageWithoutResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                await s.For(TestMessageBaseWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new(10), ct);
-                await s.For(TestMessageSubWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new(20, 30), ct);
-                await s.For(TestMessageSubWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new TestMessageSubSubWithoutResponse(40, 50, 60), ct);
+                await s.For(TestMessageBaseWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(Payload: 10), ct);
+                await s.For(TestMessageSubWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(Payload: 20, PayloadSub: 30), ct);
+                await s.For(TestMessageSubWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new TestMessageSubSubWithoutResponse(Payload: 40, PayloadSub: 50, PayloadSubSub: 60), ct);
 
                 return [];
             },
-            RunReceivers = (r, ct) => r.RunFileSystemMessageReceiver<MultiHierarchyTestMessageWithoutResponseHandler>(ct),
+            RunReceivers = (r, ct) =>
+                r.RunFileSystemMessageReceiver<MultiHierarchyTestMessageWithoutResponseHandler>(ct),
         };
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what object is being created here"
+    )]
     public static IEnumerable<FileSystemMessageConformityExecutionSuccessTestCase> CreateSimpleSuccessTestCases()
     {
         yield return new()
@@ -762,13 +1021,21 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "without response",
             Tag = "test",
-            ExpectedReceivedMessages = [new TestMessageWithoutResponse { Payload = 10 }, new TestMessageWithoutResponse { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithoutResponse { Payload = 10 },
+                new TestMessageWithoutResponse { Payload = 20 },
+            ],
             ExpectedResponses = [],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithoutResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                await s.For(TestMessageWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                await s.For(TestMessageWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                await s.For(TestMessageWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                await s.For(TestMessageWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [];
             },
@@ -779,15 +1046,17 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "multiple independent receivers",
             NumOfReceivers = 2,
-            Tag = string.Empty, // makes no sense with multiple different message types
+            Tag = "", // makes no sense with multiple different message types
             ExpectedReceivedMessages = [new TestMessage { Payload = 10 }, new TestMessageWithTag { Payload = 20 }],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
-            RegisterHandler = s => s.AddMessageHandler<TestMessageHandler>()
-                                    .AddMessageHandler<TestMessageWithTagHandler>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<TestMessageHandler>().AddMessageHandler<TestMessageWithTagHandler>(),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithTag.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r2 = await s.For(TestMessageWithTag.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -798,7 +1067,7 @@ public static partial class FileSystemMessageTestCases
         {
             Name = "multiple competing receivers",
             NumOfReceivers = 2,
-            Tag = string.Empty, // makes no sense with multiple different message types
+            Tag = "", // makes no sense with multiple different message types
             ExpectedReceivedMessages = [new TestMessage { Payload = 10 }, new TestMessage { Payload = 20 }],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageHandler>(),
@@ -819,6 +1088,11 @@ public static partial class FileSystemMessageTestCases
         };
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what object is being created here"
+    )]
     public static IEnumerable<FileSystemMessageConformityExecutionErrorTestCase> CreateErrorTestCases()
     {
         yield return new()
@@ -844,8 +1118,8 @@ public static partial class FileSystemMessageTestCases
             NumOfReceivers = 2,
             HandlerExceptions = [],
             SendMessages = (_, _) => Task.FromResult<IReadOnlyCollection<object>>([]),
-            RegisterHandler = s => s.AddMessageHandler<ThrowingTestMessageHandler>()
-                                    .AddMessageHandler<ThrowingTestMessageHandler2>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<ThrowingTestMessageHandler>().AddMessageHandler<ThrowingTestMessageHandler2>(),
             RunReceivers = (r, ct) => r.RunFileSystemMessageReceivers(ct),
         };
 
@@ -862,7 +1136,7 @@ public static partial class FileSystemMessageTestCases
             RegisterHandler = s => s.AddMessageHandler<ThrowingTestMessageHandler>(),
             RunReceivers = (r, ct) =>
             {
-                r.ServiceProvider.GetRequiredService<DirectoryInfo>().Delete(true);
+                r.ServiceProvider.GetRequiredService<DirectoryInfo>().Delete(recursive: true);
 
                 return r.RunFileSystemMessageReceiver<ThrowingTestMessageHandler>(ct);
             },
@@ -879,11 +1153,11 @@ public static partial class FileSystemMessageTestCases
             NumOfReceivers = 2,
             HandlerExceptions = [],
             SendMessages = (_, _) => Task.FromResult<IReadOnlyCollection<object>>([]),
-            RegisterHandler = s => s.AddMessageHandler<ThrowingTestMessageHandler>()
-                                    .AddMessageHandler<ThrowingTestMessageHandler2>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<ThrowingTestMessageHandler>().AddMessageHandler<ThrowingTestMessageHandler2>(),
             RunReceivers = (r, ct) =>
             {
-                r.ServiceProvider.GetRequiredService<DirectoryInfo>().Delete(true);
+                r.ServiceProvider.GetRequiredService<DirectoryInfo>().Delete(recursive: true);
 
                 return r.RunFileSystemMessageReceivers(ct);
             },
@@ -900,13 +1174,15 @@ public static partial class FileSystemMessageTestCases
             NumOfReceivers = 2,
             HandlerExceptions = [],
             SendMessages = (_, _) => Task.FromResult<IReadOnlyCollection<object>>([]),
-            RegisterHandler = s => s.AddMessageHandler<ThrowingTestMessageHandler>()
-                                    .AddMessageHandler<ThrowingTestMessageHandler2>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<ThrowingTestMessageHandler>().AddMessageHandler<ThrowingTestMessageHandler2>(),
             RunReceivers = (r, ct) =>
             {
                 var handle1 = r.RunFileSystemMessageReceiver<ThrowingTestMessageHandler>(ct);
 
+#pragma warning disable MA0045 // we want to test a sync delegate
                 handle1.InitialConnectionTask.Wait(ct);
+#pragma warning restore MA0045
 
                 // disposing the file stores will trigger the next handler to throw on startup
                 r.ServiceProvider.GetRequiredService<FileSystemStores>().Dispose();
@@ -920,45 +1196,28 @@ public static partial class FileSystemMessageTestCases
         yield return new()
         {
             Name = "single handler with handler exception",
-            ExpectedReceivedMessages =
-            [
-                new TestMessage { Payload = 10 },
-                new TestMessage { Payload = 30 },
-            ],
-            ExpectedResponses =
-            [
-                new TestMessageResponse { Payload = 11 },
-            ],
+            ExpectedReceivedMessages = [new TestMessage { Payload = 10 }, new TestMessage { Payload = 30 }],
+            ExpectedResponses = [new TestMessageResponse { Payload = 11 }],
             ConfigurationExceptions = [],
             SendException = null,
-            HandlerExceptions =
-            [
-                null,
-                new InvalidOperationException("handler exception"),
-            ],
+            HandlerExceptions = [null, new InvalidOperationException("handler exception")],
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessage.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { Payload = 10 }, ct);
+                var r1 = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await s.For(TestMessageWithoutResponse.T)
-                       .WithDefaultSenderConfiguration()
-                       .Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
-                var r2 = await s.For(TestMessage.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { Payload = 30 }, ct);
+                var r2 = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 30 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
-                var r3 = await s.For(TestMessage.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { Payload = 40 }, ct);
+                var r3 = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 40 }, ct);
 
                 return [r1, r2, r3];
             },
@@ -975,41 +1234,29 @@ public static partial class FileSystemMessageTestCases
                 new TestMessageWithoutResponse { Payload = 20 },
                 new TestMessage { Payload = 30 },
             ],
-            ExpectedResponses =
-            [
-                new TestMessageResponse { Payload = 11 },
-            ],
+            ExpectedResponses = [new TestMessageResponse { Payload = 11 }],
             ConfigurationExceptions = [],
             SendException = null,
             NumOfReceivers = 2,
-            HandlerExceptions =
-            [
-                null,
-                null,
-                new InvalidOperationException("handler exception"),
-            ],
+            HandlerExceptions = [null, null, new InvalidOperationException("handler exception")],
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessage.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { Payload = 10 }, ct);
+                var r1 = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await s.For(TestMessageWithoutResponse.T)
-                       .WithDefaultSenderConfiguration()
-                       .Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
-                await Task.Delay(50, ct);
+                await Task.Delay(millisecondsDelay: 50, ct);
 
-                var r2 = await s.For(TestMessage.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { Payload = 30 }, ct);
+                var r2 = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 30 }, ct);
 
                 return [r1, r2];
             },
-            RegisterHandler = s => s.AddMessageHandler<ThrowingTestMessageHandler>()
-                                    .AddMessageHandler<ThrowingTestMessageHandler2>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<ThrowingTestMessageHandler>().AddMessageHandler<ThrowingTestMessageHandler2>(),
             RunReceivers = (r, ct) => r.RunFileSystemMessageReceivers(ct),
         };
 
@@ -1025,8 +1272,8 @@ public static partial class FileSystemMessageTestCases
             SendMessages = async (s, ct) =>
             {
                 var response = await s.For(ThrowingTestMessage.T)
-                                      .WithDefaultSenderConfiguration()
-                                      .Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
 
                 return [response];
             },
@@ -1045,24 +1292,31 @@ public static partial class FileSystemMessageTestCases
             SendMessages = async (s, ct) =>
             {
                 var response = await s.For(ThrowingTestMessage.T)
-                                      .WithDefaultSenderConfiguration()
-                                      .Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
 
                 return [response];
             },
-            RegisterHandler = s => s.AddMessageHandler<ThrowingTestMessageHandler>()
-                                    .AddMessageHandler<ThrowingTestMessageHandler2>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<ThrowingTestMessageHandler>().AddMessageHandler<ThrowingTestMessageHandler2>(),
             RunReceivers = (r, ct) => r.RunFileSystemMessageReceivers(ct),
         };
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what object is being created here"
+    )]
     public static IEnumerable<FileSystemMessageConformityContextTestCase> CreateContextTestCases()
     {
-        foreach (var t in from hasActivity in new[] { true, false }
-                          from hasDownstream in new[] { true, false }
-                          from hasUpstream in new[] { true, false }
-                          from hasBidirectional in new[] { true, false }
-                          select (hasActivity, hasDownstream, hasUpstream, hasBidirectional))
+        foreach (
+            var t in from hasActivity in new[] { true, false }
+            from hasDownstream in new[] { true, false }
+            from hasUpstream in new[] { true, false }
+            from hasBidirectional in new[] { true, false }
+            select (hasActivity, hasDownstream, hasUpstream, hasBidirectional)
+        )
         {
             yield return new()
             {
@@ -1075,7 +1329,9 @@ public static partial class FileSystemMessageTestCases
                 RegisterHandler = s => s.AddMessageHandler<TestMessageHandler>(),
                 SendMessages = async (s, ct) =>
                 {
-                    var response = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
+                    var response = await s.For(TestMessage.T)
+                        .WithDefaultSenderConfiguration()
+                        .Handle(new() { Payload = 10 }, ct);
 
                     return [response];
                 },
@@ -1095,43 +1351,49 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessage.IHandler
+    public sealed partial class TestMessageHandler(FnToCallFromHandler funToCallFromHandler) : TestMessage.IHandler
     {
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
         public static void ConfigurePipeline(TestMessage.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessage message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<TestMessageResponse>]
     public sealed partial record TestMessageWithoutPayload;
 
-    public sealed partial class TestMessageWithoutPayloadHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithoutPayloadHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithoutPayload.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithoutPayload.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithoutPayload message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageWithoutPayload.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
+
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithoutPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = 11 };
+            return new TestMessageResponse { Payload = 11 };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage]
@@ -1140,39 +1402,45 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithoutResponseHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithoutResponseHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithoutResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
+        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage]
     public sealed partial record TestMessageWithoutResponseWithoutPayload;
 
-    public sealed partial class TestMessageWithoutResponseWithoutPayloadHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithoutResponseWithoutPayload.IHandler
+    public sealed partial class TestMessageWithoutResponseWithoutPayloadHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithoutResponseWithoutPayload.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithoutResponseWithoutPayload.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task Handle(TestMessageWithoutResponseWithoutPayload message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageWithoutResponseWithoutPayload.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
+
+        public async Task Handle(
+            TestMessageWithoutResponseWithoutPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<TestMessageResponse>(Tag = "custom-tag")]
@@ -1181,22 +1449,25 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithTagHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithTagHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithTag.IHandler
     {
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
         public static void ConfigurePipeline(TestMessageWithTag.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithTag message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithTag message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<TestMessageResponse>(Version = "v2")]
@@ -1205,22 +1476,26 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithVersionHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithVersionHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithVersion.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithVersion.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithVersion message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageWithVersion.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
+
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithVersion message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<TestMessageResponse>(Version = "v2")]
@@ -1229,22 +1504,24 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageV2Handler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageV2.IHandler
+    public sealed partial class TestMessageV2Handler(FnToCallFromHandler funToCallFromHandler) : TestMessageV2.IHandler
     {
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
         public static void ConfigurePipeline(TestMessageV2.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageV2 message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageV2 message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<TestMessageWithCustomSerializedPayloadTypeResponse>]
@@ -1260,46 +1537,53 @@ public static partial class FileSystemMessageTestCases
 
     public sealed record TestMessageWithCustomSerializedPayloadTypePayload(int Payload);
 
-    public sealed partial class TestMessageWithCustomSerializedPayloadTypeHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithCustomSerializedPayloadType.IHandler
+    public sealed partial class TestMessageWithCustomSerializedPayloadTypeHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithCustomSerializedPayloadType.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithCustomSerializedPayloadType.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
+        public static void ConfigurePipeline(TestMessageWithCustomSerializedPayloadType.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task<TestMessageWithCustomSerializedPayloadTypeResponse> Handle(
             TestMessageWithCustomSerializedPayloadType message,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = new(message.Payload.Payload + 1) };
+            return new TestMessageWithCustomSerializedPayloadTypeResponse
+            {
+                Payload = new TestMessageWithCustomSerializedPayloadTypePayload(message.Payload.Payload + 1),
+            };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
         internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
         {
-            public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestMessageWithCustomSerializedPayloadTypePayload);
+            public override bool CanConvert(Type typeToConvert) =>
+                typeToConvert == typeof(TestMessageWithCustomSerializedPayloadTypePayload);
 
-            public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
-            {
-                return Activator.CreateInstance(typeof(PayloadJsonConverter)) as JsonConverter;
-            }
+            public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
+                Activator.CreateInstance<PayloadJsonConverter>();
         }
 
         internal sealed class PayloadJsonConverter : JsonConverter<TestMessageWithCustomSerializedPayloadTypePayload>
         {
-            public override TestMessageWithCustomSerializedPayloadTypePayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                return new(reader.GetInt32());
-            }
+            public override TestMessageWithCustomSerializedPayloadTypePayload Read(
+                ref Utf8JsonReader reader,
+                Type typeToConvert,
+                JsonSerializerOptions options
+            ) => new(reader.GetInt32());
 
-            public override void Write(Utf8JsonWriter writer, TestMessageWithCustomSerializedPayloadTypePayload value, JsonSerializerOptions options)
-            {
-                writer.WriteNumberValue(value.Payload);
-            }
+            public override void Write(
+                Utf8JsonWriter writer,
+                TestMessageWithCustomSerializedPayloadTypePayload value,
+                JsonSerializerOptions options
+            ) => writer.WriteNumberValue(value.Payload);
         }
     }
 
@@ -1308,13 +1592,21 @@ public static partial class FileSystemMessageTestCases
     {
         public int Payload { get; init; }
 
-        static IFileSystemMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
-            IFileSystemMessage<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.FileSystemMessageSerializer { get; }
-            = new TestMessageCustomSerializer();
+        static IFileSystemMessageSerializer<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        > IFileSystemMessage<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        >.FileSystemMessageSerializer { get; } = new TestMessageCustomSerializer();
 
-        static IFileSystemMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
-            IFileSystemMessage<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.FileSystemMessageResponseSerializer { get; }
-            = new TestMessageCustomSerializer();
+        static IFileSystemMessageResponseSerializer<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        > IFileSystemMessage<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        >.FileSystemMessageResponseSerializer { get; } = new TestMessageCustomSerializer();
     }
 
     public sealed record TestMessageWithCustomSerializerResponse
@@ -1322,17 +1614,46 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    private sealed class TestMessageCustomSerializer : IFileSystemMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>,
-                                                       IFileSystemMessageResponseSerializer<TestMessageWithCustomSerializer,
-                                                           TestMessageWithCustomSerializerResponse>
+    private sealed class TestMessageCustomSerializer
+        : IFileSystemMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>,
+            IFileSystemMessageResponseSerializer<
+                TestMessageWithCustomSerializer,
+                TestMessageWithCustomSerializerResponse
+            >
     {
+        public async Task SerializeResponse(
+            IServiceProvider serviceProvider,
+            TestMessageWithCustomSerializerResponse response,
+            Stream fileStream,
+            CancellationToken cancellationToken
+        )
+        {
+            await using var writer = new StreamWriter(fileStream);
+            await writer.WriteAsync($"total-payload:{response.Payload}");
+        }
+
+        public async Task<TestMessageWithCustomSerializerResponse> DeserializeResponse(
+            IServiceProvider serviceProvider,
+            Stream fileStream,
+            CancellationToken cancellationToken
+        )
+        {
+            await Task.Yield();
+            using var reader = new StreamReader(fileStream, Encoding.UTF8, leaveOpen: true);
+            var bodyContent = await reader.ReadToEndAsync(cancellationToken);
+            var payload = int.Parse(bodyContent.Split(':')[1], CultureInfo.InvariantCulture);
+
+            return new TestMessageWithCustomSerializerResponse { Payload = payload };
+        }
+
         public string FileExtension => ".txt";
 
         public async Task SerializeMessage(
             IServiceProvider serviceProvider,
             TestMessageWithCustomSerializer message,
             Stream fileStream,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             await Task.Yield();
 
@@ -1343,58 +1664,38 @@ public static partial class FileSystemMessageTestCases
         public async Task<TestMessageWithCustomSerializer> DeserializeMessage(
             IServiceProvider serviceProvider,
             Stream fileStream,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             await Task.Yield();
             using var reader = new StreamReader(fileStream, Encoding.UTF8, leaveOpen: true);
             var bodyContent = await reader.ReadToEndAsync(cancellationToken);
-            var payload = int.Parse(bodyContent.Split(':')[1]);
+            var payload = int.Parse(bodyContent.Split(':')[1], CultureInfo.InvariantCulture);
 
-            return new() { Payload = payload };
-        }
-
-        public async Task SerializeResponse(
-            IServiceProvider serviceProvider,
-            TestMessageWithCustomSerializerResponse response,
-            Stream fileStream,
-            CancellationToken cancellationToken)
-        {
-            await using var writer = new StreamWriter(fileStream);
-            await writer.WriteAsync($"total-payload:{response.Payload}");
-        }
-
-        public async Task<TestMessageWithCustomSerializerResponse> DeserializeResponse(
-            IServiceProvider serviceProvider,
-            Stream fileStream,
-            CancellationToken cancellationToken)
-        {
-            await Task.Yield();
-            using var reader = new StreamReader(fileStream, Encoding.UTF8, leaveOpen: true);
-            var bodyContent = await reader.ReadToEndAsync(cancellationToken);
-            var payload = int.Parse(bodyContent.Split(':')[1]);
-
-            return new() { Payload = payload };
+            return new TestMessageWithCustomSerializer { Payload = payload };
         }
     }
 
-    public sealed partial class TestMessageWithCustomSerializerHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithCustomSerializerHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithCustomSerializer.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithCustomSerializer.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
+        public static void ConfigurePipeline(TestMessageWithCustomSerializer.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task<TestMessageWithCustomSerializerResponse> Handle(
             TestMessageWithCustomSerializer message,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageWithCustomSerializerResponse { Payload = message.Payload + 1 };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<TestMessageWithCustomJsonTypeInfoResponse>]
@@ -1408,24 +1709,26 @@ public static partial class FileSystemMessageTestCases
         public int ResponsePayload { get; init; }
     }
 
-    public sealed partial class TestMessageWithCustomJsonTypeInfoHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithCustomJsonTypeInfoHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithCustomJsonTypeInfo.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithCustomJsonTypeInfo.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
+        public static void ConfigurePipeline(TestMessageWithCustomJsonTypeInfo.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task<TestMessageWithCustomJsonTypeInfoResponse> Handle(
             TestMessageWithCustomJsonTypeInfo message,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { ResponsePayload = message.MessagePayload + 1 };
+            return new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = message.MessagePayload + 1 };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseUpper)]
@@ -1439,24 +1742,32 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithMiddlewareHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithMiddlewareHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithMiddleware.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithMiddleware.IPipeline pipeline) =>
-            pipeline.UseReceiverLogging()
-                    .Use(pipeline.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>());
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithMiddleware message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageWithMiddleware.IPipeline pipeline) =>
+            pipeline
+                .UseReceiverLogging()
+                .Use(
+                    pipeline.ServiceProvider.GetRequiredService<
+                        TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>
+                    >()
+                );
+
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithMiddleware message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage]
@@ -1465,25 +1776,35 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithMiddlewareWithoutResponseHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithMiddlewareWithoutResponse.IHandler
+    public sealed partial class TestMessageWithMiddlewareWithoutResponseHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithMiddlewareWithoutResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithMiddlewareWithoutResponse.IPipeline pipeline) =>
-            pipeline.UseReceiverLogging()
-                    .Use(pipeline.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>());
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task Handle(TestMessageWithMiddlewareWithoutResponse message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageWithMiddlewareWithoutResponse.IPipeline pipeline) =>
+            pipeline
+                .UseReceiverLogging()
+                .Use(
+                    pipeline.ServiceProvider.GetRequiredService<
+                        TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>
+                    >()
+                );
+
+        public async Task Handle(
+            TestMessageWithMiddlewareWithoutResponse message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
-    public sealed class TestMessageMiddleware<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
+    public sealed class TestMessageMiddleware<TMessage, TResponse>(TestObservations observations)
+        : IMessageMiddleware<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
@@ -1500,22 +1821,26 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithArrayResponseHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithArrayResponseHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithArrayResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithArrayResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task<TestMessageResponse[]> Handle(TestMessageWithArrayResponse message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageWithArrayResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
+
+        public async Task<TestMessageResponse[]> Handle(
+            TestMessageWithArrayResponse message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
             return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<List<TestMessageResponse>>]
@@ -1524,22 +1849,30 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithListResponseHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithListResponseHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithListResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithListResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task<List<TestMessageResponse>> Handle(TestMessageWithListResponse message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageWithListResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
+
+        public async Task<List<TestMessageResponse>> Handle(
+            TestMessageWithListResponse message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
+            return new List<TestMessageResponse>
+            {
+                new() { Payload = message.Payload + 1 },
+                new() { Payload = message.Payload + 2 },
+            };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<IEnumerable<TestMessageResponse>>]
@@ -1548,22 +1881,30 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithEnumerableResponseHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithEnumerableResponseHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithEnumerableResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithEnumerableResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task<IEnumerable<TestMessageResponse>> Handle(TestMessageWithEnumerableResponse message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageWithEnumerableResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
+
+        public async Task<IEnumerable<TestMessageResponse>> Handle(
+            TestMessageWithEnumerableResponse message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
+            return new List<TestMessageResponse>
+            {
+                new() { Payload = message.Payload + 1 },
+                new() { Payload = message.Payload + 2 },
+            };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<TestMessageForAssemblyScanningResponse>]
@@ -1577,22 +1918,26 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageForAssemblyScanningHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageForAssemblyScanningHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageForAssemblyScanning.IHandler
     {
-        public static void ConfigurePipeline(TestMessageForAssemblyScanning.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task<TestMessageForAssemblyScanningResponse> Handle(TestMessageForAssemblyScanning message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageForAssemblyScanning.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
+
+        public async Task<TestMessageForAssemblyScanningResponse> Handle(
+            TestMessageForAssemblyScanning message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageForAssemblyScanningResponse { Payload = message.Payload + 1 };
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage]
@@ -1601,20 +1946,25 @@ public static partial class FileSystemMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithoutResponseForAssemblyScanningHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithoutResponseForAssemblyScanning.IHandler
+    public sealed partial class TestMessageWithoutResponseForAssemblyScanningHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithoutResponseForAssemblyScanning.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithoutResponseForAssemblyScanning.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public async Task Handle(TestMessageWithoutResponseForAssemblyScanning message, CancellationToken cancellationToken = default)
+        public static void ConfigurePipeline(TestMessageWithoutResponseForAssemblyScanning.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
+
+        public async Task Handle(
+            TestMessageWithoutResponseForAssemblyScanning message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
-
-        public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<TestMessageResponse>]
@@ -1635,70 +1985,81 @@ public static partial class FileSystemMessageTestCases
     [FileSystemMessage<TestMessageResponse>]
     public partial record TestMessageSub(int Payload, int PayloadSub) : TestMessageBase(Payload);
 
-    public sealed record TestMessageSubSub(int Payload, int PayloadSub, int PayloadSubSub) : TestMessageSub(Payload, PayloadSub);
+    public sealed record TestMessageSubSub(int Payload, int PayloadSub, int PayloadSubSub)
+        : TestMessageSub(Payload, PayloadSub);
 
-    private sealed partial class MultiHierarchyTestMessageHandler(FnToCallFromHandler fnToCallFromHandler)
+    private sealed partial class MultiHierarchyTestMessageHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageBase.IHandler,
-          TestMessageSub.IHandler
+            TestMessageSub.IHandler
     {
+        static void IFileSystemMessageHandler.ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
         public static void ConfigurePipeline(TestMessageBase.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
         public static void ConfigurePipeline(TestMessageSub.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageBase message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageBase message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public async Task<TestMessageResponse> Handle(TestMessageSub message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageSub message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 2 };
+            return new TestMessageResponse { Payload = message.Payload + 2 };
         }
-
-        static void IFileSystemMessageHandler.ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage]
     public partial record TestMessageBaseWithoutResponse(int Payload);
 
     [FileSystemMessage]
-    public partial record TestMessageSubWithoutResponse(int Payload, int PayloadSub) : TestMessageBaseWithoutResponse(Payload);
+    public partial record TestMessageSubWithoutResponse(int Payload, int PayloadSub)
+        : TestMessageBaseWithoutResponse(Payload);
 
-    public sealed record TestMessageSubSubWithoutResponse(int Payload, int PayloadSub, int PayloadSubSub) : TestMessageSubWithoutResponse(Payload, PayloadSub);
+    public sealed record TestMessageSubSubWithoutResponse(int Payload, int PayloadSub, int PayloadSubSub)
+        : TestMessageSubWithoutResponse(Payload, PayloadSub);
 
-    private sealed partial class MultiHierarchyTestMessageWithoutResponseHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageBaseWithoutResponse.IHandler,
-          TestMessageSubWithoutResponse.IHandler
+    private sealed partial class MultiHierarchyTestMessageWithoutResponseHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageBaseWithoutResponse.IHandler, TestMessageSubWithoutResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageBaseWithoutResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        static void IFileSystemMessageHandler.ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
 
-        public static void ConfigurePipeline(TestMessageSubWithoutResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageBaseWithoutResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
+
+        public static void ConfigurePipeline(TestMessageSubWithoutResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task Handle(TestMessageBaseWithoutResponse message, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
 
         public async Task Handle(TestMessageSubWithoutResponse message, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
-
-        static void IFileSystemMessageHandler.ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
     }
 
     [FileSystemMessage<TestMessageResponse>]
@@ -1706,11 +2067,14 @@ public static partial class FileSystemMessageTestCases
     {
         public required int Payload { get; init; }
 
-        static IFileSystemMessageSerializer<ThrowingTestMessage, TestMessageResponse> IFileSystemMessage<ThrowingTestMessage, TestMessageResponse>
-            .FileSystemMessageSerializer { get; } = new ThrowingTestMessageSerializer();
+        static IFileSystemMessageSerializer<ThrowingTestMessage, TestMessageResponse> IFileSystemMessage<
+            ThrowingTestMessage,
+            TestMessageResponse
+        >.FileSystemMessageSerializer { get; } = new ThrowingTestMessageSerializer();
     }
 
-    private sealed class ThrowingTestMessageSerializer : IFileSystemMessageSerializer<ThrowingTestMessage, TestMessageResponse>
+    private sealed class ThrowingTestMessageSerializer
+        : IFileSystemMessageSerializer<ThrowingTestMessage, TestMessageResponse>
     {
         public string FileExtension => ".throwing";
 
@@ -1718,76 +2082,73 @@ public static partial class FileSystemMessageTestCases
             IServiceProvider serviceProvider,
             ThrowingTestMessage message,
             Stream fileStream,
-            CancellationToken cancellationToken)
-        {
-            throw serviceProvider.GetRequiredService<Exception>();
-        }
+            CancellationToken cancellationToken
+        ) => throw serviceProvider.GetRequiredService<Exception>();
 
         public Task<ThrowingTestMessage> DeserializeMessage(
             IServiceProvider serviceProvider,
             Stream fileStream,
-            CancellationToken cancellationToken)
-        {
-            throw new NotSupportedException();
-        }
+            CancellationToken cancellationToken
+        ) => throw new NotSupportedException();
     }
 
     private sealed partial class ThrowingTestMessageHandler(
         ConcurrentQueue<Exception?> exceptions,
-        FnToCallFromHandler fnToCallFromHandler)
-        : TestMessage.IHandler,
-          ThrowingTestMessage.IHandler
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessage.IHandler, ThrowingTestMessage.IHandler
     {
-        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        static void IFileSystemMessageHandler.ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
+        public async Task<TestMessageResponse> Handle(
+            TestMessage message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
-                await Task.Delay(1, cancellationToken);
+                await Task.Delay(millisecondsDelay: 1, cancellationToken);
 
                 throw ex;
             }
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public Task<TestMessageResponse> Handle(ThrowingTestMessage message, CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-
-        static void IFileSystemMessageHandler.ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+        public Task<TestMessageResponse> Handle(
+            ThrowingTestMessage message,
+            CancellationToken cancellationToken = default
+        ) => throw new NotSupportedException();
     }
 
     private sealed partial class ThrowingTestMessageHandler2(
         ConcurrentQueue<Exception?> exceptions,
-        FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithoutResponse.IHandler,
-          ThrowingTestMessage.IHandler
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithoutResponse.IHandler, ThrowingTestMessage.IHandler
     {
+        static void IFileSystemMessageHandler.ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
-                await Task.Delay(1, cancellationToken);
+                await Task.Delay(millisecondsDelay: 1, cancellationToken);
 
                 throw ex;
             }
         }
 
-        public Task<TestMessageResponse> Handle(ThrowingTestMessage message, CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-
-        static void IFileSystemMessageHandler.ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);
+        public Task<TestMessageResponse> Handle(
+            ThrowingTestMessage message,
+            CancellationToken cancellationToken = default
+        ) => throw new NotSupportedException();
     }
 
     public sealed class TestObservations
@@ -1803,10 +2164,13 @@ public static partial class FileSystemMessageTestCases
 file static class PipelineExtensions
 {
     public static IMessagePipeline<TMessage, TResponse> UseSendCallback<TMessage, TResponse>(
-        this IMessagePipeline<TMessage, TResponse> pipeline)
+        this IMessagePipeline<TMessage, TResponse> pipeline
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        var sendCallback = pipeline.ServiceProvider.GetService<Func<object, ConquerorContext, CancellationToken, Task>>();
+        var sendCallback = pipeline.ServiceProvider.GetService<
+            Func<object, ConquerorContext, CancellationToken, Task>
+        >();
 
         if (sendCallback is null)
         {
@@ -1821,7 +2185,9 @@ file static class PipelineExtensions
         });
     }
 
-    public static IMessagePipeline<TMessage, TResponse> UseLogging<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline)
+    public static IMessagePipeline<TMessage, TResponse> UseLogging<TMessage, TResponse>(
+        this IMessagePipeline<TMessage, TResponse> pipeline
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         var logger = pipeline.ServiceProvider.GetRequiredService<ILogger>();
@@ -1834,7 +2200,9 @@ file static class PipelineExtensions
         });
     }
 
-    public static IMessagePipeline<TMessage, TResponse> UseReceiverLogging<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline)
+    public static IMessagePipeline<TMessage, TResponse> UseReceiverLogging<TMessage, TResponse>(
+        this IMessagePipeline<TMessage, TResponse> pipeline
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         var logger = pipeline.ServiceProvider.GetRequiredService<ILogger>();
@@ -1848,13 +2216,18 @@ file static class PipelineExtensions
     }
 
     public static TIHandler WithDefaultSenderConfiguration<TMessage, TResponse, TIHandler>(
-        this IMessageHandler<TMessage, TResponse, TIHandler> handler)
+        this IMessageHandler<TMessage, TResponse, TIHandler> handler
+    )
         where TMessage : class, IFileSystemMessage<TMessage, TResponse>
         where TIHandler : class, IFileSystemMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return handler.WithPipeline(p => _ = p.UseLogging().UseSendCallback())
-                      .WithTransport(b => b.UseFileSystem(
-                                         b.ServiceProvider.GetRequiredService<DirectoryInfo>().FullName,
-                                         pollingInterval: TimeSpan.FromMilliseconds(10)));
+        return handler
+            .WithPipeline(p => _ = p.UseLogging().UseSendCallback())
+            .WithTransport(b =>
+                b.UseFileSystem(
+                    b.ServiceProvider.GetRequiredService<DirectoryInfo>().FullName,
+                    TimeSpan.FromMilliseconds(value: 10)
+                )
+            );
     }
 }

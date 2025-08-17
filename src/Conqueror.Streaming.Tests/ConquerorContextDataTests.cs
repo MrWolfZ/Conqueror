@@ -1,7 +1,7 @@
+namespace Conqueror.Streaming.Tests;
+
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-
-namespace Conqueror.Streaming.Tests;
 
 public sealed class ConquerorContextDataTests
 {
@@ -9,8 +9,14 @@ public sealed class ConquerorContextDataTests
 
     [Test]
     [TestCaseSource(nameof(GenerateTestCases))]
-    [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "parameter name makes sense here")]
-    public async Task GivenDataSetup_WhenExecutingProducer_DataIsCorrectlyAvailable(ConquerorContextDataTestCase testCase)
+    [SuppressMessage(
+        "Usage",
+        "CA2208:Instantiate argument exceptions correctly",
+        Justification = "parameter name makes sense here"
+    )]
+    public async Task GivenDataSetup_WhenExecutingProducer_DataIsCorrectlyAvailable(
+        ConquerorContextDataTestCase testCase
+    )
     {
         const string stringValue = "TestValue";
 
@@ -22,7 +28,7 @@ public sealed class ConquerorContextDataTests
             DataDirection.Downstream => testDataInstructions.DownstreamDataToSet,
             DataDirection.Upstream => testDataInstructions.UpstreamDataToSet,
             DataDirection.Bidirectional => testDataInstructions.BidirectionalDataToSet,
-            _ => throw new ArgumentOutOfRangeException(nameof(testCase.DataDirection)),
+            _ => throw new ArgumentOutOfRangeException(nameof(testCase), testCase.DataDirection),
         };
 
         var dataToRemoveCol = testCase.DataDirection switch
@@ -30,12 +36,20 @@ public sealed class ConquerorContextDataTests
             DataDirection.Downstream => testDataInstructions.DownstreamDataToRemove,
             DataDirection.Upstream => testDataInstructions.UpstreamDataToRemove,
             DataDirection.Bidirectional => testDataInstructions.BidirectionalDataToRemove,
-            _ => throw new ArgumentOutOfRangeException(nameof(testCase.DataDirection)),
+            _ => throw new ArgumentOutOfRangeException(nameof(testCase), testCase.DataDirection),
         };
 
         foreach (var (data, i) in testCase.TestData.Select((value, i) => (value, i)))
         {
-            dataToSetCol.Add((TestKey, data.DataType == DataType.String ? stringValue + i : new TestDataEntry(i), data.DataSettingLocation));
+            dataToSetCol.Add(
+                (
+                    TestKey,
+                    string.Equals(data.DataType, DataType.String, StringComparison.Ordinal)
+                        ? $"{stringValue}{i}"
+                        : new TestDataEntry(i),
+                    data.DataSettingLocation
+                )
+            );
 
             if (data.DataRemovalLocation is not null)
             {
@@ -45,43 +59,78 @@ public sealed class ConquerorContextDataTests
 
         var services = new ServiceCollection();
 
-        _ = services.AddSingleton(testDataInstructions)
-                    .AddSingleton(testObservations)
-                    .AddSingleton<NestedTestClass>()
-                    .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
-                    .AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(Producer,
-                                                                                        pipeline =>
-                                                                                        {
-                                                                                            SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.PipelineBuilder);
+        _ = services
+            .AddSingleton(testDataInstructions)
+            .AddSingleton(testObservations)
+            .AddSingleton<NestedTestClass>()
+            .AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>()
+            .AddConquerorStreamProducerDelegate<TestStreamingRequest, TestItem>(
+                Producer,
+                pipeline =>
+                {
+                    SetAndObserveContextData(
+                        pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
+                        testDataInstructions,
+                        testObservations,
+                        Location.PipelineBuilder
+                    );
 
-                                                                                            _ = pipeline.Use<TestStreamProducerMiddleware>();
-                                                                                        })
-                    .AddConquerorStreamProducerDelegate<NestedTestStreamingRequest, TestItem>((_, p, _) =>
-                    {
-                        SetAndObserveContextData(p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.NestedStreamProducer);
-                        return AsyncEnumerableHelper.Of(new TestItem());
-                    });
+                    _ = pipeline.Use<TestStreamProducerMiddleware>();
+                }
+            )
+            .AddConquerorStreamProducerDelegate<NestedTestStreamingRequest, TestItem>(
+                (_, p, _) =>
+                {
+                    SetAndObserveContextData(
+                        p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
+                        testDataInstructions,
+                        testObservations,
+                        Location.NestedStreamProducer
+                    );
 
-        async IAsyncEnumerable<TestItem> Producer(TestStreamingRequest _, IServiceProvider p, [EnumeratorCancellation] CancellationToken _2)
+                    return AsyncEnumerableHelper.Of(new TestItem());
+                }
+            );
+
+        async IAsyncEnumerable<TestItem> Producer(
+            TestStreamingRequest _,
+            IServiceProvider p,
+            [EnumeratorCancellation] CancellationToken _2
+        )
         {
-            SetAndObserveContextData(p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.ProducerPreNestedExecution);
+            SetAndObserveContextData(
+                p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
+                testDataInstructions,
+                testObservations,
+                Location.ProducerPreNestedExecution
+            );
 
             await p.GetRequiredService<NestedTestClass>().Execute();
 
-            SetAndObserveContextData(p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.ProducerPostNestedExecution);
+            SetAndObserveContextData(
+                p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!,
+                testDataInstructions,
+                testObservations,
+                Location.ProducerPostNestedExecution
+            );
 
             yield return new();
             yield return new();
             yield return new();
         }
 
-        await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+        await using var serviceProvider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateOnBuild = true }
+        );
 
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
         SetAndObserveContextData(conquerorContext, testDataInstructions, testObservations, Location.PreExecution);
 
-        _ = await serviceProvider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>().ExecuteRequest(new()).Drain();
+        _ = await serviceProvider
+            .GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
+            .ExecuteRequest(new(), CancellationToken.None)
+            .Drain(CancellationToken.None);
 
         SetAndObserveContextData(conquerorContext, testDataInstructions, testObservations, Location.PostExecution);
 
@@ -90,14 +139,17 @@ public sealed class ConquerorContextDataTests
             DataDirection.Downstream => testObservations.ObservedDownstreamData,
             DataDirection.Upstream => testObservations.ObservedUpstreamData,
             DataDirection.Bidirectional => testObservations.ObservedBidirectionalData,
-            _ => throw new ArgumentOutOfRangeException(nameof(testCase.DataDirection)),
+            _ => throw new ArgumentOutOfRangeException(nameof(testCase), testCase.DataDirection),
         };
 
         foreach (var (data, i) in testCase.TestData.Select((value, i) => (value, i)))
         {
-            object value = data.DataType == DataType.String ? stringValue + i : new TestDataEntry(i);
+            object value = string.Equals(data.DataType, DataType.String, StringComparison.Ordinal)
+                ? $"{stringValue}{i}"
+                : new TestDataEntry(i);
 
-            var errorMessage = $"test case:\n{JsonSerializer.Serialize(testCase, new JsonSerializerOptions { WriteIndented = true })}";
+            var errorMessage =
+                $"test case:\n{JsonSerializer.Serialize(testCase, new JsonSerializerOptions { WriteIndented = true })}";
 
             try
             {
@@ -106,18 +158,37 @@ public sealed class ConquerorContextDataTests
                     foreach (var location in data.LocationsWhereDataShouldBeAccessible)
                     {
                         // we assert on count equal to 2, because observed data should be added twice (once by enumeration and once by direct access)
-                        Assert.That(observedData, Has.Exactly(2).Matches<(string Key, object Value, string Location)>(d => d.Value.Equals(value) && d.Location == location), () => $"location: {location}, value: {value}, observedData: [{string.Join(",", observedData)}]");
+                        Assert.That(
+                            observedData,
+                            Has.Exactly(expectedCount: 2)
+                                .Matches<(string Key, object Value, string Location)>(d =>
+                                    d.Value.Equals(value)
+                                    && string.Equals(d.Location, location, StringComparison.Ordinal)
+                                ),
+                            () =>
+                                $"location: {location}, value: {value}, observedData: [{string.Join(',', observedData)}]"
+                        );
                     }
 
                     foreach (var location in data.LocationsWhereDataShouldNotBeAccessible)
                     {
-                        Assert.That(observedData, Has.Exactly(0).Matches<(string Key, object Value, string Location)>(d => d.Value.Equals(value) && d.Location == location), () => $"location: {location}, value: {value}, observedData: [{string.Join(",", observedData)}]");
+                        Assert.That(
+                            observedData,
+                            Has.Exactly(expectedCount: 0)
+                                .Matches<(string Key, object Value, string Location)>(d =>
+                                    d.Value.Equals(value)
+                                    && string.Equals(d.Location, location, StringComparison.Ordinal)
+                                ),
+                            () =>
+                                $"location: {location}, value: {value}, observedData: [{string.Join(',', observedData)}]"
+                        );
                     }
                 });
             }
             catch (MultipleAssertException)
             {
                 Console.WriteLine(errorMessage);
+
                 throw;
             }
         }
@@ -129,28 +200,34 @@ public sealed class ConquerorContextDataTests
         {
             foreach (var testCaseData in GenerateDownstreamTestCaseData(dataType))
             {
-                yield return new(DataDirection.Downstream, testCaseData);
+                yield return new ConquerorContextDataTestCase(DataDirection.Downstream, testCaseData);
             }
 
             foreach (var testCaseData in GenerateUpstreamTestCaseData(dataType))
             {
-                yield return new(DataDirection.Upstream, testCaseData);
+                yield return new ConquerorContextDataTestCase(DataDirection.Upstream, testCaseData);
             }
 
             foreach (var testCaseData in GenerateBidirectionalTestCaseData(dataType))
             {
-                yield return new(DataDirection.Bidirectional, testCaseData);
+                yield return new ConquerorContextDataTestCase(DataDirection.Bidirectional, testCaseData);
             }
         }
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what object is being created here"
+    )]
     private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateDownstreamTestCaseData(string dataType)
     {
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.PreExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PreExecution,
                     Location.PostExecution,
@@ -163,15 +240,16 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
                 ],
-                Array.Empty<string>()),
-
+                Array.Empty<string>()
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.PipelineBuilder,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
@@ -182,17 +260,16 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
                 ],
-                [
-                    Location.PreExecution,
-                    Location.PostExecution,
-                ]),
+                [Location.PreExecution, Location.PostExecution]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.MiddlewarePreExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
@@ -202,21 +279,17 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
                 ],
-                [
-                    Location.PreExecution,
-                    Location.PostExecution,
-                    Location.PipelineBuilder,
-                ]),
+                [Location.PreExecution, Location.PostExecution, Location.PipelineBuilder]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.MiddlewarePostExecution,
-                null,
-                [
-                    Location.MiddlewarePostExecution,
-                ],
+                DataRemovalLocation: null,
+                [Location.MiddlewarePostExecution],
                 [
                     Location.PreExecution,
                     Location.PostExecution,
@@ -227,14 +300,16 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.ProducerPreNestedExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
@@ -248,18 +323,17 @@ public sealed class ConquerorContextDataTests
                     Location.PostExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.ProducerPostNestedExecution,
-                null,
-                [
-                    Location.MiddlewarePostExecution,
-                    Location.ProducerPostNestedExecution,
-                ],
+                DataRemovalLocation: null,
+                [Location.MiddlewarePostExecution, Location.ProducerPostNestedExecution],
                 [
                     Location.PreExecution,
                     Location.PostExecution,
@@ -269,14 +343,16 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedClassPreExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
@@ -290,14 +366,16 @@ public sealed class ConquerorContextDataTests
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedClassPostExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
@@ -311,17 +389,17 @@ public sealed class ConquerorContextDataTests
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedStreamProducer,
-                null,
-                [
-                    Location.NestedStreamProducer,
-                ],
+                DataRemovalLocation: null,
+                [Location.NestedStreamProducer],
                 [
                     Location.PreExecution,
                     Location.PostExecution,
@@ -332,7 +410,8 @@ public sealed class ConquerorContextDataTests
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
-                ]),
+                ]
+            ),
         ];
 
         // overwrite tests
@@ -341,14 +420,11 @@ public sealed class ConquerorContextDataTests
         {
             yield return
             [
-                new(dataType,
+                new(
+                    dataType,
                     Location.PreExecution,
-                    null,
-                    [
-                        Location.PreExecution,
-                        Location.PostExecution,
-                        Location.PipelineBuilder,
-                    ],
+                    DataRemovalLocation: null,
+                    [Location.PreExecution, Location.PostExecution, Location.PipelineBuilder],
                     [
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
@@ -357,11 +433,12 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    ]),
-
-                new(overWriteDataType,
+                    ]
+                ),
+                new(
+                    overWriteDataType,
                     Location.MiddlewarePreExecution,
-                    null,
+                    DataRemovalLocation: null,
                     [
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
@@ -371,18 +448,16 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
                     ],
-                    [
-                        Location.PreExecution,
-                        Location.PostExecution,
-                        Location.PipelineBuilder,
-                    ]),
+                    [Location.PreExecution, Location.PostExecution, Location.PipelineBuilder]
+                ),
             ];
 
             yield return
             [
-                new(dataType,
+                new(
+                    dataType,
                     Location.PreExecution,
-                    null,
+                    DataRemovalLocation: null,
                     [
                         Location.PreExecution,
                         Location.PostExecution,
@@ -396,11 +471,12 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    ]),
-
-                new(overWriteDataType,
+                    ]
+                ),
+                new(
+                    overWriteDataType,
                     Location.ProducerPreNestedExecution,
-                    null,
+                    DataRemovalLocation: null,
                     [
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
@@ -414,7 +490,8 @@ public sealed class ConquerorContextDataTests
                         Location.PostExecution,
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
-                    ]),
+                    ]
+                ),
             ];
         }
 
@@ -422,14 +499,11 @@ public sealed class ConquerorContextDataTests
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.PreExecution,
                 Location.MiddlewarePreExecution,
-                [
-                    Location.PreExecution,
-                    Location.PostExecution,
-                    Location.PipelineBuilder,
-                ],
+                [Location.PreExecution, Location.PostExecution, Location.PipelineBuilder],
                 [
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
@@ -438,12 +512,14 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.PreExecution,
                 Location.ProducerPreNestedExecution,
                 [
@@ -459,17 +535,24 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what object is being created here"
+    )]
     private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateUpstreamTestCaseData(string dataType)
     {
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedStreamProducer,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
@@ -483,14 +566,16 @@ public sealed class ConquerorContextDataTests
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedClassPreExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
@@ -504,14 +589,16 @@ public sealed class ConquerorContextDataTests
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedClassPostExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
@@ -525,14 +612,16 @@ public sealed class ConquerorContextDataTests
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.ProducerPreNestedExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
@@ -546,19 +635,17 @@ public sealed class ConquerorContextDataTests
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.ProducerPostNestedExecution,
-                null,
-                [
-                    Location.PostExecution,
-                    Location.MiddlewarePostExecution,
-                    Location.ProducerPostNestedExecution,
-                ],
+                DataRemovalLocation: null,
+                [Location.PostExecution, Location.MiddlewarePostExecution, Location.ProducerPostNestedExecution],
                 [
                     Location.PreExecution,
                     Location.PipelineBuilder,
@@ -567,14 +654,16 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.MiddlewarePreExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePreExecution,
@@ -584,22 +673,17 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                 ],
-                [
-                    Location.PreExecution,
-                    Location.PipelineBuilder,
-                    Location.NestedStreamProducer,
-                ]),
+                [Location.PreExecution, Location.PipelineBuilder, Location.NestedStreamProducer]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.MiddlewarePostExecution,
-                null,
-                [
-                    Location.PostExecution,
-                    Location.MiddlewarePostExecution,
-                ],
+                DataRemovalLocation: null,
+                [Location.PostExecution, Location.MiddlewarePostExecution],
                 [
                     Location.PreExecution,
                     Location.PipelineBuilder,
@@ -609,7 +693,8 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         // overwrite tests
@@ -618,9 +703,10 @@ public sealed class ConquerorContextDataTests
         {
             yield return
             [
-                new(dataType,
+                new(
+                    dataType,
                     Location.NestedStreamProducer,
-                    null,
+                    DataRemovalLocation: null,
                     [
                         Location.ProducerPostNestedExecution,
                         Location.NestedClassPostExecution,
@@ -634,15 +720,13 @@ public sealed class ConquerorContextDataTests
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
                         Location.NestedClassPreExecution,
-                    ]),
-
-                new(overWriteDataType,
+                    ]
+                ),
+                new(
+                    overWriteDataType,
                     Location.MiddlewarePostExecution,
-                    null,
-                    [
-                        Location.PostExecution,
-                        Location.MiddlewarePostExecution,
-                    ],
+                    DataRemovalLocation: null,
+                    [Location.PostExecution, Location.MiddlewarePostExecution],
                     [
                         Location.PreExecution,
                         Location.PipelineBuilder,
@@ -652,18 +736,17 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    ]),
+                    ]
+                ),
             ];
 
             yield return
             [
-                new(dataType,
+                new(
+                    dataType,
                     Location.NestedClassPreExecution,
-                    null,
-                    [
-                        Location.NestedClassPreExecution,
-                        Location.NestedClassPostExecution,
-                    ],
+                    DataRemovalLocation: null,
+                    [Location.NestedClassPreExecution, Location.NestedClassPostExecution],
                     [
                         Location.PreExecution,
                         Location.PostExecution,
@@ -673,16 +756,13 @@ public sealed class ConquerorContextDataTests
                         Location.ProducerPreNestedExecution,
                         Location.ProducerPostNestedExecution,
                         Location.NestedStreamProducer,
-                    ]),
-
-                new(overWriteDataType,
+                    ]
+                ),
+                new(
+                    overWriteDataType,
                     Location.ProducerPostNestedExecution,
-                    null,
-                    [
-                        Location.PostExecution,
-                        Location.MiddlewarePostExecution,
-                        Location.ProducerPostNestedExecution,
-                    ],
+                    DataRemovalLocation: null,
+                    [Location.PostExecution, Location.MiddlewarePostExecution, Location.ProducerPostNestedExecution],
                     [
                         Location.PreExecution,
                         Location.PipelineBuilder,
@@ -691,17 +771,17 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    ]),
+                    ]
+                ),
             ];
 
             yield return
             [
-                new(dataType,
+                new(
+                    dataType,
                     Location.PreExecution,
-                    null,
-                    [
-                        Location.PreExecution,
-                    ],
+                    DataRemovalLocation: null,
+                    [Location.PreExecution],
                     [
                         Location.PostExecution,
                         Location.PipelineBuilder,
@@ -712,11 +792,12 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    ]),
-
-                new(overWriteDataType,
+                    ]
+                ),
+                new(
+                    overWriteDataType,
                     Location.ProducerPreNestedExecution,
-                    null,
+                    DataRemovalLocation: null,
                     [
                         Location.PostExecution,
                         Location.MiddlewarePostExecution,
@@ -730,8 +811,8 @@ public sealed class ConquerorContextDataTests
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.NestedStreamProducer,
-                    ]),
-
+                    ]
+                ),
             ];
         }
 
@@ -739,7 +820,8 @@ public sealed class ConquerorContextDataTests
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedStreamProducer,
                 Location.MiddlewarePostExecution,
                 [
@@ -755,18 +837,17 @@ public sealed class ConquerorContextDataTests
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedClassPreExecution,
                 Location.ProducerPostNestedExecution,
-                [
-                    Location.NestedClassPreExecution,
-                    Location.NestedClassPostExecution,
-                ],
+                [Location.NestedClassPreExecution, Location.NestedClassPostExecution],
                 [
                     Location.PreExecution,
                     Location.PostExecution,
@@ -776,17 +857,26 @@ public sealed class ConquerorContextDataTests
                     Location.ProducerPreNestedExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
     }
 
-    private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateBidirectionalTestCaseData(string dataType)
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what object is being created here"
+    )]
+    private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateBidirectionalTestCaseData(
+        string dataType
+    )
     {
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.PreExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PreExecution,
                     Location.PostExecution,
@@ -799,15 +889,16 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
                 ],
-                Array.Empty<string>()),
-
+                Array.Empty<string>()
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.PipelineBuilder,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -819,16 +910,16 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
                 ],
-                [
-                    Location.PreExecution,
-                ]),
+                [Location.PreExecution]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.MiddlewarePreExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePreExecution,
@@ -839,21 +930,17 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
                 ],
-                [
-                    Location.PreExecution,
-                    Location.PipelineBuilder,
-                ]),
+                [Location.PreExecution, Location.PipelineBuilder]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.MiddlewarePostExecution,
-                null,
-                [
-                    Location.PostExecution,
-                    Location.MiddlewarePostExecution,
-                ],
+                DataRemovalLocation: null,
+                [Location.PostExecution, Location.MiddlewarePostExecution],
                 [
                     Location.PreExecution,
                     Location.PipelineBuilder,
@@ -863,14 +950,16 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.ProducerPreNestedExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
@@ -880,23 +969,17 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
                 ],
-                [
-                    Location.PreExecution,
-                    Location.PipelineBuilder,
-                    Location.MiddlewarePreExecution,
-                ]),
+                [Location.PreExecution, Location.PipelineBuilder, Location.MiddlewarePreExecution]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.ProducerPostNestedExecution,
-                null,
-                [
-                    Location.PostExecution,
-                    Location.MiddlewarePostExecution,
-                    Location.ProducerPostNestedExecution,
-                ],
+                DataRemovalLocation: null,
+                [Location.PostExecution, Location.MiddlewarePostExecution, Location.ProducerPostNestedExecution],
                 [
                     Location.PreExecution,
                     Location.PipelineBuilder,
@@ -905,14 +988,16 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedClassPreExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
@@ -926,14 +1011,16 @@ public sealed class ConquerorContextDataTests
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedClassPostExecution,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
@@ -947,14 +1034,16 @@ public sealed class ConquerorContextDataTests
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedStreamProducer,
-                null,
+                DataRemovalLocation: null,
                 [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
@@ -968,7 +1057,8 @@ public sealed class ConquerorContextDataTests
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
-                ]),
+                ]
+            ),
         ];
 
         // overwrite tests
@@ -977,13 +1067,11 @@ public sealed class ConquerorContextDataTests
         {
             yield return
             [
-                new(dataType,
+                new(
+                    dataType,
                     Location.PreExecution,
-                    null,
-                    [
-                        Location.PreExecution,
-                        Location.PipelineBuilder,
-                    ],
+                    DataRemovalLocation: null,
+                    [Location.PreExecution, Location.PipelineBuilder],
                     [
                         Location.PostExecution,
                         Location.MiddlewarePreExecution,
@@ -993,11 +1081,12 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    ]),
-
-                new(overWriteDataType,
+                    ]
+                ),
+                new(
+                    overWriteDataType,
                     Location.MiddlewarePreExecution,
-                    null,
+                    DataRemovalLocation: null,
                     [
                         Location.PostExecution,
                         Location.MiddlewarePreExecution,
@@ -1008,22 +1097,17 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
                     ],
-                    [
-                        Location.PreExecution,
-                        Location.PipelineBuilder,
-                    ]),
+                    [Location.PreExecution, Location.PipelineBuilder]
+                ),
             ];
 
             yield return
             [
-                new(dataType,
+                new(
+                    dataType,
                     Location.PreExecution,
-                    null,
-                    [
-                        Location.PreExecution,
-                        Location.PipelineBuilder,
-                        Location.MiddlewarePreExecution,
-                    ],
+                    DataRemovalLocation: null,
+                    [Location.PreExecution, Location.PipelineBuilder, Location.MiddlewarePreExecution],
                     [
                         Location.PostExecution,
                         Location.MiddlewarePostExecution,
@@ -1032,11 +1116,12 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    ]),
-
-                new(overWriteDataType,
+                    ]
+                ),
+                new(
+                    overWriteDataType,
                     Location.ProducerPreNestedExecution,
-                    null,
+                    DataRemovalLocation: null,
                     [
                         Location.PostExecution,
                         Location.MiddlewarePostExecution,
@@ -1046,11 +1131,8 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
                     ],
-                    [
-                        Location.PreExecution,
-                        Location.PipelineBuilder,
-                        Location.MiddlewarePreExecution,
-                    ]),
+                    [Location.PreExecution, Location.PipelineBuilder, Location.MiddlewarePreExecution]
+                ),
             ];
         }
 
@@ -1058,13 +1140,11 @@ public sealed class ConquerorContextDataTests
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.PreExecution,
                 Location.MiddlewarePreExecution,
-                [
-                    Location.PreExecution,
-                    Location.PipelineBuilder,
-                ],
+                [Location.PreExecution, Location.PipelineBuilder],
                 [
                     Location.PostExecution,
                     Location.MiddlewarePreExecution,
@@ -1074,19 +1154,17 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.PreExecution,
                 Location.ProducerPreNestedExecution,
-                [
-                    Location.PreExecution,
-                    Location.PipelineBuilder,
-                    Location.MiddlewarePreExecution,
-                ],
+                [Location.PreExecution, Location.PipelineBuilder, Location.MiddlewarePreExecution],
                 [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
@@ -1095,12 +1173,14 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedStreamProducer,
                 Location.MiddlewarePostExecution,
                 [
@@ -1116,19 +1196,17 @@ public sealed class ConquerorContextDataTests
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
-                ]),
+                ]
+            ),
         ];
 
         yield return
         [
-            new(dataType,
+            new(
+                dataType,
                 Location.NestedClassPreExecution,
                 Location.ProducerPostNestedExecution,
-                [
-                    Location.NestedClassPreExecution,
-                    Location.NestedClassPostExecution,
-                    Location.NestedStreamProducer,
-                ],
+                [Location.NestedClassPreExecution, Location.NestedClassPostExecution, Location.NestedStreamProducer],
                 [
                     Location.PreExecution,
                     Location.PostExecution,
@@ -1137,54 +1215,85 @@ public sealed class ConquerorContextDataTests
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
                     Location.ProducerPostNestedExecution,
-                ]),
+                ]
+            ),
         ];
     }
 
-    private static void SetAndObserveContextData(ConquerorContext ctx, TestDataInstructions testDataInstructions, TestObservations testObservations, string location)
+    private static void SetAndObserveContextData(
+        ConquerorContext ctx,
+        TestDataInstructions testDataInstructions,
+        TestObservations testObservations,
+        string location
+    )
     {
-        foreach (var (key, value, _) in testDataInstructions.DownstreamDataToSet.Where(t => t.Location == location))
+        // ReSharper disable RedundantArgumentDefaultValue
+        foreach (
+            var (key, value, _) in testDataInstructions.DownstreamDataToSet.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
-            ctx.InProcessData.Set(key, value, flowDirection: ConquerorContextDataFlowDirection.Downstream);
+            ctx.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Downstream);
         }
 
-        foreach (var (key, _) in testDataInstructions.DownstreamDataToRemove.Where(t => t.Location == location))
+        foreach (
+            var (key, _) in testDataInstructions.DownstreamDataToRemove.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
-            var wasRemoved = ctx.InProcessData.Remove(key, flowDirection: ConquerorContextDataFlowDirection.Downstream);
+            var wasRemoved = ctx.InProcessData.Remove(key, ConquerorContextDataFlowDirection.Downstream);
 
             Assert.That(wasRemoved, Is.True); // catch wrong test setup where data that wasn't set is removed
         }
 
-        foreach (var (key, value, _) in testDataInstructions.UpstreamDataToSet.Where(t => t.Location == location))
+        foreach (
+            var (key, value, _) in testDataInstructions.UpstreamDataToSet.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
             ctx.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Upstream);
         }
 
-        foreach (var (key, _) in testDataInstructions.UpstreamDataToRemove.Where(t => t.Location == location))
+        foreach (
+            var (key, _) in testDataInstructions.UpstreamDataToRemove.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
             var wasRemoved = ctx.InProcessData.Remove(key, ConquerorContextDataFlowDirection.Upstream);
 
             Assert.That(wasRemoved, Is.True); // catch wrong test setup where data that wasn't set is removed
         }
 
-        foreach (var (key, value, _) in testDataInstructions.BidirectionalDataToSet.Where(t => t.Location == location))
+        foreach (
+            var (key, value, _) in testDataInstructions.BidirectionalDataToSet.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
             ctx.InProcessData.Set(key, value, ConquerorContextDataFlowDirection.Bidirectional);
         }
 
-        foreach (var (key, _) in testDataInstructions.BidirectionalDataToRemove.Where(t => t.Location == location))
+        foreach (
+            var (key, _) in testDataInstructions.BidirectionalDataToRemove.Where(t =>
+                string.Equals(t.Location, location, StringComparison.Ordinal)
+            )
+        )
         {
             var wasRemoved = ctx.InProcessData.Remove(key, ConquerorContextDataFlowDirection.Bidirectional);
 
             Assert.That(wasRemoved, Is.True); // catch wrong test setup where data that wasn't set is removed
         }
 
-        foreach (var (key, value) in ctx.InProcessData.GetAll(flowDirection: ConquerorContextDataFlowDirection.Downstream))
+        foreach (var (key, value) in ctx.InProcessData.GetAll(ConquerorContextDataFlowDirection.Downstream))
         {
             testObservations.ObservedDownstreamData.Add((key, value, location));
         }
 
-        if (ctx.InProcessData.Get<object>(TestKey, flowDirection: ConquerorContextDataFlowDirection.Downstream) is { } downstreamValue)
+        if (ctx.InProcessData.Get<object>(TestKey, ConquerorContextDataFlowDirection.Downstream) is { } downstreamValue)
         {
             testObservations.ObservedDownstreamData.Add((TestKey, downstreamValue, location));
         }
@@ -1204,22 +1313,39 @@ public sealed class ConquerorContextDataTests
             testObservations.ObservedBidirectionalData.Add((key, value, location));
         }
 
-        if (ctx.InProcessData.Get<object>(TestKey, ConquerorContextDataFlowDirection.Bidirectional) is { } bidirectionalValue)
+        if (
+            ctx.InProcessData.Get<object>(TestKey, ConquerorContextDataFlowDirection.Bidirectional) is
+            { } bidirectionalValue
+        )
         {
             testObservations.ObservedBidirectionalData.Add((TestKey, bidirectionalValue, location));
         }
+
+        // ReSharper restore RedundantArgumentDefaultValue
     }
 
-    [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
-    public sealed record ConquerorContextDataTestCase(string DataDirection, List<ConquerorContextDataTestCaseData> TestData);
+    [SuppressMessage(
+        "Critical Code Smell",
+        "S3218:Inner class members should not shadow outer class \"static\" or type members",
+        Justification = "The name makes sense and there is little risk of confusing a property and a class."
+    )]
+    public sealed record ConquerorContextDataTestCase(
+        string DataDirection,
+        List<ConquerorContextDataTestCaseData> TestData
+    );
 
-    [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
+    [SuppressMessage(
+        "Critical Code Smell",
+        "S3218:Inner class members should not shadow outer class \"static\" or type members",
+        Justification = "The name makes sense and there is little risk of confusing a property and a class."
+    )]
     public sealed record ConquerorContextDataTestCaseData(
         string DataType,
         string DataSettingLocation,
         string? DataRemovalLocation,
         IReadOnlyCollection<string> LocationsWhereDataShouldBeAccessible,
-        IReadOnlyCollection<string> LocationsWhereDataShouldNotBeAccessible);
+        IReadOnlyCollection<string> LocationsWhereDataShouldNotBeAccessible
+    );
 
     private static class DataDirection
     {
@@ -1256,24 +1382,37 @@ public sealed class ConquerorContextDataTests
 
     private sealed record NestedTestStreamingRequest;
 
+    // ReSharper disable once ClassNeverInstantiated.Local - used by reflection
     private sealed class TestStreamProducerMiddleware(
         TestDataInstructions dataInstructions,
-        TestObservations observations)
-        : IStreamProducerMiddleware
+        TestObservations observations
+    ) : IStreamProducerMiddleware
     {
-        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
+        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(
+            StreamProducerMiddlewareContext<TRequest, TItem> ctx
+        )
             where TRequest : class
         {
             await Task.Yield();
 
-            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.MiddlewarePreExecution);
+            SetAndObserveContextData(
+                ctx.ConquerorContext,
+                dataInstructions,
+                observations,
+                Location.MiddlewarePreExecution
+            );
 
             await foreach (var item in ctx.Next(ctx.Request, ctx.CancellationToken))
             {
                 yield return item;
             }
 
-            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.MiddlewarePostExecution);
+            SetAndObserveContextData(
+                ctx.ConquerorContext,
+                dataInstructions,
+                observations,
+                Location.MiddlewarePostExecution
+            );
         }
     }
 
@@ -1281,15 +1420,26 @@ public sealed class ConquerorContextDataTests
         IConquerorContextAccessor conquerorContextAccessor,
         TestObservations observations,
         TestDataInstructions dataInstructions,
-        IStreamProducer<NestedTestStreamingRequest, TestItem> nestedStreamProducer)
+        IStreamProducer<NestedTestStreamingRequest, TestItem> nestedStreamProducer
+    )
     {
         public async Task Execute()
         {
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPreExecution);
+            SetAndObserveContextData(
+                conquerorContextAccessor.ConquerorContext!,
+                dataInstructions,
+                observations,
+                Location.NestedClassPreExecution
+            );
 
-            _ = await nestedStreamProducer.ExecuteRequest(new()).Drain();
+            _ = await nestedStreamProducer.ExecuteRequest(new(), CancellationToken.None).Drain(CancellationToken.None);
 
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPostExecution);
+            SetAndObserveContextData(
+                conquerorContextAccessor.ConquerorContext!,
+                dataInstructions,
+                observations,
+                Location.NestedClassPostExecution
+            );
         }
     }
 

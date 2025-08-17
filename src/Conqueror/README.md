@@ -2,13 +2,22 @@
 
 # Conqueror - a highly ergonomic library for building structured, scalable .NET apps
 
-**Conqueror** is a .NET library that simplifies writing modular, scalable applications by unifying messages, signals, and more into a consistent, extensible model. It uses modern features of .NET like source generators and static abstract interface methods to reduce boilerplate, support advanced uses cases like AOT compilation, and to provide a highly ergonomic user-friendly API.
+**Conqueror** is a .NET library that simplifies writing modular, scalable applications by unifying messages, signals, and more into a
+consistent, extensible model. It uses modern features of .NET like source generators and static abstract interface methods to reduce
+boilerplate, support advanced uses cases like AOT compilation, and to provide a highly ergonomic user-friendly API.
 
-Whether you're building a monolith or distributed microservices, **Conqueror** provides a seamless experience with minimal ceremony. It also eases the transition from a modular monolith to a distributed system with minimal friction, giving teams the flexibility to start simple and delay the transition until the right time in a project's lifecycle.
+Whether you're building a monolith or distributed microservices, **Conqueror** provides a seamless experience with minimal ceremony. It also
+eases the transition from a modular monolith to a distributed system with minimal friction, giving teams the flexibility to start simple and
+delay the transition until the right time in a project's lifecycle.
 
-**Conqueror** encourages clean architectures by decoupling your application logic from concrete transports like HTTP, and allows exposing business operations via many different transports with thin adapters.
+**Conqueror** encourages clean architectures by decoupling your application logic from concrete transports like HTTP, and allows exposing
+business operations via many different transports with thin adapters.
 
-**Conqueror** leverages design patterns like [messaging](https://en.wikipedia.org/wiki/Messaging_pattern), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as _middlewares_), [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming), [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), and more.
+**Conqueror** leverages design patterns
+like [messaging](https://en.wikipedia.org/wiki/Messaging_pattern), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (
+often also known as
+_middlewares_), [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming), [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern),
+and more.
 
 <img src="./docs/intro.svg?raw=true" alt="Intro" style="height: 565px" height="565px" />
 
@@ -20,32 +29,36 @@ Whether you're building a monolith or distributed microservices, **Conqueror** p
 > **Conqueror** only supports [.NET 8 or later](https://dotnet.microsoft.com/en-us/download)
 
 <!-- TOC -->
+
 * [Quickstart](#quickstart)
 * [Recipes](#recipes)
-  * [Messaging Introduction](#messaging-introduction)
-    * [Messaging Basics](#messaging-basics)
-    * [Messaging Advanced](#messaging-advanced)
-    * [Messaging Expert](#messaging-expert)
-    * [Messaging Cross-Cutting Concerns](#messaging-cross-cutting-concerns)
-  * [Signalling Introduction](#signalling-introduction)
-    * [Signalling Basics](#signalling-basics)
-    * [Signalling Advanced](#signalling-advanced)
-    * [Signalling Expert](#signalling-expert)
-    * [Signalling Cross-Cutting Concerns](#signalling-cross-cutting-concerns)
-  * [Iterating Introduction](#iterating-introduction)
-    * [Iterating Basics](#iterating-basics)
-    * [Iterating Advanced](#iterating-advanced)
-    * [Iterating Expert](#iterating-expert)
-    * [Iterating Cross-Cutting Concerns](#iterating-cross-cutting-concerns)
+    * [Messaging Introduction](#messaging-introduction)
+        * [Messaging Basics](#messaging-basics)
+        * [Messaging Advanced](#messaging-advanced)
+        * [Messaging Expert](#messaging-expert)
+        * [Messaging Cross-Cutting Concerns](#messaging-cross-cutting-concerns)
+    * [Signalling Introduction](#signalling-introduction)
+        * [Signalling Basics](#signalling-basics)
+        * [Signalling Advanced](#signalling-advanced)
+        * [Signalling Expert](#signalling-expert)
+        * [Signalling Cross-Cutting Concerns](#signalling-cross-cutting-concerns)
+    * [Iterating Introduction](#iterating-introduction)
+        * [Iterating Basics](#iterating-basics)
+        * [Iterating Advanced](#iterating-advanced)
+        * [Iterating Expert](#iterating-expert)
+        * [Iterating Cross-Cutting Concerns](#iterating-cross-cutting-concerns)
 * [Motivation](#motivation)
-  * [Comparison with similar projects](#comparison-with-similar-projects)
-    * [Differences to MediatR](#differences-to-mediatr)
-    * [Differences to MassTransit](#differences-to-masstransit)
+    * [Comparison with similar projects](#comparison-with-similar-projects)
+        * [Differences to MediatR](#differences-to-mediatr)
+        * [Differences to MassTransit](#differences-to-masstransit)
+
 <!-- TOC -->
 
 ## Quickstart
 
-This quickstart guide will let you jump right into the code without lengthy explanations. If you prefer more guidance, head over to our [recipes](#recipes). By following this quickstart guide, you'll add HTTP messages and an in-process signal to a minimal API ASP.NET Core application. You can also find the [source code](recipes/quickstart) here in the repository.
+This quickstart guide will let you jump right into the code without lengthy explanations. If you prefer more guidance, head over to
+our [recipes](#recipes). By following this quickstart guide, you'll add HTTP messages and an in-process signal to a minimal API ASP.NET Core
+application. You can also find the [source code](recipes/quickstart) here in the repository.
 
 ```sh
 dotnet new webapi -n Quickstart && cd Quickstart
@@ -58,6 +71,7 @@ dotnet add package Swashbuckle.AspNetCore # to get a nice Swagger UI
 Let's start by defining the contracts of our quickstart application in [Contracts.cs](examples/quickstart/Contracts.cs):
 
 <!-- REPLACECODE examples/quickstart/Contracts.cs -->
+
 ```cs
 using System.ComponentModel.DataAnnotations;
 using Conqueror;
@@ -143,6 +157,7 @@ public sealed partial record CounterIncremented(
 In [CountersRepository.cs](examples/quickstart/CountersRepository.cs) create a simple repository to simulate talking to a database:
 
 <!-- REPLACECODE examples/quickstart/CountersRepository.cs -->
+
 ```cs
 using System.Collections.Concurrent;
 
@@ -173,9 +188,11 @@ internal sealed class CountersRepository
 }
 ```
 
-In [IncrementCounterByAmountHandler.cs](examples/quickstart/IncrementCounterByAmountHandler.cs) create a message handler for our `IncrementCounterByAmount` message type.
+In [IncrementCounterByAmountHandler.cs](examples/quickstart/IncrementCounterByAmountHandler.cs) create a message handler for our
+`IncrementCounterByAmount` message type.
 
 <!-- REPLACECODE examples/quickstart/IncrementCounterByAmountHandler.cs -->
+
 ```cs
 using System.ComponentModel.DataAnnotations;
 using Conqueror;
@@ -304,9 +321,11 @@ internal sealed partial class IncrementCounterByAmountHandler(
 >
 > </details>
 
-In [DoublingCounterIncrementedHandler.cs](examples/quickstart/DoublingCounterIncrementedHandler.cs) create a signal handler that doubles increment operations on specific counters.
+In [DoublingCounterIncrementedHandler.cs](examples/quickstart/DoublingCounterIncrementedHandler.cs) create a signal handler that doubles
+increment operations on specific counters.
 
 <!-- REPLACECODE examples/quickstart/DoublingCounterIncrementedHandler.cs -->
+
 ```cs
 using Conqueror;
 
@@ -412,6 +431,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 In [GetCountersHandler.cs](examples/quickstart/GetCountersHandler.cs) create a message handler that returns a filtered list of counters.
 
 <!-- REPLACECODE examples/quickstart/GetCountersHandler.cs -->
+
 ```cs
 using Conqueror;
 
@@ -506,6 +526,7 @@ internal sealed partial class GetCountersHandler(
 Finally, set up the app in [Program.cs](examples/quickstart/Program.cs):
 
 <!-- REPLACECODE examples/quickstart/Program.cs -->
+
 ```cs
 using Quickstart;
 
@@ -540,6 +561,7 @@ app.Run();
 Now launch your app:
 
 <!-- REPLACECODE examples/quickstart/run.sh -->
+
 ```sh
 dotnet run
 ```
@@ -547,6 +569,7 @@ dotnet run
 And then you can call the message handlers via HTTP.
 
 <!-- REPLACECODE examples/quickstart/call.sh -->
+
 ```sh
 curl http://localhost:5000/api/v1/incrementCounterByAmount \
   --data '{"counterName":"test","incrementBy":2}' \
@@ -580,6 +603,7 @@ Thanks to the logging middleware we added to the pipelines, you will see output 
 > Are you able to spot a bug in our logging configuration for confidential counters?
 
 <!-- REPLACECODE examples/quickstart/run.log -->
+
 ```log
 info: Quickstart.IncrementCounterByAmountHandler[711195907]
       Handling http message of type 'IncrementCounterByAmount' with payload
@@ -662,6 +686,7 @@ info: Quickstart.GetCountersHandler[711195907]
 info: Quickstart.GetCountersHandler[412531951]
       Handled http message of type 'GetCounters' in 0.5875ms (Message ID: 85791577e3f50c87, Trace ID: 1e9560273e354aa7870dd1da736f44b8)
 ```
+
 <!-- 
 If you have swagger UI enabled, it will show the new messages and they can be called from there.
 
@@ -697,7 +722,10 @@ If you have swagger UI enabled, it will show the new messages and they can be ca
 
 [![status-stable](https://img.shields.io/badge/status-stable-brightgreen)](https://www.nuget.org/packages/Conqueror/)
 
-Split your business processes into simple-to-maintain and easy-to-test pieces of code using the [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) pattern. Handle cross-cutting concerns like logging, validation, authorization etc. using configurable middlewares. Keep your applications scalable by moving commands and queries from a modular monolith to a distributed application with minimal friction.
+Split your business processes into simple-to-maintain and easy-to-test pieces of code using
+the [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) pattern. Handle cross-cutting concerns like
+logging, validation, authorization etc. using configurable middlewares. Keep your applications scalable by moving commands and queries from
+a modular monolith to a distributed application with minimal friction.
 
 Head over to our [recipes](#recipes) for more guidance on how to use this library.
 
@@ -705,19 +733,27 @@ Head over to our [recipes](#recipes) for more guidance on how to use this librar
 
 [![status-stable](https://img.shields.io/badge/status-stable-yellow)](https://www.nuget.org/packages/Conqueror/)
 
-Decouple your application logic by using in-process signal publishing using the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Handle cross-cutting concerns like logging, tracing, filtering etc. using configurable middlewares. Keep your applications scalable by moving signals from a modular monolith to a distributed application with minimal friction.
+Decouple your application logic by using in-process signal publishing using
+the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Handle cross-cutting concerns like
+logging, tracing, filtering etc. using configurable middlewares. Keep your applications scalable by moving signals from a modular monolith
+to a distributed application with minimal friction.
 
 Head over to our [signalling recipes](#signalling-introduction) for more guidance on how to use this library.
 
 ### Experimental Functionalities
 
-The functionalities below are still experimental. This means they do not have a stable API and are missing code documentation and recipes. They are therefore not suited for use in production applications, but can be used in proofs-of-concept or toy apps. If you use any of the experimental libraries and find bugs or have ideas for improving them, please don't hesitate to [create an issue](https://github.com/MrWolfZ/Conqueror/issues/new).
+The functionalities below are still experimental. This means they do not have a stable API and are missing code documentation and recipes.
+They are therefore not suited for use in production applications, but can be used in proofs-of-concept or toy apps. If you use any of the
+experimental libraries and find bugs or have ideas for improving them, please don't hesitate
+to [create an issue](https://github.com/MrWolfZ/Conqueror/issues/new).
 
 ### **Iterating**
 
 [![status-experimental](https://img.shields.io/badge/status-experimental-yellow)](https://www.nuget.org/packages/Conqueror/)
 
-Keep your applications in control by allowing them to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) at their own pace using a pull-based approach. Handle cross-cutting concerns like logging, error handling, authorization etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
+Keep your applications in control by allowing them to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) at their own pace
+using a pull-based approach. Handle cross-cutting concerns like logging, error handling, authorization etc. using configurable middlewares.
+Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
 
 Head over to our [iterating recipes](#iterating-introduction) for more guidance on how to use this library.
 
@@ -725,16 +761,28 @@ Head over to our [iterating recipes](#iterating-introduction) for more guidance 
 
 ## Recipes
 
-In addition to code-level API documentation, **Conqueror** provides you with recipes that will guide you in how to utilize it to its maximum. Each recipe will help you solve one particular challenge that you will likely encounter while building a .NET application.
+In addition to code-level API documentation, **Conqueror** provides you with recipes that will guide you in how to utilize it to its
+maximum. Each recipe will help you solve one particular challenge that you will likely encounter while building a .NET application.
 
-> For every "How do I do X?" you can imagine for this project, you should be able to find a recipe here. If you don't see a recipe for your question, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new) or even better, provide the recipe as a pull request.
+> For every "How do I do X?" you can imagine for this project, you should be able to find a recipe here. If you don't see a recipe for your
+> question, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new) or even better, provide the recipe as a
+> pull request.
 
 ### Messaging Introduction
 
 <details>
 <summary>Click here to see documentation still under construction</summary>
 
-CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) (which is the inspiration for this project and also where the name is derived from: conquer -> **co**mmands a**n**d **quer**ies). The core idea behind this pattern is that operations which only read data (i.e. queries) and operations which mutate data or cause side-effects (i.e. commands) have very different characteristics (for a start, in most applications queries are executed much more frequently than commands). In addition, business operations often map very well to commands and queries, allowing you to model your application in a way that allows technical and business stakeholders alike to understand the capabilities of the system. There are many other benefits we gain from following this separation in our application logic. For example, commands and queries represent a natural boundary for encapsulation, provide clear contracts for modularization, and allow solving cross-cutting concerns according to the nature of the operation (e.g. caching makes sense for queries, but not so much for commands). With commands and queries, testing often becomes more simple as well, since they provide a clear list of the capabilities that should be tested (allowing more focus to be placed on use-case-driven testing instead of traditional unit testing).
+CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) (which is the inspiration
+for this project and also where the name is derived from: conquer -> **co**mmands a**n**d **quer**ies). The core idea behind this pattern is
+that operations which only read data (i.e. queries) and operations which mutate data or cause side-effects (i.e. commands) have very
+different characteristics (for a start, in most applications queries are executed much more frequently than commands). In addition, business
+operations often map very well to commands and queries, allowing you to model your application in a way that allows technical and business
+stakeholders alike to understand the capabilities of the system. There are many other benefits we gain from following this separation in our
+application logic. For example, commands and queries represent a natural boundary for encapsulation, provide clear contracts for
+modularization, and allow solving cross-cutting concerns according to the nature of the operation (e.g. caching makes sense for queries, but
+not so much for commands). With commands and queries, testing often becomes more simple as well, since they provide a clear list of the
+capabilities that should be tested (allowing more focus to be placed on use-case-driven testing instead of traditional unit testing).
 
 #### Messaging Basics
 
@@ -752,9 +800,12 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [testing code which calls HTTP commands and queries](recipes/cqs/advanced/testing-calling-http#readme)
 - [creating a clean architecture and modular monolith with commands and queries](recipes/cqs/advanced/clean-architecture#readme)
 - [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme)
-- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/cqs/advanced/different-dependency-injection#readme) _(to-be-written)_
+- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/cqs/advanced/different-dependency-injection#readme)
+  _(to-be-written)_
 - [customizing OpenAPI specification for HTTP commands and queries](recipes/cqs/advanced/custom-openapi-http#readme) _(to-be-written)_
-- [re-use middleware pipelines to solve cross-cutting concerns when calling external systems (e.g. logging or retrying failed calls)](recipes/cqs/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
+- [re-use middleware pipelines to solve cross-cutting concerns when calling external systems (e.g. logging or retrying failed calls)](recipes/cqs/advanced/reuse-piplines-for-external-calls#readme)
+  _(to-be-written)_
+
 <!-- 
 - [enforce that all command and query handlers declare a pipeline](recipes/cqs/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
 - [using commands and queries in a Blazor app (server-side or web-assembly)](recipes/cqs/advanced/blazor-server#readme) _(to-be-written)_
@@ -763,10 +814,14 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 #### Messaging Expert
 
-- [store and access background context information in the scope of a single command or query](recipes/cqs/expert/command-query-context#readme) _(to-be-written)_
-- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/cqs/expert/conqueror-context#readme) _(to-be-written)_
-- [accessing properties of commands and queries in middlewares](recipes/cqs/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
-- [exposing and calling commands and queries via other transports (e.g. gRPC)](recipes/cqs/expert/exposing-via-other-transports#readme) _(to-be-written)_
+- [store and access background context information in the scope of a single command or query](recipes/cqs/expert/command-query-context#readme)
+  _(to-be-written)_
+- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/cqs/expert/conqueror-context#readme)
+  _(to-be-written)_
+- [accessing properties of commands and queries in middlewares](recipes/cqs/expert/accessing-properties-in-middlewares#readme) _(
+  to-be-written)_
+- [exposing and calling commands and queries via other transports (e.g. gRPC)](recipes/cqs/expert/exposing-via-other-transports#readme) _(
+  to-be-written)_
 
 #### Messaging Cross-Cutting Concerns
 
@@ -774,7 +829,8 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [logging commands and queries](recipes/cqs/cross-cutting-concerns/logging#readme) _(to-be-written)_
 - [validating commands and queries](recipes/cqs/cross-cutting-concerns/validation#readme) _(to-be-written)_
 - [caching query results for improved performance](recipes/cqs/cross-cutting-concerns/caching#readme) _(to-be-written)_
-- [making commands and queries more resilient (e.g. through retries, circuit breakers, fallbacks etc.)](recipes/cqs/cross-cutting-concerns/resiliency#readme) _(to-be-written)_
+- [making commands and queries more resilient (e.g. through retries, circuit breakers, fallbacks etc.)](recipes/cqs/cross-cutting-concerns/resiliency#readme)
+  _(to-be-written)_
 - [executing commands and queries in a database transaction](recipes/cqs/cross-cutting-concerns/db-transaction#readme) _(to-be-written)_
 - [timeouts for commands and queries](recipes/cqs/cross-cutting-concerns/timeouts#readme) _(to-be-written)_
 - [metrics for commands and queries](recipes/cqs/cross-cutting-concerns/metrics#readme) _(to-be-written)_
@@ -791,30 +847,38 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 [![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror/)
 
-Signalling is a way to refer to the publishing and observing of signals via the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Signalling is a good way to decouple or loosely couple different parts of your application by making an event publisher agnostic to the observers of signals it publishes. In addition to this basic idea, **Conqueror** allows solving cross-cutting concerns on both the publisher as well as the observer side.
+Signalling is a way to refer to the publishing and observing of signals via
+the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Signalling is a good way to decouple or
+loosely couple different parts of your application by making an event publisher agnostic to the observers of signals it publishes. In
+addition to this basic idea, **Conqueror** allows solving cross-cutting concerns on both the publisher as well as the observer side.
 
 #### Signalling Basics
 
 - [getting started](recipes/eventing/basics/getting-started#readme) _(to-be-written)_
 - [testing event observers](recipes/eventing/basics/testing-observers#readme) _(to-be-written)_
 - [testing code that publishes events](recipes/eventing/basics/testing-publish#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. logging or retrying on failure)](recipes/eventing/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. logging or retrying on failure)](recipes/eventing/basics/solving-cross-cutting-concerns#readme)
+  _(to-be-written)_
 - [testing event observers with pipelines](recipes/eventing/basics/testing-observers-with-pipelines#readme) _(to-be-written)_
 - [testing event publisher pipeline](recipes/eventing/basics/testing-publisher-pipeline#readme) _(to-be-written)_
 - [testing middlewares](recipes/eventing/basics/testing-middlewares#readme) _(to-be-written)_
 
 #### Signalling Advanced
 
-- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/eventing/advanced/different-dependency-injection#readme) _(to-be-written)_
-- [execute event observers with a different strategy (e.g. parallel execution)](recipes/eventing/advanced/publishing-strategy#readme) _(to-be-written)_
+- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/eventing/advanced/different-dependency-injection#readme)
+  _(to-be-written)_
+- [execute event observers with a different strategy (e.g. parallel execution)](recipes/eventing/advanced/publishing-strategy#readme) _(
+  to-be-written)_
 - [enforce that all event observers declare a pipeline](recipes/eventing/advanced/enforce-observer-pipeline#readme) _(to-be-written)_
 - [creating a clean architecture with loose coupling via events](recipes/eventing/advanced/clean-architecture#readme) _(to-be-written)_
 - [moving from a modular monolith to a distributed system](recipes/eventing/advanced/monolith-to-distributed#readme) _(to-be-written)_
 
 #### Signalling Expert
 
-- [store and access background context information in the scope of a single event](recipes/eventing/expert/event-context#readme) _(to-be-written)_
-- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/eventing/expert/conqueror-context#readme) _(to-be-written)_
+- [store and access background context information in the scope of a single event](recipes/eventing/expert/event-context#readme) _(
+  to-be-written)_
+- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/eventing/expert/conqueror-context#readme)
+  _(to-be-written)_
 - [accessing properties of events in middlewares](recipes/eventing/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
 
 #### Signalling Cross-Cutting Concerns
@@ -829,37 +893,49 @@ Signalling is a way to refer to the publishing and observing of signals via the 
 
 [![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror/)
 
-For [data streaming](https://en.wikipedia.org/wiki/Data_stream) **Conqueror** uses a pull-based approach where the consumer controls the pace (using `IAsyncEnumerable`), which is a good approach for use cases like paging and event sourcing.
+For [data streaming](https://en.wikipedia.org/wiki/Data_stream) **Conqueror** uses a pull-based approach where the consumer controls the
+pace (using `IAsyncEnumerable`), which is a good approach for use cases like paging and event sourcing.
 
 #### Iterating Basics
 
 - [getting started](recipes/streaming/basics/getting-started#readme) _(to-be-written)_
 - [testing streaming request handlers](recipes/streaming/basics/testing-handlers#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)](recipes/streaming/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing streaming request handlers that have middleware pipelines](recipes/streaming/basics/testing-handlers-with-pipelines#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)](recipes/streaming/basics/solving-cross-cutting-concerns#readme)
+  _(to-be-written)_
+- [testing streaming request handlers that have middleware pipelines](recipes/streaming/basics/testing-handlers-with-pipelines#readme) _(
+  to-be-written)_
 - [testing middlewares](recipes/streaming/basics/testing-middlewares#readme) _(to-be-written)_
 
 #### Iterating Advanced
 
-- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/streaming/advanced/different-dependency-injection#readme) _(to-be-written)_
-- [reading streams from a messaging system (e.g. Kafka or RabbitMQ)](recipes/streaming/advanced/reading-from-messaging-system#readme) _(to-be-written)_
+- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/streaming/advanced/different-dependency-injection#readme)
+  _(to-be-written)_
+- [reading streams from a messaging system (e.g. Kafka or RabbitMQ)](recipes/streaming/advanced/reading-from-messaging-system#readme) _(
+  to-be-written)_
 - [exposing streams via HTTP](recipes/streaming/advanced/exposing-via-http#readme) _(to-be-written)_
 - [testing HTTP streams](recipes/streaming/advanced/testing-http#readme) _(to-be-written)_
 - [consuming HTTP streams from another application](recipes/streaming/advanced/consuming-http#readme) _(to-be-written)_
 - [using middlewares for streaming HTTP clients](recipes/streaming/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
 - [optimize HTTP streaming performance with pre-fetching](recipes/streaming/advanced/optimize-http-performance#readme) _(to-be-written)_
-- [enforce that all streaming request handlers declare a pipeline](recipes/streaming/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
-- [re-use middleware pipelines to solve cross-cutting concerns when consuming streams from external systems (e.g. logging or retrying failed calls)](recipes/streaming/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
+- [enforce that all streaming request handlers declare a pipeline](recipes/streaming/advanced/enforce-handler-pipeline#readme) _(
+  to-be-written)_
+- [re-use middleware pipelines to solve cross-cutting concerns when consuming streams from external systems (e.g. logging or retrying failed calls)](recipes/streaming/advanced/reuse-piplines-for-external-calls#readme)
+  _(to-be-written)_
 - [authenticating and authorizing streaming requests](recipes/streaming/advanced/auth#readme) _(to-be-written)_
 - [moving from a modular monolith to a distributed system](recipes/streaming/advanced/monolith-to-distributed#readme) _(to-be-written)_
 
 #### Iterating Expert
 
-- [store and access background context information in the scope of a single streaming request](recipes/streaming/expert/streaming-request-context#readme) _(to-be-written)_
-- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/streaming/expert/conqueror-context#readme) _(to-be-written)_
-- [accessing properties of streaming requests in middlewares](recipes/streaming/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
-- [exposing and consuming streams via other transports (e.g. SignalR)](recipes/streaming/expert/exposing-via-other-transports#readme) _(to-be-written)_
-- [building test assertions that work for HTTP and non-HTTP streams](recipes/streaming/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
+- [store and access background context information in the scope of a single streaming request](recipes/streaming/expert/streaming-request-context#readme)
+  _(to-be-written)_
+- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/streaming/expert/conqueror-context#readme)
+  _(to-be-written)_
+- [accessing properties of streaming requests in middlewares](recipes/streaming/expert/accessing-properties-in-middlewares#readme) _(
+  to-be-written)_
+- [exposing and consuming streams via other transports (e.g. SignalR)](recipes/streaming/expert/exposing-via-other-transports#readme) _(
+  to-be-written)_
+- [building test assertions that work for HTTP and non-HTTP streams](recipes/streaming/expert/building-test-assertions-for-http-and-non-http#readme)
+  _(to-be-written)_
 
 #### Iterating Cross-Cutting Concerns
 
@@ -875,27 +951,66 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) **Conqueror** us
 
 ## Motivation
 
-Modern software development is often centered around building web applications that communicate via [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) (we'll call them "web APIs"). However, many applications require different entry points or APIs as well (e.g. message queues, command line interfaces, raw TCP or UDP sockets, etc.). Each of these kinds of APIs need to address a variety of cross-cutting concerns, most of which apply to all kinds of APIs (e.g. logging, tracing, error handling, authorization, etc.). Microsoft has done an excellent job in providing out-of-the-box solutions for many of these concerns when building web APIs with [ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core) using [middlewares](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-7.0) (which implement the [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) pattern). However, for other kinds of APIs, development teams are often forced to handle these concerns themselves, spending valuable development time.
+Modern software development is often centered around building web applications that communicate
+via [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) (we'll call them "web APIs"). However, many applications require
+different entry points or APIs as well (e.g. message queues, command line interfaces, raw TCP or UDP sockets, etc.). Each of these kinds of
+APIs need to address a variety of cross-cutting concerns, most of which apply to all kinds of APIs (e.g. logging, tracing, error handling,
+authorization, etc.). Microsoft has done an excellent job in providing out-of-the-box solutions for many of these concerns when building web
+APIs with [ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core)
+using [middlewares](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-7.0) (which implement
+the [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) pattern). However, for other kinds of APIs,
+development teams are often forced to handle these concerns themselves, spending valuable development time.
 
-One way many teams choose to address this issue is by forcing every operation to go through a web API (e.g. having a small adapter that reads messages from a queue and then calls a web API for processing the message). While this works well in many cases, it adds extra complexity and fragility by adding a new integration point for very little value. Optimally, there would be a way to address the cross-cutting concerns in a consistent way for all kinds of APIs. This is exactly what **Conqueror** does. It provides the building blocks for implementing business functionality and addressing those cross-cutting concerns in an transport-agnostic fashion, and provides extension packages that allow exposing the business functionality via different transports (e.g. HTTP).
+One way many teams choose to address this issue is by forcing every operation to go through a web API (e.g. having a small adapter that
+reads messages from a queue and then calls a web API for processing the message). While this works well in many cases, it adds extra
+complexity and fragility by adding a new integration point for very little value. Optimally, there would be a way to address the
+cross-cutting concerns in a consistent way for all kinds of APIs. This is exactly what **Conqueror** does. It provides the building blocks
+for implementing business functionality and addressing those cross-cutting concerns in an transport-agnostic fashion, and provides extension
+packages that allow exposing the business functionality via different transports (e.g. HTTP).
 
-A useful side-effect of moving the handling of cross-cutting concerns away from the concrete transport, is that it allows solving cross-cutting concerns for both incoming and outgoing operations. For example, with **Conqueror** the exact same code can be used for adding retry capabilities for your own command and query handlers as well as when calling an external HTTP API.
+A useful side-effect of moving the handling of cross-cutting concerns away from the concrete transport, is that it allows solving
+cross-cutting concerns for both incoming and outgoing operations. For example, with **Conqueror** the exact same code can be used for adding
+retry capabilities for your own command and query handlers as well as when calling an external HTTP API.
 
-On an architectural level, a popular way to build systems these days is using [microservices](https://microservices.io). While microservices are a powerful approach, they can often represent a significant challenge for small or new teams, mostly for deployment and operations (challenges common to most [distributed systems](https://en.wikipedia.org/wiki/Distributed_computing)). A different approach that many teams choose is to start with a [modular monolith](https://martinfowler.com/bliki/MonolithFirst.html) and move to microservices at a later point. However, it is common for teams to struggle with such a migration, partly due to sub-optimal modularization and partly due to existing tools and libraries not providing a smooth transition journey from one approach to another (or often forcing you into the distributed approach directly, e.g. [MassTransit](https://masstransit-project.com)). **Conqueror** addresses this by encouraging you to build modules with clearly defined contracts and by allowing you to switch from having a module be part of a monolith to be its own microservice with minimal code changes.
+On an architectural level, a popular way to build systems these days is using [microservices](https://microservices.io). While microservices
+are a powerful approach, they can often represent a significant challenge for small or new teams, mostly for deployment and operations (
+challenges common to most [distributed systems](https://en.wikipedia.org/wiki/Distributed_computing)). A different approach that many teams
+choose is to start with a [modular monolith](https://martinfowler.com/bliki/MonolithFirst.html) and move to microservices at a later point.
+However, it is common for teams to struggle with such a migration, partly due to sub-optimal modularization and partly due to existing tools
+and libraries not providing a smooth transition journey from one approach to another (or often forcing you into the distributed approach
+directly, e.g. [MassTransit](https://masstransit-project.com)). **Conqueror** addresses this by encouraging you to build modules with
+clearly defined contracts and by allowing you to switch from having a module be part of a monolith to be its own microservice with minimal
+code changes.
 
 In summary, these are some of the strengths of **Conqueror**:
 
-- **Providing building blocks for many different communication patterns:** Many applications require the use of different communication patterns to fulfill their business requirements (e.g. `request-response`, `fire-and-forget`, `publish-subscribe`, `streaming` etc.). **Conqueror** provides building blocks for implementing these communication patterns efficiently and consistently, while allowing you to address cross-cutting concerns in a transport-agnostic fashion.
+- **Providing building blocks for many different communication patterns:** Many applications require the use of different communication
+  patterns to fulfill their business requirements (e.g. `request-response`, `fire-and-forget`, `publish-subscribe`, `streaming` etc.). *
+  *Conqueror** provides building blocks for implementing these communication patterns efficiently and consistently, while allowing you to
+  address cross-cutting concerns in a transport-agnostic fashion.
 
-- **Excellent use-case-driven documentation:** A lot of effort went into writing our [recipes](#recipes). While most other libraries have documentation that is centered around explaining _what_ they do, our use-case-driven documentation is focused on showing you how **Conqueror** _helps you to solve the concrete challenges_ your are likely to encounter during application development.
+- **Excellent use-case-driven documentation:** A lot of effort went into writing our [recipes](#recipes). While most other libraries have
+  documentation that is centered around explaining _what_ they do, our use-case-driven documentation is focused on showing you how *
+  *Conqueror** _helps you to solve the concrete challenges_ your are likely to encounter during application development.
 
-- **Strong focus on testability:** Testing is a very important topic that is sadly often neglected. **Conqueror** takes testability very seriously and makes sure that you know how you can test the code you have written using it (you may have noticed that the **Conqueror.CQS** recipe immediately following [getting started](recipes/cqs/basics/getting-started#readme) shows you how you can [test the handlers](recipes/cqs/basics/testing-handlers#readme) we built in the first recipe).
+- **Strong focus on testability:** Testing is a very important topic that is sadly often neglected. **Conqueror** takes testability very
+  seriously and makes sure that you know how you can test the code you have written using it (you may have noticed that the **Conqueror.CQS
+  ** recipe immediately following [getting started](recipes/cqs/basics/getting-started#readme) shows you how you
+  can [test the handlers](recipes/cqs/basics/testing-handlers#readme) we built in the first recipe).
 
-- **Out-of-the-box solutions for many common yet often complex cross-cutting concerns:** Many development teams spend valuable time on solving common cross-cutting concerns like validation, logging, error handling etc. over and over again. **Conqueror** provides a variety of pre-built middlewares that help you address those concerns with minimal effort.
+- **Out-of-the-box solutions for many common yet often complex cross-cutting concerns:** Many development teams spend valuable time on
+  solving common cross-cutting concerns like validation, logging, error handling etc. over and over again. **Conqueror** provides a variety
+  of pre-built middlewares that help you address those concerns with minimal effort.
 
-- **Migrating from a modular monolith to a distributed system with minimal friction:** Business logic built on top of **Conqueror** provides clear contracts to consumers, regardless of whether these consumers are located in the same process or in a different application. By abstracting away the concrete transport over which the business logic is called, it can easily be moved from a monolithic approach to a distributed approach with minimal code changes.
+- **Migrating from a modular monolith to a distributed system with minimal friction:** Business logic built on top of **Conqueror** provides
+  clear contracts to consumers, regardless of whether these consumers are located in the same process or in a different application. By
+  abstracting away the concrete transport over which the business logic is called, it can easily be moved from a monolithic approach to a
+  distributed approach with minimal code changes.
 
-- **Modular and extensible architecture:** Instead of a big single library, **Conqueror** consists of many small (independent or complementary) packages. This allows you to pick and choose what functionality you want to use without adding the extra complexity for anything that you don't. It also improves maintainability by allowing modifications and extensions with a lower risk of breaking any existing functionality (in addition to a high level of public-API-focused test coverage).
+- **Modular and extensible architecture:** Instead of a big single library, **Conqueror** consists of many small (independent or
+  complementary) packages. This allows you to pick and choose what functionality you want to use without adding the extra complexity for
+  anything that you don't. It also improves maintainability by allowing modifications and extensions with a lower risk of breaking any
+  existing functionality (in addition to a high level of public-API-focused test coverage).
 
 ### Comparison with similar projects
 
@@ -903,19 +1018,29 @@ Below you can find a brief comparison with some popular projects which address s
 
 #### Differences to MediatR
 
-The excellent library [MediatR](https://github.com/jbogard/MediatR) is a popular choice for building applications. **Conqueror** takes a lot of inspirations from its design, with some key differences:
+The excellent library [MediatR](https://github.com/jbogard/MediatR) is a popular choice for building applications. **Conqueror** takes a lot
+of inspirations from its design, with some key differences:
 
-- MediatR allows handling cross-cutting concerns with global behaviors, while **Conqueror** allows handling these concerns with composable middlewares in independent pipelines per handler type.
-- MediatR uses a single message sender service which makes it tricky to navigate to a message handler in your IDE from the point where the message is sent. With **Conqueror** you call handlers through an explicit interface, allowing you to use the "Go to implementation" functionality of your IDE.
-- MediatR is focused building single applications without any support for any transports, while **Conqueror** allows building both single applications as well as distributed systems that communicate via different transports implemented through adapters.
+- MediatR allows handling cross-cutting concerns with global behaviors, while **Conqueror** allows handling these concerns with composable
+  middlewares in independent pipelines per handler type.
+- MediatR uses a single message sender service which makes it tricky to navigate to a message handler in your IDE from the point where the
+  message is sent. With **Conqueror** you call handlers through an explicit interface, allowing you to use the "Go to implementation"
+  functionality of your IDE.
+- MediatR is focused building single applications without any support for any transports, while **Conqueror** allows building both single
+  applications as well as distributed systems that communicate via different transports implemented through adapters.
 
 #### Differences to MassTransit
 
-[MassTransit](https://masstransit-project.com) is a great framework for building distributed applications. It addresses many of the same concerns as **Conqueror**, with some key differences:
+[MassTransit](https://masstransit-project.com) is a great framework for building distributed applications. It addresses many of the same
+concerns as **Conqueror**, with some key differences:
 
-- MassTransit is designed for building distributed systems, forcing you into this approach from the start, even if you don't need it yet (the provided in-memory transport is explicitly mentioned as not being recommended for production usage). **Conqueror** allows building both single applications as well as distributed systems.
-- MassTransit is focused on asynchronous messaging, while **Conqueror** provides more communication patterns (e.g. synchronous request-response over HTTP).
+- MassTransit is designed for building distributed systems, forcing you into this approach from the start, even if you don't need it yet (
+  the provided in-memory transport is explicitly mentioned as not being recommended for production usage). **Conqueror** allows building
+  both single applications as well as distributed systems.
+- MassTransit is focused on asynchronous messaging, while **Conqueror** provides more communication patterns (e.g. synchronous
+  request-response over HTTP).
 - MassTransit has adapters for many messaging middlewares, like RabbitMQ or Azure Service Bus, which **Conqueror** does not.
 - MassTransit provides out-of-the-box solutions for advanced patterns like sagas, state machines, etc., which **Conqueror** does not.
 
-If you require the advanced patterns or messaging middleware connectors which MassTransit provides, you can easily combine it with **Conqueror** by calling command and query handlers from your consumers or wrapping your producers in command handlers.
+If you require the advanced patterns or messaging middleware connectors which MassTransit provides, you can easily combine it with *
+*Conqueror** by calling command and query handlers from your consumers or wrapping your producers in command handlers.

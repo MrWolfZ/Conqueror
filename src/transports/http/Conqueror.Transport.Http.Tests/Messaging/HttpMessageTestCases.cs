@@ -1,12 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Conqueror.Messaging;
-using Microsoft.AspNetCore.Mvc;
+﻿namespace Conqueror.Transport.Http.Tests.Messaging;
 
-namespace Conqueror.Transport.Http.Tests.Messaging;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using Conqueror.Messaging;
 
 [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "Members are used by ASP.NET Core via reflection")]
 [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Members are used by ASP.NET Core via reflection")]
-[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification = "Members are used by ASP.NET Core via reflection")]
+[SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Members are used by ASP.NET Core via reflection"
+)]
 public static partial class HttpMessageTestCases
 {
     private const string AuthorizationHeaderScheme = "Basic";
@@ -15,6 +19,16 @@ public static partial class HttpMessageTestCases
     private const string TestHeaderName = "test-value";
     private const string TestHeaderValue = "test-value";
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "we want to explicitly test sync delegates"
+    )]
     public static IEnumerable<HttpMessageConformityExecutionSuccessTestCase> CreateSuccessTestCases()
     {
         yield return new()
@@ -73,13 +87,21 @@ public static partial class HttpMessageTestCases
             Name = "without response",
             FullPath = "/api/testMessageWithoutResponse",
             SuccessStatusCode = 204,
-            ExpectedReceivedMessages = [new TestMessageWithoutResponse { Payload = 10 }, new TestMessageWithoutResponse { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithoutResponse { Payload = 10 },
+                new TestMessageWithoutResponse { Payload = 20 },
+            ],
             ExpectedResponses = [],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithoutResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                await s.For(TestMessageWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                await s.For(TestMessageWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                await s.For(TestMessageWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                await s.For(TestMessageWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [];
             },
@@ -106,13 +128,21 @@ public static partial class HttpMessageTestCases
             FullPath = "/api/testMessageWithoutResponseWithoutPayload",
             ParameterCount = 0,
             SuccessStatusCode = 204,
-            ExpectedReceivedMessages = [new TestMessageWithoutResponseWithoutPayload(), new TestMessageWithoutResponseWithoutPayload()],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithoutResponseWithoutPayload(),
+                new TestMessageWithoutResponseWithoutPayload(),
+            ],
             ExpectedResponses = [],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithoutResponseWithoutPayloadHandler>(),
             SendMessages = async (s, ct) =>
             {
-                await s.For(TestMessageWithoutResponseWithoutPayload.T).WithDefaultSenderConfiguration().Handle(new(), ct);
-                await s.For(TestMessageWithoutResponseWithoutPayload.T).WithDefaultSenderConfiguration().Handle(new(), ct);
+                await s.For(TestMessageWithoutResponseWithoutPayload.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(), ct);
+                await s.For(TestMessageWithoutResponseWithoutPayload.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(), ct);
 
                 return [];
             },
@@ -131,34 +161,37 @@ public static partial class HttpMessageTestCases
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessage.T)
-                                .WithPipeline(p => _ = p.UseLogging().UseSendCallback())
-                                .WithTransport(b => b.UseHttp(new("http://conqueror.test"))
-                                                     .WithHttpClient(b.ServiceProvider.GetRequiredService<HttpClient>())
-                                                     .WithHeaders(h =>
-                                                     {
-                                                         h.Authorization = new(AuthorizationHeaderScheme, AuthorizationHeaderValue);
-                                                         h.Add(TestHeaderName, TestHeaderValue);
-                                                     }))
-                                .Handle(new() { Payload = 10 }, ct);
+                    .WithPipeline(p => _ = p.UseLogging().UseSendCallback())
+                    .WithTransport(b =>
+                        b.UseHttp(new("http://conqueror.test"))
+                            .WithHttpClient(b.ServiceProvider.GetRequiredService<HttpClient>())
+                            .WithHeaders(h =>
+                            {
+                                h.Authorization = new(AuthorizationHeaderScheme, AuthorizationHeaderValue);
+                                h.Add(TestHeaderName, TestHeaderValue);
+                            })
+                    )
+                    .Handle(new() { Payload = 10 }, ct);
 
                 var r2 = await s.For(TestMessage.T)
-                                .WithPipeline(p => _ = p.UseLogging().UseSendCallback())
-                                .WithTransport(b => b.UseHttp(new("http://conqueror.test"))
-                                                     .WithHttpClient(b.ServiceProvider.GetRequiredService<HttpClient>())
-                                                     .WithHeaders(h =>
-                                                     {
-                                                         h.Authorization = new(AuthorizationHeaderScheme, AuthorizationHeaderValue);
-                                                         h.Add(TestHeaderName, TestHeaderValue);
-                                                     }))
-                                .Handle(new() { Payload = 20 }, ct);
+                    .WithPipeline(p => _ = p.UseLogging().UseSendCallback())
+                    .WithTransport(b =>
+                        b.UseHttp(new("http://conqueror.test"))
+                            .WithHttpClient(b.ServiceProvider.GetRequiredService<HttpClient>())
+                            .WithHeaders(h =>
+                            {
+                                h.Authorization = new(AuthorizationHeaderScheme, AuthorizationHeaderValue);
+                                h.Add(TestHeaderName, TestHeaderValue);
+                            })
+                    )
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
             MapEndpoints = e => e.MapMessageEndpoint(TestMessage.T),
-
             AfterMessagesAreReceived = h =>
             {
-                Assert.That(h.ReceiverHost.ReceivedHeadersOnServer, Has.Count.EqualTo(2));
+                Assert.That(h.ReceiverHost.ReceivedHeadersOnServer, Has.Count.EqualTo(expected: 2));
 
                 foreach (var headers in h.ReceiverHost.ReceivedHeadersOnServer)
                 {
@@ -176,13 +209,21 @@ public static partial class HttpMessageTestCases
             FullPath = "/api/testMessageWithMethod",
             HttpMethod = MethodNames.Delete,
             ParameterCount = 1,
-            ExpectedReceivedMessages = [new TestMessageWithMethod { Payload = 10 }, new TestMessageWithMethod { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithMethod { Payload = 10 },
+                new TestMessageWithMethod { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithMethodHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithMethod.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithMethod.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithMethod.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithMethod.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -193,13 +234,21 @@ public static partial class HttpMessageTestCases
         {
             Name = "with path prefix",
             FullPath = "/custom/prefix/testMessageWithPathPrefix",
-            ExpectedReceivedMessages = [new TestMessageWithPathPrefix { Payload = 10 }, new TestMessageWithPathPrefix { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithPathPrefix { Payload = 10 },
+                new TestMessageWithPathPrefix { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithPathPrefixHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithPathPrefix.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithPathPrefix.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithPathPrefix.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithPathPrefix.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -210,13 +259,21 @@ public static partial class HttpMessageTestCases
         {
             Name = "with version",
             FullPath = "/api/v2/testMessageWithVersion",
-            ExpectedReceivedMessages = [new TestMessageWithVersion { Payload = 10 }, new TestMessageWithVersion { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithVersion { Payload = 10 },
+                new TestMessageWithVersion { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithVersionHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithVersion.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithVersion.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithVersion.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithVersion.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -227,13 +284,21 @@ public static partial class HttpMessageTestCases
         {
             Name = "with path",
             FullPath = "/api/custom/path",
-            ExpectedReceivedMessages = [new TestMessageWithPath { Payload = 10 }, new TestMessageWithPath { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithPath { Payload = 10 },
+                new TestMessageWithPath { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithPathHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithPath.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithPath.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithPath.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithPath.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -245,13 +310,20 @@ public static partial class HttpMessageTestCases
             Name = "with path prefix and version",
             FullPath = "/custom/prefix/v3/custom/path",
             ExpectedReceivedMessages =
-                [new TestMessageWithPathPrefixAndPathAndVersion { Payload = 10 }, new TestMessageWithPathPrefixAndPathAndVersion { Payload = 20 }],
+            [
+                new TestMessageWithPathPrefixAndPathAndVersion { Payload = 10 },
+                new TestMessageWithPathPrefixAndPathAndVersion { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithPathPrefixAndPathAndVersionHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithPathPrefixAndPathAndVersion.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithPathPrefixAndPathAndVersion.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithPathPrefixAndPathAndVersion.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithPathPrefixAndPathAndVersion.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -262,13 +334,21 @@ public static partial class HttpMessageTestCases
         {
             Name = "with full path",
             FullPath = "/custom/full/path/for/message",
-            ExpectedReceivedMessages = [new TestMessageWithFullPath { Payload = 10 }, new TestMessageWithFullPath { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithFullPath { Payload = 10 },
+                new TestMessageWithFullPath { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithFullPathHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithFullPath.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithFullPath.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithFullPath.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithFullPath.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -279,13 +359,21 @@ public static partial class HttpMessageTestCases
         {
             Name = "with full path and version",
             FullPath = "/custom/full/path/for/message/ignoring/version",
-            ExpectedReceivedMessages = [new TestMessageWithFullPathAndVersion { Payload = 10 }, new TestMessageWithFullPathAndVersion { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithFullPathAndVersion { Payload = 10 },
+                new TestMessageWithFullPathAndVersion { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithFullPathAndVersionHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithFullPathAndVersion.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithFullPathAndVersion.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithFullPathAndVersion.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithFullPathAndVersion.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -297,13 +385,21 @@ public static partial class HttpMessageTestCases
             Name = "with success status code",
             FullPath = "/api/testMessageWithSuccessStatusCode",
             SuccessStatusCode = 201,
-            ExpectedReceivedMessages = [new TestMessageWithSuccessStatusCode { Payload = 10 }, new TestMessageWithSuccessStatusCode { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithSuccessStatusCode { Payload = 10 },
+                new TestMessageWithSuccessStatusCode { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithSuccessStatusCodeHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithSuccessStatusCode.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithSuccessStatusCode.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithSuccessStatusCode.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithSuccessStatusCode.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -315,13 +411,21 @@ public static partial class HttpMessageTestCases
             Name = "with name",
             FullPath = "/api/testMessageWithName",
             EndpointName = "custom-message-name",
-            ExpectedReceivedMessages = [new TestMessageWithName { Payload = 10 }, new TestMessageWithName { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithName { Payload = 10 },
+                new TestMessageWithName { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithNameHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithName.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithName.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithName.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithName.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -333,13 +437,21 @@ public static partial class HttpMessageTestCases
             Name = "with API group name",
             FullPath = "/api/testMessageWithApiGroupName",
             ApiGroupName = "Custom Message Group",
-            ExpectedReceivedMessages = [new TestMessageWithApiGroupName { Payload = 10 }, new TestMessageWithApiGroupName { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithApiGroupName { Payload = 10 },
+                new TestMessageWithApiGroupName { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithApiGroupNameHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithApiGroupName.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithApiGroupName.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithApiGroupName.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithApiGroupName.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -353,13 +465,21 @@ public static partial class HttpMessageTestCases
             FullPath = "/api/testMessageWithGet",
             ParameterCount = 2,
             MessageContentType = null,
-            ExpectedReceivedMessages = [new TestMessageWithGet { Payload = 10, Param = "test" }, new TestMessageWithGet { Payload = 20, Param = "test2" }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithGet { Payload = 10, Param = "test" },
+                new TestMessageWithGet { Payload = 20, Param = "test2" },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithGetHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithGet.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10, Param = "test" }, ct);
-                var r2 = await s.For(TestMessageWithGet.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20, Param = "test2" }, ct);
+                var r1 = await s.For(TestMessageWithGet.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10, Param = "test" }, ct);
+                var r2 = await s.For(TestMessageWithGet.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20, Param = "test2" }, ct);
 
                 return [r1, r2];
             },
@@ -380,8 +500,12 @@ public static partial class HttpMessageTestCases
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithGetWithoutPayloadHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithGetWithoutPayload.T).WithDefaultSenderConfiguration().Handle(new(), ct);
-                var r2 = await s.For(TestMessageWithGetWithoutPayload.T).WithDefaultSenderConfiguration().Handle(new(), ct);
+                var r1 = await s.For(TestMessageWithGetWithoutPayload.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(), ct);
+                var r2 = await s.For(TestMessageWithGetWithoutPayload.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(), ct);
 
                 return [r1, r2];
             },
@@ -397,13 +521,21 @@ public static partial class HttpMessageTestCases
             FullPath = "/api/testMessageWithGetWithOptionalPayload",
             ParameterCount = 2,
             MessageContentType = null,
-            ExpectedReceivedMessages = [new TestMessageWithGetWithOptionalPayload(), new TestMessageWithGetWithOptionalPayload { Payload = 10 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithGetWithOptionalPayload(),
+                new TestMessageWithGetWithOptionalPayload { Payload = 10 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 1 }, new TestMessageResponse { Payload = 11 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithGetWithOptionalPayloadHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithGetWithOptionalPayload.T).WithDefaultSenderConfiguration().Handle(new(), ct);
-                var r2 = await s.For(TestMessageWithGetWithOptionalPayload.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
+                var r1 = await s.For(TestMessageWithGetWithOptionalPayload.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(), ct);
+                var r2 = await s.For(TestMessageWithGetWithOptionalPayload.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
 
                 return [r1, r2];
             },
@@ -421,18 +553,29 @@ public static partial class HttpMessageTestCases
             ParameterCount = 3,
             MessageContentType = null,
             ExpectedReceivedMessages =
-                [new TestMessageWithGetWithPrimaryConstructor(10, "test", [11, 12]), new TestMessageWithGetWithPrimaryConstructor(20, "test2", [21, 22])],
+            [
+                new TestMessageWithGetWithPrimaryConstructor(Payload: 10, "test", [11, 12]),
+                new TestMessageWithGetWithPrimaryConstructor(Payload: 20, "test2", [21, 22]),
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 33 }, new TestMessageResponse { Payload = 63 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithGetWithPrimaryConstructorHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithGetWithPrimaryConstructor.T).WithDefaultSenderConfiguration().Handle(new(10, "test", [11, 12]), ct);
-                var r2 = await s.For(TestMessageWithGetWithPrimaryConstructor.T).WithDefaultSenderConfiguration().Handle(new(20, "test2", [21, 22]), ct);
+                var r1 = await s.For(TestMessageWithGetWithPrimaryConstructor.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(Payload: 10, "test", [11, 12]), ct);
+                var r2 = await s.For(TestMessageWithGetWithPrimaryConstructor.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(Payload: 20, "test2", [21, 22]), ct);
 
                 return [r1, r2];
             },
             MapEndpoints = e => e.MapMessageEndpoint(TestMessageWithGetWithPrimaryConstructor.T),
-            QueryStrings = ["?payload=10&param=test&intArray=11&intArray=12", "?payload=20&param=test2&intArray=21&intArray=22"],
+            QueryStrings =
+            [
+                "?payload=10&param=test&intArray=11&intArray=12",
+                "?payload=20&param=test2&intArray=21&intArray=22",
+            ],
             MessagePayloads = [null, null],
             ResponsePayloads = ["{\"payload\":33}", "{\"payload\":63}"],
         };
@@ -447,19 +590,20 @@ public static partial class HttpMessageTestCases
             ExpectedReceivedMessages =
             [
                 new TestMessageWithGetWithPrimaryConstructorWithOptionalParameters(),
-                new TestMessageWithGetWithPrimaryConstructorWithOptionalParameters(10, "test"),
+                new TestMessageWithGetWithPrimaryConstructorWithOptionalParameters(Payload: 10, "test"),
             ],
             ExpectedResponses = [new TestMessageResponse { Payload = 1 }, new TestMessageResponse { Payload = 11 }],
-            RegisterHandler = s => s.AddMessageHandler<TestMessageWithGetWithPrimaryConstructorWithOptionalParametersHandler>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<TestMessageWithGetWithPrimaryConstructorWithOptionalParametersHandler>(),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessageWithGetWithPrimaryConstructorWithOptionalParameters.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new(), ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(), ct);
 
                 var r2 = await s.For(TestMessageWithGetWithPrimaryConstructorWithOptionalParameters.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new(10, "test"), ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(Payload: 10, "test"), ct);
 
                 return [r1, r2];
             },
@@ -496,25 +640,27 @@ public static partial class HttpMessageTestCases
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessageWithComplexGetPayload.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(
-                                    new()
-                                    {
-                                        Payload = 10,
-                                        NestedList = [11, 12],
-                                        NestedArray = [13, 14],
-                                    },
-                                    ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(
+                        new()
+                        {
+                            Payload = 10,
+                            NestedList = [11, 12],
+                            NestedArray = [13, 14],
+                        },
+                        ct
+                    );
                 var r2 = await s.For(TestMessageWithComplexGetPayload.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(
-                                    new()
-                                    {
-                                        Payload = 20,
-                                        NestedList = [21, 22],
-                                        NestedArray = [23, 24],
-                                    },
-                                    ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(
+                        new()
+                        {
+                            Payload = 20,
+                            NestedList = [21, 22],
+                            NestedArray = [23, 24],
+                        },
+                        ct
+                    );
 
                 return [r1, r2];
             },
@@ -533,38 +679,49 @@ public static partial class HttpMessageTestCases
             Name = "with custom serialized payload type",
             FullPath = "/api/testMessageWithCustomSerializedPayloadType",
             ExpectedReceivedMessages =
-                [new TestMessageWithCustomSerializedPayloadType { Payload = new(10) }, new TestMessageWithCustomSerializedPayloadType { Payload = new(20) }],
+            [
+                new TestMessageWithCustomSerializedPayloadType { Payload = new(Payload: 10) },
+                new TestMessageWithCustomSerializedPayloadType { Payload = new(Payload: 20) },
+            ],
             ExpectedResponses =
             [
-                new TestMessageWithCustomSerializedPayloadTypeResponse { Payload = new(11) },
-                new TestMessageWithCustomSerializedPayloadTypeResponse { Payload = new(21) },
+                new TestMessageWithCustomSerializedPayloadTypeResponse { Payload = new(Payload: 11) },
+                new TestMessageWithCustomSerializedPayloadTypeResponse { Payload = new(Payload: 21) },
             ],
             RegisterHandler = s =>
             {
                 _ = s.AddMessageHandler<TestMessageWithCustomSerializedPayloadTypeHandler>();
 
-                _ = s.AddTransient<JsonSerializerOptions>(p => p.GetRequiredService<IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>()
-                                                                .Value.SerializerOptions)
-                     .PostConfigure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
-                     {
-                         options.SerializerOptions.Converters
-                                .Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
-                     })
-                     .PostConfigure<JsonOptions>(options =>
-                     {
-                         options.JsonSerializerOptions.Converters
-                                .Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
-                     });
+                _ = s.AddTransient<JsonSerializerOptions>(p =>
+                        p.GetRequiredService<
+                            IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>
+                        >().Value.SerializerOptions
+                    )
+                    .PostConfigure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+                    {
+                        options.SerializerOptions.Converters.Add(
+                            new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()
+                        );
+                    })
+                    .PostConfigure<JsonOptions>(options =>
+                    {
+                        options.JsonSerializerOptions.Converters.Add(
+                            new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()
+                        );
+                    });
             },
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithCustomSerializedPayloadType.T).WithDefaultSenderConfiguration().Handle(new() { Payload = new(10) }, ct);
-                var r2 = await s.For(TestMessageWithCustomSerializedPayloadType.T).WithDefaultSenderConfiguration().Handle(new() { Payload = new(20) }, ct);
+                var r1 = await s.For(TestMessageWithCustomSerializedPayloadType.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = new(Payload: 10) }, ct);
+                var r2 = await s.For(TestMessageWithCustomSerializedPayloadType.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = new(Payload: 20) }, ct);
 
                 return [r1, r2];
             },
             MapEndpoints = e => e.MapMessageEndpoint(TestMessageWithCustomSerializedPayloadType.T),
-
             RegisterOnClient = services =>
             {
                 var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -573,8 +730,10 @@ public static partial class HttpMessageTestCases
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 };
 
-                jsonSerializerOptions.Converters.Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
-                jsonSerializerOptions.MakeReadOnly(true);
+                jsonSerializerOptions.Converters.Add(
+                    new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()
+                );
+                jsonSerializerOptions.MakeReadOnly(populateMissingResolver: true);
 
                 _ = services.AddSingleton(jsonSerializerOptions);
             },
@@ -591,19 +750,49 @@ public static partial class HttpMessageTestCases
             ResponseContentType = "application/custom-response",
             ExpectedReceivedMessages =
             [
-                new TestMessageWithCustomSerializer { QueryPayload = 10, BodyPayload = 11, PathPayload = 12 },
-                new TestMessageWithCustomSerializer { QueryPayload = 20, BodyPayload = 21, PathPayload = 12 },
+                new TestMessageWithCustomSerializer
+                {
+                    QueryPayload = 10,
+                    BodyPayload = 11,
+                    PathPayload = 12,
+                },
+                new TestMessageWithCustomSerializer
+                {
+                    QueryPayload = 20,
+                    BodyPayload = 21,
+                    PathPayload = 12,
+                },
             ],
-            ExpectedResponses = [new TestMessageWithCustomSerializerResponse { Payload = 33 }, new TestMessageWithCustomSerializerResponse { Payload = 53 }],
+            ExpectedResponses =
+            [
+                new TestMessageWithCustomSerializerResponse { Payload = 33 },
+                new TestMessageWithCustomSerializerResponse { Payload = 53 },
+            ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithCustomSerializerHandler>(),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessageWithCustomSerializer.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { QueryPayload = 10, BodyPayload = 11, PathPayload = 12 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(
+                        new()
+                        {
+                            QueryPayload = 10,
+                            BodyPayload = 11,
+                            PathPayload = 12,
+                        },
+                        ct
+                    );
                 var r2 = await s.For(TestMessageWithCustomSerializer.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { QueryPayload = 20, BodyPayload = 21, PathPayload = 12 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(
+                        new()
+                        {
+                            QueryPayload = 20,
+                            BodyPayload = 21,
+                            PathPayload = 12,
+                        },
+                        ct
+                    );
 
                 return [r1, r2];
             },
@@ -624,17 +813,18 @@ public static partial class HttpMessageTestCases
             ],
             ExpectedResponses =
             [
-                new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 11 }, new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 21 },
+                new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 11 },
+                new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 21 },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithCustomJsonTypeInfoHandler>(),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessageWithCustomJsonTypeInfo.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { MessagePayload = 10 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { MessagePayload = 10 }, ct);
                 var r2 = await s.For(TestMessageWithCustomJsonTypeInfo.T)
-                                .WithDefaultSenderConfiguration()
-                                .Handle(new() { MessagePayload = 20 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { MessagePayload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -647,42 +837,62 @@ public static partial class HttpMessageTestCases
         {
             Name = "with middleware",
             FullPath = "/api/testMessageWithMiddleware",
-            ExpectedReceivedMessages = [new TestMessageWithMiddleware { Payload = 10 }, new TestMessageWithMiddleware { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithMiddleware { Payload = 10 },
+                new TestMessageWithMiddleware { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
-            RegisterHandler = s => s.AddMessageHandler<TestMessageWithMiddlewareHandler>()
-                                    .AddSingleton<TestObservations>()
-                                    .AddTransient(typeof(TestMessageMiddleware<,>)),
+            RegisterHandler = s =>
+                s.AddMessageHandler<TestMessageWithMiddlewareHandler>()
+                    .AddSingleton<TestObservations>()
+                    .AddTransient(typeof(TestMessageMiddleware<,>)),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessageWithMiddleware.T)
-                                .WithDefaultSenderConfiguration()
-                                .WithPipeline(p => p.Use(
-                                                  p.ServiceProvider
-                                                   .GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>()))
-                                .Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(
+                            p.ServiceProvider.GetRequiredService<
+                                TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>
+                            >()
+                        )
+                    )
+                    .Handle(new() { Payload = 10 }, ct);
 
                 var r2 = await s.For(TestMessageWithMiddleware.T)
-                                .WithDefaultSenderConfiguration()
-                                .WithPipeline(p => p.Use(
-                                                  p.ServiceProvider
-                                                   .GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>()))
-                                .Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(
+                            p.ServiceProvider.GetRequiredService<
+                                TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>
+                            >()
+                        )
+                    )
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
             MapEndpoints = e => e.MapMessageEndpoint(TestMessageWithMiddleware.T),
-
-            RegisterOnClient = s => s.AddSingleton<TestObservations>()
-                                     .AddTransient(typeof(TestMessageMiddleware<,>)),
-
+            RegisterOnClient = s => s.AddSingleton<TestObservations>().AddTransient(typeof(TestMessageMiddleware<,>)),
             AfterMessagesAreReceived = h =>
             {
-                var seenTransportTypeOnServer = h.ReceiverHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
-                Assert.That(seenTransportTypeOnServer?.IsHttp(), Is.True, $"transport type is {seenTransportTypeOnServer?.Name}");
+                var seenTransportTypeOnServer = h
+                    .ReceiverHost.Resolve<TestObservations>()
+                    .SeenTransportTypeInMiddleware;
+                Assert.That(
+                    seenTransportTypeOnServer?.IsHttp(),
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnServer?.Name}"
+                );
                 Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(MessageTransportRole.Receiver));
 
                 var seenTransportTypeOnClient = h.SenderHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
-                Assert.That(seenTransportTypeOnClient?.IsHttp(), Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
+                Assert.That(
+                    seenTransportTypeOnClient?.IsHttp(),
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnClient?.Name}"
+                );
                 Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(MessageTransportRole.Sender));
 
                 return Task.CompletedTask;
@@ -695,42 +905,61 @@ public static partial class HttpMessageTestCases
             FullPath = "/api/testMessageWithMiddlewareWithoutResponse",
             SuccessStatusCode = 204,
             ExpectedReceivedMessages =
-                [new TestMessageWithMiddlewareWithoutResponse { Payload = 10 }, new TestMessageWithMiddlewareWithoutResponse { Payload = 20 }],
+            [
+                new TestMessageWithMiddlewareWithoutResponse { Payload = 10 },
+                new TestMessageWithMiddlewareWithoutResponse { Payload = 20 },
+            ],
             ExpectedResponses = [],
-            RegisterHandler = s => s.AddMessageHandler<TestMessageWithMiddlewareWithoutResponseHandler>()
-                                    .AddSingleton<TestObservations>()
-                                    .AddTransient(typeof(TestMessageMiddleware<,>)),
+            RegisterHandler = s =>
+                s.AddMessageHandler<TestMessageWithMiddlewareWithoutResponseHandler>()
+                    .AddSingleton<TestObservations>()
+                    .AddTransient(typeof(TestMessageMiddleware<,>)),
             SendMessages = async (s, ct) =>
             {
                 await s.For(TestMessageWithMiddlewareWithoutResponse.T)
-                       .WithDefaultSenderConfiguration()
-                       .WithPipeline(p => p.Use(
-                                         p.ServiceProvider
-                                          .GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
-                       .Handle(new() { Payload = 10 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(
+                            p.ServiceProvider.GetRequiredService<
+                                TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>
+                            >()
+                        )
+                    )
+                    .Handle(new() { Payload = 10 }, ct);
 
                 await s.For(TestMessageWithMiddlewareWithoutResponse.T)
-                       .WithDefaultSenderConfiguration()
-                       .WithPipeline(p => p.Use(
-                                         p.ServiceProvider
-                                          .GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
-                       .Handle(new() { Payload = 20 }, ct);
+                    .WithDefaultSenderConfiguration()
+                    .WithPipeline(p =>
+                        p.Use(
+                            p.ServiceProvider.GetRequiredService<
+                                TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>
+                            >()
+                        )
+                    )
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [];
             },
             MapEndpoints = e => e.MapMessageEndpoint(TestMessageWithMiddlewareWithoutResponse.T),
-
-            RegisterOnClient = s => s.AddSingleton<TestObservations>()
-                                     .AddTransient(typeof(TestMessageMiddleware<,>)),
-
+            RegisterOnClient = s => s.AddSingleton<TestObservations>().AddTransient(typeof(TestMessageMiddleware<,>)),
             AfterMessagesAreReceived = h =>
             {
-                var seenTransportTypeOnServer = h.ReceiverHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
-                Assert.That(seenTransportTypeOnServer?.IsHttp(), Is.True, $"transport type is {seenTransportTypeOnServer?.Name}");
+                var seenTransportTypeOnServer = h
+                    .ReceiverHost.Resolve<TestObservations>()
+                    .SeenTransportTypeInMiddleware;
+                Assert.That(
+                    seenTransportTypeOnServer?.IsHttp(),
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnServer?.Name}"
+                );
                 Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(MessageTransportRole.Receiver));
 
                 var seenTransportTypeOnClient = h.SenderHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
-                Assert.That(seenTransportTypeOnClient?.IsHttp(), Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
+                Assert.That(
+                    seenTransportTypeOnClient?.IsHttp(),
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnClient?.Name}"
+                );
                 Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(MessageTransportRole.Sender));
 
                 return Task.CompletedTask;
@@ -741,17 +970,33 @@ public static partial class HttpMessageTestCases
         {
             Name = "with array response",
             FullPath = "/api/testMessageWithArrayResponse",
-            ExpectedReceivedMessages = [new TestMessageWithArrayResponse { Payload = 10 }, new TestMessageWithArrayResponse { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithArrayResponse { Payload = 10 },
+                new TestMessageWithArrayResponse { Payload = 20 },
+            ],
             ExpectedResponses =
             [
-                new TestMessageResponse[] { new() { Payload = 11 }, new() { Payload = 12 } },
-                new TestMessageResponse[] { new() { Payload = 21 }, new() { Payload = 22 } },
+                new TestMessageResponse[]
+                {
+                    new() { Payload = 11 },
+                    new() { Payload = 12 },
+                },
+                new TestMessageResponse[]
+                {
+                    new() { Payload = 21 },
+                    new() { Payload = 22 },
+                },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithArrayResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithArrayResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithArrayResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithArrayResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithArrayResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -763,17 +1008,33 @@ public static partial class HttpMessageTestCases
         {
             Name = "with list response",
             FullPath = "/api/testMessageWithListResponse",
-            ExpectedReceivedMessages = [new TestMessageWithListResponse { Payload = 10 }, new TestMessageWithListResponse { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithListResponse { Payload = 10 },
+                new TestMessageWithListResponse { Payload = 20 },
+            ],
             ExpectedResponses =
             [
-                new List<TestMessageResponse> { new() { Payload = 11 }, new() { Payload = 12 } },
-                new List<TestMessageResponse> { new() { Payload = 21 }, new() { Payload = 22 } },
+                new List<TestMessageResponse>
+                {
+                    new() { Payload = 11 },
+                    new() { Payload = 12 },
+                },
+                new List<TestMessageResponse>
+                {
+                    new() { Payload = 21 },
+                    new() { Payload = 22 },
+                },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithListResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithListResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithListResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithListResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithListResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -786,17 +1047,33 @@ public static partial class HttpMessageTestCases
             Name = "with enumerable response",
             FullPath = "/api/testMessageWithEnumerableResponse",
             SingleResponseType = typeof(IEnumerable<TestMessageResponse>),
-            ExpectedReceivedMessages = [new TestMessageWithEnumerableResponse { Payload = 10 }, new TestMessageWithEnumerableResponse { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithEnumerableResponse { Payload = 10 },
+                new TestMessageWithEnumerableResponse { Payload = 20 },
+            ],
             ExpectedResponses =
             [
-                new List<TestMessageResponse> { new() { Payload = 11 }, new() { Payload = 12 } },
-                new List<TestMessageResponse> { new() { Payload = 21 }, new() { Payload = 22 } },
+                new List<TestMessageResponse>
+                {
+                    new() { Payload = 11 },
+                    new() { Payload = 12 },
+                },
+                new List<TestMessageResponse>
+                {
+                    new() { Payload = 21 },
+                    new() { Payload = 22 },
+                },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithEnumerableResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithEnumerableResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithEnumerableResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithEnumerableResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithEnumerableResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -808,13 +1085,26 @@ public static partial class HttpMessageTestCases
         {
             Name = "from assembly scanning",
             FullPath = "/api/testMessageForAssemblyScanning",
-            ExpectedReceivedMessages = [new TestMessageForAssemblyScanning { Payload = 10 }, new TestMessageForAssemblyScanning { Payload = 20 }],
-            ExpectedResponses = [new TestMessageForAssemblyScanningResponse { Payload = 11 }, new TestMessageForAssemblyScanningResponse { Payload = 21 }],
-            RegisterHandler = s => s.AddMessageHandlersFromAssembly(typeof(TestMessageForAssemblyScanningHandler).Assembly),
+            ExpectedReceivedMessages =
+            [
+                new TestMessageForAssemblyScanning { Payload = 10 },
+                new TestMessageForAssemblyScanning { Payload = 20 },
+            ],
+            ExpectedResponses =
+            [
+                new TestMessageForAssemblyScanningResponse { Payload = 11 },
+                new TestMessageForAssemblyScanningResponse { Payload = 21 },
+            ],
+            RegisterHandler = s =>
+                s.AddMessageHandlersFromAssembly(typeof(TestMessageForAssemblyScanningHandler).Assembly),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageForAssemblyScanning.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageForAssemblyScanning.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageForAssemblyScanning.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageForAssemblyScanning.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -827,13 +1117,21 @@ public static partial class HttpMessageTestCases
             FullPath = "/api/testMessageWithoutResponseForAssemblyScanning",
             SuccessStatusCode = 204,
             ExpectedReceivedMessages =
-                [new TestMessageWithoutResponseForAssemblyScanning { Payload = 10 }, new TestMessageWithoutResponseForAssemblyScanning { Payload = 20 }],
+            [
+                new TestMessageWithoutResponseForAssemblyScanning { Payload = 10 },
+                new TestMessageWithoutResponseForAssemblyScanning { Payload = 20 },
+            ],
             ExpectedResponses = [],
-            RegisterHandler = s => s.AddMessageHandlersFromAssembly(typeof(TestMessageWithoutResponseForAssemblyScanningHandler).Assembly),
+            RegisterHandler = s =>
+                s.AddMessageHandlersFromAssembly(typeof(TestMessageWithoutResponseForAssemblyScanningHandler).Assembly),
             SendMessages = async (s, ct) =>
             {
-                await s.For(TestMessageWithoutResponseForAssemblyScanning.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                await s.For(TestMessageWithoutResponseForAssemblyScanning.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                await s.For(TestMessageWithoutResponseForAssemblyScanning.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                await s.For(TestMessageWithoutResponseForAssemblyScanning.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [];
             },
@@ -864,24 +1162,34 @@ public static partial class HttpMessageTestCases
             Name = "with custom conventions",
             FullPath = "/customApi/testMessageWithCustomConventions",
             SuccessStatusCode = 201,
-            ExpectedReceivedMessages = [new TestMessageWithCustomConventions { Payload = 10 }, new TestMessageWithCustomConventions { Payload = 20 }],
+            ExpectedReceivedMessages =
+            [
+                new TestMessageWithCustomConventions { Payload = 10 },
+                new TestMessageWithCustomConventions { Payload = 20 },
+            ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithCustomConventionsHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageWithCustomConventions.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithCustomConventions.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r1 = await s.For(TestMessageWithCustomConventions.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
+                var r2 = await s.For(TestMessageWithCustomConventions.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
             MapEndpoints = e => e.MapMessageEndpoint(TestMessageWithCustomConventions.T),
         };
 
-        foreach (var t in from hasResponse in new[] { true, false }
-                          from isSync in new[] { true, false }
-                          from configuresPipeline in new[] { true, false }
-                          from configuresReceiver in new[] { true, false }
-                          select (hasResponse, isSync, configuresPipeline, configuresReceiver))
+        foreach (
+            var t in from hasResponse in new[] { true, false }
+            from isSync in new[] { true, false }
+            from configuresPipeline in new[] { true, false }
+            from configuresReceiver in new[] { true, false }
+            select (hasResponse, isSync, configuresPipeline, configuresReceiver)
+        )
         {
             var middlewareCallCount = 0;
             var receiverConfigurationCount = 0;
@@ -890,10 +1198,20 @@ public static partial class HttpMessageTestCases
             {
                 Name =
                     $"with delegate (hasResponse: {t.hasResponse}, isSync: {t.isSync}, configuresPipeline: {t.configuresPipeline}, configuresReceiver: {t.configuresReceiver})",
-                FullPath = t.hasResponse ? "/api/testMessageWithDelegateHandler" : "/api/testMessageWithDelegateHandlerWithoutResponse",
+                FullPath = t.hasResponse
+                    ? "/api/testMessageWithDelegateHandler"
+                    : "/api/testMessageWithDelegateHandlerWithoutResponse",
                 ExpectedReceivedMessages = t.hasResponse
-                    ? [new TestMessageWithDelegateHandler { Payload = 10 }, new TestMessageWithDelegateHandler { Payload = 20 }]
-                    : [new TestMessageWithDelegateHandlerWithoutResponse { Payload = 10 }, new TestMessageWithDelegateHandlerWithoutResponse { Payload = 20 }],
+                    ?
+                    [
+                        new TestMessageWithDelegateHandler { Payload = 10 },
+                        new TestMessageWithDelegateHandler { Payload = 20 },
+                    ]
+                    :
+                    [
+                        new TestMessageWithDelegateHandlerWithoutResponse { Payload = 10 },
+                        new TestMessageWithDelegateHandlerWithoutResponse { Payload = 20 },
+                    ],
                 ExpectedResponses = t.hasResponse
                     ? [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }]
                     : [],
@@ -904,7 +1222,8 @@ public static partial class HttpMessageTestCases
                     {
                         (false, false, false, false) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
-                            (m, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(m, ct)),
+                            (m, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(m, ct)
+                        ),
                         (true, false, false, false) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             async (m, p, ct) =>
@@ -912,27 +1231,37 @@ public static partial class HttpMessageTestCases
                                 await p.GetRequiredService<FnToCallFromHandler>()(m, ct);
 
                                 return new() { Payload = m.Payload + 1 };
-                            }),
+                            }
+                        ),
                         (false, true, false, false) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
-                            (m, p) => p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult()),
+                            (m, p) =>
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None)
+                                    .GetAwaiter()
+                                    .GetResult()
+                        ),
                         (true, true, false, false) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             (m, p) =>
                             {
-                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult();
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None)
+                                    .GetAwaiter()
+                                    .GetResult();
 
                                 return new() { Payload = m.Payload + 1 };
-                            }),
+                            }
+                        ),
                         (false, false, true, false) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
                             (m, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(m, ct),
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            })),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                })
+                        ),
                         (true, false, true, false) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             async (m, p, ct) =>
@@ -941,21 +1270,28 @@ public static partial class HttpMessageTestCases
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            })),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                })
+                        ),
                         (false, true, true, false) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
-                            (m, p) => p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult(),
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            (m, p) =>
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None)
+                                    .GetAwaiter()
+                                    .GetResult(),
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            })),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                })
+                        ),
                         (true, true, true, false) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             async (m, p, ct) =>
@@ -964,21 +1300,24 @@ public static partial class HttpMessageTestCases
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            })),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                })
+                        ),
                         (false, false, false, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
                             (m, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(m, ct),
-                            configureReceiver: r =>
+                            r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
-                            }),
+                            }
+                        ),
                         (true, false, false, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             async (m, p, ct) =>
@@ -987,21 +1326,26 @@ public static partial class HttpMessageTestCases
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            configureReceiver: r =>
+                            r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
-                            }),
+                            }
+                        ),
                         (false, true, false, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
-                            (m, p) => p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult(),
-                            configureReceiver: r =>
+                            (m, p) =>
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None)
+                                    .GetAwaiter()
+                                    .GetResult(),
+                            r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
-                            }),
+                            }
+                        ),
                         (true, true, false, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             async (m, p, ct) =>
@@ -1010,27 +1354,30 @@ public static partial class HttpMessageTestCases
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            configureReceiver: r =>
-                            {
-                                _ = Interlocked.Increment(ref receiverConfigurationCount);
-
-                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
-                            }),
-                        (false, false, true, true) => s.AddHttpMessageHandlerDelegate(
-                            TestMessageWithDelegateHandlerWithoutResponse.T,
-                            (m, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(m, ct),
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
-
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            }),
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
-                            }),
+                            }
+                        ),
+                        (false, false, true, true) => s.AddHttpMessageHandlerDelegate(
+                            TestMessageWithDelegateHandlerWithoutResponse.T,
+                            (m, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(m, ct),
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
+
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                }),
+                            r =>
+                            {
+                                _ = Interlocked.Increment(ref receiverConfigurationCount);
+
+                                r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
+                            }
+                        ),
                         (true, false, true, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             async (m, p, ct) =>
@@ -1039,67 +1386,86 @@ public static partial class HttpMessageTestCases
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            }),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                }),
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
-                            }),
+                            }
+                        ),
                         (false, true, true, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandlerWithoutResponse.T,
-                            (m, p) => p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult(),
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            (m, p) =>
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None)
+                                    .GetAwaiter()
+                                    .GetResult(),
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            }),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                }),
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
-                            }),
+                            }
+                        ),
                         (true, true, true, true) => s.AddHttpMessageHandlerDelegate(
                             TestMessageWithDelegateHandler.T,
                             (m, p) =>
                             {
-                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None).GetAwaiter().GetResult();
+                                p.GetRequiredService<FnToCallFromHandler>()(m, CancellationToken.None)
+                                    .GetAwaiter()
+                                    .GetResult();
 
                                 return new() { Payload = m.Payload + 1 };
                             },
-                            p => p.Use(ctx =>
-                            {
-                                _ = Interlocked.Increment(ref middlewareCallCount);
+                            p =>
+                                p.Use(ctx =>
+                                {
+                                    _ = Interlocked.Increment(ref middlewareCallCount);
 
-                                return ctx.Next(ctx.Message, ctx.CancellationToken);
-                            }),
+                                    return ctx.Next(ctx.Message, ctx.CancellationToken);
+                                }),
                             r =>
                             {
                                 _ = Interlocked.Increment(ref receiverConfigurationCount);
 
                                 r.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(r);
-                            }),
+                            }
+                        ),
                     };
                 },
                 SendMessages = async (s, ct) =>
                 {
                     if (t.hasResponse)
                     {
-                        var r1 = await s.For(TestMessageWithDelegateHandler.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                        var r2 = await s.For(TestMessageWithDelegateHandler.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                        var r1 = await s.For(TestMessageWithDelegateHandler.T)
+                            .WithDefaultSenderConfiguration()
+                            .Handle(new() { Payload = 10 }, ct);
+                        var r2 = await s.For(TestMessageWithDelegateHandler.T)
+                            .WithDefaultSenderConfiguration()
+                            .Handle(new() { Payload = 20 }, ct);
 
                         return [r1, r2];
                     }
 
-                    await s.For(TestMessageWithDelegateHandlerWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                    await s.For(TestMessageWithDelegateHandlerWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                    await s.For(TestMessageWithDelegateHandlerWithoutResponse.T)
+                        .WithDefaultSenderConfiguration()
+                        .Handle(new() { Payload = 10 }, ct);
+                    await s.For(TestMessageWithDelegateHandlerWithoutResponse.T)
+                        .WithDefaultSenderConfiguration()
+                        .Handle(new() { Payload = 20 }, ct);
 
                     return [];
                 },
@@ -1139,7 +1505,8 @@ public static partial class HttpMessageTestCases
             {
                 var responses = await Task.WhenAll(
                     s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct),
-                    s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct));
+                    s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct)
+                );
 
                 return responses;
             },
@@ -1150,15 +1517,17 @@ public static partial class HttpMessageTestCases
         {
             Name = "multiple receivers",
             NumOfReceivers = 2,
-            FullPath = string.Empty, // makes no sense with multiple different message types
+            FullPath = "", // makes no sense with multiple different message types
             ExpectedReceivedMessages = [new TestMessage { Payload = 10 }, new TestMessageWithFullPath { Payload = 20 }],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
-            RegisterHandler = s => s.AddMessageHandler<TestMessageHandler>()
-                                    .AddMessageHandler<TestMessageWithFullPathHandler>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<TestMessageHandler>().AddMessageHandler<TestMessageWithFullPathHandler>(),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithFullPath.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r2 = await s.For(TestMessageWithFullPath.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -1168,8 +1537,13 @@ public static partial class HttpMessageTestCases
         yield return new()
         {
             Name = "type hierarchy with response",
-            FullPath = string.Empty, // makes no sense with multiple different message types
-            ExpectedReceivedMessages = [new TestMessageBase(10), new TestMessageSub(20, 30), new TestMessageSub(40, 50)],
+            FullPath = "", // makes no sense with multiple different message types
+            ExpectedReceivedMessages =
+            [
+                new TestMessageBase(Payload: 10),
+                new TestMessageSub(Payload: 20, PayloadSub: 30),
+                new TestMessageSub(Payload: 40, PayloadSub: 50),
+            ],
             ExpectedResponses =
             [
                 new TestMessageResponse { Payload = 11 },
@@ -1179,9 +1553,13 @@ public static partial class HttpMessageTestCases
             RegisterHandler = s => s.AddMessageHandler<MultiHierarchyTestMessageHandler>(),
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(TestMessageBase.T).WithDefaultSenderConfiguration().Handle(new(10), ct);
-                var r2 = await s.For(TestMessageSub.T).WithDefaultSenderConfiguration().Handle(new(20, 30), ct);
-                var r3 = await s.For(TestMessageSub.T).WithDefaultSenderConfiguration().Handle(new TestMessageSubSub(40, 50, 60), ct);
+                var r1 = await s.For(TestMessageBase.T).WithDefaultSenderConfiguration().Handle(new(Payload: 10), ct);
+                var r2 = await s.For(TestMessageSub.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(Payload: 20, PayloadSub: 30), ct);
+                var r3 = await s.For(TestMessageSub.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new TestMessageSubSub(Payload: 40, PayloadSub: 50, PayloadSubSub: 60), ct);
 
                 return [r1, r2, r3];
             },
@@ -1191,16 +1569,26 @@ public static partial class HttpMessageTestCases
         yield return new()
         {
             Name = "type hierarchy without response",
-            FullPath = string.Empty, // makes no sense with multiple different message types
+            FullPath = "", // makes no sense with multiple different message types
             ExpectedReceivedMessages =
-                [new TestMessageBaseWithoutResponse(10), new TestMessageSubWithoutResponse(20, 30), new TestMessageSubWithoutResponse(40, 50)],
+            [
+                new TestMessageBaseWithoutResponse(Payload: 10),
+                new TestMessageSubWithoutResponse(Payload: 20, PayloadSub: 30),
+                new TestMessageSubWithoutResponse(Payload: 40, PayloadSub: 50),
+            ],
             ExpectedResponses = [],
             RegisterHandler = s => s.AddMessageHandler<MultiHierarchyTestMessageWithoutResponseHandler>(),
             SendMessages = async (s, ct) =>
             {
-                await s.For(TestMessageBaseWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new(10), ct);
-                await s.For(TestMessageSubWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new(20, 30), ct);
-                await s.For(TestMessageSubWithoutResponse.T).WithDefaultSenderConfiguration().Handle(new TestMessageSubSubWithoutResponse(40, 50, 60), ct);
+                await s.For(TestMessageBaseWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(Payload: 10), ct);
+                await s.For(TestMessageSubWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new(Payload: 20, PayloadSub: 30), ct);
+                await s.For(TestMessageSubWithoutResponse.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new TestMessageSubSubWithoutResponse(Payload: 40, PayloadSub: 50, PayloadSubSub: 60), ct);
 
                 return [];
             },
@@ -1208,6 +1596,11 @@ public static partial class HttpMessageTestCases
         };
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
     public static IEnumerable<HttpMessageConformityExecutionSuccessTestCase> CreateSimpleSuccessTestCases()
     {
         yield return new()
@@ -1231,15 +1624,17 @@ public static partial class HttpMessageTestCases
         {
             Name = "multiple receivers",
             NumOfReceivers = 2,
-            FullPath = string.Empty, // makes no sense with multiple different message types
+            FullPath = "", // makes no sense with multiple different message types
             ExpectedReceivedMessages = [new TestMessage { Payload = 10 }, new TestMessageWithFullPath { Payload = 20 }],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
-            RegisterHandler = s => s.AddMessageHandler<TestMessageHandler>()
-                                    .AddMessageHandler<TestMessageWithFullPathHandler>(),
+            RegisterHandler = s =>
+                s.AddMessageHandler<TestMessageHandler>().AddMessageHandler<TestMessageWithFullPathHandler>(),
             SendMessages = async (s, ct) =>
             {
                 var r1 = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
-                var r2 = await s.For(TestMessageWithFullPath.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 20 }, ct);
+                var r2 = await s.For(TestMessageWithFullPath.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 20 }, ct);
 
                 return [r1, r2];
             },
@@ -1247,6 +1642,11 @@ public static partial class HttpMessageTestCases
         };
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
     public static IEnumerable<HttpMessageConformityExecutionErrorTestCase> CreateErrorTestCases()
     {
         yield return new()
@@ -1270,28 +1670,33 @@ public static partial class HttpMessageTestCases
             ConfigurationExceptions = [],
             SendException = new InvalidOperationException("send error"),
             HandlerExceptions = [],
-            RegisterHandler = _ =>
-            {
-            },
+            RegisterHandler = _ => { },
             SendMessages = async (s, ct) =>
             {
-                var r1 = await s.For(ThrowingTestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
+                var r1 = await s.For(ThrowingTestMessage.T)
+                    .WithDefaultSenderConfiguration()
+                    .Handle(new() { Payload = 10 }, ct);
 
                 return [r1];
             },
-            MapEndpoints = _ =>
-            {
-            },
+            MapEndpoints = _ => { },
         };
     }
 
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
     public static IEnumerable<HttpMessageConformityContextTestCase> CreateContextTestCases()
     {
-        foreach (var t in from hasActivity in new[] { true, false }
-                          from hasDownstream in new[] { true, false }
-                          from hasUpstream in new[] { true, false }
-                          from hasBidirectional in new[] { true, false }
-                          select (hasActivity, hasDownstream, hasUpstream, hasBidirectional))
+        foreach (
+            var t in from hasActivity in new[] { true, false }
+            from hasDownstream in new[] { true, false }
+            from hasUpstream in new[] { true, false }
+            from hasBidirectional in new[] { true, false }
+            select (hasActivity, hasDownstream, hasUpstream, hasBidirectional)
+        )
         {
             yield return new()
             {
@@ -1304,7 +1709,9 @@ public static partial class HttpMessageTestCases
                 RegisterHandler = s => s.AddMessageHandler<TestMessageHandler>(),
                 SendMessages = async (s, ct) =>
                 {
-                    var response = await s.For(TestMessage.T).WithDefaultSenderConfiguration().Handle(new() { Payload = 10 }, ct);
+                    var response = await s.For(TestMessage.T)
+                        .WithDefaultSenderConfiguration()
+                        .Handle(new() { Payload = 10 }, ct);
 
                     return [response];
                 },
@@ -1324,43 +1731,49 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessage.IHandler
+    public sealed partial class TestMessageHandler(FnToCallFromHandler funToCallFromHandler) : TestMessage.IHandler
     {
         public static void ConfigurePipeline(TestMessage.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessage message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>]
     public sealed partial record TestMessageWithoutPayload;
 
-    public sealed partial class TestMessageWithoutPayloadHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithoutPayloadHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithoutPayload.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithoutPayload.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithoutPayload.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithoutPayload message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithoutPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = 11 };
+            return new TestMessageResponse { Payload = 11 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage]
@@ -1369,39 +1782,45 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithoutResponseHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithoutResponseHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithoutResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage]
     public sealed partial record TestMessageWithoutResponseWithoutPayload;
 
-    public sealed partial class TestMessageWithoutResponseWithoutPayloadHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithoutResponseWithoutPayload.IHandler
+    public sealed partial class TestMessageWithoutResponseWithoutPayloadHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithoutResponseWithoutPayload.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithoutResponseWithoutPayload.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithoutResponseWithoutPayload.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task Handle(TestMessageWithoutResponseWithoutPayload message, CancellationToken cancellationToken = default)
+        public async Task Handle(
+            TestMessageWithoutResponseWithoutPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Delete)]
@@ -1410,22 +1829,25 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithMethodHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithMethodHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithMethod.IHandler
     {
         public static void ConfigurePipeline(TestMessageWithMethod.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithMethod message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithMethod message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(PathPrefix = "/custom/prefix")]
@@ -1434,22 +1856,26 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithPathPrefixHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithPathPrefixHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithPathPrefix.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithPathPrefix.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithPathPrefix.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithPathPrefix message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithPathPrefix message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(Version = "v2")]
@@ -1458,22 +1884,26 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithVersionHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithVersionHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithVersion.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithVersion.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithVersion.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithVersion message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithVersion message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(Path = "/custom/path")]
@@ -1482,22 +1912,25 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithPathHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithPathHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithPath.IHandler
     {
         public static void ConfigurePipeline(TestMessageWithPath.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithPath message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithPath message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(PathPrefix = "/custom/prefix", Version = "v3", Path = "/custom/path")]
@@ -1506,22 +1939,27 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithPathPrefixAndPathAndVersionHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithPathPrefixAndPathAndVersion.IHandler
+    public sealed partial class TestMessageWithPathPrefixAndPathAndVersionHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithPathPrefixAndPathAndVersion.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithPathPrefixAndPathAndVersion.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithPathPrefixAndPathAndVersion.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithPathPrefixAndPathAndVersion message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithPathPrefixAndPathAndVersion message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(FullPath = "/custom/full/path/for/message")]
@@ -1530,22 +1968,26 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithFullPathHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithFullPathHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithFullPath.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithFullPath.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithFullPath.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithFullPath message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithFullPath message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(FullPath = "/custom/full/path/for/message/ignoring/version", Version = "v2")]
@@ -1554,22 +1996,26 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithFullPathAndVersionHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithFullPathAndVersionHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithFullPathAndVersion.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithFullPathAndVersion.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithFullPathAndVersion.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithFullPathAndVersion message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithFullPathAndVersion message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(SuccessStatusCode = 201)]
@@ -1578,22 +2024,26 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithSuccessStatusCodeHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithSuccessStatusCodeHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithSuccessStatusCode.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithSuccessStatusCode.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithSuccessStatusCode.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithSuccessStatusCode message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithSuccessStatusCode message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(Name = "custom-message-name")]
@@ -1602,22 +2052,25 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithNameHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithNameHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithName.IHandler
     {
         public static void ConfigurePipeline(TestMessageWithName.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithName message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithName message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(ApiGroupName = "Custom Message Group")]
@@ -1626,22 +2079,26 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithApiGroupNameHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithApiGroupNameHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithApiGroupName.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithApiGroupName.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithApiGroupName.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithApiGroupName message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithApiGroupName message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
@@ -1652,43 +2109,50 @@ public static partial class HttpMessageTestCases
         public required string Param { get; init; }
     }
 
-    public sealed partial class TestMessageWithGetHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithGetHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithGet.IHandler
     {
         public static void ConfigurePipeline(TestMessageWithGet.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithGet message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithGet message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
     public sealed partial record TestMessageWithGetWithoutPayload;
 
-    public sealed partial class TestMessageWithGetWithoutPayloadHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithGetWithoutPayloadHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithGetWithoutPayload.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithGetWithoutPayload.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithGetWithoutPayload.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithGetWithoutPayload message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithGetWithoutPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = 11 };
+            return new TestMessageResponse { Payload = 11 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
@@ -1699,26 +2163,29 @@ public static partial class HttpMessageTestCases
         public string? Param { get; init; }
     }
 
-    public sealed partial class TestMessageWithGetWithOptionalPayloadHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithGetWithOptionalPayloadHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithGetWithOptionalPayload.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithGetWithOptionalPayload.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithGetWithOptionalPayload.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithGetWithOptionalPayload message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithGetWithOptionalPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = (message.Payload ?? 0) + 1 };
+            return new TestMessageResponse { Payload = (message.Payload ?? 0) + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
-    [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "testing")]
     public sealed partial record TestMessageWithGetWithPrimaryConstructor(int Payload, string Param, int[] IntArray)
     {
         public bool Equals(TestMessageWithGetWithPrimaryConstructor? other)
@@ -1734,54 +2201,64 @@ public static partial class HttpMessageTestCases
             }
 
             return Payload == other.Payload
-                   && Param == other.Param
-                   && IntArray.SequenceEqual(other.IntArray);
+                && string.Equals(Param, other.Param, StringComparison.Ordinal)
+                && IntArray.SequenceEqual(other.IntArray);
         }
 
         public override int GetHashCode() => HashCode.Combine(Payload, Param, IntArray);
     }
 
-    public sealed partial class TestMessageWithGetWithPrimaryConstructorHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithGetWithPrimaryConstructor.IHandler
+    public sealed partial class TestMessageWithGetWithPrimaryConstructorHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithGetWithPrimaryConstructor.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithGetWithPrimaryConstructor.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithGetWithPrimaryConstructor.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithGetWithPrimaryConstructor message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithGetWithPrimaryConstructor message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + message.IntArray.Sum() };
+            return new TestMessageResponse { Payload = message.Payload + message.IntArray.Sum() };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
-    [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "testing")]
-    public sealed partial record TestMessageWithGetWithPrimaryConstructorWithOptionalParameters(int? Payload = null, string? Param = null);
+    public sealed partial record TestMessageWithGetWithPrimaryConstructorWithOptionalParameters(
+        int? Payload = null,
+        string? Param = null
+    );
 
-    public sealed partial class TestMessageWithGetWithPrimaryConstructorWithOptionalParametersHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithGetWithPrimaryConstructorWithOptionalParameters.IHandler
+    public sealed partial class TestMessageWithGetWithPrimaryConstructorWithOptionalParametersHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithGetWithPrimaryConstructorWithOptionalParameters.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithGetWithPrimaryConstructorWithOptionalParameters.IPipeline pipeline)
-            => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(
+            TestMessageWithGetWithPrimaryConstructorWithOptionalParameters.IPipeline pipeline
+        ) => pipeline.UseReceiverLogging();
 
         public async Task<TestMessageResponse> Handle(
             TestMessageWithGetWithPrimaryConstructorWithOptionalParameters message,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = (message.Payload ?? 0) + 1 };
+            return new TestMessageResponse { Payload = (message.Payload ?? 0) + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodNames.Get)]
@@ -1792,7 +2269,6 @@ public static partial class HttpMessageTestCases
 
         public required List<int> NestedList { get; init; }
 
-        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "for testing")]
         public required int[] NestedArray { get; init; }
 
         public bool Equals(TestMessageWithComplexGetPayload? other)
@@ -1808,32 +2284,36 @@ public static partial class HttpMessageTestCases
             }
 
             return Payload == other.Payload
-                   && NestedList.SequenceEqual(other.NestedList)
-                   && NestedArray.SequenceEqual(other.NestedArray);
+                && NestedList.SequenceEqual(other.NestedList)
+                && NestedArray.SequenceEqual(other.NestedArray);
         }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Payload, NestedList, NestedArray);
-        }
+        public override int GetHashCode() => HashCode.Combine(Payload, NestedList, NestedArray);
     }
 
-    public sealed partial class TestMessageWithComplexGetPayloadHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithComplexGetPayloadHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithComplexGetPayload.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithComplexGetPayload.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithComplexGetPayload.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithComplexGetPayload message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithComplexGetPayload message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = (message.Payload ?? 0) + message.NestedList.Sum() + message.NestedArray.Sum() };
+            return new TestMessageResponse
+            {
+                Payload = (message.Payload ?? 0) + message.NestedList.Sum() + message.NestedArray.Sum(),
+            };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageWithCustomSerializedPayloadTypeResponse>]
@@ -1849,46 +2329,53 @@ public static partial class HttpMessageTestCases
 
     public sealed record TestMessageWithCustomSerializedPayloadTypePayload(int Payload);
 
-    public sealed partial class TestMessageWithCustomSerializedPayloadTypeHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithCustomSerializedPayloadType.IHandler
+    public sealed partial class TestMessageWithCustomSerializedPayloadTypeHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithCustomSerializedPayloadType.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithCustomSerializedPayloadType.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithCustomSerializedPayloadType.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task<TestMessageWithCustomSerializedPayloadTypeResponse> Handle(
             TestMessageWithCustomSerializedPayloadType message,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = new(message.Payload.Payload + 1) };
+            return new TestMessageWithCustomSerializedPayloadTypeResponse
+            {
+                Payload = new TestMessageWithCustomSerializedPayloadTypePayload(message.Payload.Payload + 1),
+            };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
 
         internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
         {
-            public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestMessageWithCustomSerializedPayloadTypePayload);
+            public override bool CanConvert(Type typeToConvert) =>
+                typeToConvert == typeof(TestMessageWithCustomSerializedPayloadTypePayload);
 
-            public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
-            {
-                return Activator.CreateInstance(typeof(PayloadJsonConverter)) as JsonConverter;
-            }
+            public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
+                Activator.CreateInstance<PayloadJsonConverter>();
         }
 
         internal sealed class PayloadJsonConverter : JsonConverter<TestMessageWithCustomSerializedPayloadTypePayload>
         {
-            public override TestMessageWithCustomSerializedPayloadTypePayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                return new(reader.GetInt32());
-            }
+            public override TestMessageWithCustomSerializedPayloadTypePayload Read(
+                ref Utf8JsonReader reader,
+                Type typeToConvert,
+                JsonSerializerOptions options
+            ) => new(reader.GetInt32());
 
-            public override void Write(Utf8JsonWriter writer, TestMessageWithCustomSerializedPayloadTypePayload value, JsonSerializerOptions options)
-            {
-                writer.WriteNumberValue(value.Payload);
-            }
+            public override void Write(
+                Utf8JsonWriter writer,
+                TestMessageWithCustomSerializedPayloadTypePayload value,
+                JsonSerializerOptions options
+            ) => writer.WriteNumberValue(value.Payload);
         }
     }
 
@@ -1903,13 +2390,21 @@ public static partial class HttpMessageTestCases
 
         public static string FullPath => "/api/custom/path/for/serializer/{pathPayload:int}";
 
-        static IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
-            IHttpMessage<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.HttpMessageSerializer { get; }
-            = new TestMessageCustomSerializer();
+        static IHttpMessageSerializer<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        > IHttpMessage<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        >.HttpMessageSerializer { get; } = new TestMessageCustomSerializer();
 
-        static IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
-            IHttpMessage<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.HttpMessageResponseSerializer { get; }
-            = new TestMessageCustomSerializer();
+        static IHttpMessageResponseSerializer<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        > IHttpMessage<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        >.HttpMessageResponseSerializer { get; } = new TestMessageCustomSerializer();
     }
 
     public sealed record TestMessageWithCustomSerializerResponse
@@ -1917,22 +2412,62 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    private sealed class TestMessageCustomSerializer : IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>,
-                                                       IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
+    private sealed class TestMessageCustomSerializer
+        : IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>,
+            IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
     {
-        string IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType => "application/custom-message";
+        string IHttpMessageResponseSerializer<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        >.ContentType => "application/custom-response";
 
-        public string SerializeMessageToPath(IServiceProvider serviceProvider, TestMessageWithCustomSerializer message)
-            => $"/api/custom/path/for/serializer/{message.PathPayload}";
+        public async Task SerializeResponse(
+            IServiceProvider serviceProvider,
+            Stream bodyStream,
+            TestMessageWithCustomSerializerResponse response,
+            CancellationToken cancellationToken
+        )
+        {
+            await using var writer = new StreamWriter(bodyStream);
+            await writer.WriteAsync($"total-payload:{response.Payload}");
+        }
 
-        public string SerializeMessageToQuery(IServiceProvider serviceProvider, TestMessageWithCustomSerializer message)
-            => $"?query-payload={message.QueryPayload}";
+        public async Task<TestMessageWithCustomSerializerResponse> DeserializeResponse(
+            IServiceProvider serviceProvider,
+            Stream bodyStream,
+            Encoding? encoding,
+            CancellationToken cancellationToken
+        )
+        {
+            await Task.Yield();
+            using var reader = new StreamReader(bodyStream, encoding ?? Encoding.UTF8, leaveOpen: true);
+            var bodyContent = await reader.ReadToEndAsync(cancellationToken);
+            var payload = int.Parse(bodyContent.Split(':')[1], CultureInfo.InvariantCulture);
+
+            return new TestMessageWithCustomSerializerResponse { Payload = payload };
+        }
+
+        string IHttpMessageSerializer<
+            TestMessageWithCustomSerializer,
+            TestMessageWithCustomSerializerResponse
+        >.ContentType => "application/custom-message";
+
+        public string SerializeMessageToPath(
+            IServiceProvider serviceProvider,
+            TestMessageWithCustomSerializer message
+        ) => $"/api/custom/path/for/serializer/{message.PathPayload}";
+
+        public string SerializeMessageToQuery(
+            IServiceProvider serviceProvider,
+            TestMessageWithCustomSerializer message
+        ) => $"?query-payload={message.QueryPayload}";
 
         public async Task SerializeMessageToBody(
             IServiceProvider serviceProvider,
             TestMessageWithCustomSerializer message,
             Stream bodyStream,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             await Task.Yield();
 
@@ -1946,64 +2481,54 @@ public static partial class HttpMessageTestCases
             Encoding? encoding,
             string path,
             IEnumerable<KeyValuePair<string, IReadOnlyList<string?>>> query,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             await Task.Yield();
             using var reader = new StreamReader(bodyStream, encoding ?? Encoding.UTF8, leaveOpen: true);
             var bodyContent = await reader.ReadToEndAsync(cancellationToken);
-            var bodyPayload = int.Parse(bodyContent.Split(':')[1]);
-            var pathParam = int.Parse(path.Trim('/').Replace("api/custom/path/for/serializer/", string.Empty));
-            var queryParam = int.Parse(query.First(p => p.Key == "query-payload").Value[0]!);
+            var bodyPayload = int.Parse(bodyContent.Split(':')[1], CultureInfo.InvariantCulture);
+            var pathParam = int.Parse(
+                path.Trim(trimChar: '/').Replace("api/custom/path/for/serializer/", "", StringComparison.Ordinal),
+                CultureInfo.InvariantCulture
+            );
+            var queryParam = int.Parse(
+                query.First(p => string.Equals(p.Key, "query-payload", StringComparison.Ordinal)).Value[0]!,
+                CultureInfo.InvariantCulture
+            );
 
-            return new() { BodyPayload = bodyPayload, PathPayload = pathParam, QueryPayload = queryParam };
-        }
-
-        string IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>.ContentType
-            => "application/custom-response";
-
-        public async Task SerializeResponse(
-            IServiceProvider serviceProvider,
-            Stream bodyStream,
-            TestMessageWithCustomSerializerResponse response,
-            CancellationToken cancellationToken)
-        {
-            await using var writer = new StreamWriter(bodyStream);
-            await writer.WriteAsync($"total-payload:{response.Payload}");
-        }
-
-        public async Task<TestMessageWithCustomSerializerResponse> DeserializeResponse(
-            IServiceProvider serviceProvider,
-            Stream bodyStream,
-            Encoding? encoding,
-            CancellationToken cancellationToken)
-        {
-            await Task.Yield();
-            using var reader = new StreamReader(bodyStream, encoding ?? Encoding.UTF8, leaveOpen: true);
-            var bodyContent = await reader.ReadToEndAsync(cancellationToken);
-            var payload = int.Parse(bodyContent.Split(':')[1]);
-
-            return new() { Payload = payload };
+            return new TestMessageWithCustomSerializer
+            {
+                BodyPayload = bodyPayload,
+                PathPayload = pathParam,
+                QueryPayload = queryParam,
+            };
         }
     }
 
-    public sealed partial class TestMessageWithCustomSerializerHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithCustomSerializerHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithCustomSerializer.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithCustomSerializer.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithCustomSerializer.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task<TestMessageWithCustomSerializerResponse> Handle(
             TestMessageWithCustomSerializer message,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.PathPayload + message.QueryPayload + message.BodyPayload };
+            return new TestMessageWithCustomSerializerResponse
+            {
+                Payload = message.PathPayload + message.QueryPayload + message.BodyPayload,
+            };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageWithCustomJsonTypeInfoResponse>]
@@ -2017,24 +2542,26 @@ public static partial class HttpMessageTestCases
         public int ResponsePayload { get; init; }
     }
 
-    public sealed partial class TestMessageWithCustomJsonTypeInfoHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithCustomJsonTypeInfoHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithCustomJsonTypeInfo.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithCustomJsonTypeInfo.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithCustomJsonTypeInfo.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task<TestMessageWithCustomJsonTypeInfoResponse> Handle(
             TestMessageWithCustomJsonTypeInfo message,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { ResponsePayload = message.MessagePayload + 1 };
+            return new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = message.MessagePayload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseUpper)]
@@ -2048,24 +2575,32 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithMiddlewareHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithMiddlewareHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithMiddleware.IHandler
     {
         public static void ConfigurePipeline(TestMessageWithMiddleware.IPipeline pipeline) =>
-            pipeline.UseReceiverLogging()
-                    .Use(pipeline.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>());
+            pipeline
+                .UseReceiverLogging()
+                .Use(
+                    pipeline.ServiceProvider.GetRequiredService<
+                        TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>
+                    >()
+                );
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithMiddleware message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithMiddleware message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage]
@@ -2074,25 +2609,35 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithMiddlewareWithoutResponseHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithMiddlewareWithoutResponse.IHandler
+    public sealed partial class TestMessageWithMiddlewareWithoutResponseHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithMiddlewareWithoutResponse.IHandler
     {
         public static void ConfigurePipeline(TestMessageWithMiddlewareWithoutResponse.IPipeline pipeline) =>
-            pipeline.UseReceiverLogging()
-                    .Use(pipeline.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>());
+            pipeline
+                .UseReceiverLogging()
+                .Use(
+                    pipeline.ServiceProvider.GetRequiredService<
+                        TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>
+                    >()
+                );
 
-        public async Task Handle(TestMessageWithMiddlewareWithoutResponse message, CancellationToken cancellationToken = default)
+        public async Task Handle(
+            TestMessageWithMiddlewareWithoutResponse message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
-    public sealed class TestMessageMiddleware<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
+    public sealed class TestMessageMiddleware<TMessage, TResponse>(TestObservations observations)
+        : IMessageMiddleware<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
@@ -2109,22 +2654,26 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithArrayResponseHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithArrayResponseHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithArrayResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithArrayResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithArrayResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse[]> Handle(TestMessageWithArrayResponse message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse[]> Handle(
+            TestMessageWithArrayResponse message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
             return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<List<TestMessageResponse>>]
@@ -2133,22 +2682,30 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithListResponseHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithListResponseHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithListResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithListResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithListResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<List<TestMessageResponse>> Handle(TestMessageWithListResponse message, CancellationToken cancellationToken = default)
+        public async Task<List<TestMessageResponse>> Handle(
+            TestMessageWithListResponse message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
+            return new List<TestMessageResponse>
+            {
+                new() { Payload = message.Payload + 1 },
+                new() { Payload = message.Payload + 2 },
+            };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<IEnumerable<TestMessageResponse>>]
@@ -2157,22 +2714,30 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithEnumerableResponseHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithEnumerableResponseHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithEnumerableResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithEnumerableResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithEnumerableResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<IEnumerable<TestMessageResponse>> Handle(TestMessageWithEnumerableResponse message, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<TestMessageResponse>> Handle(
+            TestMessageWithEnumerableResponse message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
+            return new List<TestMessageResponse>
+            {
+                new() { Payload = message.Payload + 1 },
+                new() { Payload = message.Payload + 2 },
+            }.AsReadOnly();
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageForAssemblyScanningResponse>]
@@ -2186,22 +2751,26 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageForAssemblyScanningHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageForAssemblyScanningHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageForAssemblyScanning.IHandler
     {
-        public static void ConfigurePipeline(TestMessageForAssemblyScanning.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageForAssemblyScanning.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageForAssemblyScanningResponse> Handle(TestMessageForAssemblyScanning message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageForAssemblyScanningResponse> Handle(
+            TestMessageForAssemblyScanning message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageForAssemblyScanningResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage]
@@ -2210,20 +2779,25 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithoutResponseForAssemblyScanningHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageWithoutResponseForAssemblyScanning.IHandler
+    public sealed partial class TestMessageWithoutResponseForAssemblyScanningHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageWithoutResponseForAssemblyScanning.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithoutResponseForAssemblyScanning.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithoutResponseForAssemblyScanning.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task Handle(TestMessageWithoutResponseForAssemblyScanning message, CancellationToken cancellationToken = default)
+        public async Task Handle(
+            TestMessageWithoutResponseForAssemblyScanning message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [CustomHttpMessage<TestMessageResponse>(CustomPathPrefix = "customApi")]
@@ -2232,22 +2806,26 @@ public static partial class HttpMessageTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestMessageWithCustomConventionsHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestMessageWithCustomConventionsHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageWithCustomConventions.IHandler
     {
-        public static void ConfigurePipeline(TestMessageWithCustomConventions.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageWithCustomConventions.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageWithCustomConventions message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageWithCustomConventions message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        public static void ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>]
@@ -2268,70 +2846,81 @@ public static partial class HttpMessageTestCases
     [HttpMessage<TestMessageResponse>]
     public partial record TestMessageSub(int Payload, int PayloadSub) : TestMessageBase(Payload);
 
-    public sealed record TestMessageSubSub(int Payload, int PayloadSub, int PayloadSubSub) : TestMessageSub(Payload, PayloadSub);
+    public sealed record TestMessageSubSub(int Payload, int PayloadSub, int PayloadSubSub)
+        : TestMessageSub(Payload, PayloadSub);
 
-    private sealed partial class MultiHierarchyTestMessageHandler(FnToCallFromHandler fnToCallFromHandler)
+    private sealed partial class MultiHierarchyTestMessageHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageBase.IHandler,
-          TestMessageSub.IHandler
+            TestMessageSub.IHandler
     {
         public static void ConfigurePipeline(TestMessageBase.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
         public static void ConfigurePipeline(TestMessageSub.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
-        public async Task<TestMessageResponse> Handle(TestMessageBase message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageBase message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 1 };
+            return new TestMessageResponse { Payload = message.Payload + 1 };
         }
 
-        public async Task<TestMessageResponse> Handle(TestMessageSub message, CancellationToken cancellationToken = default)
+        public async Task<TestMessageResponse> Handle(
+            TestMessageSub message,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
 
-            return new() { Payload = message.Payload + 2 };
+            return new TestMessageResponse { Payload = message.Payload + 2 };
         }
 
-        static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage]
     public partial record TestMessageBaseWithoutResponse(int Payload);
 
     [HttpMessage]
-    public partial record TestMessageSubWithoutResponse(int Payload, int PayloadSub) : TestMessageBaseWithoutResponse(Payload);
+    public partial record TestMessageSubWithoutResponse(int Payload, int PayloadSub)
+        : TestMessageBaseWithoutResponse(Payload);
 
-    public sealed record TestMessageSubSubWithoutResponse(int Payload, int PayloadSub, int PayloadSubSub) : TestMessageSubWithoutResponse(Payload, PayloadSub);
+    public sealed record TestMessageSubSubWithoutResponse(int Payload, int PayloadSub, int PayloadSubSub)
+        : TestMessageSubWithoutResponse(Payload, PayloadSub);
 
-    private sealed partial class MultiHierarchyTestMessageWithoutResponseHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestMessageBaseWithoutResponse.IHandler,
-          TestMessageSubWithoutResponse.IHandler
+    private sealed partial class MultiHierarchyTestMessageWithoutResponseHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestMessageBaseWithoutResponse.IHandler, TestMessageSubWithoutResponse.IHandler
     {
-        public static void ConfigurePipeline(TestMessageBaseWithoutResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageBaseWithoutResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
-        public static void ConfigurePipeline(TestMessageSubWithoutResponse.IPipeline pipeline) => pipeline.UseReceiverLogging();
+        public static void ConfigurePipeline(TestMessageSubWithoutResponse.IPipeline pipeline) =>
+            pipeline.UseReceiverLogging();
 
         public async Task Handle(TestMessageBaseWithoutResponse message, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
 
         public async Task Handle(TestMessageSubWithoutResponse message, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(message, cancellationToken);
+            await funToCallFromHandler(message, cancellationToken);
         }
 
-        static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver)
-            => receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
+        static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver) =>
+            receiver.ServiceProvider.GetService<Action<IHttpMessageReceiver>>()?.Invoke(receiver);
     }
 
     [HttpMessage<TestMessageResponse>]
@@ -2339,11 +2928,14 @@ public static partial class HttpMessageTestCases
     {
         public required int Payload { get; init; }
 
-        static IHttpMessageSerializer<ThrowingTestMessage, TestMessageResponse> IHttpMessage<ThrowingTestMessage, TestMessageResponse>
-            .HttpMessageSerializer { get; } = new ThrowingTestMessageSerializer();
+        static IHttpMessageSerializer<ThrowingTestMessage, TestMessageResponse> IHttpMessage<
+            ThrowingTestMessage,
+            TestMessageResponse
+        >.HttpMessageSerializer { get; } = new ThrowingTestMessageSerializer();
     }
 
-    private sealed class ThrowingTestMessageSerializer : IHttpMessageSerializer<ThrowingTestMessage, TestMessageResponse>
+    private sealed class ThrowingTestMessageSerializer
+        : IHttpMessageSerializer<ThrowingTestMessage, TestMessageResponse>
     {
         public string ContentType => "application/throwing";
 
@@ -2351,10 +2943,8 @@ public static partial class HttpMessageTestCases
             IServiceProvider serviceProvider,
             ThrowingTestMessage message,
             Stream bodyStream,
-            CancellationToken cancellationToken)
-        {
-            throw serviceProvider.GetRequiredService<Exception>();
-        }
+            CancellationToken cancellationToken
+        ) => throw serviceProvider.GetRequiredService<Exception>();
 
         public Task<ThrowingTestMessage> DeserializeMessage(
             IServiceProvider serviceProvider,
@@ -2362,10 +2952,8 @@ public static partial class HttpMessageTestCases
             Encoding? encoding,
             string path,
             IEnumerable<KeyValuePair<string, IReadOnlyList<string?>>> query,
-            CancellationToken cancellationToken)
-        {
-            throw new NotSupportedException();
-        }
+            CancellationToken cancellationToken
+        ) => throw new NotSupportedException();
     }
 
     public sealed class TestObservations
@@ -2381,10 +2969,13 @@ public static partial class HttpMessageTestCases
 file static class PipelineExtensions
 {
     public static IMessagePipeline<TMessage, TResponse> UseSendCallback<TMessage, TResponse>(
-        this IMessagePipeline<TMessage, TResponse> pipeline)
+        this IMessagePipeline<TMessage, TResponse> pipeline
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        var sendCallback = pipeline.ServiceProvider.GetService<Func<object, ConquerorContext, CancellationToken, Task>>();
+        var sendCallback = pipeline.ServiceProvider.GetService<
+            Func<object, ConquerorContext, CancellationToken, Task>
+        >();
 
         if (sendCallback is null)
         {
@@ -2399,7 +2990,9 @@ file static class PipelineExtensions
         });
     }
 
-    public static IMessagePipeline<TMessage, TResponse> UseLogging<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline)
+    public static IMessagePipeline<TMessage, TResponse> UseLogging<TMessage, TResponse>(
+        this IMessagePipeline<TMessage, TResponse> pipeline
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         var logger = pipeline.ServiceProvider.GetRequiredService<ILogger>();
@@ -2412,7 +3005,9 @@ file static class PipelineExtensions
         });
     }
 
-    public static IMessagePipeline<TMessage, TResponse> UseReceiverLogging<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline)
+    public static IMessagePipeline<TMessage, TResponse> UseReceiverLogging<TMessage, TResponse>(
+        this IMessagePipeline<TMessage, TResponse> pipeline
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         var logger = pipeline.ServiceProvider.GetRequiredService<ILogger>();
@@ -2426,33 +3021,48 @@ file static class PipelineExtensions
     }
 
     public static TIHandler WithDefaultSenderConfiguration<TMessage, TResponse, TIHandler>(
-        this IMessageHandler<TMessage, TResponse, TIHandler> handler)
+        this IMessageHandler<TMessage, TResponse, TIHandler> handler
+    )
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return handler.WithPipeline(p => _ = p.UseLogging().UseSendCallback())
-                      .WithTransport(b => b.UseHttp(new("http://conqueror.test"))
-                                           .WithHttpClient(b.ServiceProvider.GetRequiredService<HttpClient>()));
+        return handler
+            .WithPipeline(p => _ = p.UseLogging().UseSendCallback())
+            .WithTransport(b =>
+                b.UseHttp(new("http://conqueror.test"))
+                    .WithHttpClient(b.ServiceProvider.GetRequiredService<HttpClient>())
+            );
     }
 }
 
-[SuppressMessage("ReSharper", "UnusedTypeParameter", Justification = "used by source generator")]
 [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification = "used by source generator")]
-[MessageTransport(Prefix = "Http", Namespace = "Conqueror", FullyQualifiedMessageTypeName = "Conqueror.Transport.Http.Tests.Messaging.ICustomHttpMessage")]
+[MessageTransport(
+    Prefix = "Http",
+    Namespace = "Conqueror",
+    FullyQualifiedMessageTypeName = "Conqueror.Transport.Http.Tests.Messaging.ICustomHttpMessage"
+)]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+[SuppressMessage(
+    "Major Code Smell",
+    "S2326:Unused type parameters should be removed",
+    Justification = "used by source generator"
+)]
 public sealed class CustomHttpMessageAttribute<TResponse> : Attribute
 {
     public string? CustomPathPrefix { get; set; }
 }
 
-[SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
+[SuppressMessage(
+    "ReSharper",
+    "StaticMemberInGenericType",
+    Justification = "The static members are intentionally per generic type"
+)]
 [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty", Justification = "Members are set via code generation")]
 public interface ICustomHttpMessage<TMessage, TResponse> : IHttpMessage<TMessage, TResponse>
     where TMessage : class, ICustomHttpMessage<TMessage, TResponse>
 {
+    static virtual string? CustomPathPrefix { get; }
     static string IHttpMessage<TMessage, TResponse>.PathPrefix => TMessage.CustomPathPrefix ?? "api";
 
     static int IHttpMessage<TMessage, TResponse>.SuccessStatusCode => 201;
-
-    static virtual string? CustomPathPrefix { get; }
 }

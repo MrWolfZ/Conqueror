@@ -4,11 +4,13 @@ public interface ISignalTransportConformityTestHost : ITransportConformityTestHo
 {
     Task<ISignalTransportConformityReceiverTestHost> CreateReceiverTestHost(
         CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? signalCallback = null);
+        Func<object, ConquerorContext, CancellationToken, Task>? signalCallback = null
+    );
 
     Task<ISignalTransportConformityPublisherTestHost> CreatePublisherTestHost(
         CancellationToken cancellationToken,
-        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback = null);
+        Func<object, ConquerorContext, CancellationToken, Task>? publishCallback = null
+    );
 }
 
 public interface ISignalTransportConformityPublisherTestHost : IAsyncDisposable

@@ -1,6 +1,6 @@
-﻿using static System.IO.Path;
+﻿namespace Conqueror.Transport.FileSystem;
 
-namespace Conqueror.Transport.FileSystem;
+using static Path;
 
 internal readonly record struct DirectoryPath
 {
@@ -12,7 +12,8 @@ internal readonly record struct DirectoryPath
         {
             throw new ArgumentException(
                 $"expected base directory to be non-null, non-whitespace string, but it was {path}",
-                nameof(path));
+                nameof(path)
+            );
         }
 
         this.path = path;
@@ -20,17 +21,27 @@ internal readonly record struct DirectoryPath
 
     public static implicit operator string(DirectoryPath dir) => dir.path;
 
-    public DirectoryPath SubDir(string pathSegment)
-        => new(
-            new(path.TrimEnd(DirectorySeparatorChar) + DirectorySeparatorChar + pathSegment.TrimStart(DirectorySeparatorChar)));
+    public bool Equals(DirectoryPath other) => string.CompareOrdinal(path, other.path) is 0;
 
-    public FilePath File(string fileName)
-        => new(
-            new(path.TrimEnd(DirectorySeparatorChar) + DirectorySeparatorChar + fileName.TrimStart(DirectorySeparatorChar)));
+    public DirectoryPath SubDir(string pathSegment) =>
+        new(
+            new(
+                path.TrimEnd(DirectorySeparatorChar)
+                    + DirectorySeparatorChar
+                    + pathSegment.TrimStart(DirectorySeparatorChar)
+            )
+        );
 
-    public bool Equals(DirectoryPath other) => string.CompareOrdinal(path, other.path) == 0;
+    public FilePath File(string fileName) =>
+        new(
+            new(
+                path.TrimEnd(DirectorySeparatorChar)
+                    + DirectorySeparatorChar
+                    + fileName.TrimStart(DirectorySeparatorChar)
+            )
+        );
 
-    public override int GetHashCode() => path.GetHashCode();
+    public override int GetHashCode() => StringComparer.Ordinal.GetHashCode(path);
 
     public override string ToString() => path;
 }

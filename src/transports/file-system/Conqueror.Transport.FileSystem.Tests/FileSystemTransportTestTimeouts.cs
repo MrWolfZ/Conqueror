@@ -1,14 +1,11 @@
-using System.Diagnostics;
-
 namespace Conqueror.Transport.FileSystem.Tests;
 
 public sealed class FileSystemTransportTestTimeouts : IDisposable
 {
-    private static readonly bool IsRunningInGithubActionField = Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
+    private static readonly bool IsRunningInGithubActionField =
+        Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
 
-    private FileSystemTransportTestTimeouts()
-    {
-    }
+    private FileSystemTransportTestTimeouts() { }
 
     public required TimeSpan TestTimeout { get; init; }
 
@@ -22,10 +19,17 @@ public sealed class FileSystemTransportTestTimeouts : IDisposable
 
     private CancellationTokenSource TimeoutCancellationTokenSource { get; } = new();
 
+    public void Dispose()
+    {
+        TimeoutCancellationTokenSource.Cancel();
+
+        TimeoutCancellationTokenSource.Dispose();
+    }
+
     public static FileSystemTransportTestTimeouts Create(TimeSpan? testTimeout = null)
     {
         var assertionTimeout = Debugger.IsAttached
-            ? TimeSpan.FromMinutes(1)
+            ? TimeSpan.FromMinutes(value: 1)
             : TimeSpan.FromMilliseconds(IsRunningInGithubActionField ? 20_000 : 5_000);
 
         var testHost = new FileSystemTransportTestTimeouts
@@ -41,12 +45,5 @@ public sealed class FileSystemTransportTestTimeouts : IDisposable
         }
 
         return testHost;
-    }
-
-    public void Dispose()
-    {
-        TimeoutCancellationTokenSource.Cancel();
-
-        TimeoutCancellationTokenSource.Dispose();
     }
 }

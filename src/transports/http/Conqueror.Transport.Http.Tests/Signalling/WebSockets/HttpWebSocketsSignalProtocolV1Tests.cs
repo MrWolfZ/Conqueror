@@ -1,6 +1,6 @@
-﻿using Conqueror.Signalling.WebSockets;
+﻿namespace Conqueror.Transport.Http.Tests.Signalling.WebSockets;
 
-namespace Conqueror.Transport.Http.Tests.Signalling.WebSockets;
+using Conqueror.Signalling.WebSockets;
 
 [TestFixture]
 public sealed class HttpWebSocketsSignalProtocolV1Tests
@@ -15,7 +15,8 @@ public sealed class HttpWebSocketsSignalProtocolV1Tests
     [Combinatorial]
     public async Task GivenSignal_WhenWritingToAndReadingFromStreamWithProtocol_ReturnsCorrectResult(
         [Values(Content)] string content,
-        [Values(null, ContextData)] string? contextData)
+        [Values(arg1: null, ContextData)] string? contextData
+    )
     {
         await using var ms = new FlushResetMemoryStream();
 
@@ -24,11 +25,12 @@ public sealed class HttpWebSocketsSignalProtocolV1Tests
             Tag,
             contextData,
             (s, ct) => s.WriteAsync(Encoding.UTF8.GetBytes(content), ct),
-            CancellationToken.None);
+            CancellationToken.None
+        );
 
-        Assert.That(ms.Position, Is.EqualTo(0));
+        Assert.That(ms.Position, Is.EqualTo(expected: 0));
 
-        var (signal, cData) = await HttpWebSocketsSignalProtocolV1.Read(
+        var (signal, data) = await HttpWebSocketsSignalProtocolV1.Read(
             ms,
             async (tag, s, ct) =>
             {
@@ -41,10 +43,11 @@ public sealed class HttpWebSocketsSignalProtocolV1Tests
 
                 return Encoding.UTF8.GetString(buffer[..read]);
             },
-            CancellationToken.None);
+            CancellationToken.None
+        );
 
         Assert.That(signal, Is.EqualTo(Content));
-        Assert.That(cData, Is.EqualTo(contextData));
+        Assert.That(data, Is.EqualTo(contextData));
     }
 
     [Test]
@@ -52,21 +55,23 @@ public sealed class HttpWebSocketsSignalProtocolV1Tests
     {
         await using var ms = new FlushResetMemoryStream();
 
-        await ms.WriteAsync(new byte[] { 2 << 4 }, CancellationToken.None);
-        await ms.FlushAsync();
+        await ms.WriteAsync(" "u8.ToArray(), CancellationToken.None);
+        await ms.FlushAsync(CancellationToken.None);
 
         await Assert.ThatAsync(
-            () => HttpWebSocketsSignalProtocolV1.Read(
-                ms,
-                (_, _, _) =>
-                {
-                    Assert.Fail("should not happen");
+            () =>
+                HttpWebSocketsSignalProtocolV1.Read(
+                    ms,
+                    (_, _, _) =>
+                    {
+                        Assert.Fail("should not happen");
 
-                    return default;
-                },
-                CancellationToken.None),
-            Throws.InvalidOperationException
-                  .With.Message.Contains("Unsupported protocol version"));
+                        return default;
+                    },
+                    CancellationToken.None
+                ),
+            Throws.InvalidOperationException.With.Message.Contains("Unsupported protocol version")
+        );
     }
 
     [Test]
@@ -75,27 +80,26 @@ public sealed class HttpWebSocketsSignalProtocolV1Tests
         await using var ms = new FlushResetMemoryStream();
 
         await ms.WriteAsync(new byte[] { 1 << 4, 0, 0, 1 }, CancellationToken.None);
-        await ms.FlushAsync();
+        await ms.FlushAsync(CancellationToken.None);
 
         await Assert.ThatAsync(
-            () => HttpWebSocketsSignalProtocolV1.Read(
-                ms,
-                (_, _, _) =>
-                {
-                    Assert.Fail("should not happen");
+            () =>
+                HttpWebSocketsSignalProtocolV1.Read(
+                    ms,
+                    (_, _, _) =>
+                    {
+                        Assert.Fail("should not happen");
 
-                    return default;
-                },
-                CancellationToken.None),
-            Throws.InvalidOperationException
-                  .With.Message.Contains("Invalid header length"));
+                        return default;
+                    },
+                    CancellationToken.None
+                ),
+            Throws.InvalidOperationException.With.Message.Contains("Invalid header length")
+        );
     }
 
     private sealed class FlushResetMemoryStream : MemoryStream
     {
-        public override void Flush()
-        {
-            Position = 0;
-        }
+        public override void Flush() => Position = 0;
     }
 }

@@ -1,8 +1,4 @@
-﻿using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 public interface IFileSystemSignalHandler
 {
@@ -16,6 +12,6 @@ public interface IFileSystemSignalHandler<TSignal, TIHandler> : ISignalHandler<T
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
     static ISignalHandlerTypesInjector CreateFileSystemTypesInjector<THandler>()
-        where THandler : class, TIHandler, IFileSystemSignalHandler
-        => new FileSystemSignalHandlerTypesInjector<TSignal, TIHandler>(THandler.ConfigureFileSystemReceiver);
+        where THandler : class, TIHandler, IFileSystemSignalHandler =>
+        new FileSystemSignalHandlerTypesInjector<TSignal, TIHandler>(THandler.ConfigureFileSystemReceiver);
 }

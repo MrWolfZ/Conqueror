@@ -1,13 +1,6 @@
-using Conqueror;
-
 namespace Examples.BlazorWebAssembly.SharedMiddlewares;
 
-public sealed record MessageRetryMiddlewareConfiguration
-{
-    public required int MaxNumberOfAttempts { get; set; }
-
-    public required TimeSpan RetryInterval { get; set; }
-}
+using Conqueror;
 
 public sealed class MessageRetryMiddleware<TMessage, TResponse> : IMessageMiddleware<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
@@ -21,18 +14,26 @@ public sealed class MessageRetryMiddleware<TMessage, TResponse> : IMessageMiddle
     }
 }
 
+public sealed record MessageRetryMiddlewareConfiguration
+{
+    public required int MaxNumberOfAttempts { get; set; }
+
+    public required TimeSpan RetryInterval { get; set; }
+}
+
 public static class RetryMessagePipelineExtensions
 {
     public static IMessagePipeline<TMessage, TResponse> UseRetry<TMessage, TResponse>(
         this IMessagePipeline<TMessage, TResponse> pipeline,
         int maxNumberOfAttempts = 3,
-        TimeSpan? retryInterval = null)
+        TimeSpan? retryInterval = null
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         var configuration = new MessageRetryMiddlewareConfiguration
         {
             MaxNumberOfAttempts = maxNumberOfAttempts,
-            RetryInterval = retryInterval ?? TimeSpan.FromSeconds(1),
+            RetryInterval = retryInterval ?? TimeSpan.FromSeconds(value: 1),
         };
 
         return pipeline.Use(new MessageRetryMiddleware<TMessage, TResponse> { Configuration = configuration });
@@ -41,7 +42,8 @@ public static class RetryMessagePipelineExtensions
     public static IMessagePipeline<TMessage, TResponse> ConfigureRetry<TMessage, TResponse>(
         this IMessagePipeline<TMessage, TResponse> pipeline,
         int? maxNumberOfAttempts = null,
-        TimeSpan? retryInterval = null)
+        TimeSpan? retryInterval = null
+    )
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return pipeline.Configure<MessageRetryMiddleware<TMessage, TResponse>>(m =>

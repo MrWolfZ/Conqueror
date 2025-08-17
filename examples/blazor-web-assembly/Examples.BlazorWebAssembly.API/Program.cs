@@ -5,13 +5,13 @@ using Examples.BlazorWebAssembly.API.Chat;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services
-       .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
-       .AddConquerorHttpServerAspNetCore()
-       .AddSingleton<ChatRepository>()
-       .AddSwaggerGen(o => o.DocInclusionPredicate((_, _) => true))
-       .AddCors(c => c.AddPolicy("allow-all", b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().Build()))
-       .AddAuthorization();
+builder
+    .Services.AddMessageHandlersFromAssembly(typeof(Program).Assembly)
+    .AddConquerorHttpServerAspNetCore()
+    .AddSingleton<ChatRepository>()
+    .AddSwaggerGen(o => o.DocInclusionPredicate((_, _) => true))
+    .AddCors(c => c.AddPolicy("allow-all", b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().Build()))
+    .AddAuthorization();
 
 var app = builder.Build();
 
@@ -31,4 +31,4 @@ app.UseConquerorWellKnownErrorHandling();
 app.MapMessageEndpoints();
 app.MapWebSocketsSignalsEndpoint("api/signals/ws");
 
-app.Run();
+await app.RunAsync();

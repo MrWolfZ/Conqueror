@@ -8,7 +8,8 @@ public interface ISignalTransportConformityTestCase<out TTestHost> : ITransportC
     Task PublishSignals(ISignalPublishers publishers, CancellationToken cancellationToken);
 }
 
-public interface ISignalTransportConformityExecutionTestCase<out TTestHost> : ISignalTransportConformityTestCase<TTestHost>
+public interface ISignalTransportConformityExecutionTestCase<out TTestHost>
+    : ISignalTransportConformityTestCase<TTestHost>
     where TTestHost : ISignalTransportConformityTestHost
 {
     int NumOfReceivers { get; }
@@ -53,6 +54,7 @@ public interface ISignalTransportConformityExecutionErrorTestCase<TTestHost>
     ///     Trigger an error that causes receivers to reconnect.
     /// </summary>
     /// <param name="testHost">the test host</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task TriggerReconnect(TTestHost testHost) => Task.CompletedTask;
 
     Task AfterSuccessfulReconnect(TTestHost testHost) => Task.CompletedTask;

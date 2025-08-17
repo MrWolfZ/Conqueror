@@ -1,9 +1,8 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.ResponseInDifferentNamespace
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.ResponseInDifferentNamespace
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Some.Other.Namespace;
 
     [Message<TestMessageResponse>]
@@ -11,7 +10,8 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.ResponseInDiffere
 
     public partial class TestMessageHandler : TestMessage.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
 

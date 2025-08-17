@@ -1,12 +1,11 @@
-﻿using Conqueror.SourceGenerators.Util;
+﻿namespace Conqueror.SourceGenerators.Messaging;
 
-namespace Conqueror.SourceGenerators.Messaging;
-
-public readonly record struct MessageHandlerTypeDescriptor(
+[StructLayout(LayoutKind.Auto)]
+internal readonly record struct MessageHandlerTypeDescriptor(
     TypeDescriptor HandlerDescriptor,
     EquatableArray<MessageTypeDescriptor> MessageTypes,
-    EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics)
-    : IHasDiagnostics
+    EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics
+) : IHasDiagnostics
 {
     public readonly EquatableArray<DiagnosticWithLocationDescriptor> Diagnostics = Diagnostics;
     public readonly TypeDescriptor HandlerDescriptor = HandlerDescriptor;

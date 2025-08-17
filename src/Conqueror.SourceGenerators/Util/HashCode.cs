@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿#pragma warning disable
 
-#pragma warning disable
 // ReSharper disable InconsistentNaming
 
 namespace Conqueror.SourceGenerators.Util;
+
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 ///     Polyfill for .NET 6 HashCode
@@ -23,15 +22,23 @@ internal struct HashCode
     private const uint Prime4 = 668265263U;
     private const uint Prime5 = 374761393U;
 
-    private uint _v1, _v2, _v3, _v4;
-    private uint _queue1, _queue2, _queue3;
+    private uint _v1,
+        _v2,
+        _v3,
+        _v4;
+
+    private uint _queue1,
+        _queue2,
+        _queue3;
+
     private uint _length;
 
     private static uint GenerateGlobalSeed()
     {
         var buffer = new byte[sizeof(uint)];
         new Random().NextBytes(buffer);
-        return BitConverter.ToUInt32(buffer, 0);
+
+        return BitConverter.ToUInt32(buffer, startIndex: 0);
     }
 
     public static int Combine<T1>(T1 value1)
@@ -51,6 +58,7 @@ internal struct HashCode
         hash = QueueRound(hash, hc1);
 
         hash = MixFinal(hash);
+
         return (int)hash;
     }
 
@@ -66,6 +74,7 @@ internal struct HashCode
         hash = QueueRound(hash, hc2);
 
         hash = MixFinal(hash);
+
         return (int)hash;
     }
 
@@ -83,6 +92,7 @@ internal struct HashCode
         hash = QueueRound(hash, hc3);
 
         hash = MixFinal(hash);
+
         return (int)hash;
     }
 
@@ -104,6 +114,7 @@ internal struct HashCode
         hash += 16;
 
         hash = MixFinal(hash);
+
         return (int)hash;
     }
 
@@ -128,6 +139,7 @@ internal struct HashCode
         hash = QueueRound(hash, hc5);
 
         hash = MixFinal(hash);
+
         return (int)hash;
     }
 
@@ -154,10 +166,19 @@ internal struct HashCode
         hash = QueueRound(hash, hc6);
 
         hash = MixFinal(hash);
+
         return (int)hash;
     }
 
-    public static int Combine<T1, T2, T3, T4, T5, T6, T7>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7)
+    public static int Combine<T1, T2, T3, T4, T5, T6, T7>(
+        T1 value1,
+        T2 value2,
+        T3 value3,
+        T4 value4,
+        T5 value5,
+        T6 value6,
+        T7 value7
+    )
     {
         var hc1 = (uint)(value1?.GetHashCode() ?? 0);
         var hc2 = (uint)(value2?.GetHashCode() ?? 0);
@@ -182,10 +203,20 @@ internal struct HashCode
         hash = QueueRound(hash, hc7);
 
         hash = MixFinal(hash);
+
         return (int)hash;
     }
 
-    public static int Combine<T1, T2, T3, T4, T5, T6, T7, T8>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8)
+    public static int Combine<T1, T2, T3, T4, T5, T6, T7, T8>(
+        T1 value1,
+        T2 value2,
+        T3 value3,
+        T4 value4,
+        T5 value5,
+        T6 value6,
+        T7 value7,
+        T8 value8
+    )
     {
         var hc1 = (uint)(value1?.GetHashCode() ?? 0);
         var hc2 = (uint)(value2?.GetHashCode() ?? 0);
@@ -212,6 +243,7 @@ internal struct HashCode
         hash += 32;
 
         hash = MixFinal(hash);
+
         return (int)hash;
     }
 
@@ -225,27 +257,17 @@ internal struct HashCode
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint Round(uint hash, uint input)
-    {
-        return RotateLeft(hash + input * Prime2, 13) * Prime1;
-    }
+    private static uint Round(uint hash, uint input) => RotateLeft(hash + (input * Prime2), offset: 13) * Prime1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint QueueRound(uint hash, uint queuedValue)
-    {
-        return RotateLeft(hash + queuedValue * Prime3, 17) * Prime4;
-    }
+    private static uint QueueRound(uint hash, uint queuedValue) =>
+        RotateLeft(hash + (queuedValue * Prime3), offset: 17) * Prime4;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint MixState(uint v1, uint v2, uint v3, uint v4)
-    {
-        return RotateLeft(v1, 1) + RotateLeft(v2, 7) + RotateLeft(v3, 12) + RotateLeft(v4, 18);
-    }
+    private static uint MixState(uint v1, uint v2, uint v3, uint v4) =>
+        RotateLeft(v1, offset: 1) + RotateLeft(v2, offset: 7) + RotateLeft(v3, offset: 12) + RotateLeft(v4, offset: 18);
 
-    private static uint MixEmptyState()
-    {
-        return s_seed + Prime5;
-    }
+    private static uint MixEmptyState() => s_seed + Prime5;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint MixFinal(uint hash)
@@ -255,18 +277,14 @@ internal struct HashCode
         hash ^= hash >> 13;
         hash *= Prime3;
         hash ^= hash >> 16;
+
         return hash;
     }
 
-    public void Add<T>(T value)
-    {
-        Add(value?.GetHashCode() ?? 0);
-    }
+    public void Add<T>(T value) => Add(value?.GetHashCode() ?? 0);
 
-    public void Add<T>(T value, IEqualityComparer<T>? comparer)
-    {
+    public void Add<T>(T value, IEqualityComparer<T>? comparer) =>
         Add(value is null ? 0 : comparer?.GetHashCode(value) ?? value.GetHashCode());
-    }
 
     private void Add(int value)
     {
@@ -366,10 +384,12 @@ internal struct HashCode
         }
 
         hash = MixFinal(hash);
+
         return (int)hash;
     }
 
 #pragma warning disable 0809
+
     // Obsolete member 'memberA' overrides non-obsolete member 'memberB'.
     // Disallowing GetHashCode and Equals is by design
 
@@ -383,16 +403,18 @@ internal struct HashCode
     //   implementation has to change in the future we don't want to worry
     //   about people who might have incorrectly used this type.
 
-    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.", true)]
+    [Obsolete(
+        "HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.",
+        error: true
+    )]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override int GetHashCode() => throw new NotSupportedException("Hash code not supported");
 
-    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes.", true)]
+    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes.", error: true)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override bool Equals(object? obj) => throw new NotSupportedException("Equality not supported");
 #pragma warning restore 0809
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint RotateLeft(uint value, int offset)
-        => (value << offset) | (value >> (32 - offset));
+    private static uint RotateLeft(uint value, int offset) => (value << offset) | (value >> (32 - offset));
 }

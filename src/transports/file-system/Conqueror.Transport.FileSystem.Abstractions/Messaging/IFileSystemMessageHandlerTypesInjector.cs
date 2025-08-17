@@ -1,7 +1,4 @@
-﻿using System.ComponentModel;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal interface IFileSystemMessageHandlerTypesInjector : IMessageHandlerTypesInjector
@@ -22,8 +19,8 @@ internal interface IFileSystemMessageHandlerTypesInjector : IMessageHandlerTypes
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal sealed class FileSystemMessageHandlerTypesInjector<TMessage, TResponse, TIHandler>(
-    Action<IFileSystemMessageReceiver>? configureReceiver)
-    : IFileSystemMessageHandlerTypesInjector
+    Action<IFileSystemMessageReceiver>? configureReceiver
+) : IFileSystemMessageHandlerTypesInjector
     where TMessage : class, IFileSystemMessage<TMessage, TResponse>
     where TIHandler : class, IFileSystemMessageHandler<TMessage, TResponse, TIHandler>
 {
@@ -35,8 +32,8 @@ internal sealed class FileSystemMessageHandlerTypesInjector<TMessage, TResponse,
         configureReceiver?.Invoke(receiver);
     }
 
-    public TResult Inject<TArg, TResult>(IFileSystemMessageTypesInjectable<TArg, TResult> injectable, TArg arg)
-        => injectable.WithInjectedTypes<TMessage, TResponse, TIHandler>(arg);
+    public TResult Inject<TArg, TResult>(IFileSystemMessageTypesInjectable<TArg, TResult> injectable, TArg arg) =>
+        injectable.WithInjectedTypes<TMessage, TResponse, TIHandler>(arg);
 }
 
 /// <summary>
@@ -46,6 +43,11 @@ internal sealed class FileSystemMessageHandlerTypesInjector<TMessage, TResponse,
 /// <typeparam name="TArg">Type of the argument that will be passed to the injectable</typeparam>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
+[SuppressMessage(
+    "StyleCop.CSharp.OrderingRules",
+    "SA1201:Elements should appear in the correct order",
+    Justification = "order makes sense here"
+)]
 internal interface IFileSystemMessageTypesInjectable<in TArg, out TResult>
 {
     TResult WithInjectedTypes<TMessage, TResponse, TIHandler>(TArg arg)

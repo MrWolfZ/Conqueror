@@ -22,10 +22,9 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
 
         if (handle.Stream.Length > 0)
         {
-            tagIdCache = JsonSerializer.Deserialize(
-                             handle.Stream,
-                             TagIdsJsonSerializerContext.Default.DictionaryTagTagId)
-                         ?? throw new InvalidOperationException($"failed to deserialize '{tagIdCache}'");
+            tagIdCache =
+                JsonSerializer.Deserialize(handle.Stream, TagIdsJsonSerializerContext.Default.DictionaryTagTagId)
+                ?? throw new InvalidOperationException($"failed to deserialize '{tagIdCache}'");
 
             tagCache = tagIdCache.ToDictionary(pair => pair.Value, pair => pair.Key);
 
@@ -35,18 +34,15 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
             }
         }
 
-        tagId = new((uint)tagIdCache.Count + 1);
+        tagId = new TagId((uint)tagIdCache.Count + 1);
 
         tagIdCache[tag] = tagId;
         tagCache[tagId] = tag;
 
-        _ = handle.Stream.Seek(0, SeekOrigin.Begin);
+        _ = handle.Stream.Seek(offset: 0, SeekOrigin.Begin);
 
         // we do not allow cancellation here to prevent corruption of the file
-        JsonSerializer.Serialize(
-            handle.Stream,
-            tagIdCache,
-            TagIdsJsonSerializerContext.Default.DictionaryTagTagId);
+        JsonSerializer.Serialize(handle.Stream, tagIdCache, TagIdsJsonSerializerContext.Default.DictionaryTagTagId);
 
         return tagIdCache[tag];
     }
@@ -64,10 +60,9 @@ internal sealed class TagIdFiles(DirectoryPath baseDirectoryPath)
 
         Debug.Assert(handle is not null, $"handle for file '{idsFilePath}' is null");
 
-        tagIdCache = JsonSerializer.Deserialize(
-                         handle.Stream,
-                         TagIdsJsonSerializerContext.Default.DictionaryTagTagId)
-                     ?? throw new InvalidOperationException($"failed to deserialize '{tagIdCache}'");
+        tagIdCache =
+            JsonSerializer.Deserialize(handle.Stream, TagIdsJsonSerializerContext.Default.DictionaryTagTagId)
+            ?? throw new InvalidOperationException($"failed to deserialize '{tagIdCache}'");
 
         tagCache = tagIdCache.ToDictionary(pair => pair.Value, pair => pair.Key);
 

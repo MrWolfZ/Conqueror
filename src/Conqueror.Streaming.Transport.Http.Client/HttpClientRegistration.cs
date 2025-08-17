@@ -1,5 +1,3 @@
-using System;
-
 namespace Conqueror.Streaming.Transport.Http.Client;
 
 internal sealed class HttpClientRegistration

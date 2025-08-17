@@ -1,26 +1,30 @@
-using Conqueror;
-
 namespace Quickstart.Enhanced;
 
-internal sealed partial class DoublingCounterIncrementedHandler(
-    IMessageSenders senders)
+using Conqueror;
+
+internal sealed partial class DoublingCounterIncrementedHandler(IMessageSenders senders)
     : CounterIncremented.IHandler
 {
     static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
-        pipeline.SkipSignalMatching((CounterIncremented s) => s.CounterName != "doubler")
-                .EnsureSingleExecutionPerOperation(nameof(DoublingCounterIncrementedHandler))
-                .UseDefault();
+        pipeline
+            .SkipSignalMatching((CounterIncremented s) => s.CounterName != "doubler")
+            .EnsureSingleExecutionPerOperation(nameof(DoublingCounterIncrementedHandler))
+            .UseDefault();
 
     public async Task Handle(
         CounterIncremented signal,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        await senders.For(IncrementCounterByAmount.T)
-                     .WithDefaultSenderPipeline(typeof(DoublingCounterIncrementedHandler))
-                     .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
-                             cancellationToken);
+        await senders
+            .For(IncrementCounterByAmount.T)
+            .WithDefaultSenderPipeline(typeof(DoublingCounterIncrementedHandler))
+            .Handle(
+                new(signal.CounterName) { IncrementBy = signal.IncrementBy },
+                cancellationToken
+            );
     }
 
-    static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-        => receiver.Disable();
+    static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+        receiver.Disable();
 }

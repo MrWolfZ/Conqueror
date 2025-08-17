@@ -1,11 +1,11 @@
-using System.Runtime.CompilerServices;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Hosting;
-
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 {
+    using System.Runtime.CompilerServices;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.AspNetCore.TestHost;
+    using Microsoft.Extensions.Hosting;
+
     [TestFixture]
     public class RegistrationTests
     {
@@ -16,9 +16,15 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddControllers().AddConquerorStreamingHttpControllers();
 
-            Assert.That(services.Count(d => d.ServiceType == typeof(HttpEndpointRegistry)), Is.EqualTo(1));
-            Assert.That(services.Count(d => d.ServiceType == typeof(HttpEndpointActionDescriptorChangeProvider)), Is.EqualTo(1));
-            Assert.That(services.Count(d => d.ImplementationType == typeof(HttpEndpointConfigurationStartupFilter)), Is.EqualTo(1));
+            Assert.That(services.Count(d => d.ServiceType == typeof(HttpEndpointRegistry)), Is.EqualTo(expected: 1));
+            Assert.That(
+                services.Count(d => d.ServiceType == typeof(HttpEndpointActionDescriptorChangeProvider)),
+                Is.EqualTo(expected: 1)
+            );
+            Assert.That(
+                services.Count(d => d.ImplementationType == typeof(HttpEndpointConfigurationStartupFilter)),
+                Is.EqualTo(expected: 1)
+            );
         }
 
         [Test]
@@ -30,11 +36,11 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 
                 _ = webHost.ConfigureServices(services =>
                 {
-                    _ = services.AddControllers()
-                                .AddConquerorStreamingHttpControllers();
+                    _ = services.AddControllers().AddConquerorStreamingHttpControllers();
 
-                    _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                                .AddConquerorStreamProducer<DuplicateStreamName.TestStreamProducer>();
+                    _ = services
+                        .AddConquerorStreamProducer<TestStreamProducer>()
+                        .AddConquerorStreamProducer<DuplicateStreamName.TestStreamProducer>();
                 });
 
                 _ = webHost.Configure(app =>
@@ -45,7 +51,7 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
                 });
             });
 
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync(CancellationToken.None));
         }
 
         [Test]
@@ -57,11 +63,13 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 
                 _ = webHost.ConfigureServices(services =>
                 {
-                    _ = services.AddControllers()
-                                .AddConquerorStreamingHttpControllers();
+                    _ = services.AddControllers().AddConquerorStreamingHttpControllers();
 
-                    _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                                .AddConquerorStreamProducerDelegate<DuplicateStreamName.TestStreamingRequest, TestItem>((_, _, _) => AsyncEnumerableHelper.Of(new TestItem()));
+                    _ = services
+                        .AddConquerorStreamProducer<TestStreamProducer>()
+                        .AddConquerorStreamProducerDelegate<DuplicateStreamName.TestStreamingRequest, TestItem>(
+                            (_, _, _) => AsyncEnumerableHelper.Of(new TestItem())
+                        );
                 });
 
                 _ = webHost.Configure(app =>
@@ -72,7 +80,7 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
                 });
             });
 
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync(CancellationToken.None));
         }
 
         [Test]
@@ -84,11 +92,15 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 
                 _ = webHost.ConfigureServices(services =>
                 {
-                    _ = services.AddControllers()
-                                .AddConquerorStreamingHttpControllers(o => o.PathConvention = new HttpStreamPathConventionWithDuplicates());
+                    _ = services
+                        .AddControllers()
+                        .AddConquerorStreamingHttpControllers(o =>
+                            o.PathConvention = new HttpStreamPathConventionWithDuplicates()
+                        );
 
-                    _ = services.AddConquerorStreamProducer<TestStreamProducer>()
-                                .AddConquerorStreamProducer<TestStreamingRequest2Handler>();
+                    _ = services
+                        .AddConquerorStreamProducer<TestStreamProducer>()
+                        .AddConquerorStreamProducer<TestStreamingRequest2Handler>();
                 });
 
                 _ = webHost.Configure(app =>
@@ -99,7 +111,7 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
                 });
             });
 
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync(CancellationToken.None));
         }
 
         [HttpStream]
@@ -114,30 +126,35 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 
         public sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
         {
-            public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+            public async IAsyncEnumerable<TestItem> ExecuteRequest(
+                TestStreamingRequest request,
+                [EnumeratorCancellation] CancellationToken cancellationToken = default
+            )
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
+
                 yield return new();
             }
         }
 
         public sealed class TestStreamingRequest2Handler : IStreamProducer<TestStreamingRequest2, TestItem2>
         {
-            public async IAsyncEnumerable<TestItem2> ExecuteRequest(TestStreamingRequest2 request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+            public async IAsyncEnumerable<TestItem2> ExecuteRequest(
+                TestStreamingRequest2 request,
+                [EnumeratorCancellation] CancellationToken cancellationToken = default
+            )
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
+
                 yield return new();
             }
         }
 
         private sealed class HttpStreamPathConventionWithDuplicates : IHttpStreamPathConvention
         {
-            public string GetStreamPath(Type requestType, HttpStreamAttribute attribute)
-            {
-                return "/duplicate";
-            }
+            public string GetStreamPath(Type requestType, HttpStreamAttribute attribute) => "/duplicate";
         }
     }
 
@@ -152,10 +169,14 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 
         public sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
         {
-            public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+            public async IAsyncEnumerable<TestItem> ExecuteRequest(
+                TestStreamingRequest request,
+                [EnumeratorCancellation] CancellationToken cancellationToken = default
+            )
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
+
                 yield return new();
             }
         }

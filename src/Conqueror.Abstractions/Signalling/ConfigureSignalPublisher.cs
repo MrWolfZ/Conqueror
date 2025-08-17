@@ -1,12 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿namespace Conqueror;
 
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
-
-public delegate ISignalPublisher<TSignal> ConfigureSignalPublisher<TSignal>(
-    SignalPublisherBuilder<TSignal> builder)
+public delegate ISignalPublisher<TSignal> ConfigureSignalPublisher<TSignal>(SignalPublisherBuilder<TSignal> builder)
     where TSignal : class, ISignal<TSignal>;
 
 public delegate ValueTask<ISignalPublisher<TSignal>> ConfigureSignalPublisherAsync<TSignal>(
-    SignalPublisherBuilder<TSignal> builder)
+    SignalPublisherBuilder<TSignal> builder
+)
     where TSignal : class, ISignal<TSignal>;

@@ -1,23 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Conqueror;
-using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Hosting;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
 
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
@@ -35,39 +17,51 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         return builder;
     }
 
-    public static IEndpointConventionBuilder? MapMessageEndpoint<TMessage, TResponse, TIHandler>(this IEndpointRouteBuilder builder)
+    public static IEndpointConventionBuilder? MapMessageEndpoint<TMessage, TResponse, TIHandler>(
+        this IEndpointRouteBuilder builder
+    )
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
-        => builder.MapMessageEndpoint(new MessageTypes<TMessage, TResponse, TIHandler>());
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler> =>
+        builder.MapMessageEndpoint(new MessageTypes<TMessage, TResponse, TIHandler>());
 
     public static IEndpointConventionBuilder? MapMessageEndpoint<TMessage, TResponse, TIHandler>(
         this IEndpointRouteBuilder builder,
-        MessageTypes<TMessage, TResponse, TIHandler> messageTypes)
+        MessageTypes<TMessage, TResponse, TIHandler> _
+    )
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
     {
         var handlerRegistry = builder.ServiceProvider.GetRequiredService<IMessageHandlerRegistry>();
-        var invoker = handlerRegistry.GetReceiverHandlerInvoker<TMessage, TResponse, IHttpMessageHandlerTypesInjector>();
+        var invoker = handlerRegistry.GetReceiverHandlerInvoker<
+            TMessage,
+            TResponse,
+            IHttpMessageHandlerTypesInjector
+        >();
 
-        if (invoker is null)
-        {
-            throw new InvalidOperationException($"no handler is registered for HTTP message type '{typeof(TMessage)}'");
-        }
-
-        return invoker.TypesInjector.Inject(EndpointConfigurationInjectable, new(builder, invoker));
+        return invoker is null
+            ? throw new InvalidOperationException(
+                $"no handler is registered for HTTP message type '{typeof(TMessage)}'"
+            )
+            : invoker.TypesInjector.Inject(EndpointConfigurationInjectable, new(builder, invoker));
     }
 
     private readonly record struct EndpointTypeInjectableArg(
         IEndpointRouteBuilder Builder,
-        IMessageReceiverHandlerInvoker<IHttpMessageHandlerTypesInjector> Invoker);
+        IMessageReceiverHandlerInvoker<IHttpMessageHandlerTypesInjector> Invoker
+    );
 
     private sealed class EndpointTypeInjectable
         : IHttpMessageTypesInjectable<EndpointTypeInjectableArg, IEndpointConventionBuilder?>
     {
-        IEndpointConventionBuilder? IHttpMessageTypesInjectable<EndpointTypeInjectableArg, IEndpointConventionBuilder?>
-            .WithInjectedTypes<TMessage, TResponse, TIHandler>(EndpointTypeInjectableArg arg)
+        IEndpointConventionBuilder? IHttpMessageTypesInjectable<
+            EndpointTypeInjectableArg,
+            IEndpointConventionBuilder?
+        >.WithInjectedTypes<TMessage, TResponse, TIHandler>(EndpointTypeInjectableArg arg)
         {
-            var receiver = new HttpMessageReceiver<TMessage, TResponse>(arg.Invoker.HandlerType, arg.Builder.ServiceProvider);
+            var receiver = new HttpMessageReceiver<TMessage, TResponse>(
+                arg.Invoker.HandlerType,
+                arg.Builder.ServiceProvider
+            );
 
             try
             {
@@ -77,10 +71,11 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             {
                 throw new MessageReceiverExecutionFailedException(
                     $"failed to configure HTTP endpoint for message type '{typeof(TMessage)}' and handler type '{arg.Invoker.HandlerType}'",
-                    ex)
+                    ex
+                )
                 {
                     HandlerType = receiver.HandlerType,
-                    MessageTransportType = new(TransportName, MessageTransportRole.Receiver),
+                    MessageTransportType = new MessageTransportType(TransportName, MessageTransportRole.Receiver),
                 };
             }
 
@@ -89,13 +84,15 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 return null;
             }
 
-            var duplicates = arg.Builder
-                                .DataSources
-                                .SelectMany(ds => ds.Endpoints)
-                                .SelectMany(e => e.Metadata)
-                                .OfType<ConquerorHttpMessageEndpointMetadata>()
-                                .Where(m => m.FullPath == TMessage.FullPath && m.HttpMethod == TMessage.HttpMethod)
-                                .ToList();
+            var duplicates = arg
+                .Builder.DataSources.SelectMany(ds => ds.Endpoints)
+                .SelectMany(e => e.Metadata)
+                .OfType<ConquerorHttpMessageEndpointMetadata>()
+                .Where(m =>
+                    string.Equals(m.FullPath, TMessage.FullPath, StringComparison.Ordinal)
+                    && string.Equals(m.HttpMethod, TMessage.HttpMethod, StringComparison.Ordinal)
+                )
+                .ToList();
 
             if (duplicates.Count > 0)
             {
@@ -103,16 +100,26 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 var msg =
                     $"path: {TMessage.FullPath}{Environment.NewLine}messageTypes:{Environment.NewLine}{string.Join(Environment.NewLine, duplicateMessageTypes)}";
 
-                throw new InvalidOperationException($"found multiple Conqueror message types with identical path!{Environment.NewLine}{msg}");
+                throw new InvalidOperationException(
+                    $"found multiple Conqueror message types with identical path!{Environment.NewLine}{msg}"
+                );
             }
 
             return ConfigureRoute<TMessage, TResponse>(
-                arg.Builder.MapMethods(TMessage.FullPath, [TMessage.HttpMethod], ctx => Handle<TMessage, TResponse, TIHandler>(ctx, arg.Invoker)),
+                arg.Builder.MapMethods(
+                    TMessage.FullPath,
+                    [TMessage.HttpMethod],
+                    ctx => Handle<TMessage, TResponse, TIHandler>(ctx, arg.Invoker)
+                ),
                 TMessage.EmptyInstance is null,
-                receiver.IsOmittedFromApiDescription);
+                receiver.IsOmittedFromApiDescription
+            );
         }
 
-        private async Task Handle<TMessage, TResponse, TIHandler>(HttpContext context, IMessageReceiverHandlerInvoker invoker)
+        private async Task Handle<TMessage, TResponse, TIHandler>(
+            HttpContext context,
+            IMessageReceiverHandlerInvoker invoker
+        )
             where TMessage : class, IHttpMessage<TMessage, TResponse>
             where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
         {
@@ -120,14 +127,19 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             var mediaType = GetMediaTypeFromContentType(context.Request.ContentType);
 
-            var expectedContentType = message is null ? TMessage.HttpMessageSerializer.ContentType : string.Empty;
-            if ((mediaType?.MediaType ?? string.Empty) != expectedContentType)
+            var expectedContentType = message is null ? TMessage.HttpMessageSerializer.ContentType : "";
+            if (!string.Equals(mediaType?.MediaType ?? "", expectedContentType, StringComparison.Ordinal))
             {
                 context.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
 
                 if (context.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() ?? false)
                 {
-                    await context.Response.WriteAsync($"invalid request; expected content type '{expectedContentType}' but got '{mediaType?.MediaType}'").ConfigureAwait(false);
+                    await context
+                        .Response.WriteAsync(
+                            $"invalid request; expected content type '{expectedContentType}' but got '{mediaType?.MediaType}'",
+                            CancellationToken.None
+                        )
+                        .ConfigureAwait(false);
                 }
 
                 return;
@@ -141,18 +153,25 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 return;
             }
 
-            var encoding = string.IsNullOrWhiteSpace(mediaType?.CharSet) ? null : Encoding.GetEncoding(mediaType.CharSet);
+            var encoding = string.IsNullOrWhiteSpace(mediaType?.CharSet)
+                ? null
+                : Encoding.GetEncoding(mediaType.CharSet);
 
-            var query = context.Request.Query.Select(p => new KeyValuePair<string, IReadOnlyList<string?>>(p.Key, p.Value));
+            var query = context.Request.Query.Select(p => new KeyValuePair<string, IReadOnlyList<string?>>(
+                p.Key,
+                p.Value
+            ));
 
-            message = await TMessage.HttpMessageSerializer.DeserializeMessage(
-                                        context.RequestServices,
-                                        context.Request.Body,
-                                        encoding,
-                                        context.Request.Path,
-                                        query,
-                                        context.RequestAborted)
-                                    .ConfigureAwait(false);
+            message = await TMessage
+                .HttpMessageSerializer.DeserializeMessage(
+                    context.RequestServices,
+                    context.Request.Body,
+                    encoding,
+                    context.Request.Path,
+                    query,
+                    context.RequestAborted
+                )
+                .ConfigureAwait(false);
 
             await Handle<TMessage, TResponse, TIHandler>(message, context, invoker).ConfigureAwait(false);
         }
@@ -160,7 +179,8 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         private async Task Handle<TMessage, TResponse, TIHandler>(
             TMessage? message,
             HttpContext httpContext,
-            IMessageReceiverHandlerInvoker invoker)
+            IMessageReceiverHandlerInvoker invoker
+        )
             where TMessage : class, IHttpMessage<TMessage, TResponse>
             where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
         {
@@ -170,13 +190,17 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
                 if (httpContext.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() ?? false)
                 {
-                    await httpContext.Response.WriteAsync("invalid request; empty message").ConfigureAwait(false);
+                    await httpContext
+                        .Response.WriteAsync("invalid request; empty message", CancellationToken.None)
+                        .ConfigureAwait(false);
                 }
 
                 return;
             }
 
-            using var conquerorContext = httpContext.RequestServices.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
+            using var conquerorContext = httpContext
+                .RequestServices.GetRequiredService<IConquerorContextAccessor>()
+                .CloneOrCreate();
 
             try
             {
@@ -185,11 +209,12 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             catch (FormattedConquerorContextDataInvalidException ex)
             {
                 throw new MessageFailedDueToInvalidFormattedConquerorContextDataException(
-                    $"badly formatted context data while processing HTTP message of type '{typeof(TMessage)}'",
-                    ex)
+                    $"badly formatted context data while processing HTTP {nameof(message)} of type '{typeof(TMessage)}'",
+                    ex
+                )
                 {
                     MessagePayload = message,
-                    TransportType = new(TransportName, MessageTransportRole.Receiver),
+                    TransportType = new MessageTransportType(TransportName, MessageTransportRole.Receiver),
                 };
             }
 
@@ -200,12 +225,14 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             using var principal = conquerorContext.SetCurrentPrincipalInternal(httpContext.User);
 
-            var response = await invoker.Invoke<TMessage, TResponse>(
-                                            message,
-                                            httpContext.RequestServices,
-                                            TransportName,
-                                            httpContext.RequestAborted)
-                                        .ConfigureAwait(false);
+            var response = await invoker
+                .Invoke<TMessage, TResponse>(
+                    message,
+                    httpContext.RequestServices,
+                    TransportName,
+                    httpContext.RequestAborted
+                )
+                .ConfigureAwait(false);
 
             httpContext.Response.StatusCode = TMessage.SuccessStatusCode;
 
@@ -221,15 +248,21 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             httpContext.Response.Headers.ContentType = TMessage.HttpMessageResponseSerializer.ContentType;
 
-            await TMessage.HttpMessageResponseSerializer.SerializeResponse(
-                              httpContext.RequestServices,
-                              httpContext.Response.Body,
-                              response,
-                              httpContext.RequestAborted)
-                          .ConfigureAwait(false);
+            await TMessage
+                .HttpMessageResponseSerializer.SerializeResponse(
+                    httpContext.RequestServices,
+                    httpContext.Response.Body,
+                    response,
+                    httpContext.RequestAborted
+                )
+                .ConfigureAwait(false);
 
             static IEnumerable<string> ReadContextDataFromRequest(HttpContext httpContext)
-                => httpContext.Request.Headers.TryGetValue(HeaderNames.ConquerorContext, out var values) ? values : [];
+            {
+                return httpContext.Request.Headers.TryGetValue(HeaderNames.ConquerorContext, out var values)
+                    ? values
+                    : [];
+            }
 
             static string? GetTraceId(HttpContext httpContext)
             {
@@ -239,9 +272,12 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                     return s;
                 }
 
-                if (httpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues) && traceParentValues is [{ } traceParent])
+                if (
+                    httpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues)
+                    && traceParentValues is [{ } traceParent]
+                )
                 {
-                    return ActivityTraceId.CreateFromString(traceParent.AsSpan(3, 32)).ToHexString();
+                    return ActivityTraceId.CreateFromString(traceParent.AsSpan(start: 3, length: 32)).ToHexString();
                 }
 
                 return null;
@@ -251,29 +287,39 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         private static IEndpointConventionBuilder ConfigureRoute<TMessage, TResponse>(
             IEndpointConventionBuilder builder,
             bool hasPayload,
-            bool isOmittedFromApiDescription)
+            bool isOmittedFromApiDescription
+        )
             where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
-            builder = builder.WithMetadata(
-                                 typeof(TResponse) == typeof(UnitMessageResponse)
-                                     ? new ProducesResponseTypeMetadata(TMessage.SuccessStatusCode)
-                                     : new(TMessage.SuccessStatusCode, typeof(TResponse), [TMessage.HttpMessageResponseSerializer.ContentType]))
-                             .WithMetadata(
-                                 new ConquerorHttpMessageEndpointMetadata
-                                 {
-                                     Name = TMessage.Name,
-                                     FullPath = TMessage.FullPath,
-                                     ApiGroupName = TMessage.ApiGroupName,
-                                     HttpMethod = TMessage.HttpMethod,
-                                     MessageContentType = TMessage.HttpMessageSerializer.ContentType,
-                                     ResponseContentType = TMessage.HttpMessageResponseSerializer.ContentType,
-                                     MessageType = typeof(TMessage),
-                                     HasPayload = hasPayload,
-                                     QueryParams = TMessage.HttpMethod == MethodNames.Get ? GetQueryParams() : [],
-                                     ResponseType = typeof(TResponse),
-                                     SuccessStatusCode = TMessage.SuccessStatusCode,
-                                 })
-                             .WithName(TMessage.Name);
+            builder = builder
+                .WithMetadata(
+                    typeof(TResponse) == typeof(UnitMessageResponse)
+                        ? new ProducesResponseTypeMetadata(TMessage.SuccessStatusCode)
+                        : new(
+                            TMessage.SuccessStatusCode,
+                            typeof(TResponse),
+                            [TMessage.HttpMessageResponseSerializer.ContentType]
+                        )
+                )
+                .WithMetadata(
+                    new ConquerorHttpMessageEndpointMetadata
+                    {
+                        Name = TMessage.Name,
+                        FullPath = TMessage.FullPath,
+                        ApiGroupName = TMessage.ApiGroupName,
+                        HttpMethod = TMessage.HttpMethod,
+                        MessageContentType = TMessage.HttpMessageSerializer.ContentType,
+                        ResponseContentType = TMessage.HttpMessageResponseSerializer.ContentType,
+                        MessageType = typeof(TMessage),
+                        HasPayload = hasPayload,
+                        QueryParams = string.Equals(TMessage.HttpMethod, MethodNames.Get, StringComparison.Ordinal)
+                            ? GetQueryParams()
+                            : [],
+                        ResponseType = typeof(TResponse),
+                        SuccessStatusCode = TMessage.SuccessStatusCode,
+                    }
+                )
+                .WithName(TMessage.Name);
 
             if (isOmittedFromApiDescription)
             {
@@ -282,7 +328,9 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             builder.Finally(b =>
             {
-                var defaultResponseTypeMetadata = b.Metadata.OfType<ProducesResponseTypeMetadata>().FirstOrDefault(m => m.Type == typeof(object));
+                var defaultResponseTypeMetadata = b
+                    .Metadata.OfType<ProducesResponseTypeMetadata>()
+                    .FirstOrDefault(m => m.Type == typeof(object));
 
                 if (defaultResponseTypeMetadata is null)
                 {
@@ -297,38 +345,40 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             static IReadOnlyCollection<HttpMessageEndpointQueryParameterMetadata> GetQueryParams()
             {
-                if (TMessage.PublicConstructors.Any(c => c.GetParameters().Length == 0))
+                if (TMessage.PublicConstructors.Any(c => c.GetParameters().Length is 0))
                 {
-                    return TMessage.PublicProperties
-                                   .Select(p => new HttpMessageEndpointQueryParameterMetadata
-                                   {
-                                       Name = Uncapitalize(p.Name),
-                                       PropertyType = p.PropertyType,
-                                       IsRequired = p.PropertyType.GetCustomAttribute<RequiredMemberAttribute>() is not null,
-                                   })
-                                   .ToArray();
+                    return TMessage
+                        .PublicProperties.Select(p => new HttpMessageEndpointQueryParameterMetadata
+                        {
+                            Name = Uncapitalize(p.Name),
+                            PropertyType = p.PropertyType,
+                            IsRequired = p.PropertyType.GetCustomAttribute<RequiredMemberAttribute>() is not null,
+                        })
+                        .ToArray();
                 }
 
-                var constructor = TMessage.PublicConstructors.FirstOrDefault();
+                var constructor =
+                    TMessage.PublicConstructors.FirstOrDefault()
+                    ?? throw new InvalidOperationException(
+                        $"no public constructor found for message type '{typeof(TMessage)}'"
+                    );
 
-                if (constructor is null)
-                {
-                    throw new InvalidOperationException($"no public constructor found for message type '{typeof(TMessage)}'");
-                }
-
-                return constructor.GetParameters()
-                                  .Where(p => p.Name is not null)
-                                  .Select(p => new HttpMessageEndpointQueryParameterMetadata
-                                  {
-                                      Name = Uncapitalize(p.Name!),
-                                      PropertyType = p.ParameterType,
-                                      IsRequired = !p.HasDefaultValue,
-                                  })
-                                  .ToArray();
+                return constructor
+                    .GetParameters()
+                    .Where(p => p.Name is not null)
+                    .Select(p => new HttpMessageEndpointQueryParameterMetadata
+                    {
+                        Name = Uncapitalize(p.Name!),
+                        PropertyType = p.ParameterType,
+                        IsRequired = !p.HasDefaultValue,
+                    })
+                    .ToArray();
             }
 
             static string Uncapitalize(string str)
-                => char.ToLower(str[0], CultureInfo.InvariantCulture) + str[1..];
+            {
+                return char.ToLower(str[0], CultureInfo.InvariantCulture) + str[1..];
+            }
         }
 
         private static MediaTypeHeaderValue? GetMediaTypeFromContentType(string? contentType)

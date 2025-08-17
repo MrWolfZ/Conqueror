@@ -1,11 +1,16 @@
-﻿using Microsoft.AspNetCore.Http.Json;
-using static Conqueror.Transport.Http.Tests.Signalling.HttpSignalConformityTestCase;
+﻿namespace Conqueror.Transport.Http.Tests.Signalling;
 
-namespace Conqueror.Transport.Http.Tests.Signalling;
+using System.Globalization;
+using Microsoft.AspNetCore.Http.Json;
+using static HttpSignalConformityTestCase;
 
 [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "Members are used by ASP.NET Core via reflection")]
 [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Members are used by ASP.NET Core via reflection")]
-[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification = "Members are used by ASP.NET Core via reflection")]
+[SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Members are used by ASP.NET Core via reflection"
+)]
 public static partial class HttpSignalTestCases
 {
     private const string AuthorizationHeaderScheme = "Basic";
@@ -14,7 +19,19 @@ public static partial class HttpSignalTestCases
     private const string TestHeaderName = "test-value";
     private const string TestHeaderValue = "test-value";
 
-    public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases(HttpSignalTransportType transportType)
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "we want to explicitly test sync delegates"
+    )]
+    public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSuccessTestCases(
+        HttpSignalTransportType transportType
+    )
     {
         yield return new()
         {
@@ -49,10 +66,16 @@ public static partial class HttpSignalTestCases
             },
             BeforePublish = host =>
             {
-                Assert.That(host.PublisherHost.ServerResponseHasBegunCount, Is.EqualTo(1));
+                Assert.That(host.PublisherHost.ServerResponseHasBegunCount, Is.EqualTo(expected: 1));
 
-                Assert.That(host.PublisherHost.ReceivedHeadersOnServer!.Authorization.ToString(), Is.EqualTo(AuthorizationHeader));
-                Assert.That(host.PublisherHost.ReceivedHeadersOnServer, Does.ContainKey(TestHeaderName).WithValue(TestHeaderValue));
+                Assert.That(
+                    host.PublisherHost.ReceivedHeadersOnServer!.Authorization.ToString(),
+                    Is.EqualTo(AuthorizationHeader)
+                );
+                Assert.That(
+                    host.PublisherHost.ReceivedHeadersOnServer,
+                    Does.ContainKey(TestHeaderName).WithValue(TestHeaderValue)
+                );
 
                 return Task.CompletedTask;
             },
@@ -68,7 +91,8 @@ public static partial class HttpSignalTestCases
             {
                 await Task.WhenAll(
                     CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct),
-                    CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct));
+                    CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct)
+                );
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
             SignalsArePublishedInParallel = true,
@@ -91,11 +115,13 @@ public static partial class HttpSignalTestCases
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 20 }, ct);
             },
-            RunReceivers = (r, ct) => r.CombineExecutions(
-            [
-                RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
-                RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
-            ]),
+            RunReceivers = (r, ct) =>
+                r.CombineExecutions(
+                    [
+                        RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
+                        RunReceiverForTransport<TestSignalHandler>(r, transportType, ct),
+                    ]
+                ),
             NumOfReceivers = 2,
         };
 
@@ -111,8 +137,7 @@ public static partial class HttpSignalTestCases
                 new TestSignal { Payload = 30 },
                 new TestSignal { Payload = 30 },
             ],
-            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
-                                    .AddSignalHandler<MultiTestSignalHandler>(),
+            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>().AddSignalHandler<MultiTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
@@ -135,14 +160,14 @@ public static partial class HttpSignalTestCases
                 new TestSignal { Payload = 30 },
                 new TestSignal { Payload = 30 },
             ],
-            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
-                                    .AddSignalHandler<MultiTestSignalHandler>(),
+            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>().AddSignalHandler<MultiTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
                 await Task.WhenAll(
                     CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct),
                     CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct),
-                    CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct));
+                    CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct)
+                );
             },
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
             NumOfReceivers = 2,
@@ -206,14 +231,21 @@ public static partial class HttpSignalTestCases
         {
             Name = "signal with custom event type or tag",
             TransportType = transportType,
-            ExpectedReceivedSignals = [new TestSignalWithCustomEventTypeOrTag { Payload = 10 }, new TestSignalWithCustomEventTypeOrTag { Payload = 20 }],
+            ExpectedReceivedSignals =
+            [
+                new TestSignalWithCustomEventTypeOrTag { Payload = 10 },
+                new TestSignalWithCustomEventTypeOrTag { Payload = 20 },
+            ],
             RegisterHandler = s => s.AddSignalHandler<TestSignalWithCustomEventTypeOrTagHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithCustomEventTypeOrTag.T, transportType).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignalWithCustomEventTypeOrTag.T, transportType).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomEventTypeOrTag.T, transportType)
+                    .Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomEventTypeOrTag.T, transportType)
+                    .Handle(new() { Payload = 20 }, ct);
             },
-            RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithCustomEventTypeOrTagHandler>(r, transportType, ct),
+            RunReceivers = (r, ct) =>
+                RunReceiverForTransport<TestSignalWithCustomEventTypeOrTagHandler>(r, transportType, ct),
         };
 
         yield return new()
@@ -236,8 +268,8 @@ public static partial class HttpSignalTestCases
             TransportType = transportType,
             ExpectedReceivedSignals =
             [
-                new TestSignalWithCustomSerializedPayloadType { Payload = new(10) },
-                new TestSignalWithCustomSerializedPayloadType { Payload = new(20) },
+                new TestSignalWithCustomSerializedPayloadType { Payload = new(Payload: 10) },
+                new TestSignalWithCustomSerializedPayloadType { Payload = new(Payload: 20) },
             ],
             RegisterHandler = s =>
             {
@@ -249,23 +281,29 @@ public static partial class HttpSignalTestCases
                 jsonSerializerOptions.MakeReadOnly(populateMissingResolver: true);
 
                 _ = s.AddSignalHandler<TestSignalWithCustomSerializedPayloadTypeHandler>()
-                     .AddSingleton(jsonSerializerOptions);
+                    .AddSingleton(jsonSerializerOptions);
             },
             RegisterOnServer = s =>
             {
-                _ = s.AddTransient<JsonSerializerOptions>(p => p.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions)
-                     .PostConfigure<JsonOptions>(options =>
-                     {
-                         options.SerializerOptions.Converters
-                                .Add(new TestSignalWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
-                     });
+                _ = s.AddTransient<JsonSerializerOptions>(p =>
+                        p.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions
+                    )
+                    .PostConfigure<JsonOptions>(options =>
+                    {
+                        options.SerializerOptions.Converters.Add(
+                            new TestSignalWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()
+                        );
+                    });
             },
             PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithCustomSerializedPayloadType.T, transportType).Handle(new() { Payload = new(10) }, ct);
-                await CreatePublisher(p, TestSignalWithCustomSerializedPayloadType.T, transportType).Handle(new() { Payload = new(20) }, ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializedPayloadType.T, transportType)
+                    .Handle(new() { Payload = new(Payload: 10) }, ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializedPayloadType.T, transportType)
+                    .Handle(new() { Payload = new(Payload: 20) }, ct);
             },
-            RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithCustomSerializedPayloadTypeHandler>(r, transportType, ct),
+            RunReceivers = (r, ct) =>
+                RunReceiverForTransport<TestSignalWithCustomSerializedPayloadTypeHandler>(r, transportType, ct),
         };
 
         yield return new()
@@ -280,10 +318,13 @@ public static partial class HttpSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<TestSignalWithCustomSerializerHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType)
+                    .Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType)
+                    .Handle(new() { Payload = 20 }, ct);
             },
-            RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithCustomSerializerHandler>(r, transportType, ct),
+            RunReceivers = (r, ct) =>
+                RunReceiverForTransport<TestSignalWithCustomSerializerHandler>(r, transportType, ct),
         };
 
         yield return new()
@@ -298,37 +339,50 @@ public static partial class HttpSignalTestCases
             RegisterHandler = s => s.AddSignalHandler<TestSignalWithCustomJsonTypeInfoHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType).Handle(new() { MessagePayload = 10 }, ct);
-                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType).Handle(new() { MessagePayload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType)
+                    .Handle(new() { MessagePayload = 10 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType)
+                    .Handle(new() { MessagePayload = 20 }, ct);
             },
-            RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithCustomJsonTypeInfoHandler>(r, transportType, ct),
+            RunReceivers = (r, ct) =>
+                RunReceiverForTransport<TestSignalWithCustomJsonTypeInfoHandler>(r, transportType, ct),
         };
 
         yield return new()
         {
             Name = "receiver and publisher with middleware",
             TransportType = transportType,
-            ExpectedReceivedSignals = [new TestSignalWithMiddleware { Payload = 10 }, new TestSignalWithMiddleware { Payload = 20 }],
-            RegisterHandler = s => s.AddSignalHandler<TestSignalWithMiddlewareHandler>()
-                                    .AddTransient<TestSignalMiddleware<TestSignalWithMiddleware>>()
-                                    .AddSingleton<TestObservations>(),
-            RegisterOnServer = s => s.AddTransient<TestSignalMiddleware<TestSignalWithMiddleware>>()
-                                     .AddSingleton<TestObservations>(),
+            ExpectedReceivedSignals =
+            [
+                new TestSignalWithMiddleware { Payload = 10 },
+                new TestSignalWithMiddleware { Payload = 20 },
+            ],
+            RegisterHandler = s =>
+                s.AddSignalHandler<TestSignalWithMiddlewareHandler>()
+                    .AddTransient<TestSignalMiddleware<TestSignalWithMiddleware>>()
+                    .AddSingleton<TestObservations>(),
+            RegisterOnServer = s =>
+                s.AddTransient<TestSignalMiddleware<TestSignalWithMiddleware>>().AddSingleton<TestObservations>(),
             PublishSignals = async (sp, ct) =>
             {
                 await CreatePublisher(sp, TestSignalWithMiddleware.T, transportType)
-                      .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>()))
-                      .Handle(new() { Payload = 10 }, ct);
+                    .WithPipeline(p =>
+                        p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>())
+                    )
+                    .Handle(new() { Payload = 10 }, ct);
 
                 await CreatePublisher(sp, TestSignalWithMiddleware.T, transportType)
-                      .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>()))
-                      .Handle(new() { Payload = 20 }, ct);
+                    .WithPipeline(p =>
+                        p.Use(p.ServiceProvider.GetRequiredService<TestSignalMiddleware<TestSignalWithMiddleware>>())
+                    )
+                    .Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalWithMiddlewareHandler>(r, transportType, ct),
-
             AfterSignalsAreReceived = host =>
             {
-                var seenTransportTypeOnServer = host.PublisherHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
+                var seenTransportTypeOnServer = host
+                    .PublisherHost.Resolve<TestObservations>()
+                    .SeenTransportTypeInMiddleware;
                 var isCorrectTransportTypeOnServer = transportType switch
                 {
                     HttpSignalTransportType.Sse => seenTransportTypeOnServer?.IsHttpServerSentEvents(),
@@ -336,12 +390,18 @@ public static partial class HttpSignalTestCases
                     _ => false,
                 };
 
-                Assert.That(isCorrectTransportTypeOnServer, Is.True, $"transport type is {seenTransportTypeOnServer?.Name}");
+                Assert.That(
+                    isCorrectTransportTypeOnServer,
+                    Is.True,
+                    $"transport type is {seenTransportTypeOnServer?.Name}"
+                );
                 Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(SignalTransportRole.Publisher));
 
                 foreach (var receiverHost in host.ReceiverHosts)
                 {
-                    var seenTransportTypeOnClient = receiverHost.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
+                    var seenTransportTypeOnClient = receiverHost
+                        .Resolve<TestObservations>()
+                        .SeenTransportTypeInMiddleware;
                     var isCorrectTransportTypeOnClient = transportType switch
                     {
                         HttpSignalTransportType.Sse => seenTransportTypeOnClient?.IsHttpServerSentEvents(),
@@ -349,7 +409,11 @@ public static partial class HttpSignalTestCases
                         _ => false,
                     };
 
-                    Assert.That(isCorrectTransportTypeOnClient, Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
+                    Assert.That(
+                        isCorrectTransportTypeOnClient,
+                        Is.True,
+                        $"transport type is {seenTransportTypeOnClient?.Name}"
+                    );
                     Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(SignalTransportRole.Receiver));
                 }
 
@@ -361,14 +425,21 @@ public static partial class HttpSignalTestCases
         {
             Name = "handler discovered via assembly scanning",
             TransportType = transportType,
-            ExpectedReceivedSignals = [new TestSignalForAssemblyScanning { Payload = 10 }, new TestSignalForAssemblyScanning { Payload = 20 }],
+            ExpectedReceivedSignals =
+            [
+                new TestSignalForAssemblyScanning { Payload = 10 },
+                new TestSignalForAssemblyScanning { Payload = 20 },
+            ],
             RegisterHandler = s => s.AddSignalHandlersFromAssembly(typeof(TestSignalForAssemblyScanning).Assembly),
             PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalForAssemblyScanning.T, transportType).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignalForAssemblyScanning.T, transportType).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalForAssemblyScanning.T, transportType)
+                    .Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignalForAssemblyScanning.T, transportType)
+                    .Handle(new() { Payload = 20 }, ct);
             },
-            RunReceivers = (r, ct) => RunReceiverForTransport<TestSignalForAssemblyScanningHandler>(r, transportType, ct),
+            RunReceivers = (r, ct) =>
+                RunReceiverForTransport<TestSignalForAssemblyScanningHandler>(r, transportType, ct),
         };
 
         yield return new()
@@ -389,8 +460,10 @@ public static partial class HttpSignalTestCases
             RegisterHandler = s => AddDelegateHandlers(s, TestSignalWithDelegateHandler.T, transportType),
             PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalWithDelegateHandler.T, transportType).Handle(new() { Payload = 10 }, ct);
-                await CreatePublisher(p, TestSignalWithDelegateHandler.T, transportType).Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithDelegateHandler.T, transportType)
+                    .Handle(new() { Payload = 10 }, ct);
+                await CreatePublisher(p, TestSignalWithDelegateHandler.T, transportType)
+                    .Handle(new() { Payload = 20 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
             NumOfReceivers = 4,
@@ -413,8 +486,10 @@ public static partial class HttpSignalTestCases
             {
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
                 await CreatePublisher(p, TestSignalWithoutPayload.T, transportType).Handle(new(), ct);
-                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType).Handle(new() { Payload = 20 }, ct);
-                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType).Handle(new() { MessagePayload = 30 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomSerializer.T, transportType)
+                    .Handle(new() { Payload = 20 }, ct);
+                await CreatePublisher(p, TestSignalWithCustomJsonTypeInfo.T, transportType)
+                    .Handle(new() { MessagePayload = 30 }, ct);
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 40 }, ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<WildMixTestSignalHandler>(r, transportType, ct),
@@ -426,38 +501,45 @@ public static partial class HttpSignalTestCases
             TransportType = transportType,
             ExpectedReceivedSignals =
             [
-                new TestSignalBase(1),
-
+                new TestSignalBase(Payload: 1),
                 // because we publish these events through TestSignalBase, the event type will be "testSignalBase"
                 // and the signal will be deserialized as the base type
-                new TestSignalBase(10),
-                new TestSignalBase(20),
-
+                new TestSignalBase(Payload: 10),
+                new TestSignalBase(Payload: 20),
                 // since the receiver observes multiple types from the type hierarchy, we expect each signal
                 // to be received twice, but the type of the received signal will be the type that the publisher
                 // was using
-                new TestSignalSub(30, 31),
-                new TestSignalSub(30, 31),
-
+                new TestSignalSub(Payload: 30, PayloadSub: 31),
+                new TestSignalSub(Payload: 30, PayloadSub: 31),
                 // because we publish these events through TestSignalSub, the event type will be "testSignalSub"
                 // and the signal will be deserialized as that type instead of TestSignalSubSub
-                new TestSignalSub(40, 41),
-                new TestSignalSub(40, 41),
+                new TestSignalSub(Payload: 40, PayloadSub: 41),
+                new TestSignalSub(Payload: 40, PayloadSub: 41),
             ],
             RegisterHandler = s => s.AddSignalHandler<MultiHierarchyTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
-                await CreatePublisher(p, TestSignalBase.T, transportType).Handle(new(1), ct);
-                await CreatePublisher(p, TestSignalBase.T, transportType).Handle(new TestSignalSub(10, 11), ct);
-                await CreatePublisher(p, TestSignalBase.T, transportType).Handle(new TestSignalSubSub(20, 21, 22), ct);
-                await CreatePublisher(p, TestSignalSub.T, transportType).Handle(new(30, 31), ct);
-                await CreatePublisher(p, TestSignalSub.T, transportType).Handle(new TestSignalSubSub(40, 41, 42), ct);
+                await CreatePublisher(p, TestSignalBase.T, transportType).Handle(new(Payload: 1), ct);
+                await CreatePublisher(p, TestSignalBase.T, transportType)
+                    .Handle(new TestSignalSub(Payload: 10, PayloadSub: 11), ct);
+                await CreatePublisher(p, TestSignalBase.T, transportType)
+                    .Handle(new TestSignalSubSub(Payload: 20, PayloadSub: 21, PayloadSubSub: 22), ct);
+                await CreatePublisher(p, TestSignalSub.T, transportType).Handle(new(Payload: 30, PayloadSub: 31), ct);
+                await CreatePublisher(p, TestSignalSub.T, transportType)
+                    .Handle(new TestSignalSubSub(Payload: 40, PayloadSub: 41, PayloadSubSub: 42), ct);
             },
             RunReceivers = (r, ct) => RunReceiverForTransport<MultiHierarchyTestSignalHandler>(r, transportType, ct),
         };
     }
 
-    public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSimpleSuccessTestCases(HttpSignalTransportType transportType)
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
+    public static IEnumerable<HttpSignalConformityExecutionSuccessTestCase> CreateSimpleSuccessTestCases(
+        HttpSignalTransportType transportType
+    )
     {
         yield return new()
         {
@@ -485,8 +567,7 @@ public static partial class HttpSignalTestCases
                 new TestSignal { Payload = 30 },
                 new TestSignal { Payload = 30 },
             ],
-            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
-                                    .AddSignalHandler<MultiTestSignalHandler>(),
+            RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>().AddSignalHandler<MultiTestSignalHandler>(),
             PublishSignals = async (p, ct) =>
             {
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
@@ -498,7 +579,14 @@ public static partial class HttpSignalTestCases
         };
     }
 
-    public static IEnumerable<HttpSignalConformityExecutionErrorTestCase> CreateErrorTestCases(HttpSignalTransportType transportType)
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
+    public static IEnumerable<HttpSignalConformityExecutionErrorTestCase> CreateErrorTestCases(
+        HttpSignalTransportType transportType
+    )
     {
         yield return new()
         {
@@ -527,8 +615,8 @@ public static partial class HttpSignalTestCases
             NumOfReceivers = 2,
             HandlerExceptions = [],
             PublishSignals = (_, _) => Task.CompletedTask,
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
         };
 
@@ -536,11 +624,7 @@ public static partial class HttpSignalTestCases
         {
             Name = "single handler with disconnect",
             TransportType = transportType,
-            ExpectedReceivedSignals =
-            [
-                new TestSignal { Payload = 10 },
-                new TestSignal { Payload = 30 },
-            ],
+            ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 30 }],
             ConfigurationExceptions = [],
             PublishException = null,
             ConnectionResponses = [],
@@ -577,13 +661,13 @@ public static partial class HttpSignalTestCases
             {
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
         };
 
@@ -618,8 +702,8 @@ public static partial class HttpSignalTestCases
             NumOfReceivers = 2,
             HandlerExceptions = [],
             PublishSignals = (_, _) => Task.CompletedTask,
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
         };
 
@@ -630,17 +714,13 @@ public static partial class HttpSignalTestCases
             ExpectedReceivedSignals = [],
             ConfigurationExceptions = [],
             PublishException = null,
-            ConnectionResponses =
-            [
-                null,
-                (StatusCodes.Status418ImATeapot, ContentTypes.EventStream, KeepAlive: false),
-            ],
+            ConnectionResponses = [null, (StatusCodes.Status418ImATeapot, ContentTypes.EventStream, KeepAlive: false)],
             ExpectedInitialConnectionCount = 2,
             NumOfReceivers = 2,
             HandlerExceptions = [],
             PublishSignals = (_, _) => Task.CompletedTask,
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
         };
 
@@ -648,11 +728,7 @@ public static partial class HttpSignalTestCases
         {
             Name = "single handler with recoverable connection error",
             TransportType = transportType,
-            ExpectedReceivedSignals =
-            [
-                new TestSignal { Payload = 10 },
-                new TestSignal { Payload = 30 },
-            ],
+            ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 30 }],
             ConfigurationExceptions = [],
             PublishException = null,
             ConnectionResponses = [(StatusCodes.Status500InternalServerError, ContentTypes.TextPlain, KeepAlive: true)],
@@ -672,11 +748,7 @@ public static partial class HttpSignalTestCases
         {
             Name = "single handler with multiple recoverable connection errors",
             TransportType = transportType,
-            ExpectedReceivedSignals =
-            [
-                new TestSignal { Payload = 10 },
-                new TestSignal { Payload = 30 },
-            ],
+            ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 30 }],
             ConfigurationExceptions = [],
             PublishException = null,
             ConnectionResponses =
@@ -724,8 +796,8 @@ public static partial class HttpSignalTestCases
                 await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
         };
 
@@ -757,8 +829,8 @@ public static partial class HttpSignalTestCases
                 await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
             },
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
         };
 
@@ -766,33 +838,25 @@ public static partial class HttpSignalTestCases
         {
             Name = "single handler with handler exception",
             TransportType = transportType,
-            ExpectedReceivedSignals =
-            [
-                new TestSignal { Payload = 10 },
-                new TestSignal { Payload = 30 },
-            ],
+            ExpectedReceivedSignals = [new TestSignal { Payload = 10 }, new TestSignal { Payload = 30 }],
             ConfigurationExceptions = [],
             PublishException = null,
             ConnectionResponses = [],
             ExpectedInitialConnectionCount = 1,
-            HandlerExceptions =
-            [
-                null,
-                new InvalidOperationException("handler exception"),
-            ],
+            HandlerExceptions = [null, new InvalidOperationException("handler exception")],
             PublishSignals = async (p, ct) =>
             {
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 40 }, ct);
             },
@@ -829,20 +893,20 @@ public static partial class HttpSignalTestCases
             {
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 40 }, ct);
             },
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
         };
 
@@ -869,7 +933,6 @@ public static partial class HttpSignalTestCases
                 null, // on test signal 1 handler 2
                 null, // on test signal 2 handler 1
                 null, // on test signal 3 handler 1
-
                 // throw the exception only in the second handler to work around rare race condition
                 // where the exception in the first handler is caught, and therefore the client disconnects
                 // before the second handler has a chance to run
@@ -879,21 +942,21 @@ public static partial class HttpSignalTestCases
             {
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await CreatePublisher(p, TestSignal2.T, transportType).Handle(new() { Payload2 = 20 }, ct);
 
-                await Task.Delay(10, ct);
+                await Task.Delay(millisecondsDelay: 10, ct);
 
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 30 }, ct);
 
                 // give client time to disconnect due to handler failure
-                await Task.Delay(50, ct);
+                await Task.Delay(millisecondsDelay: 50, ct);
 
                 await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 40 }, ct);
             },
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
         };
 
@@ -930,13 +993,20 @@ public static partial class HttpSignalTestCases
             {
                 await CreatePublisher(p, ThrowingTestSignal.T, transportType).Handle(new(), ct);
             },
-            RegisterHandler = s => s.AddSignalHandler<ThrowingTestSignalHandler>()
-                                    .AddSignalHandler<ThrowingTestSignalHandler2>(),
+            RegisterHandler = s =>
+                s.AddSignalHandler<ThrowingTestSignalHandler>().AddSignalHandler<ThrowingTestSignalHandler2>(),
             RunReceivers = (r, ct) => RunReceiversForTransport(r, transportType, ct),
         };
     }
 
-    public static IEnumerable<HttpSignalConformityExecutionErrorTestCase> CreateReconnectDelayTestCases(HttpSignalTransportType transportType)
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
+    public static IEnumerable<HttpSignalConformityExecutionErrorTestCase> CreateReconnectDelayTestCases(
+        HttpSignalTransportType transportType
+    )
     {
         yield return new()
         {
@@ -954,12 +1024,21 @@ public static partial class HttpSignalTestCases
         };
     }
 
-    public static IEnumerable<HttpSignalConformityContextTestCase> CreateContextTestCases(HttpSignalTransportType transportType)
+    [SuppressMessage(
+        "Roslynator",
+        "RCS1250:Use implicit/explicit object creation",
+        Justification = "it is clear what objects are being created here"
+    )]
+    public static IEnumerable<HttpSignalConformityContextTestCase> CreateContextTestCases(
+        HttpSignalTransportType transportType
+    )
     {
-        foreach (var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[] { true, false }
-                                                                       from hasDownstream in new[] { true, false }
-                                                                       from hasBidirectional in new[] { true, false }
-                                                                       select (hasActivity, hasDownstream, hasBidirectional))
+        foreach (
+            var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[] { true, false }
+            from hasDownstream in new[] { true, false }
+            from hasBidirectional in new[] { true, false }
+            select (hasActivity, hasDownstream, hasBidirectional)
+        )
         {
             yield return new()
             {
@@ -986,8 +1065,8 @@ public static partial class HttpSignalTestCases
                 HasActivity = hasActivity,
                 HasDownstreamData = hasDownstream,
                 HasBidirectionalData = hasBidirectional,
-                RegisterHandler = s => s.AddSignalHandler<TestSignalHandler>()
-                                        .AddSignalHandler<MultiTestSignalHandler>(),
+                RegisterHandler = s =>
+                    s.AddSignalHandler<TestSignalHandler>().AddSignalHandler<MultiTestSignalHandler>(),
                 PublishSignals = async (p, ct) =>
                 {
                     await CreatePublisher(p, TestSignal.T, transportType).Handle(new() { Payload = 10 }, ct);
@@ -1003,91 +1082,124 @@ public static partial class HttpSignalTestCases
     private static TIHandler CreatePublisher<TSignal, TIHandler>(
         ISignalPublishers publishers,
         SignalTypes<TSignal, TIHandler> signalTypes,
-        HttpSignalTransportType transportType)
+        HttpSignalTransportType transportType
+    )
         where TSignal : class, IHttpSseSignal<TSignal>, IHttpWebSocketsSignal<TSignal>
-        where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>, IHttpWebSocketsSignalHandler<TSignal, TIHandler>
+        where TIHandler : class,
+            IHttpSseSignalHandler<TSignal, TIHandler>,
+            IHttpWebSocketsSignalHandler<TSignal, TIHandler>
     {
         return transportType switch
         {
-            HttpSignalTransportType.Sse => publishers.For(signalTypes).WithTransport(b => b.UseHttpServerSentEvents()).WithDefaultPublisherPipeline(),
-            HttpSignalTransportType.WebSockets => publishers.For(signalTypes).WithTransport(b => b.UseHttpWebSockets()).WithDefaultPublisherPipeline(),
-            _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, null),
+            HttpSignalTransportType.Sse => publishers
+                .For(signalTypes)
+                .WithTransport(b => b.UseHttpServerSentEvents())
+                .WithDefaultPublisherPipeline(),
+            HttpSignalTransportType.WebSockets => publishers
+                .For(signalTypes)
+                .WithTransport(b => b.UseHttpWebSockets())
+                .WithDefaultPublisherPipeline(),
+            _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, message: null),
         };
     }
 
+    [SuppressMessage(
+        "Design",
+        "MA0045:Do not use blocking calls in a sync method (need to make calling method async)",
+        Justification = "we want to explicitly test sync delegates"
+    )]
     private static void AddDelegateHandlers<TSignal, TIHandler>(
         IServiceCollection services,
         SignalTypes<TSignal, TIHandler> signalTypes,
-        HttpSignalTransportType transportType)
+        HttpSignalTransportType transportType
+    )
         where TSignal : class, IHttpSseSignal<TSignal>, IHttpWebSocketsSignal<TSignal>
-        where TIHandler : class, IHttpSseSignalHandler<TSignal, TIHandler>, IHttpWebSocketsSignalHandler<TSignal, TIHandler>
+        where TIHandler : class,
+            IHttpSseSignalHandler<TSignal, TIHandler>,
+            IHttpWebSocketsSignalHandler<TSignal, TIHandler>
     {
         _ = transportType switch
         {
-            HttpSignalTransportType.Sse => services.AddHttpSseSignalHandlerDelegate(
-                                                       signalTypes,
-                                                       (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
-                                                       r => r.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>()(r))
-                                                   .AddHttpSseSignalHandlerDelegate(
-                                                       signalTypes,
-                                                       (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
-                                                       p => p.UseReceiverLogging(),
-                                                       r => r.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>()(r))
-                                                   .AddHttpSseSignalHandlerDelegate(
-                                                       signalTypes,
-                                                       (s, p) => p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None),
-                                                       r => r.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>()(r))
-                                                   .AddHttpSseSignalHandlerDelegate(
-                                                       signalTypes,
-                                                       (s, p) => p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None),
-                                                       p => p.UseReceiverLogging(),
-                                                       r => r.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>()(r)),
-            HttpSignalTransportType.WebSockets => services.AddHttpWebSocketsSignalHandlerDelegate(
-                                                              signalTypes,
-                                                              (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
-                                                              r => r.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>()(r))
-                                                          .AddHttpWebSocketsSignalHandlerDelegate(
-                                                              signalTypes,
-                                                              (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
-                                                              p => p.UseReceiverLogging(),
-                                                              r => r.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>()(r))
-                                                          .AddHttpWebSocketsSignalHandlerDelegate(
-                                                              signalTypes,
-                                                              (s, p) => p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None),
-                                                              r => r.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>()(r))
-                                                          .AddHttpWebSocketsSignalHandlerDelegate(
-                                                              signalTypes,
-                                                              (s, p) => p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None),
-                                                              p => p.UseReceiverLogging(),
-                                                              r => r.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>()(r)),
-            _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, null),
+            HttpSignalTransportType.Sse => services
+                .AddHttpSseSignalHandlerDelegate(
+                    signalTypes,
+                    (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
+                    r => r.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>()(r)
+                )
+                .AddHttpSseSignalHandlerDelegate(
+                    signalTypes,
+                    (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
+                    p => p.UseReceiverLogging(),
+                    r => r.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>()(r)
+                )
+                .AddHttpSseSignalHandlerDelegate(
+                    signalTypes,
+                    (s, p) =>
+                        p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None).GetAwaiter().GetResult(),
+                    r => r.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>()(r)
+                )
+                .AddHttpSseSignalHandlerDelegate(
+                    signalTypes,
+                    (s, p) =>
+                        p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None).GetAwaiter().GetResult(),
+                    p => p.UseReceiverLogging(),
+                    r => r.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>()(r)
+                ),
+            HttpSignalTransportType.WebSockets => services
+                .AddHttpWebSocketsSignalHandlerDelegate(
+                    signalTypes,
+                    (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
+                    r => r.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>()(r)
+                )
+                .AddHttpWebSocketsSignalHandlerDelegate(
+                    signalTypes,
+                    (s, p, ct) => p.GetRequiredService<FnToCallFromHandler>()(s, ct),
+                    p => p.UseReceiverLogging(),
+                    r => r.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>()(r)
+                )
+                .AddHttpWebSocketsSignalHandlerDelegate(
+                    signalTypes,
+                    (s, p) =>
+                        p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None).GetAwaiter().GetResult(),
+                    r => r.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>()(r)
+                )
+                .AddHttpWebSocketsSignalHandlerDelegate(
+                    signalTypes,
+                    (s, p) =>
+                        p.GetRequiredService<FnToCallFromHandler>()(s, CancellationToken.None).GetAwaiter().GetResult(),
+                    p => p.UseReceiverLogging(),
+                    r => r.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>()(r)
+                ),
+            _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, message: null),
         };
     }
 
     private static ReceiverExecutionHandle RunReceiverForTransport<THandler>(
         ISignalReceivers r,
         HttpSignalTransportType transportType,
-        CancellationToken ct)
+        CancellationToken ct
+    )
         where THandler : class, ISignalHandlerWithSourceGeneration, IHttpSseSignalHandler, IHttpWebSocketsSignalHandler
     {
         return transportType switch
         {
             HttpSignalTransportType.Sse => r.RunHttpSseSignalReceiver<THandler>(ct),
             HttpSignalTransportType.WebSockets => r.RunHttpWebSocketsSignalReceiver<THandler>(ct),
-            _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, null),
+            _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, message: null),
         };
     }
 
     private static ReceiverExecutionHandle RunReceiversForTransport(
         ISignalReceivers r,
         HttpSignalTransportType transportType,
-        CancellationToken ct)
+        CancellationToken ct
+    )
     {
         return transportType switch
         {
             HttpSignalTransportType.Sse => r.RunHttpSseSignalReceivers(ct),
             HttpSignalTransportType.WebSockets => r.RunHttpWebSocketsSignalReceivers(ct),
-            _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, null),
+            _ => throw new ArgumentOutOfRangeException(nameof(transportType), transportType, message: null),
         };
     }
 
@@ -1098,14 +1210,12 @@ public static partial class HttpSignalTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestSignal.IHandler
+    public sealed partial class TestSignalHandler(FnToCallFromHandler funToCallFromHandler) : TestSignal.IHandler
     {
-        static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
-            => pipeline.Use(ctx =>
+        static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
+            pipeline.Use(ctx =>
             {
-                ctx.ServiceProvider.GetRequiredService<ILogger>()
-                   .LogInformation("received signal");
+                ctx.ServiceProvider.GetRequiredService<ILogger>().LogInformation("received signal");
 
                 return ctx.Next(ctx.Signal, ctx.CancellationToken);
             });
@@ -1114,14 +1224,15 @@ public static partial class HttpSignalTestCases
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     public sealed partial class DisabledTestSignalHandler : TestSignal.IHandler
@@ -1153,29 +1264,30 @@ public static partial class HttpSignalTestCases
         public required int Payload2 { get; init; }
     }
 
-    public sealed partial class MultiTestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class MultiTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-          TestSignal2.IHandler
+            TestSignal2.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignal2 signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [Signal]
@@ -1184,29 +1296,30 @@ public static partial class HttpSignalTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class MixedWithNonHttpTestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class MixedWithNonHttpTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-          NonHttpTestSignal.IHandler
+            NonHttpTestSignal.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(NonHttpTestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal(EventType = "custom")]
@@ -1216,42 +1329,47 @@ public static partial class HttpSignalTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class TestSignalWithCustomEventTypeOrTagHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithCustomEventTypeOrTagHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithCustomEventTypeOrTag.IHandler
     {
-        public async Task Handle(TestSignalWithCustomEventTypeOrTag signal, CancellationToken cancellationToken = default)
+        public async Task Handle(
+            TestSignalWithCustomEventTypeOrTag signal,
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
     [HttpWebSocketsSignal]
     public sealed partial record TestSignalWithoutPayload;
 
-    public sealed partial class TestSignalWithoutPayloadHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithoutPayloadHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithoutPayload.IHandler
     {
         public async Task Handle(TestSignalWithoutPayload signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
@@ -1263,45 +1381,49 @@ public static partial class HttpSignalTestCases
 
     public sealed record TestSignalWithCustomSerializedPayloadTypePayload(int Payload);
 
-    public sealed partial class TestSignalWithCustomSerializedPayloadTypeHandler(FnToCallFromHandler fnToCallFromHandler)
-        : TestSignalWithCustomSerializedPayloadType.IHandler
+    public sealed partial class TestSignalWithCustomSerializedPayloadTypeHandler(
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestSignalWithCustomSerializedPayloadType.IHandler
     {
         public async Task Handle(
             TestSignalWithCustomSerializedPayloadType signal,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
 
         internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
         {
-            public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestSignalWithCustomSerializedPayloadTypePayload);
+            public override bool CanConvert(Type typeToConvert) =>
+                typeToConvert == typeof(TestSignalWithCustomSerializedPayloadTypePayload);
 
-            public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
-            {
-                return Activator.CreateInstance(typeof(PayloadJsonConverter)) as JsonConverter;
-            }
+            public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
+                Activator.CreateInstance<PayloadJsonConverter>();
         }
 
         internal sealed class PayloadJsonConverter : JsonConverter<TestSignalWithCustomSerializedPayloadTypePayload>
         {
-            public override TestSignalWithCustomSerializedPayloadTypePayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                return new(reader.GetInt32());
-            }
+            public override TestSignalWithCustomSerializedPayloadTypePayload Read(
+                ref Utf8JsonReader reader,
+                Type typeToConvert,
+                JsonSerializerOptions options
+            ) => new(reader.GetInt32());
 
-            public override void Write(Utf8JsonWriter writer, TestSignalWithCustomSerializedPayloadTypePayload value, JsonSerializerOptions options)
-            {
-                writer.WriteNumberValue(value.Payload);
-            }
+            public override void Write(
+                Utf8JsonWriter writer,
+                TestSignalWithCustomSerializedPayloadTypePayload value,
+                JsonSerializerOptions options
+            ) => writer.WriteNumberValue(value.Payload);
         }
     }
 
@@ -1311,66 +1433,70 @@ public static partial class HttpSignalTestCases
     {
         public required int Payload { get; init; }
 
-        static IHttpSseSignalSerializer<TestSignalWithCustomSerializer> IHttpSseSignal<TestSignalWithCustomSerializer>.HttpSseSignalSerializer
-            => new TestSignalCustomSseSerializer();
+        static IHttpSseSignalSerializer<TestSignalWithCustomSerializer> IHttpSseSignal<TestSignalWithCustomSerializer>.HttpSseSignalSerializer =>
+            new TestSignalCustomSseSerializer();
 
-        static IHttpWebSocketsSignalSerializer<TestSignalWithCustomSerializer> IHttpWebSocketsSignal<TestSignalWithCustomSerializer>.
-            HttpWebSocketsSignalSerializer
-            => new TestSignalCustomWebSocketsSerializer();
+        static IHttpWebSocketsSignalSerializer<TestSignalWithCustomSerializer> IHttpWebSocketsSignal<TestSignalWithCustomSerializer>.HttpWebSocketsSignalSerializer =>
+            new TestSignalCustomWebSocketsSerializer();
     }
 
     private sealed class TestSignalCustomSseSerializer : IHttpSseSignalSerializer<TestSignalWithCustomSerializer>
     {
-        public Task<string> SerializeSignal(IServiceProvider serviceProvider, TestSignalWithCustomSerializer signal)
-        {
-            return Task.FromResult($"payload:{signal.Payload}");
-        }
+        public Task<string> SerializeSignal(IServiceProvider serviceProvider, TestSignalWithCustomSerializer signal) =>
+            Task.FromResult($"payload:{signal.Payload}");
 
-        public Task<TestSignalWithCustomSerializer> DeserializeSignal(IServiceProvider serviceProvider, string serializedSignal)
+        public Task<TestSignalWithCustomSerializer> DeserializeSignal(
+            IServiceProvider serviceProvider,
+            string serializedSignal
+        )
         {
-            var result = int.Parse(serializedSignal.Split(':')[1]);
+            var result = int.Parse(serializedSignal.Split(':')[1], CultureInfo.InvariantCulture);
 
             return Task.FromResult(new TestSignalWithCustomSerializer { Payload = result });
         }
     }
 
-    private sealed class TestSignalCustomWebSocketsSerializer : IHttpWebSocketsSignalSerializer<TestSignalWithCustomSerializer>
+    private sealed class TestSignalCustomWebSocketsSerializer
+        : IHttpWebSocketsSignalSerializer<TestSignalWithCustomSerializer>
     {
         public Task SerializeSignal(
             IServiceProvider serviceProvider,
             TestSignalWithCustomSerializer signal,
             Stream stream,
-            CancellationToken cancellationToken)
-        {
-            return stream.WriteAsync(Encoding.UTF8.GetBytes($"payload:{signal.Payload}"), cancellationToken).AsTask();
-        }
+            CancellationToken cancellationToken
+        ) => stream.WriteAsync(Encoding.UTF8.GetBytes($"payload:{signal.Payload}"), cancellationToken).AsTask();
 
-        public async Task<TestSignalWithCustomSerializer> DeserializeSignal(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
+        public async Task<TestSignalWithCustomSerializer> DeserializeSignal(
+            IServiceProvider serviceProvider,
+            Stream stream,
+            CancellationToken cancellationToken
+        )
         {
             using var streamReader = new StreamReader(stream, Encoding.UTF8);
             var serializedSignal = await streamReader.ReadToEndAsync(cancellationToken);
 
-            var result = int.Parse(serializedSignal.Split(':')[1]);
+            var result = int.Parse(serializedSignal.Split(':')[1], CultureInfo.InvariantCulture);
 
-            return new() { Payload = result };
+            return new TestSignalWithCustomSerializer { Payload = result };
         }
     }
 
-    public sealed partial class TestSignalWithCustomSerializerHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithCustomSerializerHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithCustomSerializer.IHandler
     {
         public async Task Handle(TestSignalWithCustomSerializer signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
@@ -1380,23 +1506,22 @@ public static partial class HttpSignalTestCases
         public int MessagePayload { get; init; }
     }
 
-    public sealed partial class TestSignalWithCustomJsonTypeInfoHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithCustomJsonTypeInfoHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithCustomJsonTypeInfo.IHandler
     {
-        public async Task Handle(
-            TestSignalWithCustomJsonTypeInfo signal,
-            CancellationToken cancellationToken = default)
+        public async Task Handle(TestSignalWithCustomJsonTypeInfo signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseUpper)]
@@ -1410,26 +1535,26 @@ public static partial class HttpSignalTestCases
         public int Payload { get; init; }
     }
 
-    public sealed partial class TestSignalWithMiddlewareHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalWithMiddlewareHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalWithMiddleware.IHandler
     {
         public async Task Handle(TestSignalWithMiddleware signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public static void ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
-            where T : class, ISignal<T>
-            =>
-                pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestSignalMiddleware<T>>());
+            where T : class, ISignal<T> =>
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestSignalMiddleware<T>>());
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     public sealed class TestSignalMiddleware<TSignal>(TestObservations observations) : ISignalMiddleware<TSignal>
@@ -1450,21 +1575,22 @@ public static partial class HttpSignalTestCases
         public int Payload { get; init; }
     }
 
-    public sealed partial class TestSignalForAssemblyScanningHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class TestSignalForAssemblyScanningHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalForAssemblyScanning.IHandler
     {
         public async Task Handle(TestSignalForAssemblyScanning signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
@@ -1474,45 +1600,46 @@ public static partial class HttpSignalTestCases
         public required int Payload { get; init; }
     }
 
-    public sealed partial class WildMixTestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
+    public sealed partial class WildMixTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-          TestSignalWithoutPayload.IHandler,
-          TestSignalWithCustomSerializer.IHandler,
-          TestSignalWithCustomJsonTypeInfo.IHandler
+            TestSignalWithoutPayload.IHandler,
+            TestSignalWithCustomSerializer.IHandler,
+            TestSignalWithCustomJsonTypeInfo.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignalWithoutPayload signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignalWithCustomSerializer signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignalWithCustomJsonTypeInfo signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     [HttpSseSignal]
@@ -1523,79 +1650,77 @@ public static partial class HttpSignalTestCases
     [HttpWebSocketsSignal]
     public partial record TestSignalSub(int Payload, int PayloadSub) : TestSignalBase(Payload);
 
-    public sealed record TestSignalSubSub(int Payload, int PayloadSub, int PayloadSubSub) : TestSignalSub(Payload, PayloadSub);
+    public sealed record TestSignalSubSub(int Payload, int PayloadSub, int PayloadSubSub)
+        : TestSignalSub(Payload, PayloadSub);
 
-    private sealed partial class MultiHierarchyTestSignalHandler(FnToCallFromHandler fnToCallFromHandler)
+    private sealed partial class MultiHierarchyTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalBase.IHandler,
-          TestSignalSub.IHandler
+            TestSignalSub.IHandler
     {
         public async Task Handle(TestSignalBase signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
         public async Task Handle(TestSignalSub signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
         }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     private sealed partial class ThrowingTestSignalHandler(
         ConcurrentQueue<Exception?> exceptions,
-        FnToCallFromHandler fnToCallFromHandler)
-        : TestSignal.IHandler,
-          ThrowingTestSignal.IHandler
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestSignal.IHandler, ThrowingTestSignal.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
-                await Task.Delay(1, cancellationToken);
+                await Task.Delay(millisecondsDelay: 1, cancellationToken);
 
                 throw ex;
             }
         }
 
-        public Task Handle(ThrowingTestSignal signal, CancellationToken cancellationToken = default)
-        {
+        public Task Handle(ThrowingTestSignal signal, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
-        }
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     private sealed partial class ThrowingTestSignalHandler2(
         ConcurrentQueue<Exception?> exceptions,
-        FnToCallFromHandler fnToCallFromHandler)
-        : TestSignal.IHandler,
-          TestSignal2.IHandler,
-          ThrowingTestSignal.IHandler
+        FnToCallFromHandler funToCallFromHandler
+    ) : TestSignal.IHandler, TestSignal2.IHandler, ThrowingTestSignal.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
-                await Task.Delay(1, cancellationToken);
+                await Task.Delay(millisecondsDelay: 1, cancellationToken);
 
                 throw ex;
             }
@@ -1604,26 +1729,25 @@ public static partial class HttpSignalTestCases
         public async Task Handle(TestSignal2 signal, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
-            await fnToCallFromHandler(signal, cancellationToken);
+            await funToCallFromHandler(signal, cancellationToken);
 
             if (exceptions.TryDequeue(out var ex) && ex is not null)
             {
-                await Task.Delay(1, cancellationToken);
+                await Task.Delay(millisecondsDelay: 1, cancellationToken);
 
                 throw ex;
             }
         }
 
-        public Task Handle(ThrowingTestSignal signal, CancellationToken cancellationToken = default)
-        {
+        public Task Handle(ThrowingTestSignal signal, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
-        }
 
-        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(IHttpWebSocketsSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
+        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver) =>
+            receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
 
-        static void IHttpSseSignalHandler.ConfigureHttpSseReceiver(IHttpSseSignalReceiver receiver)
-            => receiver.ServiceProvider.GetRequiredService<Action<IHttpSseSignalReceiver>>().Invoke(receiver);
+        static void IHttpWebSocketsSignalHandler.ConfigureHttpWebSocketsReceiver(
+            IHttpWebSocketsSignalReceiver receiver
+        ) => receiver.ServiceProvider.GetRequiredService<Action<IHttpWebSocketsSignalReceiver>>().Invoke(receiver);
     }
 
     public sealed class TestObservations
@@ -1639,49 +1763,46 @@ public static partial class HttpSignalTestCases
     [HttpWebSocketsSignal]
     private sealed partial record ThrowingTestSignal
     {
-        static IHttpSseSignalSerializer<ThrowingTestSignal> IHttpSseSignal<ThrowingTestSignal>.HttpSseSignalSerializer { get; }
-            = new ThrowingTestSignalSerializer();
+        static IHttpSseSignalSerializer<ThrowingTestSignal> IHttpSseSignal<ThrowingTestSignal>.HttpSseSignalSerializer { get; } =
+            new ThrowingTestSignalSerializer();
 
-        static IHttpWebSocketsSignalSerializer<ThrowingTestSignal> IHttpWebSocketsSignal<ThrowingTestSignal>.HttpWebSocketsSignalSerializer { get; }
-            = new ThrowingTestSignalSerializer();
+        static IHttpWebSocketsSignalSerializer<ThrowingTestSignal> IHttpWebSocketsSignal<ThrowingTestSignal>.HttpWebSocketsSignalSerializer { get; } =
+            new ThrowingTestSignalSerializer();
     }
 
-    private sealed class ThrowingTestSignalSerializer : IHttpSseSignalSerializer<ThrowingTestSignal>,
-                                                        IHttpWebSocketsSignalSerializer<ThrowingTestSignal>
+    private sealed class ThrowingTestSignalSerializer
+        : IHttpSseSignalSerializer<ThrowingTestSignal>,
+            IHttpWebSocketsSignalSerializer<ThrowingTestSignal>
     {
-        public Task<string> SerializeSignal(IServiceProvider serviceProvider, ThrowingTestSignal signal)
-        {
+        public Task<string> SerializeSignal(IServiceProvider serviceProvider, ThrowingTestSignal signal) =>
             throw serviceProvider.GetRequiredService<Exception>();
-        }
 
-        public Task<ThrowingTestSignal> DeserializeSignal(IServiceProvider serviceProvider, string serializedSignal)
-        {
+        public Task<ThrowingTestSignal> DeserializeSignal(IServiceProvider serviceProvider, string serializedSignal) =>
             throw new NotSupportedException();
-        }
 
         public Task SerializeSignal(
             IServiceProvider serviceProvider,
             ThrowingTestSignal signal,
             Stream stream,
-            CancellationToken cancellationToken)
-        {
-            throw serviceProvider.GetRequiredService<Exception>();
-        }
+            CancellationToken cancellationToken
+        ) => throw serviceProvider.GetRequiredService<Exception>();
 
-        public Task<ThrowingTestSignal> DeserializeSignal(IServiceProvider serviceProvider, Stream stream, CancellationToken cancellationToken)
-        {
-            throw new NotSupportedException();
-        }
+        public Task<ThrowingTestSignal> DeserializeSignal(
+            IServiceProvider serviceProvider,
+            Stream stream,
+            CancellationToken cancellationToken
+        ) => throw new NotSupportedException();
     }
 }
 
 file static class PipelineExtensions
 {
-    public static ISignalPipeline<TSignal> UsePublishCallback<TSignal>(
-        this ISignalPipeline<TSignal> pipeline)
+    public static ISignalPipeline<TSignal> UsePublishCallback<TSignal>(this ISignalPipeline<TSignal> pipeline)
         where TSignal : class, ISignal<TSignal>
     {
-        var publishCallback = pipeline.ServiceProvider.GetService<Func<object, ConquerorContext, CancellationToken, Task>>();
+        var publishCallback = pipeline.ServiceProvider.GetService<
+            Func<object, ConquerorContext, CancellationToken, Task>
+        >();
 
         if (publishCallback is null)
         {
@@ -1722,10 +1843,9 @@ file static class PipelineExtensions
     }
 
     public static TIHandler WithDefaultPublisherPipeline<TSignal, TIHandler>(
-        this ISignalHandler<TSignal, TIHandler> handler)
+        this ISignalHandler<TSignal, TIHandler> handler
+    )
         where TSignal : class, ISignal<TSignal>
-        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-    {
-        return handler.WithPipeline(p => _ = p.UseLogging().UsePublishCallback());
-    }
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler> =>
+        handler.WithPipeline(p => _ = p.UseLogging().UsePublishCallback());
 }

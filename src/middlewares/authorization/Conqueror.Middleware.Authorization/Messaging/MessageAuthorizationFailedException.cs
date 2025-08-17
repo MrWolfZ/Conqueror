@@ -1,13 +1,18 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - part of the public API
 
-// ReSharper disable once CheckNamespace
 namespace Conqueror;
+
+using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
 ///     An exception that represents badly formatted Conqueror context data.
 /// </summary>
-[SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "they make no sense here")]
+/// <param name="result">The failed authorization result</param>
+[SuppressMessage(
+    "Roslynator",
+    "RCS1194:Implement exception constructors",
+    Justification = "the standard constructors don't make sens here"
+)]
 public sealed class MessageAuthorizationFailedException(AuthorizationFailureResult result)
     : MessageFailedException(string.Join(Environment.NewLine, result.Details))
 {

@@ -1,19 +1,16 @@
-using System;
+namespace Conqueror.Middleware.Logging.Signalling;
+
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-
-namespace Conqueror.Middleware.Logging.Signalling;
 
 /// <summary>
 ///     The configuration options for <see cref="LoggingSignalMiddleware{TSignal}" />.
 /// </summary>
+/// <typeparam name="TSignal">The signal type</typeparam>
 public sealed class LoggingSignalMiddlewareConfiguration<TSignal>
     where TSignal : class, ISignal<TSignal>
 {
-    internal LoggingSignalMiddlewareConfiguration(Type? handlerType)
-    {
-        HandlerType = handlerType;
-    }
+    internal LoggingSignalMiddlewareConfiguration(Type? handlerType) => HandlerType = handlerType;
 
     /// <summary>
     ///     The level at which the pre-execution log message is logged.
@@ -54,27 +51,27 @@ public sealed class LoggingSignalMiddlewareConfiguration<TSignal>
 
     /// <summary>
     ///     A hook that is called just before the pre-execution log message
-    ///     is written. Return <c>true</c> to allow the log message to be
-    ///     written or return <c>false</c> for the log message to be skipped.
-    ///     This hook can be used to customize the logging by returning <c>false</c>
+    ///     is written. Return <see langword="true" /> to allow the log message to be
+    ///     written or return <see langword="false" /> for the log message to be skipped.
+    ///     This hook can be used to customize the logging by returning <see langword="false" />
     ///     and using the <see cref="LoggingSignalPreExecutionContext{TSignal}.Logger" />.
     /// </summary>
     public Func<LoggingSignalPreExecutionContext<TSignal>, bool>? PreExecutionHook { get; set; }
 
     /// <summary>
     ///     A hook that is called just before the post-execution log message
-    ///     is written. Return <c>true</c> to allow the log message to be
-    ///     written or return <c>false</c> for the log message to be skipped.
-    ///     This hook can be used to customize the logging by returning <c>false</c>
+    ///     is written. Return <see langword="true" /> to allow the log message to be
+    ///     written or return <see langword="false" /> for the log message to be skipped.
+    ///     This hook can be used to customize the logging by returning <see langword="false" />
     ///     and using the <see cref="LoggingSignalPostExecutionContext{TSignal}.Logger" />.
     /// </summary>
     public Func<LoggingSignalPostExecutionContext<TSignal>, bool>? PostExecutionHook { get; set; }
 
     /// <summary>
     ///     A hook that is called just before the exception log message
-    ///     is written. Return <c>true</c> to allow the log message to be
-    ///     written or return <c>false</c> for the log message to be skipped.
-    ///     This hook can be used to customize the logging by returning <c>false</c>
+    ///     is written. Return <see langword="true" /> to allow the log message to be
+    ///     written or return <see langword="false" /> for the log message to be skipped.
+    ///     This hook can be used to customize the logging by returning <see langword="false" />
     ///     and using the <see cref="LoggingSignalExceptionContext{TSignal}.Logger" />.<br />
     ///     <br />
     ///     Note that this hook does not influence what happens with the exception
@@ -101,7 +98,8 @@ public sealed class LoggingSignalMiddlewareConfiguration<TSignal>
 ///     The context passed to a <see cref="LoggingSignalMiddleware{TSignal}" />'s
 ///     <see cref="LoggingSignalMiddlewareConfiguration{TSignal}.PreExecutionHook" />.
 /// </summary>
-public readonly record struct LoggingSignalPreExecutionContext<TSignal>
+/// <typeparam name="TSignal">The signal type</typeparam>
+public sealed record LoggingSignalPreExecutionContext<TSignal>
     where TSignal : class, ISignal<TSignal>
 {
     /// <summary>
@@ -140,7 +138,8 @@ public readonly record struct LoggingSignalPreExecutionContext<TSignal>
 ///     The context passed to a <see cref="LoggingSignalMiddleware{TSignal}" />'s
 ///     <see cref="LoggingSignalMiddlewareConfiguration{TSignal}.PostExecutionHook" />.
 /// </summary>
-public readonly record struct LoggingSignalPostExecutionContext<TSignal>
+/// <typeparam name="TSignal">The signal type</typeparam>
+public sealed record LoggingSignalPostExecutionContext<TSignal>
     where TSignal : class, ISignal<TSignal>
 {
     /// <summary>
@@ -184,7 +183,8 @@ public readonly record struct LoggingSignalPostExecutionContext<TSignal>
 ///     The context passed to a <see cref="LoggingSignalMiddleware{TSignal}" />'s
 ///     <see cref="LoggingSignalMiddlewareConfiguration{TSignal}.ExceptionHook" />.
 /// </summary>
-public readonly record struct LoggingSignalExceptionContext<TSignal>
+/// <typeparam name="TSignal">The signal type</typeparam>
+public sealed record LoggingSignalExceptionContext<TSignal>
     where TSignal : class, ISignal<TSignal>
 {
     /// <summary>
@@ -228,7 +228,7 @@ public readonly record struct LoggingSignalExceptionContext<TSignal>
     ///     can be combined with <see cref="Exception.StackTrace" /> to get the
     ///     full stack trace of the exception, since the exception's stack trace
     ///     only contains the stack frames from the middleware execution to the
-    ///     handler. Is <c>null</c> when capturing of the stack trace is disabled.
+    ///     handler. Is <see langword="null" /> when capturing of the stack trace is disabled.
     /// </summary>
     public required StackTrace? ExecutionStackTrace { get; init; }
 

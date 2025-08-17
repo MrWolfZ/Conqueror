@@ -1,9 +1,9 @@
-using System;
-using Conqueror.Streaming.Transport.Http.Client;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+#pragma warning disable IDE0130 // Namespaces don't match folder structure - it's a convention to place service collection extensions in this namespace
 
-// ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
+
+using Conqueror.Streaming.Transport.Http.Client;
+using Extensions;
 
 public static class ConquerorStreamingTransportHttpClientServiceCollectionExtensions
 {
@@ -16,8 +16,10 @@ public static class ConquerorStreamingTransportHttpClientServiceCollectionExtens
         return services;
     }
 
-    public static IServiceCollection AddConquerorStreamingHttpClientServices(this IServiceCollection services,
-                                                                             Action<ConquerorStreamingHttpClientGlobalOptions> configure)
+    public static IServiceCollection AddConquerorStreamingHttpClientServices(
+        this IServiceCollection services,
+        Action<ConquerorStreamingHttpClientGlobalOptions> configure
+    )
     {
         AddConquerorStreamingHttpClientServices(services);
         services.AddSingleton(configure);
@@ -25,8 +27,10 @@ public static class ConquerorStreamingTransportHttpClientServiceCollectionExtens
         return services;
     }
 
-    public static IServiceCollection ConfigureConquerorCQSHttpClientOptions(this IServiceCollection services,
-                                                                            Action<ConquerorStreamingHttpClientGlobalOptions> configure)
+    public static IServiceCollection ConfigureConquerorCqsHttpClientOptions(
+        this IServiceCollection services,
+        Action<ConquerorStreamingHttpClientGlobalOptions> configure
+    )
     {
         // developer note: this method is identical to AddConquerorStreamingHttpClientServices, but the name better expresses
         // that multiple configurations are merged (i.e. calling add+configure is more intuitive than add+add, even though

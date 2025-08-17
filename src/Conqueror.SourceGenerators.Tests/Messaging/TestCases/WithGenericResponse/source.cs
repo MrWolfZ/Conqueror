@@ -1,8 +1,8 @@
-﻿using System;
+﻿namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithGenericResponse;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithGenericResponse;
 
 [Message<TestMessageResponse<Payload, int, Payload2>>]
 public partial record TestMessage;
@@ -15,7 +15,10 @@ public record Payload2;
 
 public partial class TestMessageHandler : TestMessage.IHandler
 {
-    public Task<TestMessageResponse<Payload, int, Payload2>> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public Task<TestMessageResponse<Payload, int, Payload2>> Handle(
+        TestMessage message,
+        CancellationToken cancellationToken
+    ) => throw new NotSupportedException();
 }
 
 // make the compiler happy during design time

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using System.Threading.Tasks;
-
-// ReSharper disable once CheckNamespace
-namespace Conqueror;
+﻿namespace Conqueror;
 
 internal sealed class HttpSseSignalJsonSerializer<TSignal> : IHttpSseSignalSerializer<TSignal>
     where TSignal : class, IHttpSseSignal<TSignal>
@@ -13,10 +7,11 @@ internal sealed class HttpSseSignalJsonSerializer<TSignal> : IHttpSseSignalSeria
     {
         var jsonTypeInfo = (JsonTypeInfo<TSignal>?)TSignal.HttpSseJsonSerializerContext?.GetTypeInfo(typeof(TSignal));
 
-        if (jsonTypeInfo == null)
+        if (jsonTypeInfo is null)
         {
-            var jsonSerializerSettings = (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
-                                         ?? HttpJsonSerializerOptions.DefaultJsonSerializerOptions;
+            var jsonSerializerSettings =
+                (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
+                ?? HttpJsonSerializerOptions.DefaultJsonSerializerOptions;
             jsonTypeInfo = (JsonTypeInfo<TSignal>)jsonSerializerSettings.GetTypeInfo(typeof(TSignal));
         }
 
@@ -27,14 +22,17 @@ internal sealed class HttpSseSignalJsonSerializer<TSignal> : IHttpSseSignalSeria
     {
         var jsonTypeInfo = (JsonTypeInfo<TSignal>?)TSignal.HttpSseJsonSerializerContext?.GetTypeInfo(typeof(TSignal));
 
-        if (jsonTypeInfo == null)
+        if (jsonTypeInfo is null)
         {
-            var jsonSerializerSettings = (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
-                                         ?? HttpJsonSerializerOptions.DefaultJsonSerializerOptions;
+            var jsonSerializerSettings =
+                (JsonSerializerOptions?)serviceProvider.GetService(typeof(JsonSerializerOptions))
+                ?? HttpJsonSerializerOptions.DefaultJsonSerializerOptions;
             jsonTypeInfo = (JsonTypeInfo<TSignal>)jsonSerializerSettings.GetTypeInfo(typeof(TSignal));
         }
 
         return Task.FromResult(
-            JsonSerializer.Deserialize(serializedSignal, jsonTypeInfo) ?? throw new InvalidOperationException("failed to deserialize HTTP SSE signal"));
+            JsonSerializer.Deserialize(serializedSignal, jsonTypeInfo)
+                ?? throw new InvalidOperationException("failed to deserialize HTTP SSE signal")
+        );
     }
 }

@@ -1,10 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿namespace Examples.BlazorWebAssembly.API.Chat;
 
-namespace Examples.BlazorWebAssembly.API.Chat;
+using System.Collections.Concurrent;
 
 internal sealed class ChatRepository
 {
-    private readonly ConcurrentQueue<ChatEntry> entries = new();
+    private readonly ConcurrentQueue<ChatEntry> entries = [];
 
     public async Task Add(ChatEntry entry)
     {
@@ -15,6 +15,7 @@ internal sealed class ChatRepository
     public async Task<IReadOnlyCollection<ChatEntry>> GetEntries()
     {
         await Task.Yield();
+
         return entries;
     }
 }
