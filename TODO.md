@@ -13,12 +13,15 @@ This file contains all the open points for extensions and improvements to the **
 
 ### Common
 
+- [ ] align test names
 - [ ] throw on empty context data key
 - [ ] change dependencies to depend on greater-than 8
 - [ ] create benchmark app
   - [ ] add benchmarks for running with and without context items
 - [ ] use explicit dependency version numbers in all recipes and examples
   - [ ] add a script to bump version number across whole project
+- [ ] consider making the `ConquerorContext` opt-out-able or even opt-in (would require passing certain things like IDs in a different way)
+- [ ] move "internal" interfaces (which need to be public in the abstractions because generated code relies on them) to a separate internal namespace
 
 ### Messaging
 
@@ -89,6 +92,7 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] recursively instantiate property objects, again enforcing single constructor
   - [ ] emit error diagnostic if more than one constructor is defined
 - [ ] add statement in recipe that attributes can be renamed with a global using if they cause conflicts
+- [ ] improve error messages
 
 ### Analyzers
 
@@ -114,6 +118,11 @@ This file contains all the open points for extensions and improvements to the **
 
 - [ ] allow configuring properties which are added to the logging scope
 - [ ] allow supplying custom logger factory
+- [ ] make stack trace capture opt-in rather than opt-out
+
+### Authorization
+
+- [ ] add an explanation why no implementation for signals is provided
 
 ## Transport General
 
