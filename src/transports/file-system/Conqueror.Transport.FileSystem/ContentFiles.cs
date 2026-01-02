@@ -91,20 +91,53 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         CancellationToken cancellationToken
     )
     {
+        Exception? bufferedException = null;
+
         while (!cancellationToken.IsCancellationRequested)
         {
-            var result = await ReadPayload(tag, entryId, fileExtension, readFn, state, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (result is not null)
+            try
             {
-                return result;
+                var result = await ReadPayload(tag, entryId, fileExtension, readFn, state, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (result is not null)
+                {
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is OperationCanceledException)
+                {
+                    // when the caller cancels the call, but we encountered an exception during waiting, we
+                    // rather report the error instead of swallowing it
+                    if (bufferedException is not null)
+                    {
+                        throw bufferedException;
+                    }
+
+                    throw;
+                }
+
+                // in case reading the payload fails, we simply try again (until it succeeds or we time out)
+                if (bufferedException is AggregateException aex)
+                {
+                    bufferedException = new AggregateException(aex.InnerExceptions.Concat([ex]));
+                }
+                else if (bufferedException is not null)
+                {
+                    bufferedException = new AggregateException(bufferedException, ex);
+                }
+                else
+                {
+                    bufferedException = ex;
+                }
             }
 
             await Task.Delay(pollingInterval, TimeProvider.System, cancellationToken).ConfigureAwait(false);
         }
 
-        throw new OperationCanceledException();
+        throw bufferedException ?? new OperationCanceledException();
     }
 
     private FilePath GetPayloadFilePath(Tag tag, EntryId id, string extension) =>
