@@ -32,7 +32,7 @@ internal static class FileOperations
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "false positive")]
     public static ReadWriteFileHandle OpenReadWrite(this FilePath filePath, CancellationToken cancellationToken)
     {
-        var fileStream = filePath.OpenWithRetry(FileAccess.ReadWrite, cancellationToken);
+        var fileStream = filePath.OpenWithRetry(FileAccess.ReadWrite, cancellationToken, share: GetExclusiveWriteFileShare());
 
         return new ReadWriteFileHandle(filePath, fileStream);
     }
@@ -208,6 +208,12 @@ internal static class FileOperations
             }
         }
     }
+
+    // On Windows, FileShare.Read works correctly for exclusive write access.
+    // On Unix, FileShare.None is needed for reliable exclusive write access due to
+    // differences in how file locking is implemented (advisory vs. mandatory locks).
+    private static FileShare GetExclusiveWriteFileShare() =>
+        OperatingSystem.IsWindows() ? FileShare.Read : FileShare.None;
 }
 
 internal class ReadOnlyFileHandle(FilePath path, FileStream stream) : IDisposable
