@@ -34,21 +34,10 @@ public sealed class LoggingSignalMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger()
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -118,21 +107,10 @@ public sealed class LoggingSignalMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger()
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -190,21 +168,10 @@ public sealed class LoggingSignalMiddlewareTests
             logging =>
             {
                 _ = logging
-                    .AddTestLogger()
-                    // log to console during local development for easier debugging
                     .AddJsonConsole()
+                    .AddTestLogger()
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -261,8 +228,6 @@ public sealed class LoggingSignalMiddlewareTests
 
         var loggerConfiguration = new LoggerConfiguration()
             .WriteTo.TestSink(timestamp, defaultWriter)
-            // for debugging also write to console
-            .WriteTo.Conditional(_ => !IsRunningInGithubAction, sinks => sinks.Console())
             .MinimumLevel.Is(LevelConvert.ToSerilogLevel(testCase.ConfiguredLogLevel))
             .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions.Hosting.Internal.Host"))
             .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting.Lifetime"))
@@ -339,8 +304,6 @@ public sealed class LoggingSignalMiddlewareTests
 
         var loggerConfiguration = new LoggerConfiguration()
             .WriteTo.TestSink(timestamp, jsonFormatter, jsonWriter)
-            // for debugging also write to console
-            .WriteTo.Conditional(_ => !IsRunningInGithubAction, sinks => sinks.Console(jsonFormatter))
             .MinimumLevel.Is(LevelConvert.ToSerilogLevel(testCase.ConfiguredLogLevel))
             .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions.Hosting.Internal.Host"))
             .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting.Lifetime"));
@@ -427,21 +390,10 @@ public sealed class LoggingSignalMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger(shouldTruncate: false)
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -456,11 +408,6 @@ public sealed class LoggingSignalMiddlewareTests
         }
         catch (TestException thrownException)
         {
-            if (!IsRunningInGithubAction)
-            {
-                await Console.Error.WriteLineAsync(thrownException.ToString());
-            }
-
             var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
             // four matches: server, hook on server, client, hook on client
@@ -522,21 +469,10 @@ public sealed class LoggingSignalMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger(shouldTruncate: false)
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -549,13 +485,8 @@ public sealed class LoggingSignalMiddlewareTests
             await handler.Handle(testCase.Signal, host.TestTimeoutToken);
             Assert.Fail("Exception should have been thrown");
         }
-        catch (TestException thrownException)
+        catch (TestException)
         {
-            if (!IsRunningInGithubAction)
-            {
-                await Console.Error.WriteLineAsync(thrownException.ToString());
-            }
-
             var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
             // the test method should be missing from the stack trace since the caller capture is disabled
@@ -608,21 +539,10 @@ public sealed class LoggingSignalMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger()
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -654,11 +574,6 @@ public sealed class LoggingSignalMiddlewareTests
                 handler.Handle(testCase.Signal, host.TestTimeoutToken)
             );
 
-            if (!IsRunningInGithubAction)
-            {
-                await Console.Error.WriteLineAsync(thrownException.ToString());
-            }
-
             Assert.That(thrownException, Is.SameAs(handlerException));
         }
         else
@@ -686,21 +601,10 @@ public sealed class LoggingSignalMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger(shouldTruncate: false)
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -732,21 +636,10 @@ public sealed class LoggingSignalMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger(shouldTruncate: false)
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -773,8 +666,6 @@ public sealed class LoggingSignalMiddlewareTests
 
         return settings;
     }
-
-    private bool IsRunningInGithubAction => Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null;
 
     private sealed class TestSignalIdFactory : ISignalIdFactory
     {

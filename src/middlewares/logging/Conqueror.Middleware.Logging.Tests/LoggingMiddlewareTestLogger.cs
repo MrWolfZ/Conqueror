@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
+using NUnit.Framework.Interfaces;
 
 file sealed class LoggingMiddlewareTestLogger(
     string categoryName,
@@ -30,6 +31,7 @@ file sealed class LoggingMiddlewareTestLogger(
         consoleFormatter.Write(in logEntry, scopeProvider: null, textWriter);
         var message = textWriter.ToString();
         logSink.LogEntries.Add((categoryName, logLevel, message));
+        logSink.FormattedLogEntries.Add(message);
     }
 
     public bool IsEnabled(LogLevel logLevel) => logLevel is not LogLevel.None;
@@ -63,9 +65,21 @@ file sealed class LoggingMiddlewareTestLoggerProvider(
     public void Dispose() { }
 }
 
-internal sealed class LoggingMiddlewareTestLogSink
+internal sealed class LoggingMiddlewareTestLogSink : IDisposable
 {
     public List<(string CategoryName, LogLevel LogLevel, string Message)> LogEntries { get; } = [];
+
+    public List<string> FormattedLogEntries { get; } = [];
+
+    public void Dispose()
+    {
+        var testContext = TestContext.CurrentContext;
+
+        if (testContext.Result.Outcome.Status is TestStatus.Failed)
+        {
+            Console.Write(string.Concat(FormattedLogEntries));
+        }
+    }
 }
 
 internal static class LoggingMiddlewareTestLoggingBuilderExtensions
@@ -77,6 +91,15 @@ internal static class LoggingMiddlewareTestLoggingBuilderExtensions
         );
         builder.Services.TryAddSingleton<LoggingMiddlewareTestLogSink>();
         builder.Services.TryAddSingleton(new LoggingMiddlewareTestLoggerOptions(shouldTruncate));
+
+        var consoleLoggerDescriptor = builder.Services.SingleOrDefault(s =>
+            s.ServiceType == typeof(ILoggerProvider) && s.ImplementationType == typeof(ConsoleLoggerProvider)
+        );
+
+        if (consoleLoggerDescriptor is not null)
+        {
+            _ = builder.Services.Remove(consoleLoggerDescriptor);
+        }
 
         return builder;
     }

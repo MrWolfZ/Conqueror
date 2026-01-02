@@ -73,7 +73,7 @@ internal static partial class LogOutputNormalizationStringExtensions
     {
         while (!string.IsNullOrEmpty(directory))
         {
-            var solutionFiles = Directory.GetFiles(directory, "*.sln");
+            var solutionFiles = Directory.GetFiles(directory, "Conqueror.sln");
             if (solutionFiles.Length > 0)
             {
                 return Path.GetDirectoryName(solutionFiles[0]);

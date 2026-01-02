@@ -37,21 +37,10 @@ internal sealed partial class LoggingMessageMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger()
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -79,9 +68,6 @@ internal sealed partial class LoggingMessageMiddlewareTests
         }
 
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
-
-        // ReSharper disable once DisposeOnUsingVariable (intentionally done to force a flush)
-        await host.DisposeAsync();
 
         Assert.Multiple(() =>
         {
@@ -122,21 +108,10 @@ internal sealed partial class LoggingMessageMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger()
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -195,21 +170,10 @@ internal sealed partial class LoggingMessageMiddlewareTests
             logging =>
             {
                 _ = logging
-                    .AddTestLogger()
-                    // log to console during local development for easier debugging
                     .AddJsonConsole()
+                    .AddTestLogger()
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -267,8 +231,6 @@ internal sealed partial class LoggingMessageMiddlewareTests
 
         var loggerConfiguration = new LoggerConfiguration()
             .WriteTo.TestSink(timestamp, defaultWriter)
-            // for debugging also write to console
-            .WriteTo.Conditional(_ => !IsRunningInGithubAction, sinks => sinks.Console())
             .MinimumLevel.Is(LevelConvert.ToSerilogLevel(testCase.ConfiguredLogLevel))
             .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions.Hosting.Internal.Host"))
             .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting.Lifetime"))
@@ -346,8 +308,6 @@ internal sealed partial class LoggingMessageMiddlewareTests
 
         var loggerConfiguration = new LoggerConfiguration()
             .WriteTo.TestSink(timestamp, jsonFormatter, jsonWriter)
-            // for debugging also write to console
-            .WriteTo.Conditional(_ => !IsRunningInGithubAction, sinks => sinks.Console(jsonFormatter))
             .MinimumLevel.Is(LevelConvert.ToSerilogLevel(testCase.ConfiguredLogLevel))
             .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions.Hosting.Internal.Host"))
             .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting.Lifetime"));
@@ -434,21 +394,10 @@ internal sealed partial class LoggingMessageMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger(shouldTruncate: false)
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -463,11 +412,6 @@ internal sealed partial class LoggingMessageMiddlewareTests
         }
         catch (TestException thrownException)
         {
-            if (!IsRunningInGithubAction)
-            {
-                await Console.Error.WriteLineAsync(thrownException.ToString());
-            }
-
             var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
             // four matches: server, hook on server, client, hook on client
@@ -533,21 +477,10 @@ internal sealed partial class LoggingMessageMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger(shouldTruncate: false)
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -560,13 +493,8 @@ internal sealed partial class LoggingMessageMiddlewareTests
             _ = await handler.Handle(testCase.Message, host.TestTimeoutToken);
             Assert.Fail("Exception should have been thrown");
         }
-        catch (TestException thrownException)
+        catch (TestException)
         {
-            if (!IsRunningInGithubAction)
-            {
-                await Console.Error.WriteLineAsync(thrownException.ToString());
-            }
-
             var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
             // the test method should be missing from the stack trace since the caller capture is disabled
@@ -623,21 +551,10 @@ internal sealed partial class LoggingMessageMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger()
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -669,11 +586,6 @@ internal sealed partial class LoggingMessageMiddlewareTests
                 handler.Handle(testCase.Message, host.TestTimeoutToken)
             );
 
-            if (!IsRunningInGithubAction)
-            {
-                await Console.Error.WriteLineAsync(thrownException.ToString());
-            }
-
             Assert.That(thrownException, Is.SameAs(handlerException));
         }
         else
@@ -701,21 +613,10 @@ internal sealed partial class LoggingMessageMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger(shouldTruncate: false)
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
@@ -747,21 +648,10 @@ internal sealed partial class LoggingMessageMiddlewareTests
             logging =>
             {
                 _ = logging
+                    .AddSimpleConsole()
                     .AddTestLogger(shouldTruncate: false)
-                    // log to console during local development for easier debugging
-                    .AddSimpleConsole(o => o.ColorBehavior = LoggerColorBehavior.Disabled)
                     .AddFilter("Microsoft.Extensions.Hosting.Internal.Host", _ => false)
                     .AddFilter("Microsoft.Hosting.Lifetime", _ => false);
-
-                if (IsRunningInGithubAction)
-                {
-                    _ = logging.Services.Remove(
-                        logging.Services.Single(s =>
-                            s.ServiceType == typeof(ILoggerProvider)
-                            && s.ImplementationType == typeof(ConsoleLoggerProvider)
-                        )
-                    );
-                }
             }
         );
 
