@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build all authorization middleware projects
+    cmds:
+      - dotnet build Conqueror.Middleware.Authorization.sln {{.CLI_ARGS}}
+
+  test:
+    desc: Run authorization middleware tests
+    cmds:
+      - dotnet test Conqueror.Middleware.Authorization.sln {{.CLI_ARGS}}

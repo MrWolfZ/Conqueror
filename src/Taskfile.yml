@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build all core src projects (excluding middlewares, transports, recipes)
+    cmds:
+      - dotnet build Core.sln {{.CLI_ARGS}}
+
+  test:
+    desc: Run all core src tests (excluding middlewares, transports, recipes)
+    cmds:
+      - dotnet test Core.sln {{.CLI_ARGS}}

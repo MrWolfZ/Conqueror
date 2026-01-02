@@ -18,6 +18,20 @@ Provides a polling-based file transport useful for:
 - Development and debugging
 - Understanding transport concepts
 
+## Building and Testing
+
+YOU MUST use task commands for building and testing:
+
+```bash
+cd src/transports/file-system
+task build
+task test
+```
+
+Forward arguments: `task test -- --filter "FullyQualifiedName~FileSystem"`
+
+**IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. Use the task commands.
+
 ## Architecture Fit
 
 Follows the standard Conqueror transport pattern:

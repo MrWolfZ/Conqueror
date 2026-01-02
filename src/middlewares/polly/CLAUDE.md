@@ -13,6 +13,20 @@ Wraps message and signal execution in a Polly `ResiliencePipeline`, enabling sta
 - Rate limiting
 - Fallback
 
+## Building and Testing
+
+YOU MUST use task commands for building and testing:
+
+```bash
+cd src/middlewares/polly
+task build
+task test
+```
+
+Forward arguments: `task test -- --filter "FullyQualifiedName~Polly"`
+
+**IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. Use the task commands.
+
 ## Key Concepts
 
 **ResiliencePipelineBuilder**: The middleware exposes Polly's fluent builder directly via configuration. Users compose resilience strategies using Polly's native API.

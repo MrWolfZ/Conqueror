@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging", "Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj", "{FAF7E290-EC49-4F1E-A729-F3A4B1A33457}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging.Tests", "Conqueror.Middleware.Logging.Tests\Conqueror.Middleware.Logging.Tests.csproj", "{12F46DAA-4C5C-4A79-A2FE-F7BF07B58861}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\..\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{D297F4C6-B99C-4FCF-93D0-8AAA15482D0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\..\Conqueror\Conqueror.csproj", "{86EBF8B8-A7EC-40EE-81D3-BE7E45C98F82}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{B4A1FEED-2C8B-4267-8967-F875B8AF730C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FAF7E290-EC49-4F1E-A729-F3A4B1A33457}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAF7E290-EC49-4F1E-A729-F3A4B1A33457}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAF7E290-EC49-4F1E-A729-F3A4B1A33457}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAF7E290-EC49-4F1E-A729-F3A4B1A33457}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12F46DAA-4C5C-4A79-A2FE-F7BF07B58861}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12F46DAA-4C5C-4A79-A2FE-F7BF07B58861}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12F46DAA-4C5C-4A79-A2FE-F7BF07B58861}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12F46DAA-4C5C-4A79-A2FE-F7BF07B58861}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D297F4C6-B99C-4FCF-93D0-8AAA15482D0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D297F4C6-B99C-4FCF-93D0-8AAA15482D0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D297F4C6-B99C-4FCF-93D0-8AAA15482D0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D297F4C6-B99C-4FCF-93D0-8AAA15482D0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86EBF8B8-A7EC-40EE-81D3-BE7E45C98F82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86EBF8B8-A7EC-40EE-81D3-BE7E45C98F82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86EBF8B8-A7EC-40EE-81D3-BE7E45C98F82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86EBF8B8-A7EC-40EE-81D3-BE7E45C98F82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4A1FEED-2C8B-4267-8967-F875B8AF730C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4A1FEED-2C8B-4267-8967-F875B8AF730C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4A1FEED-2C8B-4267-8967-F875B8AF730C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4A1FEED-2C8B-4267-8967-F875B8AF730C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

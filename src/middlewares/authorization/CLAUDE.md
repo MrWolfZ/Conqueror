@@ -8,6 +8,20 @@ Executes authorization checks before message handler execution. Reads `ClaimsPri
 `ConquerorContext.CurrentPrincipal` and runs user-defined authorization logic. Throws
 `MessageAuthorizationFailedException` if any check fails.
 
+## Building and Testing
+
+YOU MUST use task commands for building and testing:
+
+```bash
+cd src/middlewares/authorization
+task build
+task test
+```
+
+Forward arguments: `task test -- --filter "FullyQualifiedName~Authorization"`
+
+**IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. Use the task commands.
+
 ## Key Types
 
 **`MessageAuthorizationContext<TMessage, TResponse>`** - Context passed to authorization check

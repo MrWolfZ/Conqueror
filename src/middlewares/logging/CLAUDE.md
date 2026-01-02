@@ -12,6 +12,20 @@ Logs execution lifecycle of messages and signals at three phases:
 
 Supports both message and signal pipelines with identical configuration patterns.
 
+## Building and Testing
+
+YOU MUST use task commands for building and testing:
+
+```bash
+cd src/middlewares/logging
+task build
+task test
+```
+
+Forward arguments: `task test -- --filter "FullyQualifiedName~Logging"`
+
+**IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. Use the task commands.
+
 ## Key Features
 
 **Configurable Log Levels**: Set different log levels for each execution phase (defaults: Information for pre/post, Error for exceptions).

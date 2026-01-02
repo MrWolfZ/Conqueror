@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build all file-system transport projects
+    cmds:
+      - dotnet build Conqueror.Transport.FileSystem.sln {{.CLI_ARGS}}
+
+  test:
+    desc: Run file-system transport tests
+    cmds:
+      - dotnet test Conqueror.Transport.FileSystem.sln {{.CLI_ARGS}}

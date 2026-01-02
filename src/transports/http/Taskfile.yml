@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build all http transport projects
+    cmds:
+      - dotnet build Conqueror.Transport.Http.sln {{.CLI_ARGS}}
+
+  test:
+    desc: Run http transport tests
+    cmds:
+      - dotnet test Conqueror.Transport.Http.sln {{.CLI_ARGS}}

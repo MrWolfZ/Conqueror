@@ -8,7 +8,7 @@
 
 namespace Conqueror.Transport.Http.Tests.AOT.TopLevelProgram
 {
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Text.Json.SourceGeneration", "8.0.12.11118")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Text.Json.SourceGeneration", "8.0.13.2707")]
     internal sealed partial class TopLevelTestMessageJsonSerializerContext
     {
         private readonly static global::System.Text.Json.JsonSerializerOptions s_defaultOptions = new()

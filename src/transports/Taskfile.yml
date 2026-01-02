@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build all transport projects
+    cmds:
+      - dotnet build Transports.sln {{.CLI_ARGS}}
+
+  test:
+    desc: Run all transport tests
+    cmds:
+      - dotnet test Transports.sln {{.CLI_ARGS}}

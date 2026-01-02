@@ -1,0 +1,84 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "authorization", "authorization", "{E3A7DA38-A19D-4898-95E1-5C80ABA062D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization", "authorization\Conqueror.Middleware.Authorization\Conqueror.Middleware.Authorization.csproj", "{1AC79EDF-3793-4DF1-A955-17958254DD72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization.Tests", "authorization\Conqueror.Middleware.Authorization.Tests\Conqueror.Middleware.Authorization.Tests.csproj", "{CE5C51F9-9C6E-48CE-BCD6-0FFC84060D0A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "logging", "logging", "{A06D64D6-EBDB-47A9-8533-2D62657B6B40}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging", "logging\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj", "{45F493F4-F959-46FE-90EA-40F33816DC93}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging.Tests", "logging\Conqueror.Middleware.Logging.Tests\Conqueror.Middleware.Logging.Tests.csproj", "{A18C1DB5-F87C-470D-B4C0-2E80BFAE84DF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "polly", "polly", "{FD5AA693-19AD-4A59-9883-EC52895BE5CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly", "polly\Conqueror.Middleware.Polly\Conqueror.Middleware.Polly.csproj", "{9FFC4824-C893-4ACE-8EF3-CF1CB85B2AD7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly.Tests", "polly\Conqueror.Middleware.Polly.Tests\Conqueror.Middleware.Polly.Tests.csproj", "{493AC4CC-3463-42E1-A951-DDE24AD465FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{3E585A7D-BB05-479C-860B-DE145392DBE6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\Conqueror\Conqueror.csproj", "{5B26CB40-CB32-4A0D-9F01-A06B2EEC9D45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{414529E8-18B8-4A89-A88E-BA777E38BF48}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1AC79EDF-3793-4DF1-A955-17958254DD72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1AC79EDF-3793-4DF1-A955-17958254DD72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1AC79EDF-3793-4DF1-A955-17958254DD72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1AC79EDF-3793-4DF1-A955-17958254DD72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE5C51F9-9C6E-48CE-BCD6-0FFC84060D0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE5C51F9-9C6E-48CE-BCD6-0FFC84060D0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE5C51F9-9C6E-48CE-BCD6-0FFC84060D0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE5C51F9-9C6E-48CE-BCD6-0FFC84060D0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45F493F4-F959-46FE-90EA-40F33816DC93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45F493F4-F959-46FE-90EA-40F33816DC93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45F493F4-F959-46FE-90EA-40F33816DC93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45F493F4-F959-46FE-90EA-40F33816DC93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A18C1DB5-F87C-470D-B4C0-2E80BFAE84DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A18C1DB5-F87C-470D-B4C0-2E80BFAE84DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A18C1DB5-F87C-470D-B4C0-2E80BFAE84DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A18C1DB5-F87C-470D-B4C0-2E80BFAE84DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FFC4824-C893-4ACE-8EF3-CF1CB85B2AD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FFC4824-C893-4ACE-8EF3-CF1CB85B2AD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FFC4824-C893-4ACE-8EF3-CF1CB85B2AD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FFC4824-C893-4ACE-8EF3-CF1CB85B2AD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{493AC4CC-3463-42E1-A951-DDE24AD465FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{493AC4CC-3463-42E1-A951-DDE24AD465FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{493AC4CC-3463-42E1-A951-DDE24AD465FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{493AC4CC-3463-42E1-A951-DDE24AD465FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E585A7D-BB05-479C-860B-DE145392DBE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E585A7D-BB05-479C-860B-DE145392DBE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E585A7D-BB05-479C-860B-DE145392DBE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E585A7D-BB05-479C-860B-DE145392DBE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B26CB40-CB32-4A0D-9F01-A06B2EEC9D45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B26CB40-CB32-4A0D-9F01-A06B2EEC9D45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B26CB40-CB32-4A0D-9F01-A06B2EEC9D45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B26CB40-CB32-4A0D-9F01-A06B2EEC9D45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{414529E8-18B8-4A89-A88E-BA777E38BF48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{414529E8-18B8-4A89-A88E-BA777E38BF48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{414529E8-18B8-4A89-A88E-BA777E38BF48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{414529E8-18B8-4A89-A88E-BA777E38BF48}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1AC79EDF-3793-4DF1-A955-17958254DD72} = {E3A7DA38-A19D-4898-95E1-5C80ABA062D5}
+		{CE5C51F9-9C6E-48CE-BCD6-0FFC84060D0A} = {E3A7DA38-A19D-4898-95E1-5C80ABA062D5}
+		{45F493F4-F959-46FE-90EA-40F33816DC93} = {A06D64D6-EBDB-47A9-8533-2D62657B6B40}
+		{A18C1DB5-F87C-470D-B4C0-2E80BFAE84DF} = {A06D64D6-EBDB-47A9-8533-2D62657B6B40}
+		{9FFC4824-C893-4ACE-8EF3-CF1CB85B2AD7} = {FD5AA693-19AD-4A59-9883-EC52895BE5CC}
+		{493AC4CC-3463-42E1-A951-DDE24AD465FA} = {FD5AA693-19AD-4A59-9883-EC52895BE5CC}
+	EndGlobalSection
+EndGlobal

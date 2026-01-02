@@ -10,7 +10,7 @@
 
 namespace System.Runtime.CompilerServices
 {
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.14.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.22.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.22.0")]
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     file sealed class InterceptsLocationAttribute : Attribute
     {
@@ -52,14 +52,14 @@ namespace Microsoft.AspNetCore.Http.Generated
     using MetadataPopulator = System.Func<System.Reflection.MethodInfo, Microsoft.AspNetCore.Http.RequestDelegateFactoryOptions?, Microsoft.AspNetCore.Http.RequestDelegateMetadataResult>;
     using RequestDelegateFactoryFunc = System.Func<System.Delegate, Microsoft.AspNetCore.Http.RequestDelegateFactoryOptions, Microsoft.AspNetCore.Http.RequestDelegateMetadataResult?, Microsoft.AspNetCore.Http.RequestDelegateResult>;
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.14.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.22.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.22.0")]
     file static class GeneratedRouteBuilderExtensionsCore
     {
         private static readonly JsonOptions FallbackJsonOptions = new();
                 private static readonly string[] GetVerb = new[] { global::Microsoft.AspNetCore.Http.HttpMethods.Get };
         private static readonly string[] PostVerb = new[] { global::Microsoft.AspNetCore.Http.HttpMethods.Post };
 
-                        [InterceptsLocation(@"C:\Programming\conqueror\src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Program.cs", 33, 5)]
+                        [InterceptsLocation(@"/home/dev/src/conqueror/src/transports/http/Conqueror.Transport.Http.Tests.AOT.TopLevelProgram/Program.cs", 33, 5)]
         internal static RouteHandlerBuilder MapPost0(
             this IEndpointRouteBuilder endpoints,
             [StringSyntax("Route")] string pattern,
@@ -69,7 +69,7 @@ namespace Microsoft.AspNetCore.Http.Generated
             {
                 Debug.Assert(options != null, "RequestDelegateFactoryOptions not found.");
                 Debug.Assert(options.EndpointBuilder != null, "EndpointBuilder not found.");
-                options.EndpointBuilder.Metadata.Add(new System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.14.0"));
+                options.EndpointBuilder.Metadata.Add(new System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.22.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.22.0"));
                 return new RequestDelegateMetadataResult { EndpointMetadata = options.EndpointBuilder.Metadata.AsReadOnly() };
             };
             RequestDelegateFactoryFunc createRequestDelegate = (del, options, inferredMetadataResult) =>
@@ -150,8 +150,8 @@ namespace Microsoft.AspNetCore.Http.Generated
                 createRequestDelegate);
         }
 
-                [InterceptsLocation(@"C:\Programming\conqueror\src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Program.cs", 56, 5)]
-        [InterceptsLocation(@"C:\Programming\conqueror\src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Program.cs", 74, 5)]
+                [InterceptsLocation(@"/home/dev/src/conqueror/src/transports/http/Conqueror.Transport.Http.Tests.AOT.TopLevelProgram/Program.cs", 56, 5)]
+        [InterceptsLocation(@"/home/dev/src/conqueror/src/transports/http/Conqueror.Transport.Http.Tests.AOT.TopLevelProgram/Program.cs", 74, 5)]
         internal static RouteHandlerBuilder MapGet1(
             this IEndpointRouteBuilder endpoints,
             [StringSyntax("Route")] string pattern,
@@ -161,7 +161,7 @@ namespace Microsoft.AspNetCore.Http.Generated
             {
                 Debug.Assert(options != null, "RequestDelegateFactoryOptions not found.");
                 Debug.Assert(options.EndpointBuilder != null, "EndpointBuilder not found.");
-                options.EndpointBuilder.Metadata.Add(new System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.14.0"));
+                options.EndpointBuilder.Metadata.Add(new System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.22.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.22.0"));
                 return new RequestDelegateMetadataResult { EndpointMetadata = options.EndpointBuilder.Metadata.AsReadOnly() };
             };
             RequestDelegateFactoryFunc createRequestDelegate = (del, options, inferredMetadataResult) =>
@@ -364,7 +364,7 @@ namespace Microsoft.AspNetCore.Http.Generated
     }
 
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.14.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.Http.RequestDelegateGenerator, Version=8.0.22.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "8.0.22.0")]
     file sealed class LogOrThrowExceptionHelper
     {
         private readonly ILogger? _rdgLogger;

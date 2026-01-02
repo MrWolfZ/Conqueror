@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build all logging middleware projects
+    cmds:
+      - dotnet build Conqueror.Middleware.Logging.sln {{.CLI_ARGS}}
+
+  test:
+    desc: Run logging middleware tests
+    cmds:
+      - dotnet test Conqueror.Middleware.Logging.sln {{.CLI_ARGS}}

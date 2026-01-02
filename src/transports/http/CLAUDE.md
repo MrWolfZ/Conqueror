@@ -8,6 +8,20 @@ Provides REST, Server-Sent Events (SSE), and WebSockets transport for Conqueror 
 - **Conqueror.Transport.Http.Client** - Client-side sender/publisher implementations using HttpClient
 - **Conqueror.Transport.Http.Server.AspNetCore** - Server-side receiver implementations using ASP.NET Core endpoints
 
+## Building and Testing
+
+YOU MUST use task commands for building and testing:
+
+```bash
+cd src/transports/http
+task build
+task test
+```
+
+Forward arguments: `task test -- --filter "FullyQualifiedName~Http"`
+
+**IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. Use the task commands.
+
 ## Key Concepts
 
 ### Messages as REST Endpoints

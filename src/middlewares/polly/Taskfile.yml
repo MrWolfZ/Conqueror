@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build all polly middleware projects
+    cmds:
+      - dotnet build Conqueror.Middleware.Polly.sln {{.CLI_ARGS}}
+
+  test:
+    desc: Run polly middleware tests
+    cmds:
+      - dotnet test Conqueror.Middleware.Polly.sln {{.CLI_ARGS}}

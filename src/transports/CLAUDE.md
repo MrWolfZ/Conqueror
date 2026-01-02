@@ -6,6 +6,35 @@ Enables handlers to communicate across process boundaries while remaining transp
 
 Transports provide the communication layer for Conqueror handlers. Handlers are written without knowledge of how they'll be exposed, and transport configuration is applied at the call site rather than at registration time.
 
+## Building and Testing
+
+YOU MUST use task commands for building and testing transport projects:
+
+```bash
+# Build/test all transports
+cd src/transports
+task build
+task test
+
+# Build/test individual transport
+cd src/transports/file-system
+task build
+task test
+
+cd src/transports/http
+task build
+task test
+```
+
+**Forward arguments to dotnet:**
+
+```bash
+task build -- -c Release
+task test -- --filter "FullyQualifiedName~FileSystem"
+```
+
+**IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. The task commands use the correct solution files (`Transports.sln` for aggregate, module-specific `.sln` for individual transports) with all required dependencies.
+
 ## Key Concepts
 
 ### Transport-Agnostic Design

@@ -6,6 +6,39 @@ Cross-cutting concern implementations for Conqueror message and signal pipelines
 
 Middlewares implement reusable pipeline functionality (authorization, logging, resilience) that can be composed with any message or signal handler without modifying handler logic. Each middleware follows Conqueror's pipeline architecture, receiving execution context and calling `ctx.Next()` to pass control to the next middleware or handler.
 
+## Building and Testing
+
+YOU MUST use task commands for building and testing middleware projects:
+
+```bash
+# Build/test all middlewares
+cd src/middlewares
+task build
+task test
+
+# Build/test individual middleware
+cd src/middlewares/authorization
+task build
+task test
+
+cd src/middlewares/logging
+task build
+task test
+
+cd src/middlewares/polly
+task build
+task test
+```
+
+**Forward arguments to dotnet:**
+
+```bash
+task build -- -c Release
+task test -- --filter "FullyQualifiedName~Authorization"
+```
+
+**IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. The task commands use the correct solution files (`Middlewares.sln` for aggregate, module-specific `.sln` for individual middlewares) with all required dependencies.
+
 ## Architecture
 
 Middlewares use the Chain of Responsibility pattern:

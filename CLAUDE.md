@@ -370,6 +370,63 @@ src/
         └── Conqueror.Transport.FileSystem/
 ```
 
+### Building and Testing
+
+The project uses [Task](https://taskfile.dev) for building and testing. YOU MUST use task commands instead of running `dotnet` commands directly.
+
+**Hierarchical Structure:**
+
+The repository has Taskfiles at multiple levels, allowing you to build/test at different scopes:
+
+- **Root level** (`/Taskfile.yml`): Build/test entire solution (`Conqueror.sln`)
+
+  ```bash
+  task build              # Build everything
+  task test               # Test everything
+  ```
+
+- **Core projects** (`src/Taskfile.yml`): Build/test core projects only (uses `Core.sln`)
+
+  ```bash
+  cd src && task build
+  cd src && task test
+  ```
+
+- **Middlewares** (`src/middlewares/Taskfile.yml`): Build/test all middlewares (uses `Middlewares.sln`)
+
+  ```bash
+  cd src/middlewares && task build
+  cd src/middlewares && task test
+  ```
+
+- **Transports** (`src/transports/Taskfile.yml`): Build/test all transports (uses `Transports.sln`)
+
+  ```bash
+  cd src/transports && task build
+  cd src/transports && task test
+  ```
+
+- **Individual modules**: Each middleware and transport module has its own Taskfile and solution
+
+  ```bash
+  cd src/middlewares/logging && task build
+  cd src/middlewares/logging && task test
+  cd src/transports/http && task build
+  cd src/transports/http && task test
+  ```
+
+**Passing Arguments:**
+
+All task commands support forwarding arguments to `dotnet`:
+
+```bash
+task build -- -c Release
+task test -- --filter "FullyQualifiedName~Authorization"
+task test -- --verbosity detailed
+```
+
+**IMPORTANT:** YOU MUST use `task build` and `task test` commands instead of invoking `dotnet build` or `dotnet test` directly. The task commands ensure correct solution files are used with all necessary dependencies.
+
 ### Key Design Patterns
 
 **Source Generation for AOT**: The library uses Roslyn source generators extensively to:
