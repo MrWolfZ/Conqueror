@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 [TestFixture]
 [Parallelizable(ParallelScope.None)]
@@ -83,6 +84,7 @@ public sealed class StreamingHttpClientNonTestHostTests
     private WebApplication CreateWebApp()
     {
         var builder = WebApplication.CreateBuilder();
+        _ = builder.Logging.ClearProviders();
 
         ConfigureServerServices(builder.Services);
 

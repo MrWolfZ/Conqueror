@@ -90,7 +90,7 @@ public abstract class TestBase
         timeoutCancellationTokenSource = new CancellationTokenSource();
 
         var hostBuilder = new HostBuilder()
-            .ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace))
+            // .ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace))
             .ConfigureWebHost(webHost =>
             {
                 _ = webHost.UseTestServer();
