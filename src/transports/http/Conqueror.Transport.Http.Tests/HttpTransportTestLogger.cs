@@ -10,6 +10,8 @@ file sealed class HttpTransportTestLogger(
     ConsoleFormatter consoleFormatter
 ) : ILogger
 {
+    private readonly object lockObject = new();
+
     public void Log<TState>(
         LogLevel logLevel,
         EventId eventId,
@@ -21,7 +23,11 @@ file sealed class HttpTransportTestLogger(
         var logEntry = new LogEntry<TState>(logLevel, categoryName, eventId, state, exception, formatter);
         using var textWriter = new StringWriter();
         consoleFormatter.Write(in logEntry, scopeProvider: null, textWriter);
-        logSink.LogEntries.Add(textWriter.ToString());
+
+        lock (lockObject)
+        {
+            logSink.LogEntries.Add(textWriter.ToString());
+        }
     }
 
     public bool IsEnabled(LogLevel logLevel) => logLevel is not LogLevel.None;
