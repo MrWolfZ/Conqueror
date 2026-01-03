@@ -73,7 +73,7 @@ public sealed class FileSystemMessageExecutionTests : IDisposable
     }
 
     [Test]
-    public async Task GivenMultipleCompetingHandlers_OneHandlerFailsProcessing_TheOtherHandlerProcessesTheMessage()
+    public async Task GivenMultipleCompetingHandlers_WhenOneHandlerFailsProcessing_ThenTheOtherHandlerProcessesTheMessage()
     {
         using var testTimeouts = FileSystemTransportTestTimeouts.Create();
         var leaseDuration = testTimeouts.TestTimeout;

@@ -13,7 +13,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ### Common
 
-- [ ] align test names
 - [ ] throw on empty context data key
 - [ ] change dependencies to depend on greater-than 8
 - [ ] create benchmark app

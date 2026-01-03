@@ -89,7 +89,7 @@ public sealed partial class FileSystemSignalExecutionTests
     }
 
     [Test]
-    public async Task GivenMultipleCompetingHandlers_OneHandlerFailsProcessing_TheOtherHandlerProcessesTheSignal()
+    public async Task GivenMultipleCompetingHandlers_WhenOneHandlerFailsProcessing_ThenTheOtherHandlerProcessesTheSignal()
     {
         const string receiverName = "test-receiver";
 

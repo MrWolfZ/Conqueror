@@ -81,7 +81,7 @@ public sealed partial class SignalMiddlewareConfigurationTests
     }
 
     [Test]
-    public async Task GivenUnusedMiddleware_ConfiguringMiddlewareThrowsInvalidOperationException()
+    public async Task GivenUnusedMiddleware_WhenConfiguringMiddleware_ThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();

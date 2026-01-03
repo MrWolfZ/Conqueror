@@ -3,7 +3,7 @@ namespace Conqueror.Tests.Messaging;
 public abstract partial class MessageHandlerFunctionalityTests
 {
     [Test]
-    public async Task GivenMessage_HandlerReceivesMessage()
+    public async Task GivenMessage_WhenHandlerIsCalled_HandlerReceivesMessage()
     {
         var observations = new TestObservations();
 
@@ -19,7 +19,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public async Task GivenMessageWithoutResponse_HandlerReceivesMessage()
+    public async Task GivenMessageWithoutResponse_WhenHandlerIsCalled_HandlerReceivesMessage()
     {
         var observations = new TestObservations();
 
@@ -37,7 +37,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public async Task GivenCancellationToken_HandlerReceivesCancellationToken()
+    public async Task GivenCancellationToken_WhenHandlerIsCalled_HandlerReceivesCancellationToken()
     {
         var observations = new TestObservations();
 
@@ -52,7 +52,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public async Task GivenCancellationTokenForHandlerWithoutResponse_HandlerReceivesCancellationToken()
+    public async Task GivenCancellationTokenForHandlerWithoutResponse_WhenHandlerIsCalled_HandlerReceivesCancellationToken()
     {
         var observations = new TestObservations();
 
@@ -69,7 +69,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public async Task GivenNoCancellationToken_HandlerReceivesDefaultCancellationToken()
+    public async Task GivenNoCancellationToken_WhenHandlerIsCalled_HandlerReceivesDefaultCancellationToken()
     {
         var observations = new TestObservations();
 
@@ -83,7 +83,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public async Task GivenNoCancellationToken_HandlerWithoutResponseReceivesDefaultCancellationToken()
+    public async Task GivenNoCancellationToken_WhenHandlerWithoutResponseIsCalled_HandlerReceivesDefaultCancellationToken()
     {
         var observations = new TestObservations();
 
@@ -99,7 +99,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public async Task GivenMessage_HandlerReturnsResponse()
+    public async Task GivenMessage_WhenHandlerIsCalled_HandlerReturnsResponse()
     {
         var observations = new TestObservations();
 
@@ -115,7 +115,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public void GivenExceptionInHandler_InvocationThrowsSameException()
+    public void GivenExceptionInHandler_WhenHandlerIsCalled_InvocationThrowsSameException()
     {
         var observations = new TestObservations();
         var exception = new Exception();
@@ -135,7 +135,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public void GivenExceptionInHandlerWithoutResponse_InvocationThrowsSameException()
+    public void GivenExceptionInHandlerWithoutResponse_WhenHandlerIsCalled_InvocationThrowsSameException()
     {
         var observations = new TestObservations();
         var exception = new Exception();
@@ -155,7 +155,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public async Task GivenHandler_HandlerIsResolvedFromResolutionScope()
+    public async Task GivenHandler_WhenResolved_HandlerIsResolvedFromResolutionScope()
     {
         var observations = new TestObservations();
 
@@ -177,7 +177,7 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Test]
-    public async Task GivenHandlerWithoutResponse_HandlerIsResolvedFromResolutionScope()
+    public async Task GivenHandlerWithoutResponse_WhenResolved_HandlerIsResolvedFromResolutionScope()
     {
         var observations = new TestObservations();
 
