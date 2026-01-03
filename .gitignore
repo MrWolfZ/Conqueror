@@ -11,4 +11,5 @@ riderModule.iml
 /_ReSharper.Caches/
 *.user
 *.Designer.cs
-**/Generated/.timestamp
+/src/**/Generated/*
+!/src/**/Generated/Conqueror.SourceGenerators
