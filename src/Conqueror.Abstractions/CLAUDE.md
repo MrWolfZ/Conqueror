@@ -8,6 +8,7 @@ Provides transport-agnostic interfaces for:
 
 - Messages (request/response pattern)
 - Signals (publish/subscribe pattern)
+- Iterators (request/stream pattern)
 - Middleware pipelines
 - Execution context management
 
@@ -18,6 +19,7 @@ All types use the root `Conqueror` namespace for a unified developer experience.
 ```txt
 Messaging/    - Message handling (request/response)
 Signalling/   - Signal handling (publish/subscribe)
+Iterating/    - Iterator handling (request/stream)
 Context/      - Ambient execution context
 ```
 
@@ -54,6 +56,23 @@ Parallel structure to messaging but for fire-and-forget operations:
 
 - `[Signal]` - Marks types for source generation
 
+### Iterators (`Iterating/`)
+
+Parallel structure to messaging but for streaming operations:
+
+- `IIterator<TIterator, TItem>` - Base interface for iterator types
+- `IIteratorHandler<TIterator, TItem, TIHandler>` - Handler interface
+- `IIteratorClients` - Entry point for iterating with configurable transport and pipeline
+- `IIteratorPipeline<TIterator, TItem>` - Fluent middleware chain configuration
+- `IIteratorMiddleware<TIterator, TItem>` - Middleware interface
+- `IteratorMiddlewareContext<TIterator, TItem>` - Value type passed through middleware chain
+
+**Attributes:**
+
+- `[Iterator<TItem>]` - Marks types for source generation
+
+**Note:** Handler interfaces (`TIterator.IHandler`) are source-generated and return `IAsyncEnumerable<TItem>`.
+
 ### Context (`Context/`)
 
 Ambient execution context flowing through operations:
@@ -61,7 +80,7 @@ Ambient execution context flowing through operations:
 **ConquerorContext** encapsulates:
 
 - `TraceId` - Distributed tracing ID (from Activity or generated)
-- `MessageId` / `SignalId` - Current operation ID
+- `MessageId` / `SignalId` / `IteratorId` - Current operation ID
 - `CurrentPrincipal` - Security principal (ClaimsPrincipal)
 - `TransportableData` - Cross-process data (string key/value) with flow direction control
 - `InProcessData` - In-process data (object key/value)

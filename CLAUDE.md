@@ -231,7 +231,7 @@ final outcome of the work.
 
 Conqueror is a .NET library for building structured, scalable applications using messaging patterns.
 It provides a unified, transport-agnostic model for messages (request/response), signals
-(publish/subscribe), and data streams.
+(publish/subscribe), and iterators (request/stream).
 
 ### Core Architecture
 
@@ -240,7 +240,7 @@ The library is organized into several layers:
 ```txt
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           User Application Code                             │
-│  (Message/Signal types, Handlers, Pipeline configurations)                  │
+│  (Message/Signal/Iterator types, Handlers, Pipeline configurations)         │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                              Middlewares                                    │
 │  (Authorization, Logging, Polly, etc. - cross-cutting concerns)             │
@@ -249,13 +249,13 @@ The library is organized into several layers:
 │  (Dispatchers, Pipelines, Context management, Handler registration)         │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                             Abstractions                                    │
-│  (IMessage, ISignal, IMessageHandler, ISignalHandler, pipelines, context)   │
+│  (IMessage, ISignal, IIterator, handlers, pipelines, context)               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                          Source Generators                                  │
 │  (Type metadata, handler interfaces, AOT support)                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                              Transports                                     │
-│  (HTTP, FileSystem - transport-specific sender/receiver implementations)    │
+│  (HTTP, FileSystem - transport-specific client/server implementations)      │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -267,8 +267,13 @@ expected response type. Handlers process messages through configurable pipelines
 **Signals**: Publish/subscribe pattern (fire-and-forget). Signals are broadcast to multiple handlers
 with configurable broadcasting strategies (sequential, parallel).
 
-**Pipelines**: Middleware chains that wrap message/signal execution. Configure cross-cutting concerns
-like authorization, logging, and resilience without modifying handler logic.
+**Iterators**: Request/stream pattern. An iterator type defines a request that yields multiple items
+asynchronously. Handlers return `IAsyncEnumerable<TItem>` and establish a stateful connection where
+each item and MoveNext operation propagates context data. Uses Client/Server terminology (not
+Producer/Receiver) due to the stateful, bidirectional nature of iteration.
+
+**Pipelines**: Middleware chains that wrap message/signal/iterator execution. Configure cross-cutting
+concerns like authorization, logging, and resilience without modifying handler logic.
 
 **Transports**: Pluggable communication layers. Handlers are transport-agnostic; the same handler can
 be exposed via HTTP, file system, or any custom transport without modification.
@@ -328,7 +333,32 @@ await publishers.For(OrderPlaced.T)
     .WithParallelBroadcastingStrategy()
     .Publish(new OrderPlaced(orderId));
 
-// 6. HTTP transport (handler exposed as REST endpoint)
+// 6. Iterators (request/stream)
+[Iterator<string>]
+public partial record GetLogLines(string FilePath);
+
+public class LogLineHandler : GetLogLines.IHandler
+{
+    public async IAsyncEnumerable<string> Handle(
+        GetLogLines iterator,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (var line in File.ReadLinesAsync(iterator.FilePath, cancellationToken))
+        {
+            yield return line;
+        }
+    }
+}
+
+// Consuming iterator
+await foreach (var line in iterators.For(GetLogLines.T)
+    .WithPipeline(p => p.UseLogging())
+    .Handle(new GetLogLines("/var/log/app.log")))
+{
+    Console.WriteLine(line);
+}
+
+// 7. HTTP transport (handler exposed as REST endpoint)
 [HttpMessage<OrderResponse>(HttpMethod = "POST", Path = "orders")]
 public partial record CreateOrder(...);
 
@@ -347,15 +377,18 @@ src/
 ├── Conqueror.Abstractions/       # Core interfaces and types
 │   ├── Messaging/                # IMessage, IMessageHandler, IMessagePipeline, etc.
 │   ├── Signalling/               # ISignal, ISignalHandler, ISignalPipeline, etc.
+│   ├── Iterating/                # IIterator, IIteratorHandler, IIteratorPipeline, etc.
 │   └── Context/                  # ConquerorContext, data flow abstractions
 ├── Conqueror/                    # Core implementation
 │   ├── Messaging/                # MessageDispatcher, pipelines, senders
 │   ├── Signalling/               # SignalDispatcher, publishers
+│   ├── Iterating/                # IteratorDispatcher, pipelines, clients
 │   └── Context/                  # Context implementation
 ├── Conqueror.SourceGenerators/   # Roslyn source generators
 │   ├── Messaging/                # MessageTypeGenerator, MessageHandlerTypeGenerator
-│   └── Signalling/               # SignalTypeGenerator, SignalHandlerTypeGenerator
-├── Conqueror.Streaming*/         # (DEPRECATED) Async iterator support, to be migrated to Conqueror/Streaming
+│   ├── Signalling/               # SignalTypeGenerator, SignalHandlerTypeGenerator
+│   └── Iterating/                # IteratorTypeGenerator, IteratorHandlerTypeGenerator
+├── Conqueror.Streaming*/         # (DEPRECATED) Async iterator support, to be migrated to Conqueror/Iterating
 ├── middlewares/
 │   ├── authorization/            # Claim-based authorization middleware
 │   ├── logging/                  # Structured logging middleware
