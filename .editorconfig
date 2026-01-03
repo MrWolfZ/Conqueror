@@ -2476,6 +2476,9 @@ dotnet_diagnostic.ide0240.severity = none # Nullable directive is redundant (htt
 dotnet_diagnostic.ca1813.severity = none # Avoid unsealed attributes (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1813)
 dotnet_diagnostic.ca1819.severity = none # Properties should not return arrays (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1819)
 
+dotnet_diagnostic.rcs1043.severity = none # Remove 'partial' modifier from type with a single part (https://josefpihrt.github.io/docs/roslynator/analyzers/rcs1043)
+dotnet_diagnostic.rcs1163.severity = none # Unused parameter (https://josefpihrt.github.io/docs/roslynator/analyzers/rcs1163)
+
 dotnet_diagnostic.sa1201.severity = none # An element within a C# code file is out of order in relation to the other elements in the code (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1201.md)
 dotnet_diagnostic.sa1202.severity = none # An element within a C# code file is out of order within regard to access level, in relation to other elements in the code (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1202.md)
 dotnet_diagnostic.sa1403.severity = none # A C# code file contains more than one namespace (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1403.md)
