@@ -10,3 +10,8 @@ tasks:
     desc: Run all core src tests (excluding middlewares, transports, recipes)
     cmds:
       - dotnet test Core.sln {{.CLI_ARGS}}
+
+  test:generators:
+    desc: Run all generator tests
+    cmds:
+      - dotnet test Conqueror.SourceGenerators.Tests {{.CLI_ARGS}}

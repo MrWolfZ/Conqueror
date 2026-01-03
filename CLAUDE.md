@@ -390,6 +390,7 @@ The repository has Taskfiles at multiple levels, allowing you to build/test at d
   ```bash
   cd src && task build
   cd src && task test
+  cd src && task test:generators  # Test only source generators
   ```
 
 - **Middlewares** (`src/middlewares/Taskfile.yml`): Build/test all middlewares (uses `Middlewares.sln`)
