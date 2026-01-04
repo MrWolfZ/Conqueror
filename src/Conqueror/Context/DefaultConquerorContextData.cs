@@ -245,6 +245,23 @@ internal sealed class DefaultConquerorContextData(DefaultConquerorContextData? p
 
     public void PropagateUpstreamData(DefaultConquerorContextData childData)
     {
+        // Upstream keys also propagate deletion upstream
+        if (childData.transportableUpstreamContextData?.RemovedKeys is { } removedTransportableUpstreamKeys)
+        {
+            foreach (var key in removedTransportableUpstreamKeys)
+            {
+                _ = TransportableUpstreamContextData.Remove(key);
+            }
+        }
+
+        if (childData.inProcessUpstreamContextData?.RemovedKeys is { } removedInProcessUpstreamKeys)
+        {
+            foreach (var key in removedInProcessUpstreamKeys)
+            {
+                _ = InProcessUpstreamContextData.Remove(key);
+            }
+        }
+
         if (childData.transportableUpstreamContextData is not null)
         {
             foreach (var (key, value) in childData.transportableUpstreamContextData)
@@ -261,27 +278,20 @@ internal sealed class DefaultConquerorContextData(DefaultConquerorContextData? p
             }
         }
 
-        if (transportableBidirectionalContextData is not null)
+        // Bidirectional keys also propagate deletion upstream
+        if (childData.transportableBidirectionalContextData?.RemovedKeys is { } removedTransportableBidirectionalKeys)
         {
-            // bidirectional keys also propagate deletion upstream
-            foreach (var (key, _) in transportableBidirectionalContextData)
+            foreach (var key in removedTransportableBidirectionalKeys)
             {
-                if (childData.transportableBidirectionalContextData?.IsRemoved(key) ?? false)
-                {
-                    _ = transportableBidirectionalContextData.Remove(key);
-                }
+                _ = TransportableBidirectionalContextData.Remove(key);
             }
         }
 
-        if (inProcessBidirectionalContextData is not null)
+        if (childData.inProcessBidirectionalContextData?.RemovedKeys is { } removedInProcessBidirectionalKeys)
         {
-            // bidirectional keys also propagate deletion upstream
-            foreach (var (key, _) in inProcessBidirectionalContextData)
+            foreach (var key in removedInProcessBidirectionalKeys)
             {
-                if (childData.inProcessBidirectionalContextData?.IsRemoved(key) ?? false)
-                {
-                    _ = inProcessBidirectionalContextData.Remove(key);
-                }
+                _ = InProcessBidirectionalContextData.Remove(key);
             }
         }
 

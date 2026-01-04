@@ -9,8 +9,8 @@ public abstract class ConquerorContext : IDisposable
 {
     /// <summary>
     ///     The trace ID for the current Conqueror operation. If there is an active
-    ///     <see cref="System.Diagnostics.Activity" />, the trace ID is taken from the
-    ///     <see cref="System.Diagnostics.Activity.TraceId" /> property. Otherwise, this
+    ///     <see cref="Activity" />, the trace ID is taken from the
+    ///     <see cref="Activity.TraceId" /> property. Otherwise, this
     ///     is a randomly generated value.
     /// </summary>
     public abstract string TraceId { get; set; }
@@ -24,6 +24,11 @@ public abstract class ConquerorContext : IDisposable
     ///     The ID of the currently executing signal (if any).
     /// </summary>
     public abstract string? SignalId { get; set; }
+
+    /// <summary>
+    ///     The ID of the currently executing iterator (if any).
+    /// </summary>
+    public abstract string? IteratorId { get; set; }
 
     /// <summary>
     ///     The principal (if any) for the current Conqueror operation.

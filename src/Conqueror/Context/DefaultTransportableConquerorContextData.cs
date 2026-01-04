@@ -12,6 +12,8 @@ internal sealed class DefaultTransportableConquerorContextData(DefaultTransporta
     // track keys that were removed in this context (to override parent values)
     private ConcurrentDictionary<string, string?>? removedKeys;
 
+    public IEnumerable<string>? RemovedKeys => removedKeys?.Keys;
+
     public IEnumerator<(string Key, string Value)> GetEnumerator()
     {
         if (items is not null)
@@ -90,7 +92,7 @@ internal sealed class DefaultTransportableConquerorContextData(DefaultTransporta
         return parent?.Get(key);
     }
 
-    public bool IsRemoved(string key) => removedKeys?.ContainsKey(key) ?? false;
+    private bool IsRemoved(string key) => removedKeys?.ContainsKey(key) ?? false;
 
     private ConcurrentDictionary<string, string> EnsureItems() =>
         LazyInitializer.EnsureInitialized(

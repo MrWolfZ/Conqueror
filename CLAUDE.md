@@ -278,7 +278,7 @@ concerns like authorization, logging, and resilience without modifying handler l
 **Transports**: Pluggable communication layers. Handlers are transport-agnostic; the same handler can
 be exposed via HTTP, file system, or any custom transport without modification.
 
-**Context**: Ambient execution context (`ConquerorContext`) carrying trace IDs, message IDs, security
+**Context**: Ambient execution context (`ConquerorContext`) carrying trace IDs, message/signal/iterator IDs, security
 principals, and custom data. Supports both in-process and transportable (cross-process) data with
 configurable flow direction (downstream, upstream, bidirectional).
 

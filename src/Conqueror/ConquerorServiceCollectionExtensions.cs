@@ -8,7 +8,7 @@ using Conqueror.Context;
 public static class ConquerorServiceCollectionExtensions
 {
     public static IServiceCollection AddConqueror(this IServiceCollection services) =>
-        services.AddConquerorMessaging().AddConquerorSignalling();
+        services.AddConquerorMessaging().AddConquerorSignalling().AddConquerorIterating();
 
     /// <summary>
     ///     Adds the services required for interacting with the Conqueror context. This method does typically not need to be

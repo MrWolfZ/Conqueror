@@ -29,6 +29,7 @@ internal sealed class DefaultConquerorContext
         TraceId = parent.TraceId;
         MessageId = parent.MessageId;
         SignalId = parent.SignalId;
+        IteratorId = parent.IteratorId;
         CurrentPrincipal = parent.CurrentPrincipal;
 
         this.onDispose = onDispose;
@@ -45,6 +46,8 @@ internal sealed class DefaultConquerorContext
     public override string? MessageId { get; set; }
 
     public override string? SignalId { get; set; }
+
+    public override string? IteratorId { get; set; }
 
     public override ClaimsPrincipal? CurrentPrincipal { get; set; }
 
@@ -72,6 +75,11 @@ internal sealed class DefaultConquerorContext
                 onChildDispose();
             }
         );
+    }
+
+    public void PropagateUpstreamData()
+    {
+        parent?.PropagateUpstreamData(this);
     }
 
     protected override void Dispose(bool isDisposing)

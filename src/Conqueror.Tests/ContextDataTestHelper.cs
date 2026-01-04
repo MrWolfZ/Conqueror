@@ -248,15 +248,12 @@ internal sealed class ContextDataTestHelper
 
             for (var j = i + 1; j < executionOrder.Length; j += 1)
             {
-                var (removalContextDepth, removalDepthInstance, removalLocation) = executionOrder[j];
+                var (removalContextDepth, _, removalLocation) = executionOrder[j];
 
-                var whereDataShouldBeRemoved =
-                    settingContextDepth < removalContextDepth || settingDepthInstance < removalDepthInstance
-                        ? []
-                        : executionOrder[j..]
-                            .Where(t => t.ContextDepth <= removalContextDepth)
-                            .Select(t => t.Location)
-                            .ToList();
+                var whereDataShouldBeRemoved = executionOrder[j..]
+                    .Where(t => t.ContextDepth <= removalContextDepth)
+                    .Select(t => t.Location)
+                    .ToList();
 
                 var whereDataShouldBeAccessible = executionOrder[i..]
                     .Where(t => t.ContextDepth <= settingContextDepth && t.DepthInstance <= settingDepthInstance)

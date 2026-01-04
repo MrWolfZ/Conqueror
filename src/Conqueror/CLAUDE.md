@@ -8,9 +8,9 @@ This module implements the abstractions defined in `Conqueror.Abstractions`, pro
 
 Key responsibilities:
 
-- Dispatch messages and signals through pipelines
+- Dispatch messages, signals, and iterators through pipelines
 - Execute middleware chains
-- Manage execution context (trace IDs, message/signal IDs, security principal)
+- Manage execution context (trace IDs, message/signal/iterator IDs, security principal)
 - Provide in-process transport implementation
 - Register and resolve handlers from DI
 
@@ -20,6 +20,7 @@ Key responsibilities:
 Conqueror/
 ├── Messaging/          # Message (request/response) infrastructure
 ├── Signalling/         # Signal (pub/sub) infrastructure
+├── Iterating/          # Iterator (request/stream) infrastructure
 └── Context/            # Execution context management
 ```
 
@@ -41,9 +42,18 @@ Parallel structure to messaging with signal-specific features:
 - **InProcessSignalPublisher** - Default transport for in-process signal handling
 - **AggregateSignalPublisher** - Publishes to multiple handlers with configurable strategy (sequential/parallel)
 
+### Iterating
+
+Parallel structure to messaging for streaming operations:
+
+- **IteratorDispatcher** - Orchestrates iterator execution: clones context, generates iterator ID, builds pipeline, resolves transport
+- **IteratorPipeline** - Iterator middleware chain with fluent API
+- **InProcessIteratorClient** - Default transport that resolves and invokes handlers from DI
+- **IteratorHandlerRegistry** - Stores handler metadata and creates invokers for transports
+
 ### Context
 
-- **DefaultConquerorContext** - Manages trace ID, message/signal ID, principal, and context data
+- **DefaultConquerorContext** - Manages trace ID, message/signal/iterator ID, principal, and context data
 - **DefaultConquerorContextAccessor** - Provides ambient context via `AsyncLocal`
 - Context data has two variants: in-process (any object) and transportable (string key/value pairs for cross-process)
 - Supports configurable flow direction (downstream, upstream, bidirectional)

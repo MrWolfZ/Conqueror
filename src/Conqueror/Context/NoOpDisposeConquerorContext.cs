@@ -22,6 +22,12 @@ internal sealed class NoOpDisposeConquerorContext(ConquerorContext wrappedContex
         set => wrappedContext.SignalId = value;
     }
 
+    public override string? IteratorId
+    {
+        get => wrappedContext.IteratorId;
+        set => wrappedContext.IteratorId = value;
+    }
+
     public override ClaimsPrincipal? CurrentPrincipal
     {
         get => wrappedContext.CurrentPrincipal;

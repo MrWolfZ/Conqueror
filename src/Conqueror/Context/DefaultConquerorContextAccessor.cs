@@ -18,6 +18,8 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
     public ConquerorContext CloneOrCreate() =>
         ConquerorContextCurrent.Value?.Context is { } ctx ? CreateChildContext(ctx) : CreateContext();
 
+    public void Set(DefaultConquerorContext conquerorContext) => SetContextInAsyncLocal(conquerorContext);
+
     private static DefaultConquerorContext CreateContext()
     {
         var traceId = Activity.Current?.TraceId.ToString() ?? ActivityTraceId.CreateRandom().ToString();
@@ -30,7 +32,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
 
     private static DefaultConquerorContext CreateChildContext(DefaultConquerorContext parentContext)
     {
-        var childContext = parentContext.CreateChildContext(ClearContextFromAsyncLocal);
+        var childContext = parentContext.CreateChildContext(() => RestoreParentContextInAsyncLocal(parentContext));
         SetContextInAsyncLocal(childContext);
 
         return childContext;
@@ -52,6 +54,18 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
         {
             // Clear current ConquerorContext trapped in the AsyncLocals, as it's done.
             holder.Context = null;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void RestoreParentContextInAsyncLocal(DefaultConquerorContext parentContext)
+    {
+        var holder = ConquerorContextCurrent.Value;
+
+        if (holder is not null)
+        {
+            // Restore parent ConquerorContext when child context is disposed
+            holder.Context = parentContext;
         }
     }
 
