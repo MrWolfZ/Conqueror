@@ -1,6 +1,6 @@
 # HTTP Transport
 
-Provides REST, Server-Sent Events (SSE), and WebSockets transport for Conqueror handlers.
+Provides REST, Server-Sent Events (SSE), and WebSockets transport for Conqueror handlers (messages, signals, and iterators).
 
 ## Packages
 
@@ -68,6 +68,39 @@ Signals can be published/received over persistent connections.
 - `IHttpSseSignalPublisher<TSignal>` / `IHttpWebSocketsSignalPublisher<TSignal>` - Client-side publishers
 - `IHttpSseSignalReceiver` / `IHttpWebSocketsSignalReceiver` - Server-side receiver configuration
 
+### Iterators via WebSockets
+
+Iterators use WebSockets for stateful, bidirectional streaming with client-controlled prefetching.
+
+**WebSockets**:
+
+- Pull-based streaming (client initiates and requests items)
+- Each iterator invocation establishes a dedicated WebSocket connection
+- Client-controlled prefetching to optimize network round-trips and buffering
+- Path defaults to camelCase iterator type name (e.g., `GetLogLines` → `getLogLines`)
+- Path prefix defaults to `api/iterators`
+- Protocol v1 supports:
+  - InitiateIteration: Client sends iterator request with prefetch count
+  - FetchMore: Client requests additional items
+  - Items: Server sends batch of items with context data
+  - Completion: Server signals end of stream
+  - Error: Server signals iteration failure
+
+**Key types**:
+
+- `IHttpWebSocketsIterator<TIterator, TItem>` - Marker interface for WebSocket-transportable iterators
+- `HttpWebSocketsIteratorAttribute` - Transport attribute for iterator types (configures path, version)
+- `IHttpWebSocketsIteratorClient<TIterator, TItem>` - Client-side iterator client with prefetch configuration
+- `IHttpWebSocketsIteratorServer` - Server-side server configuration (enable/disable)
+- `IHttpWebSocketsIteratorHandler<TIterator, TItem, TIHandler>` - Handler interface
+
+**Configuration options**:
+
+- Path configuration: Via `HttpWebSocketsIteratorAttribute` (PathPrefix, Path, FullPath, Version)
+- Prefetch count: Number of items to request in advance (defaults to 1, no prefetching)
+- WebSocket factory: Custom WebSocket creation for authentication/headers
+- Heartbeat interval/timeout: Keep-alive and connection health monitoring
+
 ### Context Propagation
 
 ConquerorContext data flows through HTTP headers:
@@ -83,6 +116,10 @@ Uses System.Text.Json with AOT-compatible source generation:
 - Messages use `IMessage.JsonSerializerContext` for request/response serialization
 - GET requests serialize to query strings instead of JSON bodies
 - Signals use `ISignal.JsonSerializerContext`
+- Iterators use separate serializer contexts:
+  - `HttpWebSocketsIteratorJsonSerializerContext` for iterator serialization
+  - `HttpWebSocketsItemJsonSerializerContext` for item serialization
+  - This allows different serialization strategies (e.g., JSON for iterator, binary for items)
 
 ## Design Constraints
 
@@ -90,7 +127,7 @@ Uses System.Text.Json with AOT-compatible source generation:
 
 **OpenAPI integration**: Server exposes handlers in OpenAPI specs by default. Handlers can opt out via `receiver.OmitFromApiDescription()`.
 
-**Handler configuration**: Handlers optionally implement static `ConfigureHttpReceiver` / `ConfigureHttpSseReceiver` / `ConfigureHttpWebSocketsReceiver` methods to customize receiver behavior.
+**Handler configuration**: Handlers optionally implement static `ConfigureHttpReceiver` / `ConfigureHttpSseReceiver` / `ConfigureHttpWebSocketsReceiver` / `ConfigureHttpWebSocketsServer` methods to customize receiver/server behavior.
 
 **AOT compatibility**: No runtime reflection. All type metadata comes from source-generated injectors and marker interfaces.
 
@@ -105,11 +142,23 @@ The HTTP transport sits at the boundary between Conqueror's core abstractions an
 Handlers remain transport-agnostic. The HTTP transport is selected at the call site:
 
 ```csharp
-// Client-side
+// Messages - Client-side
 await senders.For(CreateOrder.T)
     .WithTransport(b => b.UseHttp(baseAddress))
     .Handle(new CreateOrder());
 
-// Server-side (automatic)
+// Messages - Server-side (automatic)
 app.MapConquerorHttpEndpoints(); // Discovers all IHttpMessage handlers
+
+// Iterators - Client-side
+await foreach (var line in iterators.For(GetLogLines.T)
+    .WithTransport(b => b.UseHttpWebSockets()
+        .WithPrefetchCount(10))
+    .Handle(new GetLogLines("/var/log/app.log")))
+{
+    Console.WriteLine(line);
+}
+
+// Iterators - Server-side (via endpoint mapping)
+app.MapConquerorIteratorEndpoints(); // Discovers all IHttpWebSocketsIterator handlers
 ```

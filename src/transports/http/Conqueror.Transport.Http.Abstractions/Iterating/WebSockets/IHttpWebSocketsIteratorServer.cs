@@ -1,0 +1,17 @@
+namespace Conqueror;
+
+public interface IHttpWebSocketsIteratorServer
+{
+    Type IteratorType { get; }
+
+    Type? HandlerType { get; }
+
+    /// <summary>
+    ///     Note that this is the service provider from the global scope.
+    /// </summary>
+    IServiceProvider ServiceProvider { get; }
+
+    bool IsEnabled { get; }
+
+    void Disable();
+}
