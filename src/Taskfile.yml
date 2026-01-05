@@ -15,3 +15,13 @@ tasks:
     desc: Run all generator tests
     cmds:
       - dotnet test Conqueror.SourceGenerators.Tests {{.CLI_ARGS}}
+
+  fmt:
+    desc: Format files with csharpier
+    cmds:
+      - dotnet csharpier format . {{.CLI_ARGS}}
+
+  fmt:check:
+    desc: Check formatting with csharpier (for CI)
+    cmds:
+      - dotnet csharpier check . {{.CLI_ARGS}}

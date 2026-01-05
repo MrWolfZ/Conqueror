@@ -24,6 +24,8 @@ task test
 
 Forward arguments: `task test -- --filter "FullyQualifiedName~Logging"`
 
+Format code: `task fmt` or `task fmt:check` (for CI)
+
 **IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. Use the task commands.
 
 ## Key Features

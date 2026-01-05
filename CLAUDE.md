@@ -426,6 +426,17 @@ task test -- --filter "FullyQualifiedName~Authorization"
 task test -- --verbosity detailed
 ```
 
+**Formatting:**
+
+All Taskfiles include formatting tasks using CSharpier:
+
+```bash
+task fmt              # Format all files in current scope
+task fmt:check        # Check formatting (for CI)
+```
+
+Formatting commands respect the same hierarchical structure as build/test commands and operate on all files in the current directory scope.
+
 **IMPORTANT:** YOU MUST use `task build` and `task test` commands instead of invoking `dotnet build` or `dotnet test` directly. The task commands ensure correct solution files are used with all necessary dependencies.
 
 ### Key Design Patterns

@@ -37,6 +37,13 @@ task build -- -c Release
 task test -- --filter "FullyQualifiedName~Authorization"
 ```
 
+**Format code:**
+
+```bash
+task fmt              # Format all files in current scope
+task fmt:check        # Check formatting (for CI)
+```
+
 **IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. The task commands use the correct solution files (`Middlewares.sln` for aggregate, module-specific `.sln` for individual middlewares) with all required dependencies.
 
 ## Architecture
