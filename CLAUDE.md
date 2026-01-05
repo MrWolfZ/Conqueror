@@ -388,7 +388,6 @@ src/
 │   ├── Messaging/                # MessageTypeGenerator, MessageHandlerTypeGenerator
 │   ├── Signalling/               # SignalTypeGenerator, SignalHandlerTypeGenerator
 │   └── Iterating/                # IteratorTypeGenerator, IteratorHandlerTypeGenerator
-├── Conqueror.Streaming*/         # (DEPRECATED) Async iterator support, to be migrated to Conqueror/Iterating
 ├── middlewares/
 │   ├── authorization/            # Claim-based authorization middleware
 │   ├── logging/                  # Structured logging middleware
