@@ -28,6 +28,20 @@ task test
 cd src/middlewares/polly
 task build
 task test
+
+# Run benchmarks (all middlewares or individual)
+cd src/middlewares
+task benchmarks:run
+
+cd src/middlewares/authorization
+task benchmarks:run
+
+# Run AOT tests (all middlewares or individual)
+cd src/middlewares
+task test:aot
+
+cd src/middlewares/logging
+task test:aot
 ```
 
 **Forward arguments to dotnet:**
@@ -35,6 +49,7 @@ task test
 ```bash
 task build -- -c Release
 task test -- --filter "FullyQualifiedName~Authorization"
+task benchmarks:run -- --filter "*Authorization*"
 ```
 
 **Format code:**
@@ -71,6 +86,12 @@ Claim-based authorization checks before handler execution. Supports multiple nam
 
 **Note**: Only supports messages (not signals). Signal authorization is planned.
 
+**Projects**:
+- `Conqueror.Middleware.Authorization` - Core middleware implementation
+- `Conqueror.Middleware.Authorization.Tests` - Test suite
+- `Conqueror.Middleware.Authorization.Benchmarks` - Performance benchmarks
+- `Conqueror.Middleware.Authorization.Tests.AOT` - AOT compatibility tests
+
 See `authorization/CLAUDE.md` for details.
 
 ### Logging
@@ -79,6 +100,12 @@ See `authorization/CLAUDE.md` for details.
 
 Structured logging of message/signal lifecycle (pre-execution, post-execution, exceptions). Configurable log levels, payload serialization strategies (Omit, Raw, MinimalJson, IndentedJson), and custom hooks. Performance-optimized with log level checks and AOT-compatible JSON serialization.
 
+**Projects**:
+- `Conqueror.Middleware.Logging` - Core middleware implementation
+- `Conqueror.Middleware.Logging.Tests` - Test suite
+- `Conqueror.Middleware.Logging.Benchmarks` - Performance benchmarks
+- `Conqueror.Middleware.Logging.Tests.AOT` - AOT compatibility tests
+
 See `logging/CLAUDE.md` for details.
 
 ### Polly
@@ -86,6 +113,12 @@ See `logging/CLAUDE.md` for details.
 **Package**: `Conqueror.Middleware.Polly`
 
 Wraps handler execution with Polly resilience patterns (retry, timeout, circuit-breaker, hedging, rate limiting). Uses Polly's `ResiliencePipelineBuilder<TResponse>` for configuration. Middleware placement in pipeline determines which operations are wrapped (place before logging to log each retry attempt, after to log only final result).
+
+**Projects**:
+- `Conqueror.Middleware.Polly` - Core middleware implementation
+- `Conqueror.Middleware.Polly.Tests` - Test suite
+- `Conqueror.Middleware.Polly.Benchmarks` - Performance benchmarks
+- `Conqueror.Middleware.Polly.Tests.AOT` - AOT compatibility tests
 
 See `polly/CLAUDE.md` for details.
 

@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../../.targets/analyzers.targets" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PublishAot>true</PublishAot>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../core/Conqueror/Conqueror.csproj" />
+    <ProjectReference Include="../Conqueror.Middleware.Polly/Conqueror.Middleware.Polly.csproj" />
+    <ProjectReference
+      Include="../../../core/Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+  </ItemGroup>
+  <PropertyGroup>
+    <TrimmerRootAssembly>Conqueror</TrimmerRootAssembly>
+    <TrimmerRootAssembly>Conqueror.Middleware.Polly</TrimmerRootAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Polly" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Exclude the output of source generators from the compilation -->
+    <Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+  </ItemGroup>
+  <Target
+    Name="CleanSourceGeneratedFiles"
+    BeforeTargets="BeforeCompile"
+    Inputs="@(Compile);@(AdditionalFiles)"
+    Outputs="Generated/.timestamp"
+  >
+    <RemoveDir Directories="Generated" />
+    <MakeDir Directories="Generated" />
+    <Touch Files="Generated/.timestamp" AlwaysCreate="true" />
+  </Target>
+</Project>

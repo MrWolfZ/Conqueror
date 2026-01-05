@@ -35,6 +35,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\core\Conque
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\core\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{232F5601-0BD0-487C-B0F2-D5BB2088785B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.FileSystem.Benchmarks", "file-system\Conqueror.Transport.FileSystem.Benchmarks\Conqueror.Transport.FileSystem.Benchmarks.csproj", "{827E4256-3877-4FEA-9E30-06D3033BDCB0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.FileSystem.Tests.AOT", "file-system\Conqueror.Transport.FileSystem.Tests.AOT\Conqueror.Transport.FileSystem.Tests.AOT.csproj", "{E12FCDF0-7776-46DC-A310-5E22A68CC848}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +104,14 @@ Global
 		{232F5601-0BD0-487C-B0F2-D5BB2088785B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{232F5601-0BD0-487C-B0F2-D5BB2088785B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{232F5601-0BD0-487C-B0F2-D5BB2088785B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{827E4256-3877-4FEA-9E30-06D3033BDCB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{827E4256-3877-4FEA-9E30-06D3033BDCB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{827E4256-3877-4FEA-9E30-06D3033BDCB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{827E4256-3877-4FEA-9E30-06D3033BDCB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E12FCDF0-7776-46DC-A310-5E22A68CC848}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E12FCDF0-7776-46DC-A310-5E22A68CC848}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E12FCDF0-7776-46DC-A310-5E22A68CC848}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E12FCDF0-7776-46DC-A310-5E22A68CC848}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A3438BE8-70BB-4C4D-89D8-389FCC1644A8} = {78108D95-8C6F-4F75-BECE-B636F1027ABB}
@@ -112,5 +124,7 @@ Global
 		{183DBDCB-7B47-4D31-B1D3-FB40FD6252EC} = {203144E4-3057-4D99-AD00-4030241005CF}
 		{40C4DF5B-0245-4B72-B6C7-342B3515CE32} = {203144E4-3057-4D99-AD00-4030241005CF}
 		{49522829-3142-4F9A-8568-251486DFF214} = {203144E4-3057-4D99-AD00-4030241005CF}
+		{827E4256-3877-4FEA-9E30-06D3033BDCB0} = {78108D95-8C6F-4F75-BECE-B636F1027ABB}
+		{E12FCDF0-7776-46DC-A310-5E22A68CC848} = {78108D95-8C6F-4F75-BECE-B636F1027ABB}
 	EndGlobalSection
 EndGlobal

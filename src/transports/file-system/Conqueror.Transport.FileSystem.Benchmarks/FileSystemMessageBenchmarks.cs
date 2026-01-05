@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Benchmarks.Transports;
+﻿namespace Conqueror.Transport.FileSystem.Benchmarks;
 
 using System.Globalization;
 using BenchmarkDotNet.Attributes;
@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 [Config(typeof(FileSystemBenchmarkConfig))]
 [MemoryDiagnoser]
-internal sealed partial class FileSystemMessageBenchmarks
+public partial class FileSystemMessageBenchmarks
 {
     private static readonly DirectoryInfo BenchmarkBaseDirectory = new(
         Path.Join(AppDomain.CurrentDomain.BaseDirectory, ".benchmarks")
@@ -201,10 +201,10 @@ internal sealed partial class FileSystemMessageBenchmarks
     {
         foreach (
             var t in from numOfMessages in new[] { 10, 100 }
-            from numOfSenders in new[] { 1, 5 }
-            from numOfReceivers in new[] { 1, 5 }
-            from runSendersAndReceiversInSameHost in new[] { true, false }
-            select (numOfMessages, numOfSenders, numOfReceivers, runSendersAndReceiversInSameHost)
+                     from numOfSenders in new[] { 1, 5 }
+                     from numOfReceivers in new[] { 1, 5 }
+                     from runSendersAndReceiversInSameHost in new[] { true, false }
+                     select (numOfMessages, numOfSenders, numOfReceivers, runSendersAndReceiversInSameHost)
         )
         {
             yield return [t.numOfMessages, t.numOfSenders, t.numOfReceivers, t.runSendersAndReceiversInSameHost];

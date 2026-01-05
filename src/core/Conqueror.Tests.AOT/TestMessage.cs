@@ -19,7 +19,7 @@ internal sealed partial class TestMessageHandler(ISignalPublishers signalPublish
         return new TestMessageResponse(message.Payload + 1);
     }
 
-    public static void ConfigurePipeline(TestMessage.IPipeline pipeline) => pipeline.UseLogging().UseAuthorization();
+    public static void ConfigurePipeline(TestMessage.IPipeline pipeline) { }
 }
 
 [JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)]

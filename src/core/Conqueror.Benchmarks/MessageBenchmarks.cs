@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 [Config(typeof(ConfigWithCustomEnvVars))]
 [MemoryDiagnoser]
-internal sealed partial class MessageBenchmarks
+public partial class MessageBenchmarks
 {
     [Benchmark]
     [ArgumentsSource(nameof(NoConquerorArguments))]
@@ -148,9 +148,9 @@ internal sealed partial class MessageBenchmarks
     {
         foreach (
             var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000 }
-            from parallelism in new int?[] { null, 4 }
-            where parallelism is null || numOfExecutions >= parallelism
-            select (numOfExecutions, parallelism)
+                                                  from parallelism in new int?[] { null, 4 }
+                                                  where parallelism is null || numOfExecutions >= parallelism
+                                                  select (numOfExecutions, parallelism)
         )
         {
             yield return [numOfExecutions, parallelism];
@@ -161,8 +161,8 @@ internal sealed partial class MessageBenchmarks
     {
         foreach (
             var (args, numOfMiddlewares) in from args in NoConquerorArguments()
-            from numOfMiddlewares in new[] { 0, 10, 100 }
-            select (args, numOfMiddlewares)
+                                            from numOfMiddlewares in new[] { 0, 10, 100 }
+                                            select (args, numOfMiddlewares)
         )
         {
             yield return [.. args, numOfMiddlewares];

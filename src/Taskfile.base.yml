@@ -23,3 +23,25 @@ tasks:
     desc: Check formatting with csharpier (for CI)
     cmds:
       - dotnet csharpier check . {{.CLI_ARGS}}
+
+  benchmarks:run:
+    desc: Run benchmarks for {{.DESC_PREFIX}}
+    cmds:
+      - |
+        for proj in $(dotnet sln {{.SOLUTION_FILE}} list | grep -i "Benchmarks\.csproj"); do
+          echo "Running benchmarks in $proj..."
+          dotnet run --project "$proj" -c Release -- {{.CLI_ARGS}}
+        done
+
+  test:aot:
+    desc: Run AOT compilation tests for {{.DESC_PREFIX}}
+    cmds:
+      - |
+        for proj in $(dotnet sln {{.SOLUTION_FILE}} list | grep -i "Tests\.AOT\.csproj"); do
+          echo "Publishing $proj with AOT..."
+          dotnet publish "$proj" -c Release
+          PROJ_NAME=$(basename $(dirname "$proj"))
+          PROJ_DIR=$(dirname "$proj")
+          echo "Running AOT test: $PROJ_DIR/bin/Release/net8.0/publish/$PROJ_NAME"
+          "$PROJ_DIR/bin/Release/net8.0/publish/$PROJ_NAME"
+        done

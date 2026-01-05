@@ -24,6 +24,20 @@ task test
 cd src/transports/http
 task build
 task test
+
+# Run benchmarks (all transports or individual)
+cd src/transports
+task benchmarks:run
+
+cd src/transports/http
+task benchmarks:run
+
+# Run AOT tests (all transports or individual)
+cd src/transports
+task test:aot
+
+cd src/transports/file-system
+task test:aot
 ```
 
 **Forward arguments to dotnet:**
@@ -31,6 +45,7 @@ task test
 ```bash
 task build -- -c Release
 task test -- --filter "FullyQualifiedName~FileSystem"
+task benchmarks:run -- --filter "*Http*"
 ```
 
 **Format code:**
@@ -97,6 +112,14 @@ REST/SSE/WebSockets transport using ASP.NET Core.
 - `Conqueror.Transport.Http.Client` - HTTP client
 - `Conqueror.Transport.Http.Server.AspNetCore` - ASP.NET Core server
 
+**Projects:**
+- `Conqueror.Transport.Http.Abstractions` - Core abstractions
+- `Conqueror.Transport.Http.Client` - Client implementation
+- `Conqueror.Transport.Http.Server.AspNetCore` - Server implementation
+- `Conqueror.Transport.Http.Tests` - Test suite
+- `Conqueror.Transport.Http.Benchmarks` - Performance benchmarks
+- `Conqueror.Transport.Http.Tests.AOT` - AOT compatibility tests
+
 **Features:**
 
 - Messages as REST endpoints (GET/POST)
@@ -115,6 +138,13 @@ File-based transport for testing and local IPC. Not for production use.
 
 - `Conqueror.Transport.FileSystem.Abstractions` - Interfaces
 - `Conqueror.Transport.FileSystem` - Implementation
+
+**Projects:**
+- `Conqueror.Transport.FileSystem.Abstractions` - Core abstractions
+- `Conqueror.Transport.FileSystem` - Implementation
+- `Conqueror.Transport.FileSystem.Tests` - Test suite
+- `Conqueror.Transport.FileSystem.Benchmarks` - Performance benchmarks
+- `Conqueror.Transport.FileSystem.Tests.AOT` - AOT compatibility tests
 
 **Features:**
 

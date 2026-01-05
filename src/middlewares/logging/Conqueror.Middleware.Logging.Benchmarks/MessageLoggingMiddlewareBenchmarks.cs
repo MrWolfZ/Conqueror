@@ -1,15 +1,16 @@
-﻿namespace Conqueror.Benchmarks;
+﻿namespace Conqueror.Middleware.Logging.Benchmarks;
 
 using System.Globalization;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
+using Conqueror;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 [Config(typeof(ConfigWithCustomEnvVars))]
 [MemoryDiagnoser]
-internal sealed partial class MessageLoggingMiddlewareBenchmarks
+public partial class MessageLoggingMiddlewareBenchmarks
 {
     [Benchmark]
     [ArgumentsSource(nameof(Arguments))]
@@ -46,9 +47,9 @@ internal sealed partial class MessageLoggingMiddlewareBenchmarks
     {
         foreach (
             var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000, 10_000, 100_000 }
-            from parallelism in new int?[] { null, 4 }
-            where parallelism is null || numOfExecutions >= parallelism
-            select (numOfExecutions, parallelism)
+                                                  from parallelism in new int?[] { null, 4 }
+                                                  where parallelism is null || numOfExecutions >= parallelism
+                                                  select (numOfExecutions, parallelism)
         )
         {
             yield return [numOfExecutions, parallelism];

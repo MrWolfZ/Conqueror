@@ -18,6 +18,12 @@ task test
 
 # Test only source generators
 task test:generators
+
+# Run benchmarks
+task benchmarks:run
+
+# Run AOT tests
+task test:aot
 ```
 
 **Forward arguments to dotnet:**
@@ -25,6 +31,7 @@ task test:generators
 ```bash
 task build -- -c Release
 task test -- --filter "FullyQualifiedName~Messaging"
+task benchmarks:run -- "message-bench"
 ```
 
 **Format code:**
@@ -76,11 +83,11 @@ Comprehensive test suite for core functionality covering all messaging, signalli
 
 ### Conqueror.Tests.AOT
 
-AOT (Ahead-of-Time) compilation tests ensuring the library works correctly with Native AOT scenarios.
+AOT (Ahead-of-Time) compilation tests ensuring the core library works correctly with Native AOT scenarios. Only tests core functionality; middleware and transport AOT compatibility is tested in their respective projects.
 
 ### Conqueror.Benchmarks
 
-Performance benchmarks for core operations using BenchmarkDotNet.
+Performance benchmarks for core operations using BenchmarkDotNet. Only benchmarks core functionality; middleware and transport performance is benchmarked in their respective projects.
 
 ### Conqueror.SourceGenerators.Tests
 

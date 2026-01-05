@@ -2391,6 +2391,12 @@ resharper_unused_member_local_highlighting = none
 # benchmarks cannot be async, so we are forced to use GetAwaiter().GetResult()
 dotnet_diagnostic.ma0045.severity = none # Do not use blocking calls in a sync method (need to make calling method async) (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0045.md)
 
+# benchmark classes must be public according to BenchmarkDotNet
+dotnet_diagnostic.ca1515.severity = none # Consider making public types internal (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1515)
+
+# benchmark classes must not be sealed according to BenchmarkDotNet
+dotnet_diagnostic.ca1852.severity = none # Seal internal types (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1852)
+
 # in benchmark parameter generators we often use inline arrays and we don't care about performance there
 dotnet_diagnostic.ca1861.severity = none # Avoid constant arrays as arguments (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1861)
 

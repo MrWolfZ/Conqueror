@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\..\core\Con
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\..\core\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{EF9F83D8-4D3A-4241-9960-D83CEC8E881B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization.Benchmarks", "Conqueror.Middleware.Authorization.Benchmarks\Conqueror.Middleware.Authorization.Benchmarks.csproj", "{AC88F2E6-41A7-4A3A-AAA5-68DE7CF2059B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization.Tests.AOT", "Conqueror.Middleware.Authorization.Tests.AOT\Conqueror.Middleware.Authorization.Tests.AOT.csproj", "{4B014B85-6F8F-4695-A32E-87E73DC58027}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +46,13 @@ Global
 		{EF9F83D8-4D3A-4241-9960-D83CEC8E881B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF9F83D8-4D3A-4241-9960-D83CEC8E881B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF9F83D8-4D3A-4241-9960-D83CEC8E881B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC88F2E6-41A7-4A3A-AAA5-68DE7CF2059B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC88F2E6-41A7-4A3A-AAA5-68DE7CF2059B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC88F2E6-41A7-4A3A-AAA5-68DE7CF2059B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC88F2E6-41A7-4A3A-AAA5-68DE7CF2059B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B014B85-6F8F-4695-A32E-87E73DC58027}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B014B85-6F8F-4695-A32E-87E73DC58027}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B014B85-6F8F-4695-A32E-87E73DC58027}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B014B85-6F8F-4695-A32E-87E73DC58027}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

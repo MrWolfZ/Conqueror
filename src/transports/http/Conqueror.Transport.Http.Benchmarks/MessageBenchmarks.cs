@@ -1,6 +1,5 @@
 ﻿namespace Conqueror.Transport.Http.Benchmarks;
 
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net.Http.Json;
 using BenchmarkDotNet.Attributes;
@@ -17,8 +16,7 @@ using Microsoft.Extensions.Logging;
 
 [Config(typeof(ConfigWithCustomEnvVars))]
 [MemoryDiagnoser]
-[SuppressMessage("ReSharper", "ClassCanBeSealed.Global", Justification = "Benchmark.NET requires non-sealed classes")]
-internal sealed partial class MessageBenchmarks
+public partial class MessageBenchmarks
 {
     [Benchmark]
     [ArgumentsSource(nameof(Arguments))]
@@ -115,9 +113,9 @@ internal sealed partial class MessageBenchmarks
     {
         foreach (
             var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000 }
-            from parallelism in new int?[] { null, 4 }
-            where parallelism is null || numOfExecutions >= parallelism
-            select (numOfExecutions, parallelism)
+                                                  from parallelism in new int?[] { null, 4 }
+                                                  where parallelism is null || numOfExecutions >= parallelism
+                                                  select (numOfExecutions, parallelism)
         )
         {
             yield return [numOfExecutions, parallelism, false];
