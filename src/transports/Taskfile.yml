@@ -1,22 +1,11 @@
 version: '3'
 
-tasks:
-  build:
-    desc: Build all transport projects
-    cmds:
-      - dotnet build Transports.sln {{.CLI_ARGS}}
+vars:
+  SOLUTION_FILE: Transports.sln
+  DESC_PREFIX: all transport
 
-  test:
-    desc: Run all transport tests
-    cmds:
-      - dotnet test Transports.sln {{.CLI_ARGS}}
-
-  fmt:
-    desc: Format files with csharpier
-    cmds:
-      - dotnet csharpier format . {{.CLI_ARGS}}
-
-  fmt:check:
-    desc: Check formatting with csharpier (for CI)
-    cmds:
-      - dotnet csharpier check . {{.CLI_ARGS}}
+includes:
+  base:
+    taskfile: ../Taskfile.base.yml
+    dir: .
+    flatten: true

@@ -17,6 +17,6 @@
     <RootNamespace>Conqueror</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../Conqueror.Abstractions/Conqueror.Abstractions.csproj" />
+    <ProjectReference Include="../../../core/Conqueror.Abstractions/Conqueror.Abstractions.csproj" />
   </ItemGroup>
 </Project>

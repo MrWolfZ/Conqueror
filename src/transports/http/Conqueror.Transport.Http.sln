@@ -17,13 +17,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Tests.AOT.TopLevelProgram", "Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram.csproj", "{FBB697C3-45DC-4692-8CF6-1AB84F46A1EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\..\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{2ADC66FD-E123-4102-BF99-D30754BE2C91}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\..\core\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{2ADC66FD-E123-4102-BF99-D30754BE2C91}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\..\Conqueror\Conqueror.csproj", "{E287AC6C-A0C2-4C47-938C-85B99102FAA3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\..\core\Conqueror\Conqueror.csproj", "{E287AC6C-A0C2-4C47-938C-85B99102FAA3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.ConformityTests", "..\Conqueror.Transport.ConformityTests\Conqueror.Transport.ConformityTests.csproj", "{9B96DE0D-45BE-41BC-8D9C-E9C06D6D1B68}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{C72654F0-372B-4F5B-B67D-251845FEC574}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\..\core\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{C72654F0-372B-4F5B-B67D-251845FEC574}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

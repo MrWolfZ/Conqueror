@@ -8,7 +8,7 @@
     <Description>Part of the Conqueror library set. Communicate with messages, signals, and iterators via the file system. NOT INTENDED FOR PRODUCTION USAGE.</Description>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../Conqueror/Conqueror.csproj" />
+    <ProjectReference Include="../../../core/Conqueror/Conqueror.csproj" />
     <ProjectReference Include="../Conqueror.Transport.FileSystem.Abstractions/Conqueror.Transport.FileSystem.Abstractions.csproj" />
   </ItemGroup>
 </Project>

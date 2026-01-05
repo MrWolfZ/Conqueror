@@ -15,7 +15,7 @@
     <Compile Include="..//Conqueror.Transport.Http.Client/WebSockets/*.cs" Link="WebSockets/*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../Conqueror/Conqueror.csproj" />
+    <ProjectReference Include="../../../core/Conqueror/Conqueror.csproj" />
     <ProjectReference Include="../Conqueror.Transport.Http.Abstractions/Conqueror.Transport.Http.Abstractions.csproj" />
   </ItemGroup>
   <ItemGroup>

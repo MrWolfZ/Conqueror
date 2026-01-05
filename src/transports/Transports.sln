@@ -29,11 +29,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Tests.AOT.TopLevelProgram", "http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram.csproj", "{49522829-3142-4F9A-8568-251486DFF214}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{6222867C-A31E-497C-AF82-98F05CEB1151}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\core\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{6222867C-A31E-497C-AF82-98F05CEB1151}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\Conqueror\Conqueror.csproj", "{068CE29C-CE13-4C52-AA25-E2A1256A52FB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\core\Conqueror\Conqueror.csproj", "{068CE29C-CE13-4C52-AA25-E2A1256A52FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{232F5601-0BD0-487C-B0F2-D5BB2088785B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\core\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{232F5601-0BD0-487C-B0F2-D5BB2088785B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

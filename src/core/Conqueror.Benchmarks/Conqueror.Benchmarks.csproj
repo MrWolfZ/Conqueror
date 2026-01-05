@@ -13,8 +13,8 @@
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
-    <ProjectReference Include="..\middlewares\logging\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj" />
-    <ProjectReference Include="..\transports\file-system\Conqueror.Transport.FileSystem\Conqueror.Transport.FileSystem.csproj" />
+    <ProjectReference Include="..\..\middlewares\logging\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj" />
+    <ProjectReference Include="..\..\transports\file-system\Conqueror.Transport.FileSystem\Conqueror.Transport.FileSystem.csproj" />
     <!-- <PackageReference Include="Conqueror" /> -->
     <!-- <PackageReference Include="Conqueror.Middleware.Logging" /> -->
     <!-- <PackageReference Include="Conqueror.Transport.FileSystem" /> -->

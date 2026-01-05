@@ -35,9 +35,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".docs", ".docs", "{AB627029
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "src\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{69188BAE-7690-42C5-9783-360F7C500E5D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "src\core\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{69188BAE-7690-42C5-9783-360F7C500E5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "src\Conqueror\Conqueror.csproj", "{D7360204-0307-42DE-9C0D-0ED245A88D66}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "src\core\Conqueror\Conqueror.csproj", "{D7360204-0307-42DE-9C0D-0ED245A88D66}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.BlazorWebAssembly.SharedMiddlewares", "examples\blazor-web-assembly\Examples.BlazorWebAssembly.SharedMiddlewares\Examples.BlazorWebAssembly.SharedMiddlewares.csproj", "{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE}"
 EndProject
@@ -67,11 +67,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.BlazorWebAssembly.UI", "examples\blazor-web-assembly\Examples.BlazorWebAssembly.UI\Examples.BlazorWebAssembly.UI.csproj", "{756F0129-307B-491F-B58E-7B705C140131}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Tests", "src\Conqueror.Tests\Conqueror.Tests.csproj", "{D2D7D958-5204-4C9A-8B9B-DC1937E12CD0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Tests", "src\core\Conqueror.Tests\Conqueror.Tests.csproj", "{D2D7D958-5204-4C9A-8B9B-DC1937E12CD0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "src\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{304E5CC1-BFC8-4403-9F19-2BDFB190AA89}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "src\core\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{304E5CC1-BFC8-4403-9F19-2BDFB190AA89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators.Tests", "src\Conqueror.SourceGenerators.Tests\Conqueror.SourceGenerators.Tests.csproj", "{5A7C2F19-031A-4F4D-87BC-2454411CC494}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators.Tests", "src\core\Conqueror.SourceGenerators.Tests\Conqueror.SourceGenerators.Tests.csproj", "{5A7C2F19-031A-4F4D-87BC-2454411CC494}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", "{060F13CA-55B0-4D28-9010-008B87BEA087}"
 EndProject
@@ -97,7 +97,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Author
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization.Tests", "src\middlewares\authorization\Conqueror.Middleware.Authorization.Tests\Conqueror.Middleware.Authorization.Tests.csproj", "{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Tests.AOT", "src\Conqueror.Tests.AOT\Conqueror.Tests.AOT.csproj", "{5FDF23E5-3431-417A-A595-39E7B1407F7D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Tests.AOT", "src\core\Conqueror.Tests.AOT\Conqueror.Tests.AOT.csproj", "{5FDF23E5-3431-417A-A595-39E7B1407F7D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quickstart", "examples\quickstart\Quickstart.csproj", "{B0993B42-CC27-4D21-9C44-0E3E665E5539}"
 EndProject
@@ -137,7 +137,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly.Tests", "src\middlewares\polly\Conqueror.Middleware.Polly.Tests\Conqueror.Middleware.Polly.Tests.csproj", "{F5F1C095-6970-45DE-AE43-EFF17A75B148}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Benchmarks", "src\Conqueror.Benchmarks\Conqueror.Benchmarks.csproj", "{1FF21176-D184-4EA4-8F02-DDAF83CE4344}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Benchmarks", "src\core\Conqueror.Benchmarks\Conqueror.Benchmarks.csproj", "{1FF21176-D184-4EA4-8F02-DDAF83CE4344}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "logging", "logging", "{0902FB15-77D3-4AC1-ABCF-F88C78AC6435}"
 EndProject

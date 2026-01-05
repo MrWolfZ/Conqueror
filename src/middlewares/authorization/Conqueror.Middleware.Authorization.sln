@@ -7,11 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Author
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization.Tests", "Conqueror.Middleware.Authorization.Tests\Conqueror.Middleware.Authorization.Tests.csproj", "{24738984-FDA7-4F2F-88EF-1220EFDE2EFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\..\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{7B58A6F4-E5B0-47A3-9817-6EDA438B9FD3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\..\core\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{7B58A6F4-E5B0-47A3-9817-6EDA438B9FD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\..\Conqueror\Conqueror.csproj", "{1793E039-FB3C-4280-B544-8E25C25082D7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\..\core\Conqueror\Conqueror.csproj", "{1793E039-FB3C-4280-B544-8E25C25082D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{EF9F83D8-4D3A-4241-9960-D83CEC8E881B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\..\core\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{EF9F83D8-4D3A-4241-9960-D83CEC8E881B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

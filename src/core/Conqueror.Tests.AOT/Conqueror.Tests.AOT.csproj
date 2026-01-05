@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../.targets/analyzers.targets" />
+  <Import Project="../../.targets/analyzers.targets" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -19,9 +19,9 @@
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
-    <ProjectReference Include="../middlewares/authorization/Conqueror.Middleware.Authorization/Conqueror.Middleware.Authorization.csproj" />
-    <ProjectReference Include="../middlewares/logging/Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" />
-    <ProjectReference Include="../transports/http/Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" />
+    <ProjectReference Include="../../middlewares/authorization/Conqueror.Middleware.Authorization/Conqueror.Middleware.Authorization.csproj" />
+    <ProjectReference Include="../../middlewares/logging/Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" />
+    <ProjectReference Include="../../transports/http/Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <TrimmerRootAssembly>Conqueror</TrimmerRootAssembly>

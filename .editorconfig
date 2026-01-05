@@ -2363,7 +2363,7 @@ dotnet_diagnostic.s927.severity = error # Parameter names should match base decl
 # TODO: we do not yet require XML comments for public APIs
 dotnet_diagnostic.cs1591.severity = none # Public elements should have XML comments (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs1591)
 
-[src/*Abstractions/{**/*.cs,*.cs}]
+[src/core/*Abstractions/{**/*.cs,*.cs}]
 # we typically force all exposed types to reside in the "Conqueror" namespace, regardless of the directory structure
 dotnet_diagnostic.ide0130.severity = none # Namespace does not match folder structure (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0130)
 
@@ -2446,11 +2446,11 @@ dotnet_diagnostic.ma0110.severity = none # Use the Regex source generator (https
 # we don't care about string interpolation without explicit culture in test projects
 dotnet_diagnostic.ma0076.severity = none # Do not use implicit culture-sensitive ToString in interpolated strings (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0076.md)
 
-[*/Conqueror.SourceGenerators/{**/*.cs,*.cs}]
+[src/core/Conqueror.SourceGenerators/{**/*.cs,*.cs}]
 # in the source generator we frequently declare
 dotnet_diagnostic.ca1051.severity = error # Do not declare visible instance fields (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1051)
 
-[*/Conqueror.SourceGenerators.Tests/*/TestCases/*/source.cs]
+[src/core/Conqueror.SourceGenerators.Tests/*/TestCases/*/source.cs]
 # in the test files for source generators we need to disable some rules
 # since they cause false positives
 resharper_check_namespace_highlighting = error

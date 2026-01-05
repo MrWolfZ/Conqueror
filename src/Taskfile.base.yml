@@ -1,0 +1,25 @@
+version: '3'
+
+# Base Taskfile with common tasks for all modules
+# Include this file and set the SOLUTION_FILE and DESC_PREFIX variables
+
+tasks:
+  build:
+    desc: Build {{.DESC_PREFIX}} projects
+    cmds:
+      - dotnet build {{.SOLUTION_FILE}} {{.CLI_ARGS}}
+
+  test:
+    desc: Run {{.DESC_PREFIX}} tests
+    cmds:
+      - dotnet test {{.SOLUTION_FILE}} {{.CLI_ARGS}}
+
+  fmt:
+    desc: Format files with csharpier
+    cmds:
+      - dotnet csharpier format . {{.CLI_ARGS}}
+
+  fmt:check:
+    desc: Check formatting with csharpier (for CI)
+    cmds:
+      - dotnet csharpier check . {{.CLI_ARGS}}

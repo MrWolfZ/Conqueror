@@ -374,20 +374,25 @@ See `README.md` for comprehensive examples and recipes (but be careful - the REA
 
 ```txt
 src/
-├── Conqueror.Abstractions/       # Core interfaces and types
-│   ├── Messaging/                # IMessage, IMessageHandler, IMessagePipeline, etc.
-│   ├── Signalling/               # ISignal, ISignalHandler, ISignalPipeline, etc.
-│   ├── Iterating/                # IIterator, IIteratorHandler, IIteratorPipeline, etc.
-│   └── Context/                  # ConquerorContext, data flow abstractions
-├── Conqueror/                    # Core implementation
-│   ├── Messaging/                # MessageDispatcher, pipelines, senders
-│   ├── Signalling/               # SignalDispatcher, publishers
-│   ├── Iterating/                # IteratorDispatcher, pipelines, clients
-│   └── Context/                  # Context implementation
-├── Conqueror.SourceGenerators/   # Roslyn source generators
-│   ├── Messaging/                # MessageTypeGenerator, MessageHandlerTypeGenerator
-│   ├── Signalling/               # SignalTypeGenerator, SignalHandlerTypeGenerator
-│   └── Iterating/                # IteratorTypeGenerator, IteratorHandlerTypeGenerator
+├── core/                         # Core abstractions, implementation, and source generators
+│   ├── Conqueror.Abstractions/   # Core interfaces and types
+│   │   ├── Messaging/            # IMessage, IMessageHandler, IMessagePipeline, etc.
+│   │   ├── Signalling/           # ISignal, ISignalHandler, ISignalPipeline, etc.
+│   │   ├── Iterating/            # IIterator, IIteratorHandler, IIteratorPipeline, etc.
+│   │   └── Context/              # ConquerorContext, data flow abstractions
+│   ├── Conqueror/                # Core implementation
+│   │   ├── Messaging/            # MessageDispatcher, pipelines, senders
+│   │   ├── Signalling/           # SignalDispatcher, publishers
+│   │   ├── Iterating/            # IteratorDispatcher, pipelines, clients
+│   │   └── Context/              # Context implementation
+│   ├── Conqueror.SourceGenerators/   # Roslyn source generators
+│   │   ├── Messaging/            # MessageTypeGenerator, MessageHandlerTypeGenerator
+│   │   ├── Signalling/           # SignalTypeGenerator, SignalHandlerTypeGenerator
+│   │   └── Iterating/            # IteratorTypeGenerator, IteratorHandlerTypeGenerator
+│   ├── Conqueror.Tests/          # Core tests
+│   ├── Conqueror.Tests.AOT/      # AOT compilation tests
+│   ├── Conqueror.Benchmarks/     # Performance benchmarks
+│   └── Conqueror.SourceGenerators.Tests/  # Source generator tests
 ├── middlewares/
 │   ├── authorization/            # Claim-based authorization middleware
 │   ├── logging/                  # Structured logging middleware
@@ -417,12 +422,12 @@ The repository has Taskfiles at multiple levels, allowing you to build/test at d
   task test               # Test everything
   ```
 
-- **Core projects** (`src/Taskfile.yml`): Build/test core projects only (uses `Core.sln`)
+- **Core projects** (`src/core/Taskfile.yml`): Build/test core projects only (uses `core.sln`)
 
   ```bash
-  cd src && task build
-  cd src && task test
-  cd src && task test:generators  # Test only source generators
+  cd src/core && task build
+  cd src/core && task test
+  cd src/core && task test:generators  # Test only source generators
   ```
 
 - **Middlewares** (`src/middlewares/Taskfile.yml`): Build/test all middlewares (uses `Middlewares.sln`)
@@ -512,8 +517,9 @@ See `TODO.md` for planned work items and `README.md` for usage examples.
 
 ### Cross-References
 
-- **Abstractions**: See `src/Conqueror.Abstractions/CLAUDE.md`
-- **Core Implementation**: See `src/Conqueror/CLAUDE.md`
-- **Source Generators**: See `src/Conqueror.SourceGenerators/CLAUDE.md`
+- **Core**: See `src/core/CLAUDE.md`
+- **Abstractions**: See `src/core/Conqueror.Abstractions/CLAUDE.md`
+- **Core Implementation**: See `src/core/Conqueror/CLAUDE.md`
+- **Source Generators**: See `src/core/Conqueror.SourceGenerators/CLAUDE.md`
 - **Middlewares**: See `src/middlewares/CLAUDE.md`
 - **Transports**: See `src/transports/CLAUDE.md`

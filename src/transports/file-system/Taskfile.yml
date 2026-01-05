@@ -1,22 +1,11 @@
 version: '3'
 
-tasks:
-  build:
-    desc: Build all file-system transport projects
-    cmds:
-      - dotnet build Conqueror.Transport.FileSystem.sln {{.CLI_ARGS}}
+vars:
+  SOLUTION_FILE: Conqueror.Transport.FileSystem.sln
+  DESC_PREFIX: file-system transport
 
-  test:
-    desc: Run file-system transport tests
-    cmds:
-      - dotnet test Conqueror.Transport.FileSystem.sln {{.CLI_ARGS}}
-
-  fmt:
-    desc: Format files with csharpier
-    cmds:
-      - dotnet csharpier format . {{.CLI_ARGS}}
-
-  fmt:check:
-    desc: Check formatting with csharpier (for CI)
-    cmds:
-      - dotnet csharpier check . {{.CLI_ARGS}}
+includes:
+  base:
+    taskfile: ../../Taskfile.base.yml
+    dir: .
+    flatten: true

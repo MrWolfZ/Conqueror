@@ -13,7 +13,7 @@
   </PropertyGroup>
   <!-- reference the projects if the full repository is checked out (useful for development) -->
   <ItemGroup>
-    <ProjectReference Include="../../src/Conqueror/Conqueror.csproj" Condition="$(ShouldReferenceProject) == true" />
+    <ProjectReference Include="../../src/core/Conqueror/Conqueror.csproj" Condition="$(ShouldReferenceProject) == true" />
     <ProjectReference
       Include="../../src/middlewares/logging/Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj"
       Condition="$(ShouldReferenceProject) == true"
@@ -23,7 +23,7 @@
       Condition="$(ShouldReferenceProject) == true"
     />
     <ProjectReference
-      Include="../../src/Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj"
+      Include="../../src/core/Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj"
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
       Condition="$(ShouldReferenceProject) == true"

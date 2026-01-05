@@ -1,0 +1,17 @@
+version: '3'
+
+vars:
+  SOLUTION_FILE: core.sln
+  DESC_PREFIX: all core
+
+includes:
+  base:
+    taskfile: ../Taskfile.base.yml
+    dir: .
+    flatten: true
+
+tasks:
+  test:generators:
+    desc: Run all generator tests
+    cmds:
+      - dotnet test Conqueror.SourceGenerators.Tests {{.CLI_ARGS}}

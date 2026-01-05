@@ -21,11 +21,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly.Tests", "polly\Conqueror.Middleware.Polly.Tests\Conqueror.Middleware.Polly.Tests.csproj", "{493AC4CC-3463-42E1-A951-DDE24AD465FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{3E585A7D-BB05-479C-860B-DE145392DBE6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "..\core\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{3E585A7D-BB05-479C-860B-DE145392DBE6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\Conqueror\Conqueror.csproj", "{5B26CB40-CB32-4A0D-9F01-A06B2EEC9D45}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "..\core\Conqueror\Conqueror.csproj", "{5B26CB40-CB32-4A0D-9F01-A06B2EEC9D45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{414529E8-18B8-4A89-A88E-BA777E38BF48}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators", "..\core\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj", "{414529E8-18B8-4A89-A88E-BA777E38BF48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

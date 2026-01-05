@@ -1,22 +1,11 @@
 version: '3'
 
-tasks:
-  build:
-    desc: Build all logging middleware projects
-    cmds:
-      - dotnet build Conqueror.Middleware.Logging.sln {{.CLI_ARGS}}
+vars:
+  SOLUTION_FILE: Conqueror.Middleware.Logging.sln
+  DESC_PREFIX: logging middleware
 
-  test:
-    desc: Run logging middleware tests
-    cmds:
-      - dotnet test Conqueror.Middleware.Logging.sln {{.CLI_ARGS}}
-
-  fmt:
-    desc: Format files with csharpier
-    cmds:
-      - dotnet csharpier format . {{.CLI_ARGS}}
-
-  fmt:check:
-    desc: Check formatting with csharpier (for CI)
-    cmds:
-      - dotnet csharpier check . {{.CLI_ARGS}}
+includes:
+  base:
+    taskfile: ../../Taskfile.base.yml
+    dir: .
+    flatten: true

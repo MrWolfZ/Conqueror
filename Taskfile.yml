@@ -1,22 +1,11 @@
 version: '3'
 
-tasks:
-  build:
-    desc: Build entire Conqueror solution
-    cmds:
-      - dotnet build Conqueror.sln {{.CLI_ARGS}}
+vars:
+  SOLUTION_FILE: Conqueror.sln
+  DESC_PREFIX: all
 
-  test:
-    desc: Run all tests in Conqueror solution
-    cmds:
-      - dotnet test Conqueror.sln {{.CLI_ARGS}}
-
-  fmt:
-    desc: Format files with csharpier
-    cmds:
-      - dotnet csharpier format . {{.CLI_ARGS}}
-
-  fmt:check:
-    desc: Check formatting with csharpier (for CI)
-    cmds:
-      - dotnet csharpier check . {{.CLI_ARGS}}
+includes:
+  base:
+    taskfile: src/Taskfile.base.yml
+    dir: .
+    flatten: true
