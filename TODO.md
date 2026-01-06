@@ -27,21 +27,15 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] align receiver configs to not return itself, but either void or a configuration object
 - [ ] in types injectors rename the `Create` method to `Inject`
 - [ ] add tests for cancellation that assert a `Handle` throws early if passed a canceled token, and also cancels after every middleware
-- [ ] use `ValueTask` instead of `Task` in internal APIs
-  - [ ] validate using benchmarks that this improves latency and memory usage
 - [ ] add test that pipeline can be safely forked
 - [ ] add sender to context data test location
 - [ ] add test to assert that messages support polymorphism
 - [ ] add `.Has()` method to pipelines
 - [ ] add pipeline builder methods to throw on duplicate middleware
-- [ ] align all tests names to `Given_When_Then` style
 - [ ] write code-level documentation for all public APIs
 - [ ] add null checks to public API methods to support users that do not use nullable reference types
 - [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
 - [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
-- [ ] allow opting into performance enhancement by re-using pipelines
-  - [ ] add `WithEagerPipeline` to evaluate client pipeline eagerly, which allows caching senders with a pre-built pipeline
-  - [ ] add `ConfigureStaticPipeline` to create a handler pipeline only once
 
 ### Signalling
 
@@ -51,22 +45,16 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add parameter for sequential strategy that configures whether to abort early on cancellation
 - [ ] implement fire & forget strategy
 - [ ] add aggregate publisher that takes a broadcast strategy
-- [ ] use `ValueTask` instead of `Task` in internal APIs
-  - [ ] validate using benchmarks that this improves latency and memory usage
 - [ ] add test that pipeline can be safely forked
 - [ ] add publisher to context data test location
 - [ ] add `.Has()` method to pipelines
 - [ ] add pipeline builder methods to throw on duplicate middleware
-- [ ] align all tests names to `Given_When_Then` style
 - [ ] write code-level documentation for all public APIs
 - [ ] add null checks to public API methods to support users that do not use nullable reference types
 - [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
 - [ ] add recipe that showcases how batching can be implemented with a custom transport
 - [ ] add docs that specify that the sequential strategy calls observers in an unspecified order
 - [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
-- [ ] allow opting into performance enhancement by re-using pipelines
-  - [ ] add `WithEagerPipeline` to evaluate client pipeline eagerly, which allows caching senders with a pre-built pipeline
-  - [ ] add `ConfigureStaticPipeline` to create a handler pipeline only once
 
 ### Iterators
 
