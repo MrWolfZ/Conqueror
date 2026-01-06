@@ -17,6 +17,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Tests", "Conquero
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Tests.AOT", "Conqueror.Tests.AOT\Conqueror.Tests.AOT.csproj", "{90DEE6BC-8240-4B50-A406-49A0DC9F3FA0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "recipes", "recipes", "{E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "messaging", "messaging", "{F2A3B4C5-D6E7-4F8A-9B0C-1D2E3F4A5B6C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "getting-started", "getting-started", "{A3B4C5D6-E7F8-4A9B-0C1D-2E3F4A5B6C7D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".completed", ".completed", "{B4C5D6E7-F8A9-4B0C-1D2E-3F4A5B6C7D8E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.GettingStarted", "recipes\messaging\getting-started\.completed\Conqueror.Recipes.Messaging.GettingStarted\Conqueror.Recipes.Messaging.GettingStarted.csproj", "{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +64,15 @@ Global
 		{90DEE6BC-8240-4B50-A406-49A0DC9F3FA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90DEE6BC-8240-4B50-A406-49A0DC9F3FA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90DEE6BC-8240-4B50-A406-49A0DC9F3FA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F2A3B4C5-D6E7-4F8A-9B0C-1D2E3F4A5B6C} = {E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B}
+		{A3B4C5D6-E7F8-4A9B-0C1D-2E3F4A5B6C7D} = {F2A3B4C5-D6E7-4F8A-9B0C-1D2E3F4A5B6C}
+		{B4C5D6E7-F8A9-4B0C-1D2E-3F4A5B6C7D8E} = {A3B4C5D6-E7F8-4A9B-0C1D-2E3F4A5B6C7D}
+		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D} = {B4C5D6E7-F8A9-4B0C-1D2E-3F4A5B6C7D8E}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- for recipes we do not want to enable central package management so that each solution can be downloaded and run individually -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

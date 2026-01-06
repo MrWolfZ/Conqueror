@@ -2496,13 +2496,19 @@ dotnet_diagnostic.ma0104.severity = none # Do not create a type with a name from
 dotnet_diagnostic.s2326.severity = none # Unused type parameters should be removed (https://rules.sonarsource.com/csharp/RSPEC-2326/)
 dotnet_diagnostic.s2333.severity = none # Redundant modifiers should not be used (https://rules.sonarsource.com/csharp/RSPEC-2333/)
 
-[examples/**/*.cs]
-# we do not want to impose certain coding standards on the examples so that they are more familiar looking to users
+[{examples/**/*.cs,**/recipes/**/*.cs}]
+# we do not want to impose certain coding standards on the examples and recipes so that they are more familiar looking to users
 dotnet_diagnostic.ide0058.severity = none # Remove unnecessary expression value (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0058)
 dotnet_diagnostic.ca1310.severity = none # Specify StringComparison for correctness (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1310)
 dotnet_diagnostic.ca1515.severity = none # Consider making public types internal (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1515)
+dotnet_diagnostic.ca1852.severity = none # Seal internal types (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1852)
+dotnet_diagnostic.sa1202.severity = none # An element within a C# code file is out of order within regard to access level, in relation to other elements in the code (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1202.md)
 dotnet_diagnostic.rcs1174.severity = none # Remove redundant async/await (https://josefpihrt.github.io/docs/roslynator/analyzers/rcs1174)
+dotnet_diagnostic.rcs1194.severity = none # Implement exception constructors (https://josefpihrt.github.io/docs/roslynator/analyzers/rcs1194)
+dotnet_diagnostic.rcs1250.severity = none # Use implicit/explicit object creation (https://josefpihrt.github.io/docs/roslynator/analyzers/rcs1250)
+dotnet_diagnostic.ma0002.severity = none # IEqualityComparer<string> or IComparer<string> is missing (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0002.md)
 dotnet_diagnostic.ma0006.severity = none # Use String.Equals instead of equality operator (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0006.md)
+dotnet_diagnostic.ma0032.severity = none # Use an overload with a CancellationToken argument (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0032.md)
 dotnet_diagnostic.ma0076.severity = none # Do not use implicit culture-sensitive ToString in interpolated strings (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0076.md)
 dotnet_diagnostic.ma0106.severity = none # Avoid closure by using an overload with the 'factoryArgument' parameter (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0106.md)
 dotnet_diagnostic.ma0127.severity = none # Use String.Equals instead of is pattern (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0127.md)

@@ -995,7 +995,7 @@ In summary, these are some of the strengths of **Conqueror**:
 
 - **Strong focus on testability:** Testing is a very important topic that is sadly often neglected. **Conqueror** takes testability very
   seriously and makes sure that you know how you can test the code you have written using it (you may have noticed that the **Conqueror.CQS
-  ** recipe immediately following [getting started](recipes/cqs/basics/getting-started#readme) shows you how you
+  ** recipe immediately following [getting started](src/core/recipes/messaging/getting-started#readme) shows you how you
   can [test the handlers](recipes/cqs/basics/testing-handlers#readme) we built in the first recipe).
 
 - **Out-of-the-box solutions for many common yet often complex cross-cutting concerns:** Many development teams spend valuable time on

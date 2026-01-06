@@ -392,7 +392,10 @@ src/
 │   ├── Conqueror.Tests/          # Core tests
 │   ├── Conqueror.Tests.AOT/      # AOT compilation tests
 │   ├── Conqueror.Benchmarks/     # Performance benchmarks
-│   └── Conqueror.SourceGenerators.Tests/  # Source generator tests
+│   ├── Conqueror.SourceGenerators.Tests/  # Source generator tests
+│   └── recipes/                  # Hands-on tutorials for learning Conqueror
+│       └── messaging/            # Messaging-specific recipes
+│           └── getting-started/  # Introduction to Conqueror messaging
 ├── middlewares/
 │   ├── authorization/            # Claim-based authorization middleware
 │   ├── logging/                  # Structured logging middleware
@@ -521,5 +524,6 @@ See `TODO.md` for planned work items and `README.md` for usage examples.
 - **Abstractions**: See `src/core/Conqueror.Abstractions/CLAUDE.md`
 - **Core Implementation**: See `src/core/Conqueror/CLAUDE.md`
 - **Source Generators**: See `src/core/Conqueror.SourceGenerators/CLAUDE.md`
+- **Recipes**: See `src/core/recipes/CLAUDE.md` for guidance on creating hands-on tutorials
 - **Middlewares**: See `src/middlewares/CLAUDE.md`
 - **Transports**: See `src/transports/CLAUDE.md`
