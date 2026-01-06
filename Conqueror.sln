@@ -205,6 +205,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.FileSystem.Tests.AOT", "src\transports\file-system\Conqueror.Transport.FileSystem.Tests.AOT\Conqueror.Transport.FileSystem.Tests.AOT.csproj", "{EA73A5E0-4E56-4C98-BF9E-A71A06D27D99}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testing-handlers", "testing-handlers", "{AF0A0A83-616F-4349-8CFD-0A5C8D99DB75}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingHandlers", "src\core\recipes\messaging\testing-handlers\Conqueror.Recipes.Messaging.TestingHandlers\Conqueror.Recipes.Messaging.TestingHandlers.csproj", "{151CE06F-888D-4A14-83EA-873B21610B40}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".completed", ".completed", "{38C6F4CF-6A22-4220-90CB-D51DB3342908}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingHandlers", "src\core\recipes\messaging\testing-handlers\.completed\Conqueror.Recipes.Messaging.TestingHandlers\Conqueror.Recipes.Messaging.TestingHandlers.csproj", "{ADE1A784-1132-4D0C-BD06-EEB59936B964}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingHandlers.Tests", "src\core\recipes\messaging\testing-handlers\.completed\Conqueror.Recipes.Messaging.TestingHandlers.Tests\Conqueror.Recipes.Messaging.TestingHandlers.Tests.csproj", "{93F2F19F-A6A7-433F-877E-4C35233F5A86}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -374,6 +384,18 @@ Global
 		{EA73A5E0-4E56-4C98-BF9E-A71A06D27D99}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA73A5E0-4E56-4C98-BF9E-A71A06D27D99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA73A5E0-4E56-4C98-BF9E-A71A06D27D99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{151CE06F-888D-4A14-83EA-873B21610B40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{151CE06F-888D-4A14-83EA-873B21610B40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{151CE06F-888D-4A14-83EA-873B21610B40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{151CE06F-888D-4A14-83EA-873B21610B40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADE1A784-1132-4D0C-BD06-EEB59936B964}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADE1A784-1132-4D0C-BD06-EEB59936B964}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADE1A784-1132-4D0C-BD06-EEB59936B964}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADE1A784-1132-4D0C-BD06-EEB59936B964}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93F2F19F-A6A7-433F-877E-4C35233F5A86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93F2F19F-A6A7-433F-877E-4C35233F5A86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93F2F19F-A6A7-433F-877E-4C35233F5A86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93F2F19F-A6A7-433F-877E-4C35233F5A86}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -453,5 +475,10 @@ Global
 		{E3F4A5B6-C7D8-4E9F-0A1B-2C3D4E5F6A7B} = {D2E3F4A5-B6C7-4D8E-9F0A-1B2C3D4E5F6A}
 		{F4A5B6C7-D8E9-4F0A-1B2C-3D4E5F6A7B8C} = {E3F4A5B6-C7D8-4E9F-0A1B-2C3D4E5F6A7B}
 		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D} = {F4A5B6C7-D8E9-4F0A-1B2C-3D4E5F6A7B8C}
+		{AF0A0A83-616F-4349-8CFD-0A5C8D99DB75} = {D2E3F4A5-B6C7-4D8E-9F0A-1B2C3D4E5F6A}
+		{151CE06F-888D-4A14-83EA-873B21610B40} = {AF0A0A83-616F-4349-8CFD-0A5C8D99DB75}
+		{38C6F4CF-6A22-4220-90CB-D51DB3342908} = {AF0A0A83-616F-4349-8CFD-0A5C8D99DB75}
+		{ADE1A784-1132-4D0C-BD06-EEB59936B964} = {38C6F4CF-6A22-4220-90CB-D51DB3342908}
+		{93F2F19F-A6A7-433F-877E-4C35233F5A86} = {38C6F4CF-6A22-4220-90CB-D51DB3342908}
 	EndGlobalSection
 EndGlobal
