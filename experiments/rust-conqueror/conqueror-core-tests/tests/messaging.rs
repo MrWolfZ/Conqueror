@@ -167,6 +167,55 @@ where
     }
 }
 
+#[derive(Clone)]
+struct FailingLayer {
+    reason: &'static str,
+}
+
+impl FailingLayer {
+    fn new(reason: &'static str) -> Self {
+        Self { reason }
+    }
+}
+
+impl<S> Layer<S> for FailingLayer {
+    type Service = FailingService<S>;
+
+    fn layer(&self, inner: S) -> Self::Service {
+        FailingService {
+            _inner: inner,
+            reason: self.reason,
+        }
+    }
+}
+
+#[derive(Clone)]
+struct FailingService<S> {
+    _inner: S,
+    reason: &'static str,
+}
+
+impl<S, Req> Service<Req> for FailingService<S>
+where
+    S: Service<Req, Error = ConquerorError>,
+    S::Response: Send + 'static,
+    Req: Send + 'static,
+{
+    type Response = S::Response;
+    type Error = ConquerorError;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, _cx: &mut TaskContext<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, _request: Req) -> Self::Future {
+        let reason = self.reason;
+
+        Box::pin(async move { Err(ConquerorError::middleware_failed(reason)) })
+    }
+}
+
 #[tokio::test]
 async fn dispatches_registered_message_to_handler() {
     let app = Conqueror::builder()
@@ -261,6 +310,30 @@ async fn middleware_can_short_circuit_handler() {
         .unwrap();
 
     assert_eq!(response, GetCounterValueResponse { value: 999 });
+}
+
+#[tokio::test]
+async fn middleware_errors_propagate_to_caller() {
+    let app = Conqueror::builder()
+        .add_message_with::<GetCounterValue, _, _, _>(GetCounterValueHandler, |service| {
+            ServiceBuilder::new()
+                .layer(FailingLayer::new("blocked"))
+                .service(service)
+        })
+        .build();
+
+    let error = app
+        .messages()
+        .send(GetCounterValue {
+            counter_name: "orders".to_owned(),
+        })
+        .await
+        .unwrap_err();
+
+    assert!(matches!(
+        error,
+        ConquerorError::MiddlewareFailed { reason } if reason == "blocked"
+    ));
 }
 
 #[tokio::test]

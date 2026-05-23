@@ -15,11 +15,13 @@ Prove whether Rust can support Conqueror's operation-centric request/response mo
 5. private type erasure inside the registry;
 6. black-box tests through the public dispatch facade.
 
-The prototype intentionally excludes HTTP, gRPC, signals, iterators, file-system transport, automatic registration, OpenAPI, and macros.
+The prototype intentionally excludes HTTP, gRPC, signals, iterators, file-system transport,
+automatic registration, OpenAPI, and macros.
 
 ## Current status
 
-The code has been written by static inspection only. The environment used to create it did not have `cargo` or `rustc`, so it has not been compiled.
+The code has been written by static inspection only. The environment used to create it did not have
+`cargo` or `rustc`, so it has not been compiled.
 
 The draft already includes:
 
@@ -82,7 +84,8 @@ cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 ```
 
-Expected initial issues, if any, should be treated as design feedback rather than papered over. In particular, do not hide API awkwardness behind macros until the manual model is proven.
+Expected initial issues, if any, should be treated as design feedback rather than papered over. In
+particular, do not hide API awkwardness behind macros until the manual model is proven.
 
 ## MVP behavior covered by tests
 
@@ -93,8 +96,9 @@ Expected initial issues, if any, should be treated as design feedback rather tha
 3. propagating handler errors;
 4. middleware observing request/response flow;
 5. middleware short-circuiting the handler;
-6. caller-supplied context reaching the handler;
-7. unique operation IDs for root dispatch contexts.
+6. middleware error propagation;
+7. caller-supplied context reaching the handler;
+8. unique operation IDs for root dispatch contexts.
 
 ## Design notes
 
