@@ -21,9 +21,11 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] add a script to bump version number across whole project
 - [ ] consider making the `ConquerorContext` opt-out-able or even opt-in (would require passing certain things like IDs in a different way)
 - [ ] move "internal" interfaces (which need to be public in the abstractions because generated code relies on them) to a separate internal namespace
+- [ ] register a throwing factory for `IHandler` interfaces which provides a nice clean error message as to why that is wrong and show the correct way instead
 
 ### Messaging
 
+- [ ] recipe for testing handlers: use test host instead of test base (composition over inheritance)
 - [ ] align receiver configs to not return itself, but either void or a configuration object
 - [ ] in types injectors rename the `Create` method to `Inject`
 - [ ] add tests for cancellation that assert a `Handle` throws early if passed a canceled token, and also cancels after every middleware
