@@ -516,7 +516,11 @@ The `feature/messaging-lib` branch contains a major API refactoring:
 - **Source generator focus**: Heavy reliance on generated code for type safety and AOT
 - **Simplified package structure**: Unified core library instead of separate CQS/Eventing/Streaming
 
-See `TODO.md` for planned work items and `README.md` for usage examples.
+See `TODO.md` for planned work items and `README.md` for usage examples. For Rust
+reimplementation feasibility, see `rust-feasibility-consolidated.md` and
+`rust-feasibility-review.md`; for a scoped Rust prototype plan, see
+`rust-prototype-mvp-plan.md`. A draft Rust message-core prototype lives under
+`experiments/rust-conqueror`.
 
 ### Cross-References
 
