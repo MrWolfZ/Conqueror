@@ -113,11 +113,21 @@ impl MessageHandler<RecordingMessage> for RecordingHandler {
 #[derive(Clone)]
 struct RecordingLayer {
     events: Arc<Mutex<Vec<&'static str>>>,
+    before: &'static str,
+    after: &'static str,
 }
 
 impl RecordingLayer {
     fn new(events: Arc<Mutex<Vec<&'static str>>>) -> Self {
-        Self { events }
+        Self::named(events, "before", "after")
+    }
+
+    fn named(events: Arc<Mutex<Vec<&'static str>>>, before: &'static str, after: &'static str) -> Self {
+        Self {
+            events,
+            before,
+            after,
+        }
     }
 }
 
@@ -128,6 +138,8 @@ impl<S> Layer<S> for RecordingLayer {
         RecordingService {
             inner,
             events: Arc::clone(&self.events),
+            before: self.before,
+            after: self.after,
         }
     }
 }
@@ -136,6 +148,8 @@ impl<S> Layer<S> for RecordingLayer {
 struct RecordingService<S> {
     inner: S,
     events: Arc<Mutex<Vec<&'static str>>>,
+    before: &'static str,
+    after: &'static str,
 }
 
 impl<S, Req> Service<Req> for RecordingService<S>
@@ -157,11 +171,13 @@ where
         let clone = self.inner.clone();
         let mut inner = std::mem::replace(&mut self.inner, clone);
         let events = Arc::clone(&self.events);
+        let before = self.before;
+        let after = self.after;
 
         Box::pin(async move {
-            events.lock().unwrap().push("before");
+            events.lock().unwrap().push(before);
             let response = inner.call(request).await;
-            events.lock().unwrap().push("after");
+            events.lock().unwrap().push(after);
             response
         })
     }
@@ -234,6 +250,42 @@ async fn dispatches_registered_message_to_handler() {
 }
 
 #[tokio::test]
+async fn cloned_senders_can_dispatch_from_spawned_tasks() {
+    let app = Conqueror::builder()
+        .add_message::<GetCounterValue, _>(GetCounterValueHandler)
+        .build();
+
+    let senders = app.messages();
+    let first_senders = senders.clone();
+    let second_senders = senders.clone();
+
+    let first = tokio::spawn(async move {
+        first_senders
+            .send(GetCounterValue {
+                counter_name: "orders".to_owned(),
+            })
+            .await
+    });
+
+    let second = tokio::spawn(async move {
+        second_senders
+            .send(GetCounterValue {
+                counter_name: "unknown".to_owned(),
+            })
+            .await
+    });
+
+    assert_eq!(
+        first.await.unwrap().unwrap(),
+        GetCounterValueResponse { value: 42 }
+    );
+    assert_eq!(
+        second.await.unwrap().unwrap(),
+        GetCounterValueResponse { value: 0 }
+    );
+}
+
+#[tokio::test]
 async fn returns_error_when_handler_is_not_registered() {
     let app = Conqueror::builder().build();
 
@@ -288,6 +340,51 @@ async fn middleware_observes_before_and_after_handler() {
     assert_eq!(
         events.lock().unwrap().as_slice(),
         ["before", "handler", "after"]
+    );
+}
+
+#[tokio::test]
+async fn middleware_order_is_deterministic() {
+    let events = Arc::new(Mutex::new(Vec::new()));
+
+    let app = Conqueror::builder()
+        .add_message_with::<RecordingMessage, _, _, _>(
+            RecordingHandler {
+                events: Arc::clone(&events),
+            },
+            {
+                let events = Arc::clone(&events);
+
+                move |service| {
+                    ServiceBuilder::new()
+                        .layer(RecordingLayer::named(
+                            Arc::clone(&events),
+                            "outer-before",
+                            "outer-after",
+                        ))
+                        .layer(RecordingLayer::named(
+                            Arc::clone(&events),
+                            "inner-before",
+                            "inner-after",
+                        ))
+                        .service(service)
+                }
+            },
+        )
+        .build();
+
+    let response = app.messages().send(RecordingMessage).await.unwrap();
+
+    assert_eq!(response, vec!["outer-before", "inner-before", "handler"]);
+    assert_eq!(
+        events.lock().unwrap().as_slice(),
+        [
+            "outer-before",
+            "inner-before",
+            "handler",
+            "inner-after",
+            "outer-after",
+        ]
     );
 }
 

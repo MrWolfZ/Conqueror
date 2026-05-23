@@ -92,13 +92,15 @@ particular, do not hide API awkwardness behind macros until the manual model is 
 `conqueror-core-tests/tests/messaging.rs` covers:
 
 1. dispatching a registered message to its handler;
-2. returning a typed missing-handler error;
-3. propagating handler errors;
-4. middleware observing request/response flow;
-5. middleware short-circuiting the handler;
-6. middleware error propagation;
-7. caller-supplied context reaching the handler;
-8. unique operation IDs for root dispatch contexts.
+2. cloned senders dispatching from spawned Tokio tasks;
+3. returning a typed missing-handler error;
+4. propagating handler errors;
+5. middleware observing request/response flow;
+6. deterministic middleware ordering;
+7. middleware short-circuiting the handler;
+8. middleware error propagation;
+9. caller-supplied context reaching the handler;
+10. unique operation IDs for root dispatch contexts.
 
 ## Design notes
 
