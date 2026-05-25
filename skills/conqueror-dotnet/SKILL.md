@@ -33,7 +33,8 @@ Operation types and handler types should normally be `partial`. Attributes drive
 6. Register handlers and required transport/middleware services in DI.
 7. Invoke operations through generated type tokens: `.For(CreateTodo.T)`, `.For(TodoCreated.T)`, `.For(StreamTodos.T)`.
 8. Configure pipelines explicitly, either on handlers with `ConfigurePipeline` or at call sites with `.WithPipeline(...)`.
-9. Run the narrowest relevant build/test command available in the target repo. If the repo uses Taskfiles, prefer `task build` and `task test` over direct `dotnet build/test`.
+9. For HTTP transport work, make an explicit AOT/serializer-context decision: either follow the app's existing `JsonSerializerContext` pattern, add the needed context for AOT/trimming-sensitive apps, or state why no serializer context is needed for the current app.
+10. Run the narrowest relevant build/test command available in the target repo. If the repo uses Taskfiles, prefer `task build` and `task test` over direct `dotnet build/test`.
 
 ## Read references when needed
 
@@ -117,5 +118,6 @@ Middleware order is semantic. A middleware wraps everything downstream from it. 
 - Do not assume one signal handler; signals can have many handlers and no handlers is a no-op for in-process publishing.
 - Do not present file-system transport as production infrastructure.
 - Do not present HTTP iterators as ready app guidance unless the target project already has an implementation.
+- Do not finish HTTP transport work without accounting for JSON serialization/AOT. At minimum, mention the decision in your summary when you did not add serializer contexts.
 - Do not apply authorization middleware to signals; Conqueror authorization middleware is message-only.
 - Do not use transportable context data for arbitrary objects; transportable data is string key/value data for crossing process boundaries.

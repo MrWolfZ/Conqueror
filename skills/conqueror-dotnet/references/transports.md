@@ -58,6 +58,24 @@ var response = await senders
 
 If no transport is configured, Conqueror defaults to in-process.
 
+### HTTP serializer/AOT checkpoint
+
+Every HTTP transport change should explicitly account for JSON serialization and Native AOT/trimming:
+
+1. Inspect the target project for an existing `JsonSerializerContext` pattern.
+2. If the app targets Native AOT, trimming, or already uses source-generated JSON contexts, add or extend a context for the HTTP message and response types.
+3. If the app is not AOT/trimming-sensitive and uses normal reflection-based JSON serialization, do not add unnecessary serializer-context code; state that decision in the summary.
+
+Example context shape:
+
+```csharp
+[JsonSerializable(typeof(GetTodo))]
+[JsonSerializable(typeof(GetTodoResponse))]
+internal sealed partial class GetTodoJsonSerializerContext : JsonSerializerContext;
+```
+
+If a shared app context exists, extend that instead of creating one context per message.
+
 ## HTTP signals
 
 HTTP signals are exposed via Server-Sent Events or WebSockets, depending on the attribute/package surface the app uses.
