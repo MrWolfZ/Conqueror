@@ -1,0 +1,39 @@
+// This file is intentionally not compiled. It sketches the desired archive feature,
+// but it contains common Conqueror mistakes that an eval agent should fix.
+
+using Conqueror;
+
+namespace ConquerorDemo;
+
+[Message<int>]
+public record ArchiveCompletedTodos;
+
+public class ArchiveCompletedTodosHandler(TodoStore store)
+    : IMessageHandler<ArchiveCompletedTodos, int, ArchiveCompletedTodosHandler>
+{
+    public static void ConfigurePipeline(ArchiveCompletedTodos.IPipeline pipeline)
+    {
+        pipeline.Use(ctx =>
+        {
+            if (ctx.ConquerorContext.InProcessData.Get<bool>("skip-archive"))
+            {
+                return Task.FromResult(0);
+            }
+
+            return Task.FromResult(0);
+        });
+    }
+
+    public Task<int> Handle(ArchiveCompletedTodos message, CancellationToken cancellationToken)
+    {
+        return store.ArchiveCompleted(cancellationToken);
+    }
+}
+
+public sealed class ArchiveService(IMessageSenders senders)
+{
+    public Task<int> Archive(CancellationToken cancellationToken)
+    {
+        return senders.For<ArchiveCompletedTodos>().Handle(new(), cancellationToken);
+    }
+}

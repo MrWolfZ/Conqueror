@@ -1,0 +1,66 @@
+{
+  "skill_name": "conqueror-dotnet",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "In the attached demo app, add Conqueror in-process messaging for creating todos. Define a CreateTodo message with a response containing the created id, implement the handler using the existing TodoStore, register handlers in DI, add an endpoint or service call that uses IMessageSenders.For(CreateTodo.T), and add tests that exercise the behavior through Conqueror rather than directly constructing the handler.",
+      "expected_output": "A working implementation using partial Conqueror message contracts, generated handler interfaces, DI registration, IMessageSenders.For(CreateTodo.T), and tests through the public Conqueror factory.",
+      "files": [
+        "evals/files/demo-app"
+      ],
+      "expectations": [
+        "Defines a partial CreateTodo message contract using a Conqueror message attribute",
+        "Implements a partial handler via the generated CreateTodo.IHandler interface",
+        "Invokes the message through IMessageSenders.For(CreateTodo.T)",
+        "Registers Conqueror message handlers in dependency injection",
+        "Adds or updates tests that exercise the Conqueror invocation path rather than only direct handler construction"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "In the attached demo app, expose todo lookup over HTTP using Conqueror. Add an HTTP-capable GetTodo message with a response DTO, wire ASP.NET Core server registration and endpoint mapping, add a client-side usage example with UseHttp, and cover the behavior with an appropriate test. Keep package versions consistent with the fixture and do not hard-code unrelated versions in explanatory text.",
+      "expected_output": "HTTP Conqueror message usage with [HttpMessage<T>], server registration/mapping, client transport selection, and test coverage.",
+      "files": [
+        "evals/files/demo-app"
+      ],
+      "expectations": [
+        "Defines an HTTP-capable partial message contract using HttpMessage",
+        "Adds ASP.NET Core server setup for Conqueror HTTP endpoints",
+        "Uses IMessageSenders.For(GetTodo.T).WithTransport(...UseHttp...) for client-side invocation",
+        "Mentions or implements serializer-context/AOT considerations when relevant",
+        "Adds tests or a testable setup that validates the HTTP-facing behavior"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "In the attached demo app, publish a TodoCreated signal after a todo is created and add a signal handler that updates metrics. Use a Conqueror pipeline or context data to prevent double-counting within one operation if the signal is observed more than once. Add tests that prove the signal path updates metrics and does not double-count.",
+      "expected_output": "Signal contract, publisher usage, signal handler registration, context/pipeline guard, and tests through ISignalPublishers or a message that publishes the signal.",
+      "files": [
+        "evals/files/demo-app"
+      ],
+      "expectations": [
+        "Defines a partial TodoCreated signal contract",
+        "Publishes via ISignalPublishers.For(TodoCreated.T).Handle(...)",
+        "Implements a partial signal handler via TodoCreated.IHandler",
+        "Uses Conqueror context or pipeline logic for the double-counting guard",
+        "Adds tests proving signal side effects and the guard behavior"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "The attached demo app contains BrokenConquerorSketch.cs.txt with an attempted Conqueror implementation that has common mistakes. Replace it with a correct implementation for archiving completed todos. Fix the source-generation, registration, invocation, and pipeline issues, and explain briefly why each category of mistake mattered.",
+      "expected_output": "Corrected Conqueror message implementation that fixes partial types, generated nested handler usage, .T invocation, DI registration, and ctx.Next pipeline usage, with tests or build evidence.",
+      "files": [
+        "evals/files/demo-app"
+      ],
+      "expectations": [
+        "Identifies that operation and handler types need to be partial for source generation",
+        "Uses the generated ArchiveCompletedTodos.IHandler interface rather than hand-written generic handler plumbing",
+        "Invokes through IMessageSenders.For(ArchiveCompletedTodos.T)",
+        "Registers the handler through Conqueror DI helpers",
+        "Fixes pipeline middleware to call ctx.Next(...) unless intentionally short-circuiting",
+        "Adds tests or validation for the corrected behavior"
+      ]
+    }
+  ]
+}
