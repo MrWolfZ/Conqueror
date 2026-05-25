@@ -1,6 +1,7 @@
 ---
 name: conqueror-dotnet
-description: Implement, test, and debug .NET applications that use the Conqueror library for messages, signals, iterators, pipelines, context, middlewares, and transports. Use this skill whenever a user mentions Conqueror, Conqueror APIs such as [Message], [HttpMessage], [Signal], [Iterator], IMessageSenders, ISignalPublishers, IIterators, ConfigurePipeline, .T, or asks to add/use/debug Conqueror in a C#/.NET app. Do not use it for generic CQRS, message bus, event, or middleware questions unless Conqueror or its APIs are involved.
+description: >-
+  Use this skill when a user wants to implement or fix Conqueror usage in a .NET app: define operation contracts, implement generated handlers, register handlers in dependency injection, invoke via IMessageSenders/ISignalPublishers/IIterators, configure pipelines/middlewares/context, expose HTTP transports, add tests, or handle AOT JSON serialization. Conqueror cues include [Message], [HttpMessage], [Signal], [Iterator], .T, IHandler, ConfigurePipeline, UseHttp, and ConquerorContext. Avoid generic messaging, CQRS, events, ASP.NET middleware, Polly, or JSON tasks that do not involve Conqueror.
 ---
 
 # Conqueror for .NET application code
