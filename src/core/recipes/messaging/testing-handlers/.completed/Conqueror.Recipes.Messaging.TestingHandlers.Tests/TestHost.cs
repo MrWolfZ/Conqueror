@@ -3,11 +3,11 @@ namespace Conqueror.Recipes.Messaging.TestingHandlers.Tests;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-public abstract class TestBase
+internal sealed class TestHost : IAsyncDisposable
 {
     private readonly ServiceProvider serviceProvider;
 
-    protected TestBase()
+    private TestHost()
     {
         var services = new ServiceCollection();
 
@@ -18,17 +18,15 @@ public abstract class TestBase
         serviceProvider = services.BuildServiceProvider();
     }
 
-    protected IMessageSenders MessageSenders => serviceProvider.GetRequiredService<IMessageSenders>();
+    public IMessageSenders MessageSenders => serviceProvider.GetRequiredService<IMessageSenders>();
 
-    protected IAdminNotificationService AdminNotificationServiceMock { get; } =
+    public IAdminNotificationService AdminNotificationServiceMock { get; } =
         Substitute.For<IAdminNotificationService>();
 
-    [TearDown]
-    public void TearDown()
-    {
-        serviceProvider.Dispose();
-    }
+    public static TestHost Create() => new();
 
-    protected T Resolve<T>()
+    public ValueTask DisposeAsync() => serviceProvider.DisposeAsync();
+
+    public T Resolve<T>()
         where T : notnull => serviceProvider.GetRequiredService<T>();
 }

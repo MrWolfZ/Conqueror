@@ -1,20 +1,20 @@
 namespace Conqueror.Recipes.Messaging.TestingHandlers.Tests;
 
 [TestFixture]
-public class IncrementCounterTests : TestBase
+public class IncrementCounterTests
 {
     private const string TestCounterName = "test-counter";
-
-    private IncrementCounter.IHandler Handler => MessageSenders.For(IncrementCounter.T);
-
-    private CountersRepository CountersRepository => Resolve<CountersRepository>();
 
     [Test]
     public async Task GivenNonExistingCounter_WhenIncrementingCounter_CounterIsCreatedAndInitialValueIsReturned()
     {
-        var response = await Handler.Handle(new(TestCounterName));
+        await using var host = TestHost.Create();
 
-        var storedCounterValue = await CountersRepository.GetCounterValue(TestCounterName);
+        var handler = host.MessageSenders.For(IncrementCounter.T);
+
+        var response = await handler.Handle(new(TestCounterName));
+
+        var storedCounterValue = await host.Resolve<CountersRepository>().GetCounterValue(TestCounterName);
 
         Assert.That(storedCounterValue, Is.EqualTo(1).And.EqualTo(response.NewCounterValue));
     }
@@ -22,11 +22,15 @@ public class IncrementCounterTests : TestBase
     [Test]
     public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncrementedAndValueIsReturned()
     {
-        await CountersRepository.SetCounterValue(TestCounterName, 10);
+        await using var host = TestHost.Create();
 
-        var response = await Handler.Handle(new(TestCounterName));
+        var handler = host.MessageSenders.For(IncrementCounter.T);
 
-        var storedCounterValue = await CountersRepository.GetCounterValue(TestCounterName);
+        await host.Resolve<CountersRepository>().SetCounterValue(TestCounterName, 10);
+
+        var response = await handler.Handle(new(TestCounterName));
+
+        var storedCounterValue = await host.Resolve<CountersRepository>().GetCounterValue(TestCounterName);
 
         Assert.That(storedCounterValue, Is.EqualTo(11).And.EqualTo(response.NewCounterValue));
     }
@@ -34,22 +38,30 @@ public class IncrementCounterTests : TestBase
     [Test]
     public async Task GivenExistingCounter_WhenIncrementingCounterAboveThreshold_AdminNotificationIsSent()
     {
-        await CountersRepository.SetCounterValue(TestCounterName, 999);
+        await using var host = TestHost.Create();
 
-        _ = await Handler.Handle(new(TestCounterName));
+        var handler = host.MessageSenders.For(IncrementCounter.T);
 
-        await AdminNotificationServiceMock.Received(1)
+        await host.Resolve<CountersRepository>().SetCounterValue(TestCounterName, 999);
+
+        _ = await handler.Handle(new(TestCounterName));
+
+        await host.AdminNotificationServiceMock.Received(1)
             .SendCounterIncrementedBeyondThresholdNotification(TestCounterName);
     }
 
     [Test]
     public async Task GivenExistingCounter_WhenIncrementingCounterBelowThreshold_NoAdminNotificationIsSent()
     {
-        await CountersRepository.SetCounterValue(TestCounterName, 10);
+        await using var host = TestHost.Create();
 
-        _ = await Handler.Handle(new(TestCounterName));
+        var handler = host.MessageSenders.For(IncrementCounter.T);
 
-        await AdminNotificationServiceMock.DidNotReceive()
+        await host.Resolve<CountersRepository>().SetCounterValue(TestCounterName, 10);
+
+        _ = await handler.Handle(new(TestCounterName));
+
+        await host.AdminNotificationServiceMock.DidNotReceive()
             .SendCounterIncrementedBeyondThresholdNotification(TestCounterName);
     }
 }

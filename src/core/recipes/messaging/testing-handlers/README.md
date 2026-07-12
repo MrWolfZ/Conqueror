@@ -166,18 +166,18 @@ This concludes the tests for [GetCounterValue](Conqueror.Recipes.Messaging.Testi
 
 The [IncrementCounter](Conqueror.Recipes.Messaging.TestingHandlers/IncrementCounter.cs) handler contains something which is quite common: a side-effect. Side-effects are things that happen as the results of calling a handler, but are not directly visible in the handler's response. In this case the side-effect is sending a notification to an administrator whenever a counter is incremented beyond a threshold of 1000 (through the [IAdminNotificationService](Conqueror.Recipes.Messaging.TestingHandlers/IAdminNotificationService.cs)), which is admittedly not very realistic for such a simple application, but it serves well to illustrate how to deal with such side-effects during testing.
 
-In contrast to testing our `GetCounterValue` handler above, we're going to address the test setup in a base class that our handler's test class can inherit from. This allows the test class to fully focus on the tests themselves without a lot of boilerplate. Let's create a new file `TestBase.cs` ([view completed file](.completed/Conqueror.Recipes.Messaging.TestingHandlers.Tests/TestBase.cs)) and add the following content:
+In contrast to testing our `GetCounterValue` handler above, we're going to consolidate the test setup into a dedicated _test host_ class which each test creates and disposes. For test infrastructure like this we prefer composition over inheritance, since it keeps each test explicit and self-contained, and avoids the fragility that base classes tend to introduce. Let's create a new file `TestHost.cs` ([view completed file](.completed/Conqueror.Recipes.Messaging.TestingHandlers.Tests/TestHost.cs)) and add the following content:
 
 ```cs
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Conqueror.Recipes.Messaging.TestingHandlers.Tests;
 
-public abstract class TestBase
+using Microsoft.Extensions.DependencyInjection;
+
+internal sealed class TestHost : IAsyncDisposable
 {
     private readonly ServiceProvider serviceProvider;
 
-    protected TestBase()
+    private TestHost()
     {
         var services = new ServiceCollection();
 
@@ -186,44 +186,30 @@ public abstract class TestBase
         serviceProvider = services.BuildServiceProvider();
     }
 
-    protected IMessageSenders MessageSenders => serviceProvider.GetRequiredService<IMessageSenders>();
+    public IMessageSenders MessageSenders => serviceProvider.GetRequiredService<IMessageSenders>();
 
-    [TearDown]
-    public void TearDown()
-    {
-        serviceProvider.Dispose();
-    }
+    public static TestHost Create() => new();
 
-    protected T Resolve<T>()
+    public ValueTask DisposeAsync() => serviceProvider.DisposeAsync();
+
+    public T Resolve<T>()
         where T : notnull => serviceProvider.GetRequiredService<T>();
 }
 ```
 
-There are a few things to note here. We are creating a new service collection and create the service provider in the class's constructor. There is also a call to `AddApplicationServices`, which is a method we haven't seen before. This method comes from [ServiceCollectionExtensions.cs](Conqueror.Recipes.Messaging.TestingHandlers/ServiceCollectionExtensions.cs) and registers all services contained in its project. This is a recommended practice for modular system design.
+There are a few things to note here. The constructor is private, and instances are created through the static `Create` factory method. The class implements `IAsyncDisposable`, so each test can create its own host with `await using` and have the service provider disposed automatically at the end of the test. There is also a call to `AddApplicationServices`, which is a method we haven't seen before. This method comes from [ServiceCollectionExtensions.cs](Conqueror.Recipes.Messaging.TestingHandlers/ServiceCollectionExtensions.cs) and registers all services contained in its project. This is a recommended practice for modular system design.
 
-The class uses the `[TearDown]` attribute to dispose the service provider after each test. For some testing frameworks there is another aspect you need to be careful of: they might re-use the same class instance for multiple tests. This could cause undesired side-effects, and therefore we recommend to configure your test framework to create a new class instance for each test. Since we are using [NUnit](https://nunit.org) in this recipe, we can do this with an assembly attribute in a new file `AssemblyAttributes.cs` ([view completed file](.completed/Conqueror.Recipes.Messaging.TestingHandlers.Tests/AssemblyAttributes.cs)).
-
-```cs
-[assembly: FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-```
-
-Now we can use this test base for our `IncrementCounter` handler tests. Create a new test class called `IncrementCounterTests.cs` ([view completed file](.completed/Conqueror.Recipes.Messaging.TestingHandlers.Tests/IncrementCounterTests.cs)) with some helper constants and properties:
+Now we can use this test host for our `IncrementCounter` handler tests. Create a new test class called `IncrementCounterTests.cs` ([view completed file](.completed/Conqueror.Recipes.Messaging.TestingHandlers.Tests/IncrementCounterTests.cs)) with a helper constant:
 
 ```cs
 namespace Conqueror.Recipes.Messaging.TestingHandlers.Tests;
 
 [TestFixture]
-public class IncrementCounterTests : TestBase
+public class IncrementCounterTests
 {
     private const string TestCounterName = "test-counter";
-
-    private IncrementCounter.IHandler Handler => MessageSenders.For(IncrementCounter.T);
-
-    private CountersRepository CountersRepository => Resolve<CountersRepository>();
 }
 ```
-
-The `Handler` and `CountersRepository` properties allow accessing the handler and repository conveniently in each test.
 
 Our first test is going to validate what happens when we increment a non-existing counter:
 
@@ -231,9 +217,13 @@ Our first test is going to validate what happens when we increment a non-existin
 [Test]
 public async Task GivenNonExistingCounter_WhenIncrementingCounter_CounterIsCreatedAndInitialValueIsReturned()
 {
-    var response = await Handler.Handle(new(TestCounterName));
+    await using var host = TestHost.Create();
 
-    var storedCounterValue = await CountersRepository.GetCounterValue(TestCounterName);
+    var handler = host.MessageSenders.For(IncrementCounter.T);
+
+    var response = await handler.Handle(new(TestCounterName));
+
+    var storedCounterValue = await host.Resolve<CountersRepository>().GetCounterValue(TestCounterName);
 
     Assert.That(storedCounterValue, Is.EqualTo(1).And.EqualTo(response.NewCounterValue));
 }
@@ -249,11 +239,15 @@ Let's add another test for incrementing an existing counter:
 [Test]
 public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncrementedAndValueIsReturned()
 {
-    await CountersRepository.SetCounterValue(TestCounterName, 10);
+    await using var host = TestHost.Create();
 
-    var response = await Handler.Handle(new(TestCounterName));
+    var handler = host.MessageSenders.For(IncrementCounter.T);
 
-    var storedCounterValue = await CountersRepository.GetCounterValue(TestCounterName);
+    await host.Resolve<CountersRepository>().SetCounterValue(TestCounterName, 10);
+
+    var response = await handler.Handle(new(TestCounterName));
+
+    var storedCounterValue = await host.Resolve<CountersRepository>().GetCounterValue(TestCounterName);
 
     Assert.That(storedCounterValue, Is.EqualTo(11).And.EqualTo(response.NewCounterValue));
 }
@@ -268,19 +262,19 @@ global using NUnit.Framework;
 + global using NSubstitute;
 ```
 
-Since we resolve the handler from the service provider for testing, we need to register the mock object in the service provider. Apply the following changes to `TestBase.cs` ([view completed file](.completed/Conqueror.Recipes.Messaging.TestingHandlers.Tests/TestBase.cs)) to replace `IAdminNotificationService` with a mock object:
+Since we resolve the handler from the service provider for testing, we need to register the mock object in the service provider. Apply the following changes to `TestHost.cs` ([view completed file](.completed/Conqueror.Recipes.Messaging.TestingHandlers.Tests/TestHost.cs)) to replace `IAdminNotificationService` with a mock object:
 
 ```diff
+  namespace Conqueror.Recipes.Messaging.TestingHandlers.Tests;
+
   using Microsoft.Extensions.DependencyInjection;
 + using Microsoft.Extensions.DependencyInjection.Extensions;
 
-  namespace Conqueror.Recipes.Messaging.TestingHandlers.Tests;
-
-  public abstract class TestBase
+  internal sealed class TestHost : IAsyncDisposable
   {
       private readonly ServiceProvider serviceProvider;
 
-      protected TestBase()
+      private TestHost()
       {
           var services = new ServiceCollection();
 
@@ -291,16 +285,14 @@ Since we resolve the handler from the service provider for testing, we need to r
           serviceProvider = services.BuildServiceProvider();
       }
 
-      protected IMessageSenders MessageSenders => serviceProvider.GetRequiredService<IMessageSenders>();
+      public IMessageSenders MessageSenders => serviceProvider.GetRequiredService<IMessageSenders>();
 +
-+     protected IAdminNotificationService AdminNotificationServiceMock { get; } =
++     public IAdminNotificationService AdminNotificationServiceMock { get; } =
 +         Substitute.For<IAdminNotificationService>();
 
-      [TearDown]
-      public void TearDown()
-      {
-          serviceProvider.Dispose();
-      }
+      public static TestHost Create() => new();
+
+      public ValueTask DisposeAsync() => serviceProvider.DisposeAsync();
   }
 ```
 
@@ -312,16 +304,20 @@ With this change we can now write a test to verify that the notification is sent
 [Test]
 public async Task GivenExistingCounter_WhenIncrementingCounterAboveThreshold_AdminNotificationIsSent()
 {
-    await CountersRepository.SetCounterValue(TestCounterName, 999);
+    await using var host = TestHost.Create();
 
-    _ = await Handler.Handle(new(TestCounterName));
+    var handler = host.MessageSenders.For(IncrementCounter.T);
 
-    await AdminNotificationServiceMock.Received(1)
+    await host.Resolve<CountersRepository>().SetCounterValue(TestCounterName, 999);
+
+    _ = await handler.Handle(new(TestCounterName));
+
+    await host.AdminNotificationServiceMock.Received(1)
         .SendCounterIncrementedBeyondThresholdNotification(TestCounterName);
 }
 ```
 
-Still short and clear thanks to our `TestBase`.
+Still short and clear thanks to our `TestHost`.
 
 For completeness, let's also add a test for the negative case, i.e. that no notification is sent as long as a counter is incremented below the threshold.
 
@@ -329,11 +325,15 @@ For completeness, let's also add a test for the negative case, i.e. that no noti
 [Test]
 public async Task GivenExistingCounter_WhenIncrementingCounterBelowThreshold_NoAdminNotificationIsSent()
 {
-    await CountersRepository.SetCounterValue(TestCounterName, 10);
+    await using var host = TestHost.Create();
 
-    _ = await Handler.Handle(new(TestCounterName));
+    var handler = host.MessageSenders.For(IncrementCounter.T);
 
-    await AdminNotificationServiceMock.DidNotReceive()
+    await host.Resolve<CountersRepository>().SetCounterValue(TestCounterName, 10);
+
+    _ = await handler.Handle(new(TestCounterName));
+
+    await host.AdminNotificationServiceMock.DidNotReceive()
         .SendCounterIncrementedBeyondThresholdNotification(TestCounterName);
 }
 ```
@@ -342,8 +342,8 @@ And that concludes this recipe for testing message handlers with **Conqueror**. 
 
 - always test handlers through `IMessageSenders.For(MessageType.T)` to get the handler interface
 - focus on testing the public API (i.e. messages) of your application instead of testing implementation details
-- consolidate common setup logic into a base class
-- minimize the amount of mocking of external dependencies like databases, but if you need to mock them, create the mocks centrally in a test base class
+- consolidate common setup logic into a test host class that each test creates and disposes via `await using`
+- minimize the amount of mocking of external dependencies like databases, but if you need to mock them, create the mocks centrally in the test host
 
 As the next step you can explore other messaging recipes.
 

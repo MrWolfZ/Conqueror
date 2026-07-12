@@ -169,6 +169,10 @@ Before considering a recipe complete:
 5. **Progressive**: Build complexity gradually through the recipe
 6. **Practical**: Use realistic examples that demonstrate real-world usage
 
+## Test Projects in Recipes
+
+In recipe test projects, use a composition-based `TestHost` class, never a test base class. See the [testing-handlers recipe](./messaging/testing-handlers/.completed/Conqueror.Recipes.Messaging.TestingHandlers.Tests/TestHost.cs) as example.
+
 ## Common Pitfalls
 
 1. **Forgetting the source generators project reference** when using project references (causes `IHandler` not found errors)
