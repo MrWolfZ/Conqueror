@@ -33,12 +33,16 @@ dotnet_naming_rule.types_should_be_pascal_case.symbols = types
 dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
 dotnet_naming_rule.types_should_be_pascal_case.severity = error
 
+dotnet_naming_rule.interfaces_should_be_prefixed_pascal_case.symbols = interfaces
+dotnet_naming_rule.interfaces_should_be_prefixed_pascal_case.style = interface_pascal_case
+dotnet_naming_rule.interfaces_should_be_prefixed_pascal_case.severity = error
+
 dotnet_naming_rule.parameter.symbols = parameter
 dotnet_naming_rule.parameter.style = camel_case
 dotnet_naming_rule.parameter.severity = error
 
-dotnet_naming_symbols.interface.applicable_kinds = interface
-dotnet_naming_symbols.interface.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.interfaces.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
 
 dotnet_naming_symbols.types.applicable_kinds = class, struct, interface, enum, delegate
 dotnet_naming_symbols.types.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
@@ -54,6 +58,8 @@ dotnet_naming_symbols.parameter.applicable_kinds = parameter
 
 dotnet_naming_style.camel_case.capitalization = camel_case
 dotnet_naming_style.pascal_case.capitalization = pascal_case
+dotnet_naming_style.interface_pascal_case.capitalization = pascal_case
+dotnet_naming_style.interface_pascal_case.required_prefix = I
 dotnet_naming_style.first_word_upper.capitalization = first_word_upper
 dotnet_naming_style.all_upper.capitalization = all_upper
 dotnet_naming_style.all_lower.capitalization = all_lower
@@ -2091,7 +2097,7 @@ dotnet_diagnostic.s3218.severity = error # Inner class members should not shadow
 dotnet_diagnostic.s3220.severity = error # Method calls should not resolve ambiguously to overloads with "params" (https://rules.sonarsource.com/csharp/RSPEC-3220/)
 dotnet_diagnostic.s3234.severity = none # "GC.SuppressFinalize" should not be invoked for types without destructors (https://rules.sonarsource.com/csharp/RSPEC-3234/)
 dotnet_diagnostic.s3235.severity = none # Redundant parentheses should not be used (https://rules.sonarsource.com/csharp/RSPEC-3235/)
-dotnet_diagnostic.s3236.severity = error # Caller information arguments should not be provided explicitly (https://rules.sonarsource.com/csharp/RSPEC-3236/)
+dotnet_diagnostic.s3236.severity = suggestion # Caller information arguments should not be provided explicitly (https://rules.sonarsource.com/csharp/RSPEC-3236/)
 dotnet_diagnostic.s3237.severity = error # "value" contextual keyword should be used (https://rules.sonarsource.com/csharp/RSPEC-3237/)
 dotnet_diagnostic.s3240.severity = none # The simplest possible condition syntax should be used (https://rules.sonarsource.com/csharp/RSPEC-3240/)
 dotnet_diagnostic.s3241.severity = suggestion # Methods should not return values that are never used (https://rules.sonarsource.com/csharp/RSPEC-3241/)
