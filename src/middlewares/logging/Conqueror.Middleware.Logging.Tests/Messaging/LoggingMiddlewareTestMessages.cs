@@ -59,12 +59,28 @@ public static partial class LoggingMiddlewareTestMessages
                      let willLog = logLevel is not LogLevel.None && logLevel >= configuredLogLevel
                      // to reduce the number of test cases we don't test generate additional cases
                      // when we know that nothing will be logged anyway
-                     from hasException in willLog ? new[] { true, false } : [false]
+                     from hasException in willLog
+                         ? new[]
+                         {
+                             true,
+                             false,
+                         }
+                         : [false]
                      from payloadLoggingStrategy in willLog ? allPayloadLoggingStrategies : [null]
                      from payloadLoggingStrategyFromFactory in willLog
-                         ? new PayloadLoggingStrategy?[] { null, PayloadLoggingStrategy.Raw }
+                         ? new PayloadLoggingStrategy?[]
+                         {
+                             null,
+                             PayloadLoggingStrategy.Raw,
+                         }
                          : [null]
-                     from hasCustomCategoryFactory in willLog && payloadLoggingStrategy is null ? new[] { true, false } : [false]
+                     from hasCustomCategoryFactory in willLog && payloadLoggingStrategy is null
+                         ? new[]
+                         {
+                             true,
+                             false,
+                         }
+                         : [false]
                      from hookTestBehavior in willLog && payloadLoggingStrategy is null
                          ? allHookTestBehaviors
                          : [HookTestBehavior.HookLogsAndReturnsTrue]
@@ -110,9 +126,23 @@ public static partial class LoggingMiddlewareTestMessages
         PayloadLoggingStrategy?[] allPayloadLoggingStrategies = [null, .. Enum.GetValues<PayloadLoggingStrategy>()];
 
         foreach (
-            var t in from hasException in new[] { true, false }
-                     from stackTraceCaptureIsDisabled in hasException ? new[] { true, false } : [false]
-                     from hasCustomCategoryFactory in new[] { true, false }
+            var t in from hasException in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from stackTraceCaptureIsDisabled in hasException
+                         ? new[]
+                         {
+                             true,
+                             false,
+                         }
+                         : [false]
+                     from hasCustomCategoryFactory in new[]
+                     {
+                         true,
+                         false,
+                     }
                      from payloadLoggingStrategy in allPayloadLoggingStrategies
                      select (hasException, stackTraceCaptureIsDisabled, hasCustomCategoryFactory, payloadLoggingStrategy)
         )

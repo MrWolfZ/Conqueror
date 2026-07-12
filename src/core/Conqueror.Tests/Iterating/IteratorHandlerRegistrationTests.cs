@@ -133,7 +133,8 @@ public sealed partial class IteratorHandlerRegistrationTests
 
         var expectedRegistrations = new[]
         {
-            (typeof(TestIterator), typeof(MultiTestIteratorHandler)), (typeof(TestIterator2), typeof(MultiTestIteratorHandler)),
+            (typeof(TestIterator), typeof(MultiTestIteratorHandler)),
+            (typeof(TestIterator2), typeof(MultiTestIteratorHandler)),
         };
 
         Assert.That(handlerRegistrations, Is.EquivalentTo(expectedRegistrations));

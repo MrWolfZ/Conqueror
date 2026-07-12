@@ -199,7 +199,11 @@ public sealed partial class IteratorHandlerFunctionalityDefaultTests : IteratorH
         _ = await ConsumeAll(handler1.Handle(iterator1, CancellationToken.None));
         _ = await ConsumeAll(handler2.Handle(iterator2, CancellationToken.None));
 
-        Assert.That(observations.Iterators, Is.EqualTo(new object[] { iterator1, iterator2 }));
+        Assert.That(observations.Iterators, Is.EqualTo(new object[]
+        {
+            iterator1,
+            iterator2,
+        }));
     }
 
     [Test]

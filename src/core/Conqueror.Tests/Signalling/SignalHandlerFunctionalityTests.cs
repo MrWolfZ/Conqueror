@@ -215,7 +215,11 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
         await handler1.Handle(signal1, CancellationToken.None);
         await handler2.Handle(signal2, CancellationToken.None);
 
-        Assert.That(observations.Signals, Is.EqualTo(new object[] { signal1, signal2 }));
+        Assert.That(observations.Signals, Is.EqualTo(new object[]
+        {
+            signal1,
+            signal2,
+        }));
     }
 
     [Test]
@@ -237,7 +241,11 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
         await handler1.Handle(signal1, CancellationToken.None);
         await handler2.Handle(signal2, CancellationToken.None);
 
-        Assert.That(observations.Signals, Is.EqualTo(new object[] { signal1, signal2 }));
+        Assert.That(observations.Signals, Is.EqualTo(new object[]
+        {
+            signal1,
+            signal2,
+        }));
     }
 
     [Test]
@@ -256,7 +264,11 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
 
         await handler.Handle(signal, CancellationToken.None);
 
-        Assert.That(observations.Signals, Is.EqualTo(new object[] { signal, signal }));
+        Assert.That(observations.Signals, Is.EqualTo(new object[]
+        {
+            signal,
+            signal,
+        }));
     }
 
     [Test]
@@ -275,7 +287,11 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
 
         await handler.Handle(signal, CancellationToken.None);
 
-        Assert.That(observations.Signals, Is.EqualTo(new object[] { signal, signal }));
+        Assert.That(observations.Signals, Is.EqualTo(new object[]
+        {
+            signal,
+            signal,
+        }));
     }
 
     [Test]

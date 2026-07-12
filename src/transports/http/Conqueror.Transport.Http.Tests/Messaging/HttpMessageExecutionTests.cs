@@ -286,14 +286,14 @@ public sealed class HttpMessageExecutionTests
             .First(tc =>
                 tc
                     is
-                {
-                    NumOfReceivers: 1,
-                    HandlerIsEnabled: true,
-                    ExpectedReceivedMessages.Count: > 0,
-                    HttpMethod: MethodNames.Post,
-                    MessageContentType: MediaTypeNames.Application.Json,
-                    ResponseContentType: MediaTypeNames.Application.Json,
-                }
+                    {
+                        NumOfReceivers: 1,
+                        HandlerIsEnabled: true,
+                        ExpectedReceivedMessages.Count: > 0,
+                        HttpMethod: MethodNames.Post,
+                        MessageContentType: MediaTypeNames.Application.Json,
+                        ResponseContentType: MediaTypeNames.Application.Json,
+                    }
             );
 
         await using var host = testCase.CreateTestHost();

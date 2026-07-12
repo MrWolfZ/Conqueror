@@ -825,7 +825,11 @@ public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestH
         TTestClass.CreateSimpleSuccessTestCases().Select(tc => new TestCaseData(tc).SetName(tc.Name));
 
     private static IEnumerable<TestCaseData> CreateShutdownTestCasesPrivate() =>
-        new[] { true, false }.SelectMany(b =>
+        new[]
+        {
+            true,
+            false,
+        }.SelectMany(b =>
             TTestClass
                 .CreateSimpleSuccessTestCases()
                 .Select(tc => new TestCaseData(tc, b).SetName($"{tc.Name} with useCancel={b}"))

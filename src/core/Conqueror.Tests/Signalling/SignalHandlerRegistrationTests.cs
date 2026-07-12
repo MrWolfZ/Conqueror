@@ -133,7 +133,11 @@ public sealed partial class SignalHandlerRegistrationTests
             .Select(r => (r.SignalType, r.HandlerType))
             .ToList();
 
-        var expectedRegistrations = new[] { (typeof(TestSignal), typeof(MultiTestSignalHandler)), (typeof(TestSignal2), typeof(MultiTestSignalHandler)), };
+        var expectedRegistrations = new[]
+        {
+            (typeof(TestSignal), typeof(MultiTestSignalHandler)),
+            (typeof(TestSignal2), typeof(MultiTestSignalHandler)),
+        };
 
         Assert.That(handlerRegistrations, Is.EquivalentTo(expectedRegistrations));
     }

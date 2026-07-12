@@ -151,7 +151,13 @@ public sealed partial class IteratorMiddlewareFunctionalityTests
 
         Assert.That(
             observations.IteratorsFromMiddlewares,
-            Is.EqualTo(new object[] { iterator1, iterator1, iterator2, iterator2 })
+            Is.EqualTo(new object[]
+            {
+                iterator1,
+                iterator1,
+                iterator2,
+                iterator2,
+            })
         );
         Assert.That(
             observations.MiddlewareTypes,
@@ -1545,7 +1551,11 @@ public sealed partial class IteratorMiddlewareFunctionalityTests
                 Assert.That(pipeline, Has.Count.EqualTo(expected: 2));
                 Assert.That(
                     pipeline,
-                    Is.EqualTo(new IIteratorMiddleware<TestIterator, int>[] { middleware1, middleware2 })
+                    Is.EqualTo(new IIteratorMiddleware<TestIterator, int>[]
+                    {
+                        middleware1,
+                        middleware2,
+                    })
                 );
             }
         );
@@ -1567,7 +1577,11 @@ public sealed partial class IteratorMiddlewareFunctionalityTests
                     Assert.That(pipeline, Has.Count.EqualTo(expected: 2));
                     Assert.That(
                         pipeline,
-                        Is.EqualTo(new IIteratorMiddleware<TestIterator, int>[] { middleware1, middleware2 })
+                        Is.EqualTo(new IIteratorMiddleware<TestIterator, int>[]
+                        {
+                            middleware1,
+                            middleware2,
+                        })
                     );
                 })
                 .Handle(iterator, CancellationToken.None)

@@ -334,7 +334,11 @@ public sealed partial class SignalBroadcastingStrategyTests
             Throws
                 .InstanceOf<AggregateException>()
                 .With.Property("InnerExceptions")
-                .EquivalentTo(new[] { exception1, exception2 })
+                .EquivalentTo(new[]
+                {
+                    exception1,
+                    exception2,
+                })
         );
 
         Assert.That(
@@ -594,7 +598,8 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                     }
                 )
                 .After(delay: 100)
@@ -609,7 +614,8 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                         (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
                     }
                 )
@@ -627,8 +633,10 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
                 }
             )
         );
@@ -674,7 +682,8 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                     (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
                 }
             )
@@ -725,13 +734,21 @@ public sealed partial class SignalBroadcastingStrategyTests
             Throws
                 .InstanceOf<AggregateException>()
                 .With.Property("InnerExceptions")
-                .EquivalentTo(new[] { exception1, exception2 })
+                .EquivalentTo(new[]
+                {
+                    exception1,
+                    exception2,
+                })
         );
 
         Assert.That(
             observations.ObservedHandlerExecutions,
             Is.EquivalentTo(
-                new[] { (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start), }
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                }
             )
         );
     }
@@ -768,8 +785,10 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
                 }
             )
         );
@@ -818,7 +837,8 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                     (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
                 }
             )
@@ -873,7 +893,11 @@ public sealed partial class SignalBroadcastingStrategyTests
         Assert.That(
             observations.ObservedHandlerExecutions,
             Is.EquivalentTo(
-                new[] { (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start), }
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                }
             )
         );
     }
@@ -935,7 +959,11 @@ public sealed partial class SignalBroadcastingStrategyTests
         Assert.That(
             observations.ObservedHandlerExecutions,
             Is.EquivalentTo(
-                new[] { (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start), }
+                new[]
+                {
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                }
             )
         );
     }
@@ -980,7 +1008,8 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                     }
                 )
                 .After(delay: 100)
@@ -995,8 +1024,10 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                        (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
                     }
                 )
                 .After(delay: 100)
@@ -1011,8 +1042,10 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                        (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
                         (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
                     }
                 )
@@ -1030,9 +1063,12 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.End),
                 }
             )
         );

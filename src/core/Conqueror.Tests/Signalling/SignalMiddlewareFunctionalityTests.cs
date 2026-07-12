@@ -1288,7 +1288,11 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                 _ = pipeline.Use(middleware1).Use(middleware2);
 
                 Assert.That(pipeline, Has.Count.EqualTo(expected: 2));
-                Assert.That(pipeline, Is.EqualTo(new ISignalMiddleware<TestSignal>[] { middleware1, middleware2 }));
+                Assert.That(pipeline, Is.EqualTo(new ISignalMiddleware<TestSignal>[]
+                {
+                    middleware1,
+                    middleware2,
+                }));
             }
         );
 
@@ -1306,7 +1310,11 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                 _ = pipeline.Use(middleware1).Use(middleware2);
 
                 Assert.That(pipeline, Has.Count.EqualTo(expected: 2));
-                Assert.That(pipeline, Is.EqualTo(new ISignalMiddleware<TestSignal>[] { middleware1, middleware2 }));
+                Assert.That(pipeline, Is.EqualTo(new ISignalMiddleware<TestSignal>[]
+                {
+                    middleware1,
+                    middleware2,
+                }));
             })
             .Handle(signal, CancellationToken.None);
     }

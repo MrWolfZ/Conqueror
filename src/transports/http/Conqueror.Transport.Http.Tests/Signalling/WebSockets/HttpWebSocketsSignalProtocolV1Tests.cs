@@ -79,7 +79,13 @@ public sealed class HttpWebSocketsSignalProtocolV1Tests
     {
         await using var ms = new FlushResetMemoryStream();
 
-        await ms.WriteAsync(new byte[] { 1 << 4, 0, 0, 1 }, CancellationToken.None);
+        await ms.WriteAsync(new byte[]
+        {
+            1 << 4,
+            0,
+            0,
+            1,
+        }, CancellationToken.None);
         await ms.FlushAsync(CancellationToken.None);
 
         await Assert.ThatAsync(

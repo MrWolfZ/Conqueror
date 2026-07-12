@@ -7,11 +7,22 @@ public sealed class HttpMessageTcpTests
 {
     private static readonly object[] HttpVersionTestCases =
     [
-        new object[] { HttpProtocols.Http1, HttpVersion.Version11, HttpVersionPolicy.RequestVersionExact },
-        new object[] { HttpProtocols.Http2, HttpVersion.Version20, HttpVersionPolicy.RequestVersionExact },
         new object[]
         {
-            HttpProtocols.Http1AndHttp2, HttpVersion.Version20,
+            HttpProtocols.Http1,
+            HttpVersion.Version11,
+            HttpVersionPolicy.RequestVersionExact,
+        },
+        new object[]
+        {
+            HttpProtocols.Http2,
+            HttpVersion.Version20,
+            HttpVersionPolicy.RequestVersionExact,
+        },
+        new object[]
+        {
+            HttpProtocols.Http1AndHttp2,
+            HttpVersion.Version20,
             HttpVersionPolicy.RequestVersionOrLower, // because we are not using HTTPS here, this will cause a downgrade to HTTP/1.1
         },
     ];

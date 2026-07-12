@@ -200,10 +200,26 @@ public partial class FileSystemMessageBenchmarks
     public static IEnumerable<object?[]> Arguments()
     {
         foreach (
-            var t in from numOfMessages in new[] { 10, 100 }
-                     from numOfSenders in new[] { 1, 5 }
-                     from numOfReceivers in new[] { 1, 5 }
-                     from runSendersAndReceiversInSameHost in new[] { true, false }
+            var t in from numOfMessages in new[]
+                     {
+                         10,
+                         100,
+                     }
+                     from numOfSenders in new[]
+                     {
+                         1,
+                         5,
+                     }
+                     from numOfReceivers in new[]
+                     {
+                         1,
+                         5,
+                     }
+                     from runSendersAndReceiversInSameHost in new[]
+                     {
+                         true,
+                         false,
+                     }
                      select (numOfMessages, numOfSenders, numOfReceivers, runSendersAndReceiversInSameHost)
         )
         {

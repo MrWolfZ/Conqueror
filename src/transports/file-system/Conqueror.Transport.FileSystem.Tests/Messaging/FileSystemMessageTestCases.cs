@@ -479,8 +479,16 @@ public static partial class FileSystemMessageTestCases
             ],
             ExpectedResponses =
             [
-                new TestMessageResponse[] { new() { Payload = 11 }, new() { Payload = 12 }, },
-                new TestMessageResponse[] { new() { Payload = 21 }, new() { Payload = 22 }, },
+                new TestMessageResponse[]
+                {
+                    new() { Payload = 11 },
+                    new() { Payload = 12 },
+                },
+                new TestMessageResponse[]
+                {
+                    new() { Payload = 21 },
+                    new() { Payload = 22 },
+                },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithArrayResponseHandler>(),
             SendMessages = async (s, ct) =>
@@ -637,9 +645,21 @@ public static partial class FileSystemMessageTestCases
         };
 
         foreach (
-            var t in from hasResponse in new[] { true, false }
-                     from isSync in new[] { true, false }
-                     from configuresPipeline in new[] { true, false }
+            var t in from hasResponse in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from isSync in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from configuresPipeline in new[]
+                     {
+                         true,
+                         false,
+                     }
                      select (hasResponse, isSync, configuresPipeline)
         )
         {
@@ -1303,10 +1323,26 @@ public static partial class FileSystemMessageTestCases
     public static IEnumerable<FileSystemMessageConformityContextTestCase> CreateContextTestCases()
     {
         foreach (
-            var t in from hasActivity in new[] { true, false }
-                     from hasDownstream in new[] { true, false }
-                     from hasUpstream in new[] { true, false }
-                     from hasBidirectional in new[] { true, false }
+            var t in from hasActivity in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from hasDownstream in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from hasUpstream in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from hasBidirectional in new[]
+                     {
+                         true,
+                         false,
+                     }
                      select (hasActivity, hasDownstream, hasUpstream, hasBidirectional)
         )
         {

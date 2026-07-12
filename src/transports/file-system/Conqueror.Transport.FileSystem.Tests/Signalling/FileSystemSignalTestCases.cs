@@ -769,9 +769,21 @@ public static partial class FileSystemSignalTestCases
     public static IEnumerable<FileSystemSignalConformityContextTestCase> CreateContextTestCases()
     {
         foreach (
-            var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[] { true, false }
-                                                                  from hasDownstream in new[] { true, false }
-                                                                  from hasBidirectional in new[] { true, false }
+            var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[]
+                                                                  {
+                                                                      true,
+                                                                      false,
+                                                                  }
+                                                                  from hasDownstream in new[]
+                                                                  {
+                                                                      true,
+                                                                      false,
+                                                                  }
+                                                                  from hasBidirectional in new[]
+                                                                  {
+                                                                      true,
+                                                                      false,
+                                                                  }
                                                                   select (hasActivity, hasDownstream, hasBidirectional)
         )
         {

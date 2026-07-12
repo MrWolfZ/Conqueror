@@ -73,6 +73,7 @@ csharp_indent_case_contents_when_block = false
 csharp_indent_labels = flush_left
 csharp_indent_switch_labels = true
 csharp_max_initializer_elements_on_line = 1
+csharp_max_array_initializer_elements_on_line = 1
 csharp_new_line_before_catch = true
 csharp_new_line_before_else = true
 csharp_new_line_before_finally = true

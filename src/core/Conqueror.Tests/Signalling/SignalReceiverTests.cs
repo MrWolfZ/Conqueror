@@ -123,7 +123,12 @@ internal sealed partial class SignalReceiverTests
         >(signal2, CancellationToken.None);
         await receiver2.Receive(signal3, CancellationToken.None);
 
-        Assert.That(observations.ReceivedSignals, Is.EquivalentTo(new object[] { signal1, signal2, signal3 }));
+        Assert.That(observations.ReceivedSignals, Is.EquivalentTo(new object[]
+        {
+            signal1,
+            signal2,
+            signal3,
+        }));
     }
 
     [Test]

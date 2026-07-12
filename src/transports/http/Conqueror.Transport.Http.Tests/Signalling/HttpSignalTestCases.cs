@@ -1034,9 +1034,21 @@ public static partial class HttpSignalTestCases
     )
     {
         foreach (
-            var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[] { true, false }
-                                                                  from hasDownstream in new[] { true, false }
-                                                                  from hasBidirectional in new[] { true, false }
+            var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[]
+                                                                  {
+                                                                      true,
+                                                                      false,
+                                                                  }
+                                                                  from hasDownstream in new[]
+                                                                  {
+                                                                      true,
+                                                                      false,
+                                                                  }
+                                                                  from hasBidirectional in new[]
+                                                                  {
+                                                                      true,
+                                                                      false,
+                                                                  }
                                                                   select (hasActivity, hasDownstream, hasBidirectional)
         )
         {

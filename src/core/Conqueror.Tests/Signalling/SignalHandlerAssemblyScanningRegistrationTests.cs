@@ -47,7 +47,11 @@ internal partial class SignalHandlerAssemblyScanningRegistrationTests
 
     [Test]
     [TestCase(typeof(TestSignalHandler), new[] { typeof(TestSignal) })]
-    [TestCase(typeof(MultiTestSignalHandler), new[] { typeof(TestSignal), typeof(TestSignal2) })]
+    [TestCase(typeof(MultiTestSignalHandler), new[]
+    {
+        typeof(TestSignal),
+        typeof(TestSignal2),
+    })]
     public void GivenServiceCollection_WhenAddingAllHandlersFromAssemblyMultipleTimes_AddsSignalHandlerAsTransientOnce(
         Type handlerType,
         Type[] signalTypes

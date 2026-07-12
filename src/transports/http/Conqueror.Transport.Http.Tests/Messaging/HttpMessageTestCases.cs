@@ -993,8 +993,16 @@ public static partial class HttpMessageTestCases
             ],
             ExpectedResponses =
             [
-                new TestMessageResponse[] { new() { Payload = 11 }, new() { Payload = 12 } },
-                new TestMessageResponse[] { new() { Payload = 21 }, new() { Payload = 22 } },
+                new TestMessageResponse[]
+                {
+                    new() { Payload = 11 },
+                    new() { Payload = 12 },
+                },
+                new TestMessageResponse[]
+                {
+                    new() { Payload = 21 },
+                    new() { Payload = 22 },
+                },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithArrayResponseHandler>(),
             SendMessages = async (s, ct) =>
@@ -1192,10 +1200,26 @@ public static partial class HttpMessageTestCases
         };
 
         foreach (
-            var t in from hasResponse in new[] { true, false }
-                     from isSync in new[] { true, false }
-                     from configuresPipeline in new[] { true, false }
-                     from configuresReceiver in new[] { true, false }
+            var t in from hasResponse in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from isSync in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from configuresPipeline in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from configuresReceiver in new[]
+                     {
+                         true,
+                         false,
+                     }
                      select (hasResponse, isSync, configuresPipeline, configuresReceiver)
         )
         {
@@ -1699,10 +1723,26 @@ public static partial class HttpMessageTestCases
     public static IEnumerable<HttpMessageConformityContextTestCase> CreateContextTestCases()
     {
         foreach (
-            var t in from hasActivity in new[] { true, false }
-                     from hasDownstream in new[] { true, false }
-                     from hasUpstream in new[] { true, false }
-                     from hasBidirectional in new[] { true, false }
+            var t in from hasActivity in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from hasDownstream in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from hasUpstream in new[]
+                     {
+                         true,
+                         false,
+                     }
+                     from hasBidirectional in new[]
+                     {
+                         true,
+                         false,
+                     }
                      select (hasActivity, hasDownstream, hasUpstream, hasBidirectional)
         )
         {
@@ -2939,7 +2979,7 @@ public static partial class HttpMessageTestCases
         static IHttpMessageSerializer<ThrowingTestMessage, TestMessageResponse> IHttpMessage<
             ThrowingTestMessage,
             TestMessageResponse
-        >.HttpMessageSerializer { get;} = new ThrowingTestMessageSerializer();
+        >.HttpMessageSerializer { get; } = new ThrowingTestMessageSerializer();
     }
 
     private sealed class ThrowingTestMessageSerializer

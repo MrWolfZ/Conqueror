@@ -147,8 +147,17 @@ public partial class MessageBenchmarks
     public static IEnumerable<object?[]> NoConquerorArguments()
     {
         foreach (
-            var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000 }
-                                                  from parallelism in new int?[] { null, 4 }
+            var (numOfExecutions, parallelism) in from numOfExecutions in new[]
+                                                  {
+                                                      1,
+                                                      100,
+                                                      1_000,
+                                                  }
+                                                  from parallelism in new int?[]
+                                                  {
+                                                      null,
+                                                      4,
+                                                  }
                                                   where parallelism is null || numOfExecutions >= parallelism
                                                   select (numOfExecutions, parallelism)
         )
@@ -161,7 +170,12 @@ public partial class MessageBenchmarks
     {
         foreach (
             var (args, numOfMiddlewares) in from args in NoConquerorArguments()
-                                            from numOfMiddlewares in new[] { 0, 10, 100 }
+                                            from numOfMiddlewares in new[]
+                                            {
+                                                0,
+                                                10,
+                                                100,
+                                            }
                                             select (args, numOfMiddlewares)
         )
         {

@@ -11,7 +11,11 @@ internal sealed class ContextDataTestHelper
 
     public static IEnumerable<TestCaseData> GenerateContextDataTestCases(ExecutionOrderItem[] executionOrder)
     {
-        foreach (var dataType in new[] { ContextDataType.String, ContextDataType.Object })
+        foreach (var dataType in new[]
+                 {
+                     ContextDataType.String,
+                     ContextDataType.Object,
+                 })
         {
             foreach (var testCaseData in GenerateDownstreamTestCaseData(dataType, executionOrder))
             {
@@ -64,7 +68,11 @@ internal sealed class ContextDataTestHelper
 
         // overwrite tests
 
-        foreach (var overWriteDataType in new[] { ContextDataType.String, ContextDataType.Object })
+        foreach (var overWriteDataType in new[]
+                 {
+                     ContextDataType.String,
+                     ContextDataType.Object,
+                 })
         {
             for (var i = 0; i < executionOrder.Length - 1; i += 1)
             {
@@ -191,7 +199,11 @@ internal sealed class ContextDataTestHelper
 
         // overwrite tests
 
-        foreach (var overWriteDataType in new[] { ContextDataType.String, ContextDataType.Object })
+        foreach (var overWriteDataType in new[]
+                 {
+                     ContextDataType.String,
+                     ContextDataType.Object,
+                 })
         {
             for (var i = 0; i < executionOrder.Length - 1; i += 1)
             {
@@ -303,7 +315,11 @@ internal sealed class ContextDataTestHelper
 
         // overwrite tests
 
-        foreach (var overWriteDataType in new[] { ContextDataType.String, ContextDataType.Object })
+        foreach (var overWriteDataType in new[]
+                 {
+                     ContextDataType.String,
+                     ContextDataType.Object,
+                 })
         {
             for (var i = 0; i < executionOrder.Length - 1; i += 1)
             {

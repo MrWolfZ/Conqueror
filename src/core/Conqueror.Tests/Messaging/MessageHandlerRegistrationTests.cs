@@ -159,7 +159,11 @@ public sealed partial class MessageHandlerRegistrationTests
             .Select(r => (r.MessageType, r.HandlerType))
             .ToList();
 
-        var expectedRegistrations = new[] { (typeof(TestMessage), typeof(MultiTestMessageHandler)), (typeof(TestMessage2), typeof(MultiTestMessageHandler)), };
+        var expectedRegistrations = new[]
+        {
+            (typeof(TestMessage), typeof(MultiTestMessageHandler)),
+            (typeof(TestMessage2), typeof(MultiTestMessageHandler)),
+        };
 
         Assert.That(handlerRegistrations, Is.EquivalentTo(expectedRegistrations));
     }

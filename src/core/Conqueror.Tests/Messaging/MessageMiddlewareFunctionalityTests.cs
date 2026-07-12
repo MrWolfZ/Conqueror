@@ -190,7 +190,13 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         Assert.That(
             observations.MessagesFromMiddlewares,
-            Is.EqualTo(new object[] { message1, message1, message2, message2 })
+            Is.EqualTo(new object[]
+            {
+                message1,
+                message1,
+                message2,
+                message2,
+            })
         );
         Assert.That(
             observations.MiddlewareTypes,
@@ -1841,7 +1847,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                 Assert.That(pipeline, Has.Count.EqualTo(expected: 2));
                 Assert.That(
                     pipeline,
-                    Is.EqualTo(new IMessageMiddleware<TestMessage, TestMessageResponse>[] { middleware1, middleware2 })
+                    Is.EqualTo(new IMessageMiddleware<TestMessage, TestMessageResponse>[]
+                    {
+                        middleware1,
+                        middleware2,
+                    })
                 );
             }
         );
@@ -1862,7 +1872,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                 Assert.That(pipeline, Has.Count.EqualTo(expected: 2));
                 Assert.That(
                     pipeline,
-                    Is.EqualTo(new IMessageMiddleware<TestMessage, TestMessageResponse>[] { middleware1, middleware2 })
+                    Is.EqualTo(new IMessageMiddleware<TestMessage, TestMessageResponse>[]
+                    {
+                        middleware1,
+                        middleware2,
+                    })
                 );
             })
             .Handle(message, CancellationToken.None);

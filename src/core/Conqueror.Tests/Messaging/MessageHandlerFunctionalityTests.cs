@@ -278,7 +278,11 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
         _ = await handler1.Handle(message1, CancellationToken.None);
         _ = await handler2.Handle(message2, CancellationToken.None);
 
-        Assert.That(observations.Messages, Is.EqualTo(new object[] { message1, message2 }));
+        Assert.That(observations.Messages, Is.EqualTo(new object[]
+        {
+            message1,
+            message2,
+        }));
     }
 
     [Test]

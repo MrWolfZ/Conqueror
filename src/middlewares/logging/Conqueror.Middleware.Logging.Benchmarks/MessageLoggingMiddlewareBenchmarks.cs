@@ -46,8 +46,19 @@ public partial class MessageLoggingMiddlewareBenchmarks
     public static IEnumerable<object?[]> Arguments()
     {
         foreach (
-            var (numOfExecutions, parallelism) in from numOfExecutions in new[] { 1, 100, 1_000, 10_000, 100_000 }
-                                                  from parallelism in new int?[] { null, 4 }
+            var (numOfExecutions, parallelism) in from numOfExecutions in new[]
+                                                  {
+                                                      1,
+                                                      100,
+                                                      1_000,
+                                                      10_000,
+                                                      100_000,
+                                                  }
+                                                  from parallelism in new int?[]
+                                                  {
+                                                      null,
+                                                      4,
+                                                  }
                                                   where parallelism is null || numOfExecutions >= parallelism
                                                   select (numOfExecutions, parallelism)
         )

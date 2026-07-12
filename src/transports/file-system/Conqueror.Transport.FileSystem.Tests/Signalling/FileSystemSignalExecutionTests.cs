@@ -197,7 +197,11 @@ public sealed partial class FileSystemSignalExecutionTests
 
         Assert.That(
             () => receivedSignals,
-            Is.EquivalentTo(new[] { signal1, signal2 })
+            Is.EquivalentTo(new[]
+                {
+                    signal1,
+                    signal2,
+                })
                 .After(testTimeouts.AssertionTimeoutInMs)
                 .MilliSeconds.PollEvery(milliSeconds: 10)
                 .MilliSeconds
