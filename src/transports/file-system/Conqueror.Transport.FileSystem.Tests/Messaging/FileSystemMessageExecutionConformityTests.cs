@@ -3,16 +3,16 @@ namespace Conqueror.Transport.FileSystem.Tests.Messaging;
 [TestFixture]
 public sealed class FileSystemMessageExecutionConformityTests
     : MessageTransportExecutionConformityTests<
-        FileSystemMessageExecutionConformityTests,
-        FileSystemMessageTransportConformityTestHost,
-        FileSystemMessageConformityExecutionSuccessTestCase,
-        FileSystemMessageConformityExecutionErrorTestCase
-    >,
-        IMessageTransportExecutionConformityTests<
-            FileSystemMessageTransportConformityTestHost,
-            FileSystemMessageConformityExecutionSuccessTestCase,
-            FileSystemMessageConformityExecutionErrorTestCase
-        >
+          FileSystemMessageExecutionConformityTests,
+          FileSystemMessageTransportConformityTestHost,
+          FileSystemMessageConformityExecutionSuccessTestCase,
+          FileSystemMessageConformityExecutionErrorTestCase
+      >,
+      IMessageTransportExecutionConformityTests<
+          FileSystemMessageTransportConformityTestHost,
+          FileSystemMessageConformityExecutionSuccessTestCase,
+          FileSystemMessageConformityExecutionErrorTestCase
+      >
 {
     public static bool TransportSupportsConcurrentReceivers => true;
 

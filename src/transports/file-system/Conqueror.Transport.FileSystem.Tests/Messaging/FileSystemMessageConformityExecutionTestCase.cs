@@ -2,7 +2,7 @@
 
 public abstract class FileSystemMessageConformityExecutionTestCase
     : FileSystemMessageConformityTestCase,
-        IMessageTransportConformityExecutionTestCase<FileSystemMessageTransportConformityTestHost>
+      IMessageTransportConformityExecutionTestCase<FileSystemMessageTransportConformityTestHost>
 {
     private readonly Type? singleResponseType;
 

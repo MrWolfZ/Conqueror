@@ -456,7 +456,7 @@ public sealed partial class IteratorHandlerFunctionalityDefaultTests : IteratorH
 
     private sealed partial class DisposableIteratorHandler(DisposalObservation observation)
         : TestIterator.IHandler,
-            IDisposable
+          IDisposable
     {
         public void Dispose() => observation.WasDisposed = true;
 
@@ -815,7 +815,7 @@ public sealed class IteratorHandlerFunctionalityClientWithSyncTransportFactoryTe
                 .ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
 
             return baseConfigure?.Invoke(b)
-                ?? b.ServiceProvider.GetRequiredService<TestIteratorTransport<TestIterator, int>>();
+                   ?? b.ServiceProvider.GetRequiredService<TestIteratorTransport<TestIterator, int>>();
         });
     }
 }
@@ -843,7 +843,7 @@ public sealed class IteratorHandlerFunctionalityClientWithAsyncTransportFactoryT
                 .ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
 
             return baseConfigure?.Invoke(b)
-                ?? b.ServiceProvider.GetRequiredService<TestIteratorTransport<TestIterator, int>>();
+                   ?? b.ServiceProvider.GetRequiredService<TestIteratorTransport<TestIterator, int>>();
         });
     }
 }

@@ -63,7 +63,11 @@ internal static class IteratorHandlerTypeSources
         foreach (
             var (ns, prefix) in iteratorDescriptors
                 .OrderBy(d => d.IteratorDescriptor.FullyQualifiedName, StringComparer.OrdinalIgnoreCase)
-                .SelectMany(d => d.Attributes, (d, a) => new { d, a })
+                .SelectMany(d => d.Attributes, (d, a) => new
+                {
+                    d,
+                    a,
+                })
                 .Where(t => !string.Equals(t.a.Prefix, "Core", StringComparison.Ordinal))
                 .Select(t => (t.a.Namespace, t.a.Prefix))
                 .Distinct()

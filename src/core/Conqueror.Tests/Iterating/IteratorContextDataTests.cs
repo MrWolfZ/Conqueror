@@ -289,20 +289,20 @@ internal sealed partial class IteratorContextDataTests
     private static class ExecutionOrder
     {
         public static ExecutionOrderItem[] Order =>
-            [
-                new(ContextDepth: 1, DepthInstance: 1, Location.PreExecution),
-                new(ContextDepth: 2, DepthInstance: 1, Location.ClientMiddlewarePreExecution),
-                new(ContextDepth: 3, DepthInstance: 1, Location.HandlerMiddlewarePreExecution),
-                new(ContextDepth: 3, DepthInstance: 1, Location.HandlerPreNestedExecution),
-                new(ContextDepth: 3, DepthInstance: 1, Location.NestedClassPreExecution),
-                new(ContextDepth: 4, DepthInstance: 1, Location.NestedIteratorHandler),
-                new(ContextDepth: 3, DepthInstance: 1, Location.NestedClassPostExecution),
-                new(ContextDepth: 3, DepthInstance: 1, Location.HandlerPostNestedExecution),
-                new(ContextDepth: 3, DepthInstance: 1, Location.HandlerPostFirstItemYielded),
-                new(ContextDepth: 3, DepthInstance: 1, Location.HandlerMiddlewarePostExecution),
-                new(ContextDepth: 2, DepthInstance: 1, Location.ClientMiddlewarePostExecution),
-                new(ContextDepth: 1, DepthInstance: 1, Location.PostExecution),
-            ];
+        [
+            new(ContextDepth: 1, DepthInstance: 1, Location.PreExecution),
+            new(ContextDepth: 2, DepthInstance: 1, Location.ClientMiddlewarePreExecution),
+            new(ContextDepth: 3, DepthInstance: 1, Location.HandlerMiddlewarePreExecution),
+            new(ContextDepth: 3, DepthInstance: 1, Location.HandlerPreNestedExecution),
+            new(ContextDepth: 3, DepthInstance: 1, Location.NestedClassPreExecution),
+            new(ContextDepth: 4, DepthInstance: 1, Location.NestedIteratorHandler),
+            new(ContextDepth: 3, DepthInstance: 1, Location.NestedClassPostExecution),
+            new(ContextDepth: 3, DepthInstance: 1, Location.HandlerPostNestedExecution),
+            new(ContextDepth: 3, DepthInstance: 1, Location.HandlerPostFirstItemYielded),
+            new(ContextDepth: 3, DepthInstance: 1, Location.HandlerMiddlewarePostExecution),
+            new(ContextDepth: 2, DepthInstance: 1, Location.ClientMiddlewarePostExecution),
+            new(ContextDepth: 1, DepthInstance: 1, Location.PostExecution),
+        ];
     }
 
     private sealed record TestDataEntry(int Value);

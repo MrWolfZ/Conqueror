@@ -57,7 +57,8 @@ public sealed partial class SignalHandlerRegistrationTests
     [Test]
     [Combinatorial]
     public void GivenServiceCollection_WhenAddingSignalHandlers_AddsCorrectHandlerRegistrations(
-        [Values("type", "factory", "instance", "delegate", "sync_delegate")] string registrationMethod
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
+        string registrationMethod
     )
     {
         var services = new ServiceCollection();
@@ -106,7 +107,8 @@ public sealed partial class SignalHandlerRegistrationTests
     [Test]
     [Combinatorial]
     public void GivenServiceCollection_WhenAddingSignalHandlerForMultipleSignalTypes_AddsCorrectHandlerRegistrations(
-        [Values("type", "factory", "instance")] string registrationMethod
+        [Values("type", "factory", "instance")]
+        string registrationMethod
     )
     {
         var services = new ServiceCollection();
@@ -131,11 +133,7 @@ public sealed partial class SignalHandlerRegistrationTests
             .Select(r => (r.SignalType, r.HandlerType))
             .ToList();
 
-        var expectedRegistrations = new[]
-        {
-            (typeof(TestSignal), typeof(MultiTestSignalHandler)),
-            (typeof(TestSignal2), typeof(MultiTestSignalHandler)),
-        };
+        var expectedRegistrations = new[] { (typeof(TestSignal), typeof(MultiTestSignalHandler)), (typeof(TestSignal2), typeof(MultiTestSignalHandler)), };
 
         Assert.That(handlerRegistrations, Is.EquivalentTo(expectedRegistrations));
     }
@@ -144,11 +142,13 @@ public sealed partial class SignalHandlerRegistrationTests
     [Combinatorial]
     public void GivenRegisteredHandler_WhenRegisteringSameHandlerDifferently_OverwritesRegistration(
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? initialLifetime,
-        [Values("type", "factory", "instance")] string initialRegistrationMethod,
+        ServiceLifetime? initialLifetime,
+        [Values("type", "factory", "instance")]
+        string initialRegistrationMethod,
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? overwrittenLifetime,
-        [Values("type", "factory", "instance")] string overwrittenRegistrationMethod
+        ServiceLifetime? overwrittenLifetime,
+        [Values("type", "factory", "instance")]
+        string overwrittenRegistrationMethod
     )
     {
         var services = new ServiceCollection();
@@ -232,11 +232,13 @@ public sealed partial class SignalHandlerRegistrationTests
     [Combinatorial]
     public void GivenRegisteredHandler_WhenRegisteringDifferentHandlerForSameSignalType_AddsSeparateRegistration(
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? firstLifetime,
-        [Values("type", "factory", "instance", "delegate", "sync_delegate")] string firstRegistrationMethod,
+        ServiceLifetime? firstLifetime,
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
+        string firstRegistrationMethod,
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? secondLifetime,
-        [Values("type", "factory", "instance", "delegate", "sync_delegate")] string secondRegistrationMethod
+        ServiceLifetime? secondLifetime,
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
+        string secondRegistrationMethod
     )
     {
         var services = new ServiceCollection();

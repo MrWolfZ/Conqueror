@@ -1035,9 +1035,9 @@ public static partial class HttpSignalTestCases
     {
         foreach (
             var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[] { true, false }
-            from hasDownstream in new[] { true, false }
-            from hasBidirectional in new[] { true, false }
-            select (hasActivity, hasDownstream, hasBidirectional)
+                                                                  from hasDownstream in new[] { true, false }
+                                                                  from hasBidirectional in new[] { true, false }
+                                                                  select (hasActivity, hasDownstream, hasBidirectional)
         )
         {
             yield return new()
@@ -1086,8 +1086,8 @@ public static partial class HttpSignalTestCases
     )
         where TSignal : class, IHttpSseSignal<TSignal>, IHttpWebSocketsSignal<TSignal>
         where TIHandler : class,
-            IHttpSseSignalHandler<TSignal, TIHandler>,
-            IHttpWebSocketsSignalHandler<TSignal, TIHandler>
+        IHttpSseSignalHandler<TSignal, TIHandler>,
+        IHttpWebSocketsSignalHandler<TSignal, TIHandler>
     {
         return transportType switch
         {
@@ -1115,8 +1115,8 @@ public static partial class HttpSignalTestCases
     )
         where TSignal : class, IHttpSseSignal<TSignal>, IHttpWebSocketsSignal<TSignal>
         where TIHandler : class,
-            IHttpSseSignalHandler<TSignal, TIHandler>,
-            IHttpWebSocketsSignalHandler<TSignal, TIHandler>
+        IHttpSseSignalHandler<TSignal, TIHandler>,
+        IHttpWebSocketsSignalHandler<TSignal, TIHandler>
     {
         _ = transportType switch
         {
@@ -1266,7 +1266,7 @@ public static partial class HttpSignalTestCases
 
     public sealed partial class MultiTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-            TestSignal2.IHandler
+          TestSignal2.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -1298,7 +1298,7 @@ public static partial class HttpSignalTestCases
 
     public sealed partial class MixedWithNonHttpTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-            NonHttpTestSignal.IHandler
+          NonHttpTestSignal.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -1436,7 +1436,8 @@ public static partial class HttpSignalTestCases
         static IHttpSseSignalSerializer<TestSignalWithCustomSerializer> IHttpSseSignal<TestSignalWithCustomSerializer>.HttpSseSignalSerializer =>
             new TestSignalCustomSseSerializer();
 
-        static IHttpWebSocketsSignalSerializer<TestSignalWithCustomSerializer> IHttpWebSocketsSignal<TestSignalWithCustomSerializer>.HttpWebSocketsSignalSerializer =>
+        static IHttpWebSocketsSignalSerializer<TestSignalWithCustomSerializer> IHttpWebSocketsSignal<TestSignalWithCustomSerializer>.
+            HttpWebSocketsSignalSerializer =>
             new TestSignalCustomWebSocketsSerializer();
     }
 
@@ -1602,9 +1603,9 @@ public static partial class HttpSignalTestCases
 
     public sealed partial class WildMixTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-            TestSignalWithoutPayload.IHandler,
-            TestSignalWithCustomSerializer.IHandler,
-            TestSignalWithCustomJsonTypeInfo.IHandler
+          TestSignalWithoutPayload.IHandler,
+          TestSignalWithCustomSerializer.IHandler,
+          TestSignalWithCustomJsonTypeInfo.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -1655,7 +1656,7 @@ public static partial class HttpSignalTestCases
 
     private sealed partial class MultiHierarchyTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalBase.IHandler,
-            TestSignalSub.IHandler
+          TestSignalSub.IHandler
     {
         public async Task Handle(TestSignalBase signal, CancellationToken cancellationToken = default)
         {
@@ -1772,7 +1773,7 @@ public static partial class HttpSignalTestCases
 
     private sealed class ThrowingTestSignalSerializer
         : IHttpSseSignalSerializer<ThrowingTestSignal>,
-            IHttpWebSocketsSignalSerializer<ThrowingTestSignal>
+          IHttpWebSocketsSignalSerializer<ThrowingTestSignal>
     {
         public Task<string> SerializeSignal(IServiceProvider serviceProvider, ThrowingTestSignal signal) =>
             throw serviceProvider.GetRequiredService<Exception>();

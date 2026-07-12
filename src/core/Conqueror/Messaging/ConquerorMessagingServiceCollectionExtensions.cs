@@ -8,7 +8,8 @@ using Conqueror.Messaging;
 public static class ConquerorMessagingServiceCollectionExtensions
 {
     public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services)
         where THandler : class, IMessageHandler, IMessageHandlerWithSourceGeneration
     {
@@ -19,7 +20,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, ServiceLifetime lifetime)
         where THandler : class, IMessageHandler, IMessageHandlerWithSourceGeneration
     {
@@ -30,7 +32,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, Func<IServiceProvider, THandler> factory)
         where THandler : class, IMessageHandler
     {
@@ -41,7 +44,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, Func<IServiceProvider, THandler> factory, ServiceLifetime lifetime)
         where THandler : class, IMessageHandler, IMessageHandlerWithSourceGeneration
     {
@@ -52,7 +56,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, THandler instance)
         where THandler : class, IMessageHandler, IMessageHandlerWithSourceGeneration
     {
@@ -319,7 +324,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
             if (
                 typeof(THandler).Assembly == assembly
                 && typeof(THandler)
-                    is {
+                    is
+                    {
                         IsInterface: false,
                         IsAbstract: false,
                         ContainsGenericParameters: false,

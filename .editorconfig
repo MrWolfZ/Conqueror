@@ -1,7 +1,7 @@
 [*.{csproj,props,targets,xml,config}]
 indent_style = space
 indent_size = 2
-max_line_length = 120
+max_line_length = 160
 insert_final_newline = true
 
 [*.Containerfile]
@@ -9,16 +9,14 @@ indent_size = 4
 insert_final_newline = true
 
 [*.{cs,csx}]
-# Non-configurable behaviors for CSharpier
 charset = utf-8
 insert_final_newline = true
 trim_trailing_whitespace = true
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
-# Configurable behaviors for CSharpier
 end_of_line = lf
-max_line_length = 120
+max_line_length = 160
 indent_style = space
 indent_size = 4
 
@@ -68,6 +66,7 @@ csharp_indent_case_contents = true
 csharp_indent_case_contents_when_block = false
 csharp_indent_labels = flush_left
 csharp_indent_switch_labels = true
+csharp_max_initializer_elements_on_line = 1
 csharp_new_line_before_catch = true
 csharp_new_line_before_else = true
 csharp_new_line_before_finally = true
@@ -99,6 +98,7 @@ csharp_space_between_method_declaration_name_and_open_parenthesis = false
 csharp_space_between_method_declaration_parameter_list_parentheses = false
 csharp_space_between_parentheses = false
 csharp_space_between_square_brackets = false
+csharp_trailing_comma_in_multiline_lists = true
 
 ## IDE0003 / IDE0009
 dotnet_style_qualification_for_field = false
@@ -325,7 +325,6 @@ resharper_arrange_object_creation_when_type_not_evident_highlighting = hint
 resharper_arrange_object_creation_when_type_not_evident_highlighting = none
 resharper_arrange_redundant_parentheses_highlighting = none
 resharper_arrange_this_qualifier_highlighting = none
-resharper_arrange_trailing_comma_in_multiline_lists_highlighting = error # redundant with CSharpier
 resharper_arrange_trailing_comma_in_multiline_lists_highlighting = none # redundant with MA0007
 resharper_arrange_trailing_comma_in_singleline_lists_highlighting = error
 resharper_arrange_var_keywords_in_deconstructing_declaration_highlighting = hint

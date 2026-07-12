@@ -43,7 +43,8 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Handling {TransportTypeName:l} signal of type '{SignalTypeName}' with payload {@SignalPayload:l} (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handling {TransportTypeName:l} signal of type '{SignalTypeName}' with payload {@SignalPayload:l} (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogSignalForTransportOnReceiver(
         this ILogger logger,
@@ -57,7 +58,8 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Publishing {TransportTypeName:l} signal of type '{SignalTypeName}' with payload {@SignalPayload:l} (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Publishing {TransportTypeName:l} signal of type '{SignalTypeName}' with payload {@SignalPayload:l} (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogSignalForTransportOnPublisher(
         this ILogger logger,
@@ -290,7 +292,8 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Publishing in-process signal of type '{SignalTypeName}' with payload\r\n{@SignalPayload:l}\r\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Publishing in-process signal of type '{SignalTypeName}' with payload\r\n{@SignalPayload:l}\r\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogSignalWithPayloadAsIndentedJsonNonUnixOnPublisher(
         this ILogger logger,
@@ -303,7 +306,8 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Handling {TransportTypeName:l} signal of type '{SignalTypeName}' with payload\n{@SignalPayload:l}\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handling {TransportTypeName:l} signal of type '{SignalTypeName}' with payload\n{@SignalPayload:l}\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogSignalWithPayloadAsIndentedJsonForTransportUnixOnReceiver(
         this ILogger logger,
@@ -317,7 +321,8 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Publishing {TransportTypeName:l} signal of type '{SignalTypeName}' with payload\n{@SignalPayload:l}\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Publishing {TransportTypeName:l} signal of type '{SignalTypeName}' with payload\n{@SignalPayload:l}\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogSignalWithPayloadAsIndentedJsonForTransportUnixOnPublisher(
         this ILogger logger,
@@ -331,7 +336,8 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Handling {TransportTypeName:l} signal of type '{SignalTypeName}' with payload\r\n{@SignalPayload:l}\r\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handling {TransportTypeName:l} signal of type '{SignalTypeName}' with payload\r\n{@SignalPayload:l}\r\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogSignalWithPayloadAsIndentedJsonForTransportNonUnixOnReceiver(
         this ILogger logger,
@@ -345,7 +351,8 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Publishing {TransportTypeName:l} signal of type '{SignalTypeName}' with payload\r\n{@SignalPayload:l}\r\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Publishing {TransportTypeName:l} signal of type '{SignalTypeName}' with payload\r\n{@SignalPayload:l}\r\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogSignalWithPayloadAsIndentedJsonForTransportNonUnixOnPublisher(
         this ILogger logger,

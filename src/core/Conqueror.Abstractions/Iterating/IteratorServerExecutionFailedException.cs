@@ -3,10 +3,14 @@ namespace Conqueror;
 public sealed class IteratorServerExecutionFailedException : Exception
 {
     public IteratorServerExecutionFailedException(string message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     public IteratorServerExecutionFailedException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     private IteratorServerExecutionFailedException() { }
 

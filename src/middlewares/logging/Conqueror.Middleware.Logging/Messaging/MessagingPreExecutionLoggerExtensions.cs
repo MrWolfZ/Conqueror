@@ -43,7 +43,8 @@ internal static partial class MessagingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message",
-        Message = "Handling {TransportTypeName:l} message of type '{MessageTypeName}' with payload {@MessagePayload:l} (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handling {TransportTypeName:l} message of type '{MessageTypeName}' with payload {@MessagePayload:l} (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageForTransportOnReceiver(
         this ILogger logger,
@@ -57,7 +58,8 @@ internal static partial class MessagingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message",
-        Message = "Sending {TransportTypeName:l} message of type '{MessageTypeName}' with payload {@MessagePayload:l} (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sending {TransportTypeName:l} message of type '{MessageTypeName}' with payload {@MessagePayload:l} (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageForTransportOnSender(
         this ILogger logger,
@@ -290,7 +292,8 @@ internal static partial class MessagingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message",
-        Message = "Sending in-process message of type '{MessageTypeName}' with payload\r\n{@MessagePayload:l}\r\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sending in-process message of type '{MessageTypeName}' with payload\r\n{@MessagePayload:l}\r\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageWithPayloadAsIndentedJsonNonUnixOnSender(
         this ILogger logger,
@@ -303,7 +306,8 @@ internal static partial class MessagingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message",
-        Message = "Handling {TransportTypeName:l} message of type '{MessageTypeName}' with payload\n{@MessagePayload:l}\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handling {TransportTypeName:l} message of type '{MessageTypeName}' with payload\n{@MessagePayload:l}\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageWithPayloadAsIndentedJsonForTransportUnixOnReceiver(
         this ILogger logger,
@@ -317,7 +321,8 @@ internal static partial class MessagingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message",
-        Message = "Sending {TransportTypeName:l} message of type '{MessageTypeName}' with payload\n{@MessagePayload:l}\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sending {TransportTypeName:l} message of type '{MessageTypeName}' with payload\n{@MessagePayload:l}\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageWithPayloadAsIndentedJsonForTransportUnixOnSender(
         this ILogger logger,
@@ -331,7 +336,8 @@ internal static partial class MessagingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message",
-        Message = "Handling {TransportTypeName:l} message of type '{MessageTypeName}' with payload\r\n{@MessagePayload:l}\r\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handling {TransportTypeName:l} message of type '{MessageTypeName}' with payload\r\n{@MessagePayload:l}\r\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageWithPayloadAsIndentedJsonForTransportNonUnixOnReceiver(
         this ILogger logger,
@@ -345,7 +351,8 @@ internal static partial class MessagingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message",
-        Message = "Sending {TransportTypeName:l} message of type '{MessageTypeName}' with payload\r\n{@MessagePayload:l}\r\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sending {TransportTypeName:l} message of type '{MessageTypeName}' with payload\r\n{@MessagePayload:l}\r\n(Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageWithPayloadAsIndentedJsonForTransportNonUnixOnSender(
         this ILogger logger,

@@ -3,10 +3,14 @@ namespace Conqueror;
 public abstract class IteratorFailedException : Exception
 {
     protected IteratorFailedException(string? message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     protected IteratorFailedException(string? message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     protected IteratorFailedException() { }
 

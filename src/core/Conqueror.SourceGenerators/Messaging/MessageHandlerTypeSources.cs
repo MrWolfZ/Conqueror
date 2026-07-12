@@ -61,7 +61,11 @@ internal static class MessageHandlerTypeSources
         foreach (
             var (ns, prefix) in messageDescriptors
                 .OrderBy(d => d.MessageDescriptor.FullyQualifiedName, StringComparer.OrdinalIgnoreCase)
-                .SelectMany(d => d.Attributes, (d, a) => new { d, a })
+                .SelectMany(d => d.Attributes, (d, a) => new
+                {
+                    d,
+                    a,
+                })
                 .Where(t => !string.Equals(t.a.Prefix, "Core", StringComparison.Ordinal))
                 .Select(t => (t.a.Namespace, t.a.Prefix))
                 .Distinct()

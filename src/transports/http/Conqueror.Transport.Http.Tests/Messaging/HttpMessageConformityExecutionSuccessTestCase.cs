@@ -2,7 +2,7 @@
 
 public sealed class HttpMessageConformityExecutionSuccessTestCase
     : HttpMessageConformityExecutionTestCase,
-        IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>
+      IMessageTransportConformityExecutionSuccessTestCase<HttpMessageTransportConformityTestHost>
 {
     private readonly string? messageContentType;
     private readonly bool messageContentTypeWasSet;

@@ -8,10 +8,14 @@ namespace Conqueror;
 public sealed class FileSystemMessageFailedOnSenderException : MessageFailedException
 {
     public FileSystemMessageFailedOnSenderException(string message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     public FileSystemMessageFailedOnSenderException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     private FileSystemMessageFailedOnSenderException() { }
 

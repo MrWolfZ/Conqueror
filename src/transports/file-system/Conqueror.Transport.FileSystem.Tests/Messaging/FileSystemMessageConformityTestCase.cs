@@ -34,5 +34,7 @@ public abstract class FileSystemMessageConformityTestCase
     public virtual void ConfigureReceiver(
         FileSystemMessageTransportConformityTestHost host,
         IFileSystemMessageReceiver receiver
-    ) { }
+    )
+    {
+    }
 }

@@ -23,8 +23,10 @@ internal sealed partial class AuthorizationMessageMiddlewareTests
     [Test]
     [Combinatorial]
     public async Task GivenHandlerWithAuthorizationMiddlewareWithChecks_WhenCallingHandler_CallSucceedsOrFailsBasedOnCheckResults(
-        [Values("none", "syncSuccess", "syncFail", "asyncSuccess", "asyncFail")] string authenticationCheck,
-        [Values("none", "syncSuccess", "syncFail", "asyncSuccess", "asyncFail")] string authorizationCheck
+        [Values("none", "syncSuccess", "syncFail", "asyncSuccess", "asyncFail")]
+        string authenticationCheck,
+        [Values("none", "syncSuccess", "syncFail", "asyncSuccess", "asyncFail")]
+        string authorizationCheck
     )
     {
         await using var host = await AuthorizationMiddlewareTestHost.Create(services =>

@@ -29,7 +29,7 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
     public IHeaderDictionary? ReceivedHeadersOnServer { get; private set; }
 
     public ConcurrentQueue<(int StatusCode, string ContentType, bool KeepAlive)?> ServerConnectionResponses { get; } =
-    [];
+        [];
 
     public HttpClient HttpClient => HttpTransportTestHost.HttpClient;
 
@@ -60,8 +60,7 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
                 _ = services
                     .AddConquerorHttpServerAspNetCore()
                     .AddRouting()
-                    .AddSingleton(
-                        ILogger (p) => p.GetRequiredService<ILogger<HttpSignalTransportConformityTestHost>>()
+                    .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<HttpSignalTransportConformityTestHost>>()
                     );
 
                 if (publishCallback is not null)
@@ -73,8 +72,7 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
             },
             app =>
             {
-                _ = app.Use(
-                        async (ctx, next) =>
+                _ = app.Use(async (ctx, next) =>
                         {
                             _ = Interlocked.Increment(ref host.serverCallCount);
                             host.ReceivedHeadersOnServer = ctx.Request.Headers;
@@ -98,8 +96,7 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
                             }
                         }
                     )
-                    .Use(
-                        async (ctx, next) =>
+                    .Use(async (ctx, next) =>
                         {
                             try
                             {
@@ -120,8 +117,7 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
                             }
                         }
                     )
-                    .Use(
-                        async (ctx, next) =>
+                    .Use(async (ctx, next) =>
                         {
                             if (host.serverCancellationToken is null)
                             {
@@ -149,8 +145,7 @@ public sealed class HttpSignalTransportConformityPublisherTestHost : ISignalTran
                             await next();
                         }
                     )
-                    .Use(
-                        async (ctx, next) =>
+                    .Use(async (ctx, next) =>
                         {
                             if (host.ServerConnectionResponses.TryDequeue(out var res) && res.HasValue)
                             {

@@ -17,9 +17,9 @@ internal sealed class HttpWebSocketsSignalJsonSerializer<TSignal> : IHttpWebSock
     )
     {
         return await JsonSerializer
-                .DeserializeAsync(stream, GetJsonTypeInfo(serviceProvider), cancellationToken)
-                .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("failed to deserialize HTTP WebSockets signal");
+                   .DeserializeAsync(stream, GetJsonTypeInfo(serviceProvider), cancellationToken)
+                   .ConfigureAwait(false)
+               ?? throw new InvalidOperationException("failed to deserialize HTTP WebSockets signal");
     }
 
     private static JsonTypeInfo<TSignal> GetJsonTypeInfo(IServiceProvider serviceProvider)

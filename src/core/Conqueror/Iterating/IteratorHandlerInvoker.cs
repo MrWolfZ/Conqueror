@@ -42,14 +42,14 @@ internal sealed class IteratorHandlerInvoker<TIterator, TItem> : IIteratorHandle
 
         return (IAsyncEnumerable<TItm>)
             (object)
-                dispatcher.Dispatch(
-                    (iterator as TIterator)!,
-                    serviceProvider,
-                    pipeline,
-                    new Client(handlerFn, transportTypeName),
-                    configureClientAsync: null,
-                    cancellationToken
-                );
+            dispatcher.Dispatch(
+                (iterator as TIterator)!,
+                serviceProvider,
+                pipeline,
+                new Client(handlerFn, transportTypeName),
+                configureClientAsync: null,
+                cancellationToken
+            );
     }
 
     private sealed class Client(IteratorHandlerFn<TIterator, TItem> handlerFn, string transportTypeName)

@@ -7,7 +7,8 @@ public static class MessageHandlerTypeServiceRegistry
     private static readonly List<Action<IMessageHandlerServiceRegisterable>> RegistrationActions = [];
 
     public static void RegisterHandlerType<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >()
         where THandler : class, IMessageHandler => RegisterHandlerTypeInternal<THandler>();
 
@@ -20,7 +21,8 @@ public static class MessageHandlerTypeServiceRegistry
     }
 
     private static void RegisterHandlerTypeInternal<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >()
         where THandler : class, IMessageHandler => RegistrationActions.Add(r => r.Register<THandler>());
 }

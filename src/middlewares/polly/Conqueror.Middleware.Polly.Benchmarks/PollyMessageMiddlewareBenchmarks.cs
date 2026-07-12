@@ -22,7 +22,11 @@ public partial class PollyMessageMiddlewareBenchmarks
         var handler = serviceProvider
             .GetRequiredService<IMessageSenders>()
             .For(TestMessage.T)
-            .WithPipeline(p => p.UsePolly(b => b.AddRetry(new() { MaxRetryAttempts = 3, Delay = TimeSpan.Zero })));
+            .WithPipeline(p => p.UsePolly(b => b.AddRetry(new()
+            {
+                MaxRetryAttempts = 3,
+                Delay = TimeSpan.Zero,
+            })));
 
         Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();
 
@@ -56,7 +60,11 @@ public partial class PollyMessageMiddlewareBenchmarks
             .GetRequiredService<IMessageSenders>()
             .For(TestMessage.T)
             .WithPipeline(p => p.UsePolly(b => b
-                .AddRetry(new() { MaxRetryAttempts = 3, Delay = TimeSpan.Zero })
+                .AddRetry(new()
+                {
+                    MaxRetryAttempts = 3,
+                    Delay = TimeSpan.Zero,
+                })
                 .AddTimeout(TimeSpan.FromSeconds(10))));
 
         Run(RunSingle, numOfExecutions, parallelism).GetAwaiter().GetResult();

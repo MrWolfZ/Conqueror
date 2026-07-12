@@ -93,13 +93,12 @@ public sealed class HttpMessageExecutionTests
             {
                 _ = services
                     .AddMessageHandler<TestMessageHandler>()
-                    .AddSingleton<FnToCallFromHandler>(
-                        (msg, _) =>
-                            throw new TestWellKnownException(reason)
-                            {
-                                MessagePayload = msg,
-                                TransportType = new MessageTransportType(TransportName, MessageTransportRole.Receiver),
-                            }
+                    .AddSingleton<FnToCallFromHandler>((msg, _) =>
+                        throw new TestWellKnownException(reason)
+                        {
+                            MessagePayload = msg,
+                            TransportType = new MessageTransportType(TransportName, MessageTransportRole.Receiver),
+                        }
                     );
 
                 _ = services
@@ -142,8 +141,7 @@ public sealed class HttpMessageExecutionTests
         await using var host = await HttpTransportTestHost.Create(
             services =>
             {
-                _ = services.AddMessageHandler(p => new TestMessageHandler(
-                    (_, _) =>
+                _ = services.AddMessageHandler(p => new TestMessageHandler((_, _) =>
                     {
                         seenPrincipal =
                             p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.CurrentPrincipal;
@@ -194,7 +192,11 @@ public sealed class HttpMessageExecutionTests
 
         await using var receiverHost = await host.CreateReceiverTestHost(host.TestTimeoutToken);
 
-        var targetUriBuilder = new UriBuilder { Host = "localhost", Path = testCase.FullPath };
+        var targetUriBuilder = new UriBuilder
+        {
+            Host = "localhost",
+            Path = testCase.FullPath,
+        };
 
         for (var i = 0; i < testCase.ExpectedReceivedMessages.Count; i += 1)
         {
@@ -245,7 +247,11 @@ public sealed class HttpMessageExecutionTests
 
         await using var receiverHost = await host.CreateReceiverTestHost(host.TestTimeoutToken);
 
-        var targetUriBuilder = new UriBuilder { Host = "localhost", Path = testCase.FullPath };
+        var targetUriBuilder = new UriBuilder
+        {
+            Host = "localhost",
+            Path = testCase.FullPath,
+        };
 
         for (var i = 0; i < testCase.ExpectedReceivedMessages.Count; i += 1)
         {
@@ -279,21 +285,26 @@ public sealed class HttpMessageExecutionTests
         var testCase = CreateSuccessTestCases()
             .First(tc =>
                 tc
-                    is {
-                        NumOfReceivers: 1,
-                        HandlerIsEnabled: true,
-                        ExpectedReceivedMessages.Count: > 0,
-                        HttpMethod: MethodNames.Post,
-                        MessageContentType: MediaTypeNames.Application.Json,
-                        ResponseContentType: MediaTypeNames.Application.Json,
-                    }
+                    is
+                {
+                    NumOfReceivers: 1,
+                    HandlerIsEnabled: true,
+                    ExpectedReceivedMessages.Count: > 0,
+                    HttpMethod: MethodNames.Post,
+                    MessageContentType: MediaTypeNames.Application.Json,
+                    ResponseContentType: MediaTypeNames.Application.Json,
+                }
             );
 
         await using var host = testCase.CreateTestHost();
 
         await using var receiverHost = await host.CreateReceiverTestHost(host.TestTimeoutToken);
 
-        var targetUriBuilder = new UriBuilder { Host = "localhost", Path = testCase.FullPath };
+        var targetUriBuilder = new UriBuilder
+        {
+            Host = "localhost",
+            Path = testCase.FullPath,
+        };
 
         for (var i = 0; i < testCase.ExpectedReceivedMessages.Count; i += 1)
         {

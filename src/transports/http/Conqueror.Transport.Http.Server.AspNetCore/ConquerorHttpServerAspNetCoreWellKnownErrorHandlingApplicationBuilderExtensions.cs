@@ -13,8 +13,7 @@ public static class ConquerorHttpServerAspNetCoreWellKnownErrorHandlingApplicati
     /// <returns>The application builder</returns>
     public static IApplicationBuilder UseConquerorWellKnownErrorHandling(this IApplicationBuilder app)
     {
-        return app.Use(
-            async (ctx, next) =>
+        return app.Use(async (ctx, next) =>
             {
                 try
                 {
@@ -22,31 +21,31 @@ public static class ConquerorHttpServerAspNetCoreWellKnownErrorHandlingApplicati
                 }
                 catch (MessageFailedException ex)
                     when (string.Equals(
-                            ex.WellKnownReason,
-                            MessageFailedException.WellKnownReasons.Unauthenticated,
-                            StringComparison.Ordinal
-                        )
-                    )
+                              ex.WellKnownReason,
+                              MessageFailedException.WellKnownReasons.Unauthenticated,
+                              StringComparison.Ordinal
+                          )
+                         )
                 {
                     await ctx.ChallengeAsync().ConfigureAwait(false);
                 }
                 catch (MessageFailedException ex)
                     when (string.Equals(
-                            ex.WellKnownReason,
-                            MessageFailedException.WellKnownReasons.Unauthorized,
-                            StringComparison.Ordinal
-                        )
-                    )
+                              ex.WellKnownReason,
+                              MessageFailedException.WellKnownReasons.Unauthorized,
+                              StringComparison.Ordinal
+                          )
+                         )
                 {
                     await ctx.ForbidAsync().ConfigureAwait(false);
                 }
                 catch (MessageFailedException ex)
                     when (string.Equals(
-                            ex.WellKnownReason,
-                            MessageFailedException.WellKnownReasons.InvalidFormattedContextData,
-                            StringComparison.Ordinal
-                        )
-                    )
+                              ex.WellKnownReason,
+                              MessageFailedException.WellKnownReasons.InvalidFormattedContextData,
+                              StringComparison.Ordinal
+                          )
+                         )
                 {
                     // using this instead of just writing the status code directly ensures that the request is properly logged
                     await new BadRequestResult().ExecuteResultAsync(new() { HttpContext = ctx }).ConfigureAwait(false);

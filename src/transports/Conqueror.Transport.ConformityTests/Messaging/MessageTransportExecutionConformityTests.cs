@@ -2,12 +2,12 @@
 
 public abstract class MessageTransportExecutionConformityTests<TTestClass, TTestHost, TSuccessTestCase, TErrorTestCase>
     where TTestClass : MessageTransportExecutionConformityTests<
-            TTestClass,
-            TTestHost,
-            TSuccessTestCase,
-            TErrorTestCase
-        >,
-        IMessageTransportExecutionConformityTests<TTestHost, TSuccessTestCase, TErrorTestCase>
+        TTestClass,
+        TTestHost,
+        TSuccessTestCase,
+        TErrorTestCase
+    >,
+    IMessageTransportExecutionConformityTests<TTestHost, TSuccessTestCase, TErrorTestCase>
     where TTestHost : IMessageTransportConformityTestHost
     where TSuccessTestCase : IMessageTransportConformityExecutionSuccessTestCase<TTestHost>
     where TErrorTestCase : IMessageTransportConformityExecutionErrorTestCase<TTestHost>

@@ -34,5 +34,7 @@ public abstract class HttpMessageConformityTestCase
     public virtual void ConfigureReceiver(
         HttpMessageTransportConformityTestHost host,
         IHttpMessageReceiver receiver
-    ) { }
+    )
+    {
+    }
 }

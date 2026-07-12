@@ -20,9 +20,9 @@ internal readonly record struct FilePath
     public DirectoryPath DirectoryPath =>
         new(
             Path.GetDirectoryName(path)
-                ?? throw new InvalidOperationException(
-                    $"expected path '{path}' to have a directory name, but it did not"
-                )
+            ?? throw new InvalidOperationException(
+                $"expected path '{path}' to have a directory name, but it did not"
+            )
         );
 
     public static implicit operator string(FilePath path) => path.path;

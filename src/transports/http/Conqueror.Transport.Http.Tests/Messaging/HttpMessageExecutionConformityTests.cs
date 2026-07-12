@@ -3,16 +3,16 @@ namespace Conqueror.Transport.Http.Tests.Messaging;
 [TestFixture]
 public sealed class HttpMessageExecutionConformityTests
     : MessageTransportExecutionConformityTests<
-        HttpMessageExecutionConformityTests,
-        HttpMessageTransportConformityTestHost,
-        HttpMessageConformityExecutionSuccessTestCase,
-        HttpMessageConformityExecutionErrorTestCase
-    >,
-        IMessageTransportExecutionConformityTests<
-            HttpMessageTransportConformityTestHost,
-            HttpMessageConformityExecutionSuccessTestCase,
-            HttpMessageConformityExecutionErrorTestCase
-        >
+          HttpMessageExecutionConformityTests,
+          HttpMessageTransportConformityTestHost,
+          HttpMessageConformityExecutionSuccessTestCase,
+          HttpMessageConformityExecutionErrorTestCase
+      >,
+      IMessageTransportExecutionConformityTests<
+          HttpMessageTransportConformityTestHost,
+          HttpMessageConformityExecutionSuccessTestCase,
+          HttpMessageConformityExecutionErrorTestCase
+      >
 {
     public static bool TransportSupportsConcurrentReceivers => false;
 

@@ -12,21 +12,21 @@ public static class SignalTypeSymbolExtensions
     public static bool IsSignalTransportAttribute(this INamedTypeSymbol? attributeSymbol)
     {
         return attributeSymbol
-                ?.GetAttributes()
-                .Any(a =>
-                    string.Equals(
-                        a.AttributeClass?.ToString(),
-                        "Conqueror.Signalling.SignalTransportAttribute",
-                        StringComparison.Ordinal
-                    )
-                ) ?? false;
+            ?.GetAttributes()
+            .Any(a =>
+                string.Equals(
+                    a.AttributeClass?.ToString(),
+                    "Conqueror.Signalling.SignalTransportAttribute",
+                    StringComparison.Ordinal
+                )
+            ) ?? false;
     }
 
     public static (
         string Prefix,
         string Namespace,
         string? FullyQualifiedSignalTypeName
-    ) GetPrefixAndNamespaceFromSignalTransportAttribute(this INamedTypeSymbol attributeSymbol)
+        ) GetPrefixAndNamespaceFromSignalTransportAttribute(this INamedTypeSymbol attributeSymbol)
     {
         var namedArguments = attributeSymbol
             .GetAttributes()

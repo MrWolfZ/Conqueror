@@ -1450,7 +1450,8 @@ public sealed partial class IteratorMiddlewareFunctionalityTests
         static async IAsyncEnumerable<int> HandleIterator(
             TestIterator iterator,
             IServiceProvider p,
-            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken
+            [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken
         )
         {
             await Task.Yield();
@@ -1677,7 +1678,8 @@ public sealed partial class IteratorMiddlewareFunctionalityTests
     {
         public async IAsyncEnumerable<int> Handle(
             TestIterator iterator,
-            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default
+            [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
         )
         {
             await Task.Yield();
@@ -1698,11 +1700,12 @@ public sealed partial class IteratorMiddlewareFunctionalityTests
 
     private sealed partial class MultiTestIteratorHandler(TestObservations observations)
         : TestIterator.IHandler,
-            TestIterator2.IHandler
+          TestIterator2.IHandler
     {
         public async IAsyncEnumerable<int> Handle(
             TestIterator iterator,
-            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default
+            [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
         )
         {
             await Task.Yield();
@@ -1716,7 +1719,8 @@ public sealed partial class IteratorMiddlewareFunctionalityTests
 
         public async IAsyncEnumerable<string> Handle(
             TestIterator2 iterator,
-            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default
+            [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
         )
         {
             await Task.Yield();
@@ -1744,7 +1748,8 @@ public sealed partial class IteratorMiddlewareFunctionalityTests
     {
         public async IAsyncEnumerable<int> Handle(
             TestIteratorBase iterator,
-            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default
+            [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
         )
         {
             await Task.Yield();
@@ -1764,7 +1769,8 @@ public sealed partial class IteratorMiddlewareFunctionalityTests
     {
         public async IAsyncEnumerable<int> Handle(
             TestIterator iterator,
-            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default
+            [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
         )
         {
             await Task.Yield();

@@ -12,21 +12,21 @@ public static class IteratorTypeSymbolExtensions
     public static bool IsIteratorTransportAttribute(this INamedTypeSymbol? attributeSymbol)
     {
         return attributeSymbol
-                ?.GetAttributes()
-                .Any(a =>
-                    string.Equals(
-                        a.AttributeClass?.ToString(),
-                        "Conqueror.Iterating.IteratorTransportAttribute",
-                        StringComparison.Ordinal
-                    )
-                ) ?? false;
+            ?.GetAttributes()
+            .Any(a =>
+                string.Equals(
+                    a.AttributeClass?.ToString(),
+                    "Conqueror.Iterating.IteratorTransportAttribute",
+                    StringComparison.Ordinal
+                )
+            ) ?? false;
     }
 
     public static (
         string Prefix,
         string Namespace,
         string? FullyQualifiedIteratorTypeName
-    ) GetIteratorTransportAttributeProperties(this INamedTypeSymbol attributeSymbol)
+        ) GetIteratorTransportAttributeProperties(this INamedTypeSymbol attributeSymbol)
     {
         var namedArguments = attributeSymbol
             .GetAttributes()

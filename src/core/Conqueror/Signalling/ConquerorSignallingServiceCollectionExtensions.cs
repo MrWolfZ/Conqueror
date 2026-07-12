@@ -8,7 +8,8 @@ using Conqueror.Signalling;
 public static class ConquerorSignallingServiceCollectionExtensions
 {
     public static IServiceCollection AddSignalHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services)
         where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
@@ -19,7 +20,8 @@ public static class ConquerorSignallingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddSignalHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, ServiceLifetime lifetime)
         where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
@@ -30,7 +32,8 @@ public static class ConquerorSignallingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddSignalHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, Func<IServiceProvider, THandler> factory)
         where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
@@ -41,7 +44,8 @@ public static class ConquerorSignallingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddSignalHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, Func<IServiceProvider, THandler> factory, ServiceLifetime lifetime)
         where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
@@ -52,7 +56,8 @@ public static class ConquerorSignallingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddSignalHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, THandler instance)
         where THandler : class, ISignalHandler, ISignalHandlerWithSourceGeneration
     {
@@ -235,7 +240,8 @@ public static class ConquerorSignallingServiceCollectionExtensions
             if (
                 typeof(THandler).Assembly == assembly
                 && typeof(THandler)
-                    is {
+                    is
+                    {
                         IsInterface: false,
                         IsAbstract: false,
                         ContainsGenericParameters: false,

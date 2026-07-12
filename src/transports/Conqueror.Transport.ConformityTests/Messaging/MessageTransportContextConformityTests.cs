@@ -5,7 +5,7 @@ using static TestContextData;
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "by design")]
 public abstract class MessageTransportContextConformityTests<TTestClass, TTestHost, TTestCase>
     where TTestClass : MessageTransportContextConformityTests<TTestClass, TTestHost, TTestCase>,
-        IMessageTransportContextConformityTests<TTestHost, TTestCase>
+    IMessageTransportContextConformityTests<TTestHost, TTestCase>
     where TTestHost : IMessageTransportConformityTestHost
     where TTestCase : IMessageTransportConformityContextTestCase<TTestHost>
 {

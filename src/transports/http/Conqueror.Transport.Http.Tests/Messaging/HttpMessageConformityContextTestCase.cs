@@ -2,7 +2,7 @@
 
 public sealed class HttpMessageConformityContextTestCase
     : HttpMessageConformityTestCase,
-        IMessageTransportConformityContextTestCase<HttpMessageTransportConformityTestHost>
+      IMessageTransportConformityContextTestCase<HttpMessageTransportConformityTestHost>
 {
     public required bool HasActivity { get; init; }
 

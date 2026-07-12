@@ -212,7 +212,7 @@ public sealed partial class FileSystemSignalExecutionTests
 
     private sealed partial class TestSignalWithDuplicateTagHandler
         : TestSignalWithDuplicateTag1.IHandler,
-            TestSignalWithDuplicateTag2.IHandler
+          TestSignalWithDuplicateTag2.IHandler
     {
         static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
             receiver.EnableSingleInstance(

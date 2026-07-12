@@ -2,6 +2,7 @@
 // ReSharper disable InconsistentNaming
 
 // we simulate the generator output here
+
 #pragma warning disable SA1201, SA1302, CA1715, S2333, RCS1018
 
 namespace Conqueror.Tests.Signalling;

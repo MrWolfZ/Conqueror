@@ -4,12 +4,12 @@ using System.Security.Claims;
 
 internal sealed class DefaultConquerorContext
     : ConquerorContext,
-        // performance: we implement these interfaces directly here instead of always delegating to
-        // DefaultConquerorContextData to prevent unnecessary allocations of the context data
-        // objects when users have added no data (i.e. we can shortcut the `GetAll` calls in that
-        // case)
-        ITransportableConquerorContextData,
-        IInProcessConquerorContextData
+      // performance: we implement these interfaces directly here instead of always delegating to
+      // DefaultConquerorContextData to prevent unnecessary allocations of the context data
+      // objects when users have added no data (i.e. we can shortcut the `GetAll` calls in that
+      // case)
+      ITransportableConquerorContextData,
+      IInProcessConquerorContextData
 {
     private readonly Action<DefaultConquerorContext> onDispose;
     private readonly DefaultConquerorContext? parent;

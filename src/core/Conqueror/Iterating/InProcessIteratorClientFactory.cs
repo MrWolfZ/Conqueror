@@ -18,9 +18,9 @@ internal sealed class InProcessIteratorClientFactory(IServiceProvider servicePro
         }
 
         return handler
-            ?? throw new InvalidOperationException(
-                $"there is no handler registered for iterator type '{typeof(TIterator)}'"
-            );
+               ?? throw new InvalidOperationException(
+                   $"there is no handler registered for iterator type '{typeof(TIterator)}'"
+               );
     }
 
     public IIteratorClient<TIterator, TItem>? GetIfAvailable<TIterator, TItem>()

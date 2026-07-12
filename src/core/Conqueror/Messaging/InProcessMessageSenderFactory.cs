@@ -18,9 +18,9 @@ internal sealed class InProcessMessageSenderFactory(IServiceProvider serviceProv
         }
 
         return handler
-            ?? throw new InvalidOperationException(
-                $"there is no handler registered for message type '{typeof(TMessage)}'"
-            );
+               ?? throw new InvalidOperationException(
+                   $"there is no handler registered for message type '{typeof(TMessage)}'"
+               );
     }
 
     public IMessageSender<TMessage, TResponse>? GetIfAvailable<TMessage, TResponse>()

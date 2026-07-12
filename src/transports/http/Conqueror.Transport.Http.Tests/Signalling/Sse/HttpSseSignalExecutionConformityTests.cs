@@ -5,16 +5,16 @@ using static HttpSignalTestCases;
 [TestFixture]
 public sealed class HttpSseSignalExecutionConformityTests
     : SignalTransportExecutionConformityTests<
-        HttpSseSignalExecutionConformityTests,
-        HttpSignalTransportConformityTestHost,
-        HttpSignalConformityExecutionSuccessTestCase,
-        HttpSignalConformityExecutionErrorTestCase
-    >,
-        ISignalTransportExecutionConformityTests<
-            HttpSignalTransportConformityTestHost,
-            HttpSignalConformityExecutionSuccessTestCase,
-            HttpSignalConformityExecutionErrorTestCase
-        >
+          HttpSseSignalExecutionConformityTests,
+          HttpSignalTransportConformityTestHost,
+          HttpSignalConformityExecutionSuccessTestCase,
+          HttpSignalConformityExecutionErrorTestCase
+      >,
+      ISignalTransportExecutionConformityTests<
+          HttpSignalTransportConformityTestHost,
+          HttpSignalConformityExecutionSuccessTestCase,
+          HttpSignalConformityExecutionErrorTestCase
+      >
 {
     public static bool TransportBuffersSignalsDuringReceiverDowntime => false;
 

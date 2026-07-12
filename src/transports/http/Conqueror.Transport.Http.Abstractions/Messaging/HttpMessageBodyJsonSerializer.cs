@@ -47,7 +47,7 @@ internal sealed class HttpMessageBodyJsonSerializer<TMessage, TResponse> : IHttp
                 .ConfigureAwait(false);
 
             return result
-                ?? throw new IOException($"failed to deserialize HTTP body to message of type '{typeof(TMessage)}'");
+                   ?? throw new IOException($"failed to deserialize HTTP body to message of type '{typeof(TMessage)}'");
         }
         finally
         {

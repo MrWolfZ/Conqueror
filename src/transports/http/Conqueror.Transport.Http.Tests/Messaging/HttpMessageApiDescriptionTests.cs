@@ -24,9 +24,9 @@ public sealed class HttpMessageApiDescriptionTests
             .FirstOrDefault(d =>
                 string.Equals(
                     d.ActionDescriptor.AttributeRouteInfo?.Name
-                        ?? d.ActionDescriptor.EndpointMetadata.OfType<EndpointNameMetadata>()
-                            .FirstOrDefault()
-                            ?.EndpointName,
+                    ?? d.ActionDescriptor.EndpointMetadata.OfType<EndpointNameMetadata>()
+                        .FirstOrDefault()
+                        ?.EndpointName,
                     testCase.EndpointName ?? messageType.Name,
                     StringComparison.Ordinal
                 )

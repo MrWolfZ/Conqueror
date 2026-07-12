@@ -8,7 +8,7 @@ public sealed partial class AggregateSignalPublisherTests
     [Combinatorial]
     public async Task GivenConfiguredBroadcastingStrategy_WhenPublishingSignal_ConfiguredStrategyIsUsed(
         [Values("default", "sequential", "sequentialWithConfig", "parallel", "parallelWithConfig", "custom")]
-            string strategyType,
+        string strategyType,
         [Values(arg1: true, arg2: false)] bool nestedPublisherThrowsException,
         [Values(arg1: true, arg2: false)] bool passPublishersAsEnumerable
     )
@@ -103,8 +103,7 @@ public sealed partial class AggregateSignalPublisherTests
                 Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalPublisher1<TestSignal>), signal),
-                        (typeof(TestSignalPublisher2<TestSignal>), signal),
+                        (typeof(TestSignalPublisher1<TestSignal>), signal), (typeof(TestSignalPublisher2<TestSignal>), signal),
                         (typeof(TestSignalPublisher2<TestSignal>), signal),
                     }
                 )

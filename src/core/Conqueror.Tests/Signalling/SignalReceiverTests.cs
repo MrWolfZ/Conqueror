@@ -25,10 +25,18 @@ internal sealed partial class SignalReceiverTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalWithTestTransport), new() { Parameter = 10, Parameter2 = 1 }),
+                    (typeof(TestSignalWithTestTransport), new()
+                    {
+                        Parameter = 10,
+                        Parameter2 = 1,
+                    }),
                     (
                         typeof(TestSignal2WithTestTransport),
-                        new TestTransportSignalReceiverConfiguration { Parameter = 20, Parameter2 = 2 }
+                        new TestTransportSignalReceiverConfiguration
+                        {
+                            Parameter = 20,
+                            Parameter2 = 2,
+                        }
                     ),
                 }
             )
@@ -69,10 +77,18 @@ internal sealed partial class SignalReceiverTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalWithTestTransport), new() { Parameter = 10, Parameter2 = 0 }),
+                    (typeof(TestSignalWithTestTransport), new()
+                    {
+                        Parameter = 10,
+                        Parameter2 = 0,
+                    }),
                     (
                         typeof(TestSignal2WithTestTransport),
-                        new TestTransportSignalReceiverConfiguration { Parameter = 20, Parameter2 = 0 }
+                        new TestTransportSignalReceiverConfiguration
+                        {
+                            Parameter = 20,
+                            Parameter2 = 0,
+                        }
                     ),
                 }
             )
@@ -111,7 +127,8 @@ internal sealed partial class SignalReceiverTests
     }
 
     [Test]
-    public async Task GivenHandlerWithReceiverConfigurationForSignalTypeWithMultipleTransports_WhenRunningReceiver_ReceiverGetsCorrectConfigurationForTransport()
+    public async Task
+        GivenHandlerWithReceiverConfigurationForSignalTypeWithMultipleTransports_WhenRunningReceiver_ReceiverGetsCorrectConfigurationForTransport()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -137,7 +154,11 @@ internal sealed partial class SignalReceiverTests
                 {
                     (
                         typeof(TestSignalWithMultipleTestTransports),
-                        new TestTransportSignalReceiverConfiguration { Parameter = 10, Parameter2 = 0 }
+                        new TestTransportSignalReceiverConfiguration
+                        {
+                            Parameter = 10,
+                            Parameter2 = 0,
+                        }
                     ),
                 }
             )
@@ -181,9 +202,17 @@ internal sealed partial class SignalReceiverTests
                 {
                     (
                         typeof(TestSignalWithTestTransportBase),
-                        new TestTransportSignalReceiverConfiguration { Parameter = 10, Parameter2 = 1 }
+                        new TestTransportSignalReceiverConfiguration
+                        {
+                            Parameter = 10,
+                            Parameter2 = 1,
+                        }
                     ),
-                    (typeof(TestSignalWithTestTransportSub), new() { Parameter = 20, Parameter2 = 2 }),
+                    (typeof(TestSignalWithTestTransportSub), new()
+                    {
+                        Parameter = 20,
+                        Parameter2 = 2,
+                    }),
                 }
             )
         );
@@ -191,7 +220,7 @@ internal sealed partial class SignalReceiverTests
 
     private sealed partial class TestSignalHandler(TestObservations observations)
         : TestSignalWithTestTransport.IHandler,
-            TestSignal2WithTestTransport.IHandler
+          TestSignal2WithTestTransport.IHandler
     {
         public Task Handle(TestSignalWithTestTransport signal, CancellationToken cancellationToken = default)
         {
@@ -226,8 +255,8 @@ internal sealed partial class SignalReceiverTests
 
     private sealed partial class MixedTestSignalHandler(TestObservations observations)
         : TestSignalWithTestTransport.IHandler,
-            TestSignal2WithTestTransport.IHandler,
-            TestSignalWithTestTransport2.IHandler
+          TestSignal2WithTestTransport.IHandler,
+          TestSignalWithTestTransport2.IHandler
     {
         public Task Handle(TestSignalWithTestTransport signal, CancellationToken cancellationToken = default)
         {
@@ -305,7 +334,7 @@ internal sealed partial class SignalReceiverTests
 
     private sealed partial class TestSignalWithTypeHierarchyHandler(TestObservations observations)
         : TestSignalWithTestTransportBase.IHandler,
-            TestSignalWithTestTransportSub.IHandler
+          TestSignalWithTestTransportSub.IHandler
     {
         public Task Handle(TestSignalWithTestTransportBase signal, CancellationToken cancellationToken = default)
         {
@@ -522,7 +551,7 @@ public interface ITestTransportSignalHandler
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface ITestTransportSignalHandler<TSignal, TIHandler>
     : ISignalHandler<TSignal, TIHandler>,
-        ITestTransportSignalHandler
+      ITestTransportSignalHandler
     where TSignal : class, ITestTransportSignal<TSignal>
     where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
 {
@@ -659,7 +688,7 @@ public interface ITestTransport2SignalHandler
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface ITestTransport2SignalHandler<TSignal, TIHandler>
     : ISignalHandler<TSignal, TIHandler>,
-        ITestTransport2SignalHandler
+      ITestTransport2SignalHandler
     where TSignal : class, ITestTransport2Signal<TSignal>
     where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
 {

@@ -61,7 +61,7 @@ internal sealed class ContentFiles(DirectoryPath baseDirectoryPath)
         var result = await readFn(state, handle.Stream, cancellationToken).ConfigureAwait(false);
 
         return result
-            ?? throw new IOException($"failed to read payload for entry ID '{entryId}' from path '{payloadFilePath}'");
+               ?? throw new IOException($"failed to read payload for entry ID '{entryId}' from path '{payloadFilePath}'");
     }
 
     public TMetadata ReadMetadata<TMetadata>(

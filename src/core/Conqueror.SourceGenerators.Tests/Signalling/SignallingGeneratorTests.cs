@@ -44,27 +44,27 @@ public sealed class SignallingGeneratorTests
     public Task GivenHandlerInDifferentAssemblyThanSignalType_WhenRunningGenerator_GeneratesCorrectOutput()
     {
         var signalSource = """
-            using Conqueror;
+                           using Conqueror;
 
-            namespace Generator.Tests.Signals;
+                           namespace Generator.Tests.Signals;
 
-            [Signal]
-            public sealed partial record TestSignal;
-            """;
+                           [Signal]
+                           public sealed partial record TestSignal;
+                           """;
 
         var handlerSource = """
-            using System;
-            using System.Threading;
-            using System.Threading.Tasks;
-            using Generator.Tests.Signals;
+                            using System;
+                            using System.Threading;
+                            using System.Threading.Tasks;
+                            using Generator.Tests.Signals;
 
-            namespace Generator.Tests.Handlers;
+                            namespace Generator.Tests.Handlers;
 
-            public sealed partial class TestSignalHandler : TestSignal.IHandler
-            {
-                public Task Handle(TestSignal signal, CancellationToken cancellationToken) => throw new NotSupportedException();
-            }
-            """;
+                            public sealed partial class TestSignalHandler : TestSignal.IHandler
+                            {
+                                public Task Handle(TestSignal signal, CancellationToken cancellationToken) => throw new NotSupportedException();
+                            }
+                            """;
 
         var (diagnostics1, assembly) = TestHelpers.GetGeneratedAssembly(
             "signal",

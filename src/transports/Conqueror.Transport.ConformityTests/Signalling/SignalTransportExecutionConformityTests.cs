@@ -2,7 +2,7 @@
 
 public abstract class SignalTransportExecutionConformityTests<TTestClass, TTestHost, TSuccessTestCase, TErrorTestCase>
     where TTestClass : SignalTransportExecutionConformityTests<TTestClass, TTestHost, TSuccessTestCase, TErrorTestCase>,
-        ISignalTransportExecutionConformityTests<TTestHost, TSuccessTestCase, TErrorTestCase>
+    ISignalTransportExecutionConformityTests<TTestHost, TSuccessTestCase, TErrorTestCase>
     where TTestHost : ISignalTransportConformityTestHost
     where TSuccessTestCase : ISignalTransportConformityExecutionSuccessTestCase<TTestHost>
     where TErrorTestCase : ISignalTransportConformityExecutionErrorTestCase<TTestHost>

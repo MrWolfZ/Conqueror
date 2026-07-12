@@ -18,9 +18,9 @@ internal sealed class HttpWebSocketsIteratorJsonSerializer<TIterator, TItem>
     )
     {
         return await JsonSerializer
-                .DeserializeAsync(stream, GetIteratorJsonTypeInfo(serviceProvider), cancellationToken)
-                .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("failed to deserialize HTTP WebSockets iterator");
+                   .DeserializeAsync(stream, GetIteratorJsonTypeInfo(serviceProvider), cancellationToken)
+                   .ConfigureAwait(false)
+               ?? throw new InvalidOperationException("failed to deserialize HTTP WebSockets iterator");
     }
 
     private static JsonTypeInfo<TIterator> GetIteratorJsonTypeInfo(IServiceProvider serviceProvider)

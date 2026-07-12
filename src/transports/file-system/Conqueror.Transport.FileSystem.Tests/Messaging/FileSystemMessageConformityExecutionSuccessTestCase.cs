@@ -2,7 +2,7 @@
 
 public sealed class FileSystemMessageConformityExecutionSuccessTestCase
     : FileSystemMessageConformityExecutionTestCase,
-        IMessageTransportConformityExecutionSuccessTestCase<FileSystemMessageTransportConformityTestHost>
+      IMessageTransportConformityExecutionSuccessTestCase<FileSystemMessageTransportConformityTestHost>
 {
     private readonly IReadOnlyCollection<string?>? messagePayloads;
     private readonly IReadOnlyCollection<string>? responsePayloads;

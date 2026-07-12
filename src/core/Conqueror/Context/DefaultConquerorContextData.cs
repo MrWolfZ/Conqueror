@@ -2,7 +2,7 @@
 
 internal sealed class DefaultConquerorContextData(DefaultConquerorContextData? parent = null)
     : ITransportableConquerorContextData,
-        IInProcessConquerorContextData
+      IInProcessConquerorContextData
 {
     private DefaultInProcessConquerorContextData? inProcessBidirectionalContextData =
         parent?.inProcessBidirectionalContextData is not null ? new(parent.inProcessBidirectionalContextData) : null;
@@ -117,11 +117,11 @@ internal sealed class DefaultConquerorContextData(DefaultConquerorContextData? p
         return flowDirection switch
         {
             ConquerorContextDataFlowDirection.Downstream => inProcessDownstreamContextData
-                ?? DefaultInProcessConquerorContextData.Empty,
+                                                            ?? DefaultInProcessConquerorContextData.Empty,
             ConquerorContextDataFlowDirection.Upstream => inProcessUpstreamContextData
-                ?? DefaultInProcessConquerorContextData.Empty,
+                                                          ?? DefaultInProcessConquerorContextData.Empty,
             ConquerorContextDataFlowDirection.Bidirectional => inProcessBidirectionalContextData
-                ?? DefaultInProcessConquerorContextData.Empty,
+                                                               ?? DefaultInProcessConquerorContextData.Empty,
             _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, message: null),
         };
     }
@@ -223,11 +223,11 @@ internal sealed class DefaultConquerorContextData(DefaultConquerorContextData? p
         return flowDirection switch
         {
             ConquerorContextDataFlowDirection.Downstream => transportableDownstreamContextData
-                ?? DefaultTransportableConquerorContextData.Empty,
+                                                            ?? DefaultTransportableConquerorContextData.Empty,
             ConquerorContextDataFlowDirection.Upstream => transportableUpstreamContextData
-                ?? DefaultTransportableConquerorContextData.Empty,
+                                                          ?? DefaultTransportableConquerorContextData.Empty,
             ConquerorContextDataFlowDirection.Bidirectional => transportableBidirectionalContextData
-                ?? DefaultTransportableConquerorContextData.Empty,
+                                                               ?? DefaultTransportableConquerorContextData.Empty,
             _ => throw new ArgumentOutOfRangeException(nameof(flowDirection), flowDirection, message: null),
         };
     }

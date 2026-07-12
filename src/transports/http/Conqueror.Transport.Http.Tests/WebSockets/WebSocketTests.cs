@@ -12,8 +12,7 @@ public sealed class WebSocketTests
     [Test]
     public async Task GivenSocketEndpoint_WhenWritingToAndReadingFromSocket_EverythingWorks()
     {
-        await using var host = await CreateHost(
-            async (s, logger, ct) =>
+        await using var host = await CreateHost(async (s, logger, ct) =>
             {
                 await using var d = ct.Register(() => logger.LogTrace("canceled"));
 
@@ -113,8 +112,7 @@ public sealed class WebSocketTests
         string? heartbeatTimeout
     )
     {
-        await using var host = await CreateHost(
-            async (_, _, ct) =>
+        await using var host = await CreateHost(async (_, _, ct) =>
             {
                 await Task.Delay(TimeSpan.FromSeconds(value: 10), TimeProvider.System, ct);
             }

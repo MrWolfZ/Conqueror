@@ -58,10 +58,10 @@ internal sealed class WrappingException(Exception wrapped, string stackTrace) : 
 
                 if (
                     line.TrimStart()
-                        .StartsWith(
-                            "at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine]",
-                            StringComparison.InvariantCulture
-                        )
+                    .StartsWith(
+                        "at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine]",
+                        StringComparison.InvariantCulture
+                    )
                 )
                 {
                     skipNext = true;

@@ -467,8 +467,16 @@ public static partial class HttpMessageTestCases
             MessageContentType = null,
             ExpectedReceivedMessages =
             [
-                new TestMessageWithGet { Payload = 10, Param = "test" },
-                new TestMessageWithGet { Payload = 20, Param = "test2" },
+                new TestMessageWithGet
+                {
+                    Payload = 10,
+                    Param = "test",
+                },
+                new TestMessageWithGet
+                {
+                    Payload = 20,
+                    Param = "test2",
+                },
             ],
             ExpectedResponses = [new TestMessageResponse { Payload = 11 }, new TestMessageResponse { Payload = 21 }],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithGetHandler>(),
@@ -476,10 +484,18 @@ public static partial class HttpMessageTestCases
             {
                 var r1 = await s.For(TestMessageWithGet.T)
                     .WithDefaultSenderConfiguration()
-                    .Handle(new() { Payload = 10, Param = "test" }, ct);
+                    .Handle(new()
+                    {
+                        Payload = 10,
+                        Param = "test",
+                    }, ct);
                 var r2 = await s.For(TestMessageWithGet.T)
                     .WithDefaultSenderConfiguration()
-                    .Handle(new() { Payload = 20, Param = "test2" }, ct);
+                    .Handle(new()
+                    {
+                        Payload = 20,
+                        Param = "test2",
+                    }, ct);
 
                 return [r1, r2];
             },
@@ -977,16 +993,8 @@ public static partial class HttpMessageTestCases
             ],
             ExpectedResponses =
             [
-                new TestMessageResponse[]
-                {
-                    new() { Payload = 11 },
-                    new() { Payload = 12 },
-                },
-                new TestMessageResponse[]
-                {
-                    new() { Payload = 21 },
-                    new() { Payload = 22 },
-                },
+                new TestMessageResponse[] { new() { Payload = 11 }, new() { Payload = 12 }, },
+                new TestMessageResponse[] { new() { Payload = 21 }, new() { Payload = 22 }, },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithArrayResponseHandler>(),
             SendMessages = async (s, ct) =>
@@ -1185,10 +1193,10 @@ public static partial class HttpMessageTestCases
 
         foreach (
             var t in from hasResponse in new[] { true, false }
-            from isSync in new[] { true, false }
-            from configuresPipeline in new[] { true, false }
-            from configuresReceiver in new[] { true, false }
-            select (hasResponse, isSync, configuresPipeline, configuresReceiver)
+                     from isSync in new[] { true, false }
+                     from configuresPipeline in new[] { true, false }
+                     from configuresReceiver in new[] { true, false }
+                     select (hasResponse, isSync, configuresPipeline, configuresReceiver)
         )
         {
             var middlewareCallCount = 0;
@@ -1692,10 +1700,10 @@ public static partial class HttpMessageTestCases
     {
         foreach (
             var t in from hasActivity in new[] { true, false }
-            from hasDownstream in new[] { true, false }
-            from hasUpstream in new[] { true, false }
-            from hasBidirectional in new[] { true, false }
-            select (hasActivity, hasDownstream, hasUpstream, hasBidirectional)
+                     from hasDownstream in new[] { true, false }
+                     from hasUpstream in new[] { true, false }
+                     from hasBidirectional in new[] { true, false }
+                     select (hasActivity, hasDownstream, hasUpstream, hasBidirectional)
         )
         {
             yield return new()
@@ -2201,8 +2209,8 @@ public static partial class HttpMessageTestCases
             }
 
             return Payload == other.Payload
-                && string.Equals(Param, other.Param, StringComparison.Ordinal)
-                && IntArray.SequenceEqual(other.IntArray);
+                   && string.Equals(Param, other.Param, StringComparison.Ordinal)
+                   && IntArray.SequenceEqual(other.IntArray);
         }
 
         public override int GetHashCode() => HashCode.Combine(Payload, Param, IntArray);
@@ -2284,8 +2292,8 @@ public static partial class HttpMessageTestCases
             }
 
             return Payload == other.Payload
-                && NestedList.SequenceEqual(other.NestedList)
-                && NestedArray.SequenceEqual(other.NestedArray);
+                   && NestedList.SequenceEqual(other.NestedList)
+                   && NestedArray.SequenceEqual(other.NestedArray);
         }
 
         public override int GetHashCode() => HashCode.Combine(Payload, NestedList, NestedArray);
@@ -2396,7 +2404,10 @@ public static partial class HttpMessageTestCases
         > IHttpMessage<
             TestMessageWithCustomSerializer,
             TestMessageWithCustomSerializerResponse
-        >.HttpMessageSerializer { get; } = new TestMessageCustomSerializer();
+        >.HttpMessageSerializer
+        {
+            get;
+        } = new TestMessageCustomSerializer();
 
         static IHttpMessageResponseSerializer<
             TestMessageWithCustomSerializer,
@@ -2404,7 +2415,10 @@ public static partial class HttpMessageTestCases
         > IHttpMessage<
             TestMessageWithCustomSerializer,
             TestMessageWithCustomSerializerResponse
-        >.HttpMessageResponseSerializer { get; } = new TestMessageCustomSerializer();
+        >.HttpMessageResponseSerializer
+        {
+            get;
+        } = new TestMessageCustomSerializer();
     }
 
     public sealed record TestMessageWithCustomSerializerResponse
@@ -2414,7 +2428,7 @@ public static partial class HttpMessageTestCases
 
     private sealed class TestMessageCustomSerializer
         : IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>,
-            IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
+          IHttpMessageResponseSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>
     {
         string IHttpMessageResponseSerializer<
             TestMessageWithCustomSerializer,
@@ -2851,7 +2865,7 @@ public static partial class HttpMessageTestCases
 
     private sealed partial class MultiHierarchyTestMessageHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageBase.IHandler,
-            TestMessageSub.IHandler
+          TestMessageSub.IHandler
     {
         public static void ConfigurePipeline(TestMessageBase.IPipeline pipeline) => pipeline.UseReceiverLogging();
 
@@ -2931,7 +2945,10 @@ public static partial class HttpMessageTestCases
         static IHttpMessageSerializer<ThrowingTestMessage, TestMessageResponse> IHttpMessage<
             ThrowingTestMessage,
             TestMessageResponse
-        >.HttpMessageSerializer { get; } = new ThrowingTestMessageSerializer();
+        >.HttpMessageSerializer
+        {
+            get;
+        } = new ThrowingTestMessageSerializer();
     }
 
     private sealed class ThrowingTestMessageSerializer

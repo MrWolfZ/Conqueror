@@ -51,35 +51,35 @@ public sealed class IteratingGeneratorTests
     public Task GivenHandlerInDifferentAssemblyThanIteratorType_WhenRunningGenerator_GeneratesCorrectOutput()
     {
         var iteratorSource = """
-            using Conqueror;
+                             using Conqueror;
 
-            namespace Generator.Tests.Iterators;
+                             namespace Generator.Tests.Iterators;
 
-            [Iterator<TestItem>]
-            public sealed partial record TestIterator;
+                             [Iterator<TestItem>]
+                             public sealed partial record TestIterator;
 
-            public sealed partial record TestItem;
-            """;
+                             public sealed partial record TestItem;
+                             """;
 
         var handlerSource = """
-            using System;
-            using System.Collections.Generic;
-            using System.Runtime.CompilerServices;
-            using System.Threading;
-            using System.Threading.Tasks;
-            using Generator.Tests.Iterators;
+                            using System;
+                            using System.Collections.Generic;
+                            using System.Runtime.CompilerServices;
+                            using System.Threading;
+                            using System.Threading.Tasks;
+                            using Generator.Tests.Iterators;
 
-            namespace Generator.Tests.Handlers;
+                            namespace Generator.Tests.Handlers;
 
-            public sealed partial class TestIteratorHandler : TestIterator.IHandler
-            {
-                public async IAsyncEnumerable<TestItem> Handle(TestIterator iterator, [EnumeratorCancellation] CancellationToken cancellationToken)
-                {
-                    await Task.CompletedTask;
-                    yield break;
-                }
-            }
-            """;
+                            public sealed partial class TestIteratorHandler : TestIterator.IHandler
+                            {
+                                public async IAsyncEnumerable<TestItem> Handle(TestIterator iterator, [EnumeratorCancellation] CancellationToken cancellationToken)
+                                {
+                                    await Task.CompletedTask;
+                                    yield break;
+                                }
+                            }
+                            """;
 
         var (diagnostics1, assembly) = TestHelpers.GetGeneratedAssembly(
             "iterator",

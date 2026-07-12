@@ -321,7 +321,7 @@ public partial class IteratorHandlerAssemblyScanningRegistrationTests
 
     public sealed partial class MultiTestIteratorHandler
         : TestIteratorForMulti1.IHandler,
-            TestIteratorForMulti2.IHandler
+          TestIteratorForMulti2.IHandler
     {
         public async IAsyncEnumerable<TestItem> Handle(
             TestIteratorForMulti1 iterator,

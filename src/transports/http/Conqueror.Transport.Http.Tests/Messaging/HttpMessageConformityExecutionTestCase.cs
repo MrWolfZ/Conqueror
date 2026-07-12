@@ -2,7 +2,7 @@
 
 public abstract class HttpMessageConformityExecutionTestCase
     : HttpMessageConformityTestCase,
-        IMessageTransportConformityExecutionTestCase<HttpMessageTransportConformityTestHost>
+      IMessageTransportConformityExecutionTestCase<HttpMessageTransportConformityTestHost>
 {
     private readonly Type? singleResponseType;
 

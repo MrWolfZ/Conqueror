@@ -8,10 +8,14 @@ namespace Conqueror;
 public sealed class HttpWebSocketsIteratorFailedOnClientException : IteratorFailedException
 {
     public HttpWebSocketsIteratorFailedOnClientException(string message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     public HttpWebSocketsIteratorFailedOnClientException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     private HttpWebSocketsIteratorFailedOnClientException() { }
 

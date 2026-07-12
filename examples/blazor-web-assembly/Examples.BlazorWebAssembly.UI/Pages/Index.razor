@@ -8,7 +8,7 @@
         <h1>Chat Room</h1>
     </div>
 
-    @if (currentEntries  is null)
+    @if (currentEntries is null)
     {
         <div class="loading-container">
             <div class="spinner-border text-primary"
@@ -93,7 +93,7 @@
             await MessageSenders.For(BroadcastChatEntry.T)
                 .WithDefaultClientPipeline()
                 .WithHttpApiTransport()
-                .Handle(new BroadcastChatEntry {User = user, Content = content});
+                .Handle(new BroadcastChatEntry { User = user, Content = content });
 
             content = "";
         }
@@ -101,7 +101,7 @@
 
     private async Task HandleKeyUp(KeyboardEventArgs e)
     {
-        if (e is {Key: "Enter", ShiftKey: false}) // Allow shift+enter for new lines
+        if (e is { Key: "Enter", ShiftKey: false }) // Allow shift+enter for new lines
         {
             await BroadcastEntry();
         }
@@ -135,7 +135,7 @@
 
     private void OnChatEntryBroadcasted(object? sender, ChatEntryBroadcasted signal)
     {
-        currentEntries!.Add(new ChatEntry {Content = signal.Content, User = signal.User, Timestamp = signal.Timestamp});
+        currentEntries!.Add(new ChatEntry { Content = signal.Content, User = signal.User, Timestamp = signal.Timestamp });
 
         Logger.LogInformation("received chat entry");
 

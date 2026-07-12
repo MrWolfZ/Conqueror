@@ -42,14 +42,14 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse> : IMessageHandl
 
         return (Task<TR>)
             (object)
-                dispatcher.Dispatch(
-                    (message as TMessage)!,
-                    serviceProvider,
-                    pipeline,
-                    new Sender(handlerFn, transportTypeName),
-                    configureSenderAsync: null,
-                    cancellationToken
-                );
+            dispatcher.Dispatch(
+                (message as TMessage)!,
+                serviceProvider,
+                pipeline,
+                new Sender(handlerFn, transportTypeName),
+                configureSenderAsync: null,
+                cancellationToken
+            );
     }
 
     private sealed class Sender(MessageHandlerFn<TMessage, TResponse> handlerFn, string transportTypeName)

@@ -41,7 +41,11 @@ internal sealed class InboxTests
 
         var leaseTask = Parallel.ForEachAsync(
             Enumerable.Range(start: 1, numOfReaders),
-            new ParallelOptions { MaxDegreeOfParallelism = numOfReaders, CancellationToken = cts.Token },
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = numOfReaders,
+                CancellationToken = cts.Token,
+            },
             async (_, ct) =>
             {
                 var receiveCount = 0;
@@ -199,7 +203,11 @@ internal sealed class InboxTests
 
         var leaseTask = Parallel.ForEachAsync(
             Enumerable.Range(start: 1, numOfReaders),
-            new ParallelOptions { MaxDegreeOfParallelism = numOfReaders, CancellationToken = cts.Token },
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = numOfReaders,
+                CancellationToken = cts.Token,
+            },
             async (_, ct) =>
             {
                 var inboxFilesForLease = new InboxFiles(new(baseDirectory.FullName), tagIdFiles);
@@ -327,7 +335,8 @@ internal sealed class InboxTests
 
     [Test]
     [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "false positive")]
-    public async Task GivenSeparateInboxFiles_WhenWritingToAndReadingSequentiallyFromInboxWithSingleWriterAndManyParallelReaders_ThenAllWritesAndReadsAreSuccessful()
+    public async Task
+        GivenSeparateInboxFiles_WhenWritingToAndReadingSequentiallyFromInboxWithSingleWriterAndManyParallelReaders_ThenAllWritesAndReadsAreSuccessful()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(Debugger.IsAttached ? 60 : 20));
 
@@ -355,7 +364,11 @@ internal sealed class InboxTests
 
         await Parallel.ForEachAsync(
             Enumerable.Range(start: 1, numOfReaders),
-            new ParallelOptions { MaxDegreeOfParallelism = numOfReaders, CancellationToken = cts.Token },
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = numOfReaders,
+                CancellationToken = cts.Token,
+            },
             async (_, ct) =>
             {
                 var inboxFilesForLease = new InboxFiles(new(baseDirectory.FullName), tagIdFiles);

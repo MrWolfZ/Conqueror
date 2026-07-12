@@ -12,7 +12,8 @@ internal static partial class SignallingExceptionLoggerExtensions
 {
     [LoggerMessage(
         EventName = "conqueror-signal-exception",
-        Message = "An exception occurred while handling signal of type '{SignalTypeName}' after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "An exception occurred while handling signal of type '{SignalTypeName}' after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogSignalExceptionOnReceiver(
         this ILogger logger,
@@ -26,7 +27,8 @@ internal static partial class SignallingExceptionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal-exception",
-        Message = "An exception occurred while publishing in-process signal of type '{SignalTypeName}' after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "An exception occurred while publishing in-process signal of type '{SignalTypeName}' after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogSignalExceptionOnPublisher(
         this ILogger logger,
@@ -40,7 +42,8 @@ internal static partial class SignallingExceptionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal-exception",
-        Message = "An exception occurred while handling {TransportTypeName:l} signal of type '{SignalTypeName}' after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "An exception occurred while handling {TransportTypeName:l} signal of type '{SignalTypeName}' after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogSignalExceptionForTransportOnReceiver(
         this ILogger logger,
@@ -55,7 +58,8 @@ internal static partial class SignallingExceptionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal-exception",
-        Message = "An exception occurred while publishing {TransportTypeName:l} signal of type '{SignalTypeName}' after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "An exception occurred while publishing {TransportTypeName:l} signal of type '{SignalTypeName}' after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogSignalExceptionForTransportOnPublisher(
         this ILogger logger,

@@ -191,8 +191,7 @@ public static partial class TestHelpers
                     .Results[0]
                     .TrackedOutputSteps.SelectMany(x => x.Value) // step executions
                     .SelectMany(x => x.Outputs), // execution results
-                Is.All.Matches(
-                    ((object Value, IncrementalStepRunReason Reason) x) => x.Reason is IncrementalStepRunReason.Cached
+                Is.All.Matches(((object Value, IncrementalStepRunReason Reason) x) => x.Reason is IncrementalStepRunReason.Cached
                 )
             );
         }
@@ -258,9 +257,8 @@ public static partial class TestHelpers
             // - Cached is when the input has not changed, so the cached output is used
             Assert.That(
                 runStep2.Outputs,
-                Is.All.Matches(
-                    ((object Value, IncrementalStepRunReason Reason) x) =>
-                        x.Reason is IncrementalStepRunReason.Cached or IncrementalStepRunReason.Unchanged
+                Is.All.Matches(((object Value, IncrementalStepRunReason Reason) x) =>
+                    x.Reason is IncrementalStepRunReason.Cached or IncrementalStepRunReason.Unchanged
                 ),
                 $"{stepName} expected to have reason {nameof(IncrementalStepRunReason.Cached)} or {nameof(IncrementalStepRunReason.Unchanged)}"
             );
@@ -364,13 +362,19 @@ public static partial class TestHelpers
     public sealed record Options
     {
         public Options(params string[] sources)
-            : this(LanguageVersion.Default, features: null, stages: null, sources, options: null) { }
+            : this(LanguageVersion.Default, features: null, stages: null, sources, options: null)
+        {
+        }
 
         public Options(string[] stages, params string[] sources)
-            : this(LanguageVersion.Default, features: null, stages, sources, options: null) { }
+            : this(LanguageVersion.Default, features: null, stages, sources, options: null)
+        {
+        }
 
         public Options(Dictionary<string, string> options, string[] stages, params string[] sources)
-            : this(LanguageVersion.Default, features: null, stages, sources, options) { }
+            : this(LanguageVersion.Default, features: null, stages, sources, options)
+        {
+        }
 
         public Options(
             LanguageVersion languageVersion,
@@ -378,7 +382,9 @@ public static partial class TestHelpers
             string[] stages,
             params string[] sources
         )
-            : this(languageVersion, features: null, stages, sources, options) { }
+            : this(languageVersion, features: null, stages, sources, options)
+        {
+        }
 
         public Options(
             Dictionary<string, string> options,
@@ -386,7 +392,9 @@ public static partial class TestHelpers
             string[] stages,
             params string[] sources
         )
-            : this(LanguageVersion.Default, features, stages, sources, options) { }
+            : this(LanguageVersion.Default, features, stages, sources, options)
+        {
+        }
 
         public Options(
             LanguageVersion languageVersion,
@@ -395,7 +403,9 @@ public static partial class TestHelpers
             string[] stages,
             params string[] sources
         )
-            : this(languageVersion, features, stages, sources, options) { }
+            : this(languageVersion, features, stages, sources, options)
+        {
+        }
 
         private Options(
             LanguageVersion languageVersion,

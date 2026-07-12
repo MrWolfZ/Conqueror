@@ -8,10 +8,14 @@ namespace Conqueror;
 public sealed class HttpSseSignalFailedOnPublisherException : SignalFailedException
 {
     public HttpSseSignalFailedOnPublisherException(string message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     public HttpSseSignalFailedOnPublisherException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     private HttpSseSignalFailedOnPublisherException() { }
 

@@ -2,7 +2,7 @@
 
 public sealed class HttpSignalConformityExecutionErrorTestCase
     : HttpSignalConformityExecutionTestCase,
-        ISignalTransportConformityExecutionErrorTestCase<HttpSignalTransportConformityTestHost>
+      ISignalTransportConformityExecutionErrorTestCase<HttpSignalTransportConformityTestHost>
 {
     public required IReadOnlyCollection<Exception?> ConfigurationExceptions { get; init; }
 
@@ -10,7 +10,7 @@ public sealed class HttpSignalConformityExecutionErrorTestCase
         int StatusCode,
         string ContentType,
         bool KeepAlive
-    )?> ConnectionResponses { get; init; }
+        )?> ConnectionResponses { get; init; }
 
     public required int ExpectedInitialConnectionCount { get; init; }
     public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();

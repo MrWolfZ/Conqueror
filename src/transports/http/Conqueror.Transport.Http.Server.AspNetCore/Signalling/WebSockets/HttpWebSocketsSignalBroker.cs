@@ -6,7 +6,7 @@ internal sealed partial class HttpWebSocketsSignalBroker(
 )
 {
     private readonly ConcurrentDictionary<string, ImmutableList<HttpWebSocketsSignalBrokerStream>> streamsBySignalTag =
-    [];
+        [];
 
     public IDisposable Subscribe(
         HttpWebSocketsSignalBrokerStream stream,

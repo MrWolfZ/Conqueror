@@ -64,9 +64,9 @@ internal static class FileOperations
         var result = JsonSerializer.Deserialize(handle.Stream, jsonTypeInfo);
 
         return result
-            ?? throw new IOException(
-                $"failed to JSON-deserialize file '{handle.FilePath}' to object of type '{typeof(T)}'"
-            );
+               ?? throw new IOException(
+                   $"failed to JSON-deserialize file '{handle.FilePath}' to object of type '{typeof(T)}'"
+               );
     }
 
     public static void DeleteLineFromFile(ReadWriteFileHandle handle, int lineNumber, int lineLength)

@@ -3,10 +3,14 @@ namespace Conqueror;
 public abstract class MessageFailedException : Exception
 {
     protected MessageFailedException(string? message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     protected MessageFailedException(string? message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     protected MessageFailedException() { }
 

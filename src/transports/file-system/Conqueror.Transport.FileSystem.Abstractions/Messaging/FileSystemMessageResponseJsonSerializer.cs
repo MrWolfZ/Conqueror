@@ -31,9 +31,9 @@ internal sealed class FileSystemMessageResponseJsonSerializer<TMessage, TRespons
             .ConfigureAwait(false);
 
         return result
-            ?? throw new IOException(
-                $"failed to deserialize file stream to message response of type '{typeof(TResponse)}' (for message type '{typeof(TMessage)}')"
-            );
+               ?? throw new IOException(
+                   $"failed to deserialize file stream to message response of type '{typeof(TResponse)}' (for message type '{typeof(TMessage)}')"
+               );
     }
 
     private static JsonTypeInfo<TResponse> GetJsonTypeInfo(IServiceProvider serviceProvider)

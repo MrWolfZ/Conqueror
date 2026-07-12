@@ -32,7 +32,7 @@ internal sealed class HttpSseSignalJsonSerializer<TSignal> : IHttpSseSignalSeria
 
         return Task.FromResult(
             JsonSerializer.Deserialize(serializedSignal, jsonTypeInfo)
-                ?? throw new InvalidOperationException("failed to deserialize HTTP SSE signal")
+            ?? throw new InvalidOperationException("failed to deserialize HTTP SSE signal")
         );
     }
 }

@@ -18,7 +18,7 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
                 && routeEndpoint.Metadata.GetMetadata<IHttpMethodMetadata>() is { } httpMethodMetadata
                 && routeEndpoint.Metadata.GetMetadata<IExcludeFromDescriptionMetadata>()
                     is null
-                        or { ExcludeFromDescription: false }
+                    or { ExcludeFromDescription: false }
             )
             {
                 // REVIEW: Should we add an ApiDescription for endpoints without IHttpMethodMetadata? Swagger doesn't handle

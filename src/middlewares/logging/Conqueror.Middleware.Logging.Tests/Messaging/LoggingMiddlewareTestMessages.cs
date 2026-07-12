@@ -50,37 +50,37 @@ public static partial class LoggingMiddlewareTestMessages
 
         foreach (
             var t in from configuredLogLevel in allLogLevels
-            where configuredLogLevel is not null
-            from logLevel in allLogLevels
+                     where configuredLogLevel is not null
+                     from logLevel in allLogLevels
 
-            // to reduce the number of test cases we only create those combinations that are
-            // where the configured log level and actual log level are close
-            where Math.Abs((int)(logLevel ?? LogLevel.Information) - (int)configuredLogLevel) <= 1
-            let willLog = logLevel is not LogLevel.None && logLevel >= configuredLogLevel
-            // to reduce the number of test cases we don't test generate additional cases
-            // when we know that nothing will be logged anyway
-            from hasException in willLog ? new[] { true, false } : [false]
-            from payloadLoggingStrategy in willLog ? allPayloadLoggingStrategies : [null]
-            from payloadLoggingStrategyFromFactory in willLog
-                ? new PayloadLoggingStrategy?[] { null, PayloadLoggingStrategy.Raw }
-                : [null]
-            from hasCustomCategoryFactory in willLog && payloadLoggingStrategy is null ? new[] { true, false } : [false]
-            from hookTestBehavior in willLog && payloadLoggingStrategy is null
-                ? allHookTestBehaviors
-                : [HookTestBehavior.HookLogsAndReturnsTrue]
-            select (
-                configuredLogLevel: (LogLevel)configuredLogLevel,
-                preExecutionLogLevel: logLevel,
-                postExecutionLogLevel: logLevel,
-                exceptionLogLevel: logLevel,
-                hasException,
-                messagePayloadLoggingStrategy: payloadLoggingStrategy,
-                messagePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
-                responsePayloadLoggingStrategy: payloadLoggingStrategy,
-                responsePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
-                hasCustomCategoryFactory,
-                hookTestBehavior
-            )
+                     // to reduce the number of test cases we only create those combinations that are
+                     // where the configured log level and actual log level are close
+                     where Math.Abs((int)(logLevel ?? LogLevel.Information) - (int)configuredLogLevel) <= 1
+                     let willLog = logLevel is not LogLevel.None && logLevel >= configuredLogLevel
+                     // to reduce the number of test cases we don't test generate additional cases
+                     // when we know that nothing will be logged anyway
+                     from hasException in willLog ? new[] { true, false } : [false]
+                     from payloadLoggingStrategy in willLog ? allPayloadLoggingStrategies : [null]
+                     from payloadLoggingStrategyFromFactory in willLog
+                         ? new PayloadLoggingStrategy?[] { null, PayloadLoggingStrategy.Raw }
+                         : [null]
+                     from hasCustomCategoryFactory in willLog && payloadLoggingStrategy is null ? new[] { true, false } : [false]
+                     from hookTestBehavior in willLog && payloadLoggingStrategy is null
+                         ? allHookTestBehaviors
+                         : [HookTestBehavior.HookLogsAndReturnsTrue]
+                     select (
+                         configuredLogLevel: (LogLevel)configuredLogLevel,
+                         preExecutionLogLevel: logLevel,
+                         postExecutionLogLevel: logLevel,
+                         exceptionLogLevel: logLevel,
+                         hasException,
+                         messagePayloadLoggingStrategy: payloadLoggingStrategy,
+                         messagePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
+                         responsePayloadLoggingStrategy: payloadLoggingStrategy,
+                         responsePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
+                         hasCustomCategoryFactory,
+                         hookTestBehavior
+                     )
         )
         {
             foreach (
@@ -111,10 +111,10 @@ public static partial class LoggingMiddlewareTestMessages
 
         foreach (
             var t in from hasException in new[] { true, false }
-            from stackTraceCaptureIsDisabled in hasException ? new[] { true, false } : [false]
-            from hasCustomCategoryFactory in new[] { true, false }
-            from payloadLoggingStrategy in allPayloadLoggingStrategies
-            select (hasException, stackTraceCaptureIsDisabled, hasCustomCategoryFactory, payloadLoggingStrategy)
+                     from stackTraceCaptureIsDisabled in hasException ? new[] { true, false } : [false]
+                     from hasCustomCategoryFactory in new[] { true, false }
+                     from payloadLoggingStrategy in allPayloadLoggingStrategies
+                     select (hasException, stackTraceCaptureIsDisabled, hasCustomCategoryFactory, payloadLoggingStrategy)
         )
         {
             foreach (
@@ -263,7 +263,11 @@ public static partial class LoggingMiddlewareTestMessages
             Message = new TestMessageWithComplexPayload
             {
                 Payload = 10,
-                NestedPayload = new TestMessageWithComplexPayloadPayload { Payload = 11, Payload2 = 12 },
+                NestedPayload = new TestMessageWithComplexPayloadPayload
+                {
+                    Payload = 11,
+                    Payload2 = 12,
+                },
             },
             MessageJson = "{\"Payload\":10,\"NestedPayload\":{\"Payload\":11,\"Payload2\":12}}",
             Response = new TestMessageResponse { Payload = 33 },
@@ -374,7 +378,11 @@ public static partial class LoggingMiddlewareTestMessages
             TestMessageBaseHandler
         >
         {
-            Message = new TestMessageSub { PayloadBase = 10, PayloadSub = 11 },
+            Message = new TestMessageSub
+            {
+                PayloadBase = 10,
+                PayloadSub = 11,
+            },
             MessageJson = "{\"PayloadSub\":11,\"PayloadBase\":10}",
             Response = new TestMessageResponse { Payload = 11 },
             ResponseJson = "{\"Payload\":11}",
@@ -450,11 +458,11 @@ public static partial class LoggingMiddlewareTestMessages
                 var hookReturn =
                     hookTestBehavior
                         is HookTestBehavior.HookLogsAndReturnsTrue
-                            or HookTestBehavior.HookDoesNotLogAndReturnsTrue;
+                        or HookTestBehavior.HookDoesNotLogAndReturnsTrue;
                 var hookLogs =
                     hookTestBehavior
                         is HookTestBehavior.HookLogsAndReturnsTrue
-                            or HookTestBehavior.HookLogsAndReturnsFalse;
+                        or HookTestBehavior.HookLogsAndReturnsFalse;
 
                 c.PreExecutionHook = ctx =>
                 {
@@ -584,7 +592,7 @@ public static partial class LoggingMiddlewareTestMessages
                 var hookSuppressesMessage =
                     HookBehavior
                         is HookTestBehavior.HookLogsAndReturnsFalse
-                            or HookTestBehavior.HookDoesNotLogAndReturnsFalse;
+                        or HookTestBehavior.HookDoesNotLogAndReturnsFalse;
 
                 if (PreExecutionLogLevel is not LogLevel.None && PreExecutionLogLevel >= ConfiguredLogLevel)
                 {
@@ -665,7 +673,7 @@ public static partial class LoggingMiddlewareTestMessages
                     if (
                         HookBehavior
                         is HookTestBehavior.HookLogsAndReturnsFalse
-                            or HookTestBehavior.HookLogsAndReturnsTrue
+                        or HookTestBehavior.HookLogsAndReturnsTrue
                     )
                     {
                         var preExecutionMessageFromHook =
@@ -773,7 +781,7 @@ public static partial class LoggingMiddlewareTestMessages
                     if (
                         HookBehavior
                         is HookTestBehavior.HookLogsAndReturnsFalse
-                            or HookTestBehavior.HookLogsAndReturnsTrue
+                        or HookTestBehavior.HookLogsAndReturnsTrue
                     )
                     {
                         var postExecutionMessageFromHook =
@@ -850,7 +858,7 @@ public static partial class LoggingMiddlewareTestMessages
                     if (
                         HookBehavior
                         is HookTestBehavior.HookLogsAndReturnsFalse
-                            or HookTestBehavior.HookLogsAndReturnsTrue
+                        or HookTestBehavior.HookLogsAndReturnsTrue
                     )
                     {
                         var exceptionMessageFromHook =

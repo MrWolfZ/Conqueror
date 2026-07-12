@@ -116,9 +116,9 @@ internal sealed class HttpWebSocketsSignalReceiverRunner(IConquerorContextAccess
                 }
                 catch (WebSocketException wex)
                     when (wex.WebSocketErrorCode
-                            is not WebSocketError.UnsupportedVersion
-                                and not WebSocketError.UnsupportedProtocol
-                    )
+                              is not WebSocketError.UnsupportedVersion
+                              and not WebSocketError.UnsupportedProtocol
+                         )
                 {
                     if (config.ReconnectDelayFn is not null)
                     {

@@ -22,7 +22,8 @@ public static class HttpResponseMessageExtensions
                 {
                     var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>(cancellationToken);
 
-                    return $"title: {problemDetails?.Title}\ndetail: {problemDetails?.Detail}\nextensions: {JsonSerializer.Serialize(problemDetails?.Extensions)}";
+                    return
+                        $"title: {problemDetails?.Title}\ndetail: {problemDetails?.Detail}\nextensions: {JsonSerializer.Serialize(problemDetails?.Extensions)}";
                 }
                 catch
                 {

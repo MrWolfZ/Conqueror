@@ -22,10 +22,10 @@ internal sealed class IteratorHandlerRegistry(
         var key = (typeof(TIterator), typeof(TTypesInjector));
 
         return invokerByIteratorAndInjectorType.GetOrAdd(
-                key,
-                static (_, @this) => @this.GetInvokerForIteratorAndInjectorType<TIterator, TTypesInjector>(),
-                this
-            ) as IIteratorServerHandlerInvoker<TTypesInjector>;
+            key,
+            static (_, @this) => @this.GetInvokerForIteratorAndInjectorType<TIterator, TTypesInjector>(),
+            this
+        ) as IIteratorServerHandlerInvoker<TTypesInjector>;
     }
 
     public IReadOnlyCollection<IIteratorServerHandlerInvoker<TTypesInjector>> GetServerHandlerInvokers<TTypesInjector>()

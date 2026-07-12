@@ -181,8 +181,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -220,8 +219,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -261,8 +259,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -307,8 +304,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -316,8 +312,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             }
         );
 
-        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -394,7 +389,8 @@ public sealed partial class SignalBroadcastingStrategyTests
     }
 
     [Test]
-    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndOneHandlerThrowsCancellationException_ThrowsCancellationExceptionAfterAllHandlersHaveExecuted()
+    public async Task
+        GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndOneHandlerThrowsCancellationException_ThrowsCancellationExceptionAfterAllHandlersHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -404,8 +400,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, ct) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, ct) =>
             {
                 await Task.Yield();
                 ct.ThrowIfCancellationRequested();
@@ -444,7 +439,8 @@ public sealed partial class SignalBroadcastingStrategyTests
     }
 
     [Test]
-    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndMultipleHandlersThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllHandlersHaveExecuted()
+    public async Task
+        GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndMultipleHandlersThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllHandlersHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -454,16 +450,14 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, ct) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, ct) =>
             {
                 await Task.Yield();
                 ct.ThrowIfCancellationRequested();
             }
         );
 
-        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(
-            async (_, ct) =>
+        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, ct) =>
             {
                 await Task.Yield();
                 ct.ThrowIfCancellationRequested();
@@ -501,7 +495,8 @@ public sealed partial class SignalBroadcastingStrategyTests
     }
 
     [Test]
-    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndSingleHandlersThrowCancellationExceptionWhileOtherHandlerThrowsOtherException_ThrowsAggregateException()
+    public async Task
+        GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndSingleHandlersThrowCancellationExceptionWhileOtherHandlerThrowsOtherException_ThrowsAggregateException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -513,16 +508,14 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, ct) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, ct) =>
             {
                 await Task.Yield();
                 ct.ThrowIfCancellationRequested();
             }
         );
 
-        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -601,8 +594,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                     }
                 )
                 .After(delay: 100)
@@ -617,8 +609,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                         (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
                     }
                 )
@@ -636,10 +627,8 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
                 }
             )
         );
@@ -658,8 +647,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -686,8 +674,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                     (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
                 }
             )
@@ -708,8 +695,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -717,8 +703,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             }
         );
 
-        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -746,11 +731,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         Assert.That(
             observations.ObservedHandlerExecutions,
             Is.EquivalentTo(
-                new[]
-                {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                }
+                new[] { (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start), }
             )
         );
     }
@@ -787,17 +768,16 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
                 }
             )
         );
     }
 
     [Test]
-    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndOneHandlerThrowsCancellationException_ThrowsCancellationExceptionAfterAllHandlersHaveExecuted()
+    public async Task
+        GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndOneHandlerThrowsCancellationException_ThrowsCancellationExceptionAfterAllHandlersHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -807,8 +787,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, ct) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, ct) =>
             {
                 await Task.Yield();
                 ct.ThrowIfCancellationRequested();
@@ -839,8 +818,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                     (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
                 }
             )
@@ -848,7 +826,8 @@ public sealed partial class SignalBroadcastingStrategyTests
     }
 
     [Test]
-    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndMultipleHandlersThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllHandlersHaveExecuted()
+    public async Task
+        GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndMultipleHandlersThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllHandlersHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -858,16 +837,14 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, ct) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, ct) =>
             {
                 await Task.Yield();
                 ct.ThrowIfCancellationRequested();
             }
         );
 
-        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(
-            async (_, ct) =>
+        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, ct) =>
             {
                 await Task.Yield();
                 ct.ThrowIfCancellationRequested();
@@ -896,17 +873,14 @@ public sealed partial class SignalBroadcastingStrategyTests
         Assert.That(
             observations.ObservedHandlerExecutions,
             Is.EquivalentTo(
-                new[]
-                {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                }
+                new[] { (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start), }
             )
         );
     }
 
     [Test]
-    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndSingleHandlersThrowCancellationExceptionWhileOtherHandlerThrowsOtherException_ThrowsAggregateException()
+    public async Task
+        GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndSingleHandlersThrowCancellationExceptionWhileOtherHandlerThrowsOtherException_ThrowsAggregateException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -918,16 +892,14 @@ public sealed partial class SignalBroadcastingStrategyTests
             .AddSignalHandler<TestSignalHandler2>()
             .AddSingleton(observations);
 
-        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(
-            async (_, ct) =>
+        _ = services.AddSingleton<Func<TestSignalHandler, CancellationToken, Task>>(async (_, ct) =>
             {
                 await Task.Yield();
                 ct.ThrowIfCancellationRequested();
             }
         );
 
-        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(
-            async (_, _) =>
+        _ = services.AddSingleton<Func<TestSignalHandler2, CancellationToken, Task>>(async (_, _) =>
             {
                 await Task.Yield();
 
@@ -963,11 +935,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         Assert.That(
             observations.ObservedHandlerExecutions,
             Is.EquivalentTo(
-                new[]
-                {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                }
+                new[] { (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start), }
             )
         );
     }
@@ -1012,8 +980,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
                     }
                 )
                 .After(delay: 100)
@@ -1028,10 +995,8 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-                        (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
                     }
                 )
                 .After(delay: 100)
@@ -1046,10 +1011,8 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                     new[]
                     {
-                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-                        (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                        (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
                         (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
                     }
                 )
@@ -1067,12 +1030,9 @@ public sealed partial class SignalBroadcastingStrategyTests
             Is.EquivalentTo(
                 new[]
                 {
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End),
-                    (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
-                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End),
-                    (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.End),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.Start), (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler2), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.Start),
+                    (typeof(TestSignalHandler), signal, HandlerExecutionPhase.End), (typeof(TestSignalHandler3), signal, HandlerExecutionPhase.End),
                 }
             )
         );
@@ -1279,7 +1239,7 @@ public sealed partial class SignalBroadcastingStrategyTests
             Type HandlerType,
             object Signal,
             HandlerExecutionPhase Phase
-        )> ObservedHandlerExecutions { get; } = [];
+            )> ObservedHandlerExecutions { get; } = [];
 
         public ConcurrentQueue<IServiceProvider> ServiceProvidersFromPublish { get; } = [];
     }

@@ -2,7 +2,7 @@
 
 public sealed class FileSystemMessageConformityExecutionErrorTestCase
     : FileSystemMessageConformityExecutionTestCase,
-        IMessageTransportConformityExecutionErrorTestCase<FileSystemMessageTransportConformityTestHost>
+      IMessageTransportConformityExecutionErrorTestCase<FileSystemMessageTransportConformityTestHost>
 {
     public required IReadOnlyCollection<Exception?> ConfigurationExceptions { get; init; }
     public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();

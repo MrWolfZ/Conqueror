@@ -133,8 +133,7 @@ public sealed class HttpSignalTransportConformityReceiverTestHost : ISignalTrans
             _ = config
                 // test that function can be overwritten
                 .WithReconnectDelayFunction((_, _) => throw new NotSupportedException())
-                .WithReconnectDelayFunction(
-                    async (statusCode, ct) =>
+                .WithReconnectDelayFunction(async (statusCode, ct) =>
                     {
                         ct.ThrowIfCancellationRequested();
 
@@ -170,8 +169,7 @@ public sealed class HttpSignalTransportConformityReceiverTestHost : ISignalTrans
             _ = config
                 // test that function can be overwritten
                 .WithReconnectDelayFunction((_, _, _, _) => throw new NotSupportedException())
-                .WithReconnectDelayFunction(
-                    async (closeStatus, statusCode, _, ct) =>
+                .WithReconnectDelayFunction(async (closeStatus, statusCode, _, ct) =>
                     {
                         ct.ThrowIfCancellationRequested();
 

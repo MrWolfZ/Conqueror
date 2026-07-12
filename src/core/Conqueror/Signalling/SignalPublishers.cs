@@ -28,6 +28,10 @@ internal sealed class SignalPublishers(IServiceProvider serviceProvider, ISignal
     {
         object ICoreSignalHandlerTypesInjectable<InjectableArg, object>.WithInjectedTypes<TSignal, TIHandler, TProxy>(
             InjectableArg arg
-        ) => new TProxy { ServiceProvider = arg.ServiceProvider, Dispatcher = arg.Dispatcher };
+        ) => new TProxy
+        {
+            ServiceProvider = arg.ServiceProvider,
+            Dispatcher = arg.Dispatcher,
+        };
     }
 }

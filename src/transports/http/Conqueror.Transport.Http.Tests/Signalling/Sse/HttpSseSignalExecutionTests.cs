@@ -237,7 +237,7 @@ public sealed partial class HttpSseSignalExecutionTests
 
     private sealed partial class TestSignalWithDuplicateEventTypeHandler
         : TestSignalWithDuplicateEventType1.IHandler,
-            TestSignalWithDuplicateEventType2.IHandler
+          TestSignalWithDuplicateEventType2.IHandler
     {
         public Task Handle(TestSignalWithDuplicateEventType1 signal, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();

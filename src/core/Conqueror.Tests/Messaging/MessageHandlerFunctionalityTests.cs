@@ -641,7 +641,7 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
 
     private sealed partial class DisposableMessageHandler(DisposalObservation observation)
         : TestMessage.IHandler,
-            IDisposable
+          IDisposable
     {
         public void Dispose() => observation.WasDisposed = true;
 
@@ -1154,7 +1154,7 @@ public sealed class MessageHandlerFunctionalityClientWithSyncTransportFactoryTes
                 .ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
 
             return baseConfigure?.Invoke(b)
-                ?? b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
+                   ?? b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
         });
     }
 
@@ -1172,9 +1172,9 @@ public sealed class MessageHandlerFunctionalityClientWithSyncTransportFactoryTes
                 .ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
 
             return baseConfigure?.Invoke(b)
-                ?? b.ServiceProvider.GetRequiredService<
-                    TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>
-                >();
+                   ?? b.ServiceProvider.GetRequiredService<
+                       TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>
+                   >();
         });
     }
 }
@@ -1200,7 +1200,7 @@ public sealed class MessageHandlerFunctionalityClientWithAsyncTransportFactoryTe
                 .ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
 
             return baseConfigure?.Invoke(b)
-                ?? b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
+                   ?? b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
         });
     }
 
@@ -1219,9 +1219,9 @@ public sealed class MessageHandlerFunctionalityClientWithAsyncTransportFactoryTe
                 .ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
 
             return baseConfigure?.Invoke(b)
-                ?? b.ServiceProvider.GetRequiredService<
-                    TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>
-                >();
+                   ?? b.ServiceProvider.GetRequiredService<
+                       TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>
+                   >();
         });
     }
 }

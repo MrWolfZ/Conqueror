@@ -479,16 +479,8 @@ public static partial class FileSystemMessageTestCases
             ],
             ExpectedResponses =
             [
-                new TestMessageResponse[]
-                {
-                    new() { Payload = 11 },
-                    new() { Payload = 12 },
-                },
-                new TestMessageResponse[]
-                {
-                    new() { Payload = 21 },
-                    new() { Payload = 22 },
-                },
+                new TestMessageResponse[] { new() { Payload = 11 }, new() { Payload = 12 }, },
+                new TestMessageResponse[] { new() { Payload = 21 }, new() { Payload = 22 }, },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithArrayResponseHandler>(),
             SendMessages = async (s, ct) =>
@@ -646,9 +638,9 @@ public static partial class FileSystemMessageTestCases
 
         foreach (
             var t in from hasResponse in new[] { true, false }
-            from isSync in new[] { true, false }
-            from configuresPipeline in new[] { true, false }
-            select (hasResponse, isSync, configuresPipeline)
+                     from isSync in new[] { true, false }
+                     from configuresPipeline in new[] { true, false }
+                     select (hasResponse, isSync, configuresPipeline)
         )
         {
             var middlewareCallCount = 0;
@@ -1312,10 +1304,10 @@ public static partial class FileSystemMessageTestCases
     {
         foreach (
             var t in from hasActivity in new[] { true, false }
-            from hasDownstream in new[] { true, false }
-            from hasUpstream in new[] { true, false }
-            from hasBidirectional in new[] { true, false }
-            select (hasActivity, hasDownstream, hasUpstream, hasBidirectional)
+                     from hasDownstream in new[] { true, false }
+                     from hasUpstream in new[] { true, false }
+                     from hasBidirectional in new[] { true, false }
+                     select (hasActivity, hasDownstream, hasUpstream, hasBidirectional)
         )
         {
             yield return new()
@@ -1616,10 +1608,10 @@ public static partial class FileSystemMessageTestCases
 
     private sealed class TestMessageCustomSerializer
         : IFileSystemMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>,
-            IFileSystemMessageResponseSerializer<
-                TestMessageWithCustomSerializer,
-                TestMessageWithCustomSerializerResponse
-            >
+          IFileSystemMessageResponseSerializer<
+              TestMessageWithCustomSerializer,
+              TestMessageWithCustomSerializerResponse
+          >
     {
         public async Task SerializeResponse(
             IServiceProvider serviceProvider,
@@ -1990,7 +1982,7 @@ public static partial class FileSystemMessageTestCases
 
     private sealed partial class MultiHierarchyTestMessageHandler(FnToCallFromHandler funToCallFromHandler)
         : TestMessageBase.IHandler,
-            TestMessageSub.IHandler
+          TestMessageSub.IHandler
     {
         static void IFileSystemMessageHandler.ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver) =>
             receiver.ServiceProvider.GetRequiredService<Action<IFileSystemMessageReceiver>>().Invoke(receiver);

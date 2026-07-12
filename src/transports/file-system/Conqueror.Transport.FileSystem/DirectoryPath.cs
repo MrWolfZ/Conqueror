@@ -27,8 +27,8 @@ internal readonly record struct DirectoryPath
         new(
             new(
                 path.TrimEnd(DirectorySeparatorChar)
-                    + DirectorySeparatorChar
-                    + pathSegment.TrimStart(DirectorySeparatorChar)
+                + DirectorySeparatorChar
+                + pathSegment.TrimStart(DirectorySeparatorChar)
             )
         );
 
@@ -36,8 +36,8 @@ internal readonly record struct DirectoryPath
         new(
             new(
                 path.TrimEnd(DirectorySeparatorChar)
-                    + DirectorySeparatorChar
-                    + fileName.TrimStart(DirectorySeparatorChar)
+                + DirectorySeparatorChar
+                + fileName.TrimStart(DirectorySeparatorChar)
             )
         );
 

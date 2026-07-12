@@ -8,10 +8,14 @@ namespace Conqueror;
 public sealed class HttpMessageFailedOnClientException : MessageFailedException
 {
     public HttpMessageFailedOnClientException(string message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     public HttpMessageFailedOnClientException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     private HttpMessageFailedOnClientException() { }
 

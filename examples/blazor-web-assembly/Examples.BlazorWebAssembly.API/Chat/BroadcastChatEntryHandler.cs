@@ -18,13 +18,23 @@ internal sealed partial class BroadcastChatEntryHandler(
     {
         var timestamp = SystemTime.Now;
         await repository.Add(
-            new() { User = message.User, Content = message.Content, Timestamp = timestamp });
+            new()
+            {
+                User = message.User,
+                Content = message.Content,
+                Timestamp = timestamp,
+            });
 
         await signalPublishers.For(ChatEntryBroadcasted.T)
             .WithDefaultPublisherPipeline(typeof(BroadcastChatEntryHandler))
             .WithTransport(b => b.UseHttpWebSockets())
             .Handle(
-                new() { User = message.User, Content = message.Content, Timestamp = timestamp },
+                new()
+                {
+                    User = message.User,
+                    Content = message.Content,
+                    Timestamp = timestamp,
+                },
                 cancellationToken);
     }
 }

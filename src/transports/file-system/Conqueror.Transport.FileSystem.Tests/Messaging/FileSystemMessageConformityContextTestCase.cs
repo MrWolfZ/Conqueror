@@ -2,7 +2,7 @@
 
 public sealed class FileSystemMessageConformityContextTestCase
     : FileSystemMessageConformityTestCase,
-        IMessageTransportConformityContextTestCase<FileSystemMessageTransportConformityTestHost>
+      IMessageTransportConformityContextTestCase<FileSystemMessageTransportConformityTestHost>
 {
     public required bool HasActivity { get; init; }
 

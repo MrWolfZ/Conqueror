@@ -11,8 +11,7 @@ public sealed class HttpMessageTcpTests
         new object[] { HttpProtocols.Http2, HttpVersion.Version20, HttpVersionPolicy.RequestVersionExact },
         new object[]
         {
-            HttpProtocols.Http1AndHttp2,
-            HttpVersion.Version20,
+            HttpProtocols.Http1AndHttp2, HttpVersion.Version20,
             HttpVersionPolicy.RequestVersionOrLower, // because we are not using HTTPS here, this will cause a downgrade to HTTP/1.1
         },
     ];

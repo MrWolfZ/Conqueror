@@ -44,29 +44,29 @@ public sealed class MessagingGeneratorTests
     public Task GivenHandlerInDifferentAssemblyThanMessageType_WhenRunningGenerator_GeneratesCorrectOutput()
     {
         var messageSource = """
-            using Conqueror;
+                            using Conqueror;
 
-            namespace Generator.Tests.Messages;
+                            namespace Generator.Tests.Messages;
 
-            [Message<TestMessageResponse>]
-            public sealed partial record TestMessage;
+                            [Message<TestMessageResponse>]
+                            public sealed partial record TestMessage;
 
-            public sealed partial record TestMessageResponse;
-            """;
+                            public sealed partial record TestMessageResponse;
+                            """;
 
         var handlerSource = """
-            using System;
-            using System.Threading;
-            using System.Threading.Tasks;
-            using Generator.Tests.Messages;
+                            using System;
+                            using System.Threading;
+                            using System.Threading.Tasks;
+                            using Generator.Tests.Messages;
 
-            namespace Generator.Tests.Handlers;
+                            namespace Generator.Tests.Handlers;
 
-            public sealed partial class TestMessageHandler : TestMessage.IHandler
-            {
-                public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
-            }
-            """;
+                            public sealed partial class TestMessageHandler : TestMessage.IHandler
+                            {
+                                public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+                            }
+                            """;
 
         var (diagnostics1, assembly) = TestHelpers.GetGeneratedAssembly(
             "message",

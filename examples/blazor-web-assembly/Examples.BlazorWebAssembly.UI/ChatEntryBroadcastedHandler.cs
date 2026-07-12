@@ -30,8 +30,7 @@ public sealed partial class ChatEntryBroadcastedHandler : ChatEntryBroadcasted.I
         _ = receiver
             .Enable(uri)
             // exponential back-off
-            .WithReconnectDelayFunction(
-                async (_, _, _, token) =>
+            .WithReconnectDelayFunction(async (_, _, _, token) =>
                 {
                     var delay = TimeSpan.FromSeconds(Math.Min(val1: 60, 2 ^ attempt));
 

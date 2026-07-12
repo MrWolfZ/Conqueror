@@ -62,8 +62,7 @@ public sealed class FileSystemMessageTransportConformityReceiverTestHost : IMess
                         ConfigureReceiver(host, testCase, baseDirectory, r)
                     )
                     .AddSingleton(baseDirectory)
-                    .AddSingleton(
-                        ILogger (p) => p.GetRequiredService<ILogger<FileSystemMessageTransportConformityTestHost>>()
+                    .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<FileSystemMessageTransportConformityTestHost>>()
                     )
                     .AddSingleton<FnToCallFromHandler>(p =>
                         (s, ct) =>

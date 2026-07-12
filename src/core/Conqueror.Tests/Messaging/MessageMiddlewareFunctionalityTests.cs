@@ -1981,7 +1981,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
     private sealed partial class MultiTestMessageHandler(TestObservations observations)
         : TestMessage.IHandler,
-            TestMessageWithoutResponse.IHandler
+          TestMessageWithoutResponse.IHandler
     {
         public async Task<TestMessageResponse> Handle(
             TestMessage message,

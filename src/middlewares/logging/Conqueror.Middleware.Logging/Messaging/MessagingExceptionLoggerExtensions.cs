@@ -12,7 +12,8 @@ internal static partial class MessagingExceptionLoggerExtensions
 {
     [LoggerMessage(
         EventName = "conqueror-message-exception",
-        Message = "An exception occurred while handling message of type '{MessageTypeName}' after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "An exception occurred while handling message of type '{MessageTypeName}' after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageExceptionOnReceiver(
         this ILogger logger,
@@ -26,7 +27,8 @@ internal static partial class MessagingExceptionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-exception",
-        Message = "An exception occurred while sending in-process message of type '{MessageTypeName}' after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "An exception occurred while sending in-process message of type '{MessageTypeName}' after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageExceptionOnSender(
         this ILogger logger,
@@ -40,7 +42,8 @@ internal static partial class MessagingExceptionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-exception",
-        Message = "An exception occurred while handling {TransportTypeName:l} message of type '{MessageTypeName}' after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "An exception occurred while handling {TransportTypeName:l} message of type '{MessageTypeName}' after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageExceptionForTransportOnReceiver(
         this ILogger logger,
@@ -55,7 +58,8 @@ internal static partial class MessagingExceptionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-exception",
-        Message = "An exception occurred while sending {TransportTypeName:l} message of type '{MessageTypeName}' after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "An exception occurred while sending {TransportTypeName:l} message of type '{MessageTypeName}' after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageExceptionForTransportOnSender(
         this ILogger logger,

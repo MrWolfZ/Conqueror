@@ -27,7 +27,8 @@ internal static class TypeDescriptorExtensions
             return $"global::{descriptor.FullyQualifiedName}";
         }
 
-        return $"global::{descriptor.FullyQualifiedName.Substring(startIndex: 0, descriptor.FullyQualifiedName.IndexOf('<'))}<{string.Join(", ", descriptor.TypeArguments.Select(i => i.Descriptor.FullyQualifiedName()))}>";
+        return
+            $"global::{descriptor.FullyQualifiedName.Substring(startIndex: 0, descriptor.FullyQualifiedName.IndexOf('<'))}<{string.Join(", ", descriptor.TypeArguments.Select(i => i.Descriptor.FullyQualifiedName()))}>";
     }
 
     public static bool HasProperties(this TypeDescriptor descriptor) =>

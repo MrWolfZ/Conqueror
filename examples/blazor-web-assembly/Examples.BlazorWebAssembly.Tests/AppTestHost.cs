@@ -64,8 +64,7 @@ public sealed class AppTestHost : IStartupFilter, IAsyncDisposable
     {
         return app =>
         {
-            _ = app.Use(
-                async (_, n) =>
+            _ = app.Use(async (_, n) =>
                 {
                     using var t = SystemTime.WithCurrentTime(CurrentTime);
                     await n();

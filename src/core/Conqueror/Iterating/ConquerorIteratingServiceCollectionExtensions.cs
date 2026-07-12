@@ -8,7 +8,8 @@ using Conqueror.Iterating;
 public static class ConquerorIteratingServiceCollectionExtensions
 {
     public static IServiceCollection AddIteratorHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services)
         where THandler : class, IIteratorHandler, IIteratorHandlerWithSourceGeneration
     {
@@ -19,7 +20,8 @@ public static class ConquerorIteratingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddIteratorHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, ServiceLifetime lifetime)
         where THandler : class, IIteratorHandler, IIteratorHandlerWithSourceGeneration
     {
@@ -30,7 +32,8 @@ public static class ConquerorIteratingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddIteratorHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, Func<IServiceProvider, THandler> factory)
         where THandler : class, IIteratorHandler
     {
@@ -41,7 +44,8 @@ public static class ConquerorIteratingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddIteratorHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, Func<IServiceProvider, THandler> factory, ServiceLifetime lifetime)
         where THandler : class, IIteratorHandler, IIteratorHandlerWithSourceGeneration
     {
@@ -52,7 +56,8 @@ public static class ConquerorIteratingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddIteratorHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >(this IServiceCollection services, THandler instance)
         where THandler : class, IIteratorHandler, IIteratorHandlerWithSourceGeneration
     {
@@ -203,7 +208,8 @@ public static class ConquerorIteratingServiceCollectionExtensions
             if (
                 typeof(THandler).Assembly == assembly
                 && typeof(THandler)
-                    is {
+                    is
+                    {
                         IsInterface: false,
                         IsAbstract: false,
                         ContainsGenericParameters: false,

@@ -255,7 +255,7 @@ public partial class FileSystemMessageBenchmarks
 
     private sealed partial class TestMessageHandler(WithoutResponseResult? withoutResponseResult = null)
         : TestMessage.IHandler,
-            TestMessageWithoutResponse.IHandler
+          TestMessageWithoutResponse.IHandler
     {
         public static void ConfigureFileSystemReceiver(IFileSystemMessageReceiver receiver)
         {

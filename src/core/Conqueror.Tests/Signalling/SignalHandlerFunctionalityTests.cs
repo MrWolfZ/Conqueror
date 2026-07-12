@@ -429,7 +429,7 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
 
     private sealed partial class MultiTestSignalHandler(TestObservations observations, IServiceProvider serviceProvider)
         : TestSignal.IHandler,
-            TestSignal2.IHandler
+          TestSignal2.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -508,7 +508,7 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
 
     private sealed partial class DisposableSignalHandler(DisposalObservation observation)
         : TestSignal.IHandler,
-            IDisposable
+          IDisposable
     {
         public void Dispose() => observation.WasDisposed = true;
 

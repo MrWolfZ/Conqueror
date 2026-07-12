@@ -12,21 +12,21 @@ public static class MessageTypeSymbolExtensions
     public static bool IsMessageTransportAttribute(this INamedTypeSymbol? attributeSymbol)
     {
         return attributeSymbol
-                ?.GetAttributes()
-                .Any(a =>
-                    string.Equals(
-                        a.AttributeClass?.ToString(),
-                        "Conqueror.Messaging.MessageTransportAttribute",
-                        StringComparison.Ordinal
-                    )
-                ) ?? false;
+            ?.GetAttributes()
+            .Any(a =>
+                string.Equals(
+                    a.AttributeClass?.ToString(),
+                    "Conqueror.Messaging.MessageTransportAttribute",
+                    StringComparison.Ordinal
+                )
+            ) ?? false;
     }
 
     public static (
         string Prefix,
         string Namespace,
         string? FullyQualifiedMessageTypeName
-    ) GetMessageTransportAttributeProperties(this INamedTypeSymbol attributeSymbol)
+        ) GetMessageTransportAttributeProperties(this INamedTypeSymbol attributeSymbol)
     {
         var namedArguments = attributeSymbol
             .GetAttributes()

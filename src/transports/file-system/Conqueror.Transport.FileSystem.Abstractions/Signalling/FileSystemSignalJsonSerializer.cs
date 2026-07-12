@@ -19,11 +19,11 @@ internal sealed class FileSystemSignalJsonSerializer<TSignal> : IFileSystemSigna
     )
     {
         return await JsonSerializer
-                .DeserializeAsync(fileStream, GetJsonTypeInfo(serviceProvider), cancellationToken)
-                .ConfigureAwait(false)
-            ?? throw new InvalidOperationException(
-                $"failed to deserialize file stream to signal of type '{typeof(TSignal)}'"
-            );
+                   .DeserializeAsync(fileStream, GetJsonTypeInfo(serviceProvider), cancellationToken)
+                   .ConfigureAwait(false)
+               ?? throw new InvalidOperationException(
+                   $"failed to deserialize file stream to signal of type '{typeof(TSignal)}'"
+               );
     }
 
     private static JsonTypeInfo<TSignal> GetJsonTypeInfo(IServiceProvider serviceProvider)

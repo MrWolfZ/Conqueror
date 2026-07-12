@@ -8,10 +8,14 @@ namespace Conqueror;
 public sealed class FileSystemSignalFailedOnPublisherException : SignalFailedException
 {
     public FileSystemSignalFailedOnPublisherException(string message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     public FileSystemSignalFailedOnPublisherException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     private FileSystemSignalFailedOnPublisherException() { }
 

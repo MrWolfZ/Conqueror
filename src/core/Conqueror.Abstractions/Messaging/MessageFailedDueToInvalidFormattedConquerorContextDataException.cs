@@ -6,10 +6,14 @@ namespace Conqueror;
 public sealed class MessageFailedDueToInvalidFormattedConquerorContextDataException : MessageFailedException
 {
     public MessageFailedDueToInvalidFormattedConquerorContextDataException(string? message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     public MessageFailedDueToInvalidFormattedConquerorContextDataException(string? message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     public MessageFailedDueToInvalidFormattedConquerorContextDataException() { }
 

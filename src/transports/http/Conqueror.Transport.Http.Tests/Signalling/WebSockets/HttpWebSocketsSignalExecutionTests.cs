@@ -69,8 +69,7 @@ public sealed partial class HttpWebSocketsSignalExecutionTests
             {
                 configCount += 1;
                 _ = r.Enable(HttpSignalTransportConformityTestHost.WebSocketsAddress)
-                    .WithWebSocketFactory(
-                        (address, _)
+                    .WithWebSocketFactory((address, _)
                         //// ReSharper disable once AccessToDisposedClosure
                         => host.ConnectToWebSocket(address)
                     );
@@ -241,7 +240,7 @@ public sealed partial class HttpWebSocketsSignalExecutionTests
 
     private sealed partial class TestSignalWithDuplicateTagHandler
         : TestSignalWithDuplicateTag1.IHandler,
-            TestSignalWithDuplicateTag2.IHandler
+          TestSignalWithDuplicateTag2.IHandler
     {
         public Task Handle(TestSignalWithDuplicateTag1 signal, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();

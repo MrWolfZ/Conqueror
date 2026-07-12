@@ -26,10 +26,10 @@ internal sealed class MessageHandlerRegistry(
         var key = (typeof(TMessage), typeof(TTypesInjector));
 
         return invokerByMessageAndInjectorType.GetOrAdd(
-                key,
-                static (_, @this) => @this.GetInvokerForMessageAndInjectorType<TMessage, TTypesInjector>(),
-                this
-            ) as IMessageReceiverHandlerInvoker<TTypesInjector>;
+            key,
+            static (_, @this) => @this.GetInvokerForMessageAndInjectorType<TMessage, TTypesInjector>(),
+            this
+        ) as IMessageReceiverHandlerInvoker<TTypesInjector>;
     }
 
     public IReadOnlyCollection<

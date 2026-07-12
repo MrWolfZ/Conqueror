@@ -50,8 +50,7 @@ public sealed class HttpMessageTransportConformityReceiverTestHost : IMessageTra
                 _ = services
                     .AddConquerorHttpServerAspNetCore()
                     .AddRouting()
-                    .AddSingleton(
-                        ILogger (p) => p.GetRequiredService<ILogger<HttpMessageTransportConformityTestHost>>()
+                    .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<HttpMessageTransportConformityTestHost>>()
                     )
                     .AddSingleton<Action<IHttpMessageReceiver>>(r => testCase.ConfigureReceiver(host, r))
                     .AddSingleton<FnToCallFromHandler>(p =>
@@ -71,16 +70,14 @@ public sealed class HttpMessageTransportConformityReceiverTestHost : IMessageTra
             },
             app =>
             {
-                _ = app.Use(
-                        async (ctx, next) =>
+                _ = app.Use(async (ctx, next) =>
                         {
                             receiverHost.ReceivedHeadersOnServer.Enqueue(ctx.Request.Headers);
                             receiverHost.ReceivedQueryStringsOnServer.Enqueue(ctx.Request.QueryString.Value);
                             await next();
                         }
                     )
-                    .Use(
-                        async (ctx, next) =>
+                    .Use(async (ctx, next) =>
                         {
                             try
                             {

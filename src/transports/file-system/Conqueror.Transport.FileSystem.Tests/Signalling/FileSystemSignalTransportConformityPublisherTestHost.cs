@@ -29,8 +29,7 @@ public sealed class FileSystemSignalTransportConformityPublisherTestHost : ISign
                 _ = services
                     .AddConquerorFileSystemTransport()
                     .AddSingleton(baseDirectory)
-                    .AddSingleton(
-                        ILogger (p) => p.GetRequiredService<ILogger<FileSystemSignalTransportConformityTestHost>>()
+                    .AddSingleton(ILogger (p) => p.GetRequiredService<ILogger<FileSystemSignalTransportConformityTestHost>>()
                     );
 
                 if (publishCallback is not null)

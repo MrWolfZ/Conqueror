@@ -7,7 +7,8 @@ public static class SignalHandlerTypeServiceRegistry
     private static readonly List<Action<ISignalHandlerServiceRegisterable>> RegistrationActions = [];
 
     public static void RegisterHandlerType<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >()
         where THandler : class, ISignalHandler => RegisterHandlerTypeInternal<THandler>();
 
@@ -20,7 +21,8 @@ public static class SignalHandlerTypeServiceRegistry
     }
 
     private static void RegisterHandlerTypeInternal<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >()
         where THandler : class, ISignalHandler => RegistrationActions.Add(r => r.Register<THandler>());
 }

@@ -3,10 +3,14 @@ namespace Conqueror;
 public sealed class MessageReceiverExecutionFailedException : Exception
 {
     public MessageReceiverExecutionFailedException(string message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     public MessageReceiverExecutionFailedException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     private MessageReceiverExecutionFailedException() { }
 

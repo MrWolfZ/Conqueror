@@ -770,9 +770,9 @@ public static partial class FileSystemSignalTestCases
     {
         foreach (
             var (hasActivity, hasDownstream, hasBidirectional) in from hasActivity in new[] { true, false }
-            from hasDownstream in new[] { true, false }
-            from hasBidirectional in new[] { true, false }
-            select (hasActivity, hasDownstream, hasBidirectional)
+                                                                  from hasDownstream in new[] { true, false }
+                                                                  from hasBidirectional in new[] { true, false }
+                                                                  select (hasActivity, hasDownstream, hasBidirectional)
         )
         {
             yield return new()
@@ -901,7 +901,7 @@ public static partial class FileSystemSignalTestCases
 
     public sealed partial class MultiTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-            TestSignal2.IHandler
+          TestSignal2.IHandler
     {
         static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
             receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
@@ -929,7 +929,7 @@ public static partial class FileSystemSignalTestCases
 
     public sealed partial class MixedWithNonFileSystemTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-            NonFileSystemTestSignal.IHandler
+          NonFileSystemTestSignal.IHandler
     {
         static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
             receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
@@ -1180,9 +1180,9 @@ public static partial class FileSystemSignalTestCases
 
     public sealed partial class WildMixTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignal.IHandler,
-            TestSignalWithoutPayload.IHandler,
-            TestSignalWithCustomSerializer.IHandler,
-            TestSignalWithCustomJsonTypeInfo.IHandler
+          TestSignalWithoutPayload.IHandler,
+          TestSignalWithCustomSerializer.IHandler,
+          TestSignalWithCustomJsonTypeInfo.IHandler
     {
         static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
             receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);
@@ -1227,7 +1227,7 @@ public static partial class FileSystemSignalTestCases
 
     private sealed partial class MultiHierarchyTestSignalHandler(FnToCallFromHandler funToCallFromHandler)
         : TestSignalBase.IHandler,
-            TestSignalSub.IHandler
+          TestSignalSub.IHandler
     {
         static void IFileSystemSignalHandler.ConfigureFileSystemReceiver(IFileSystemSignalReceiver receiver) =>
             receiver.ServiceProvider.GetRequiredService<Action<IFileSystemSignalReceiver>>().Invoke(receiver);

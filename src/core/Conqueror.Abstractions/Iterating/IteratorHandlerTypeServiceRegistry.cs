@@ -7,7 +7,8 @@ public static class IteratorHandlerTypeServiceRegistry
     private static readonly List<Action<IIteratorHandlerServiceRegisterable>> RegistrationActions = [];
 
     public static void RegisterHandlerType<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >()
         where THandler : class, IIteratorHandler => RegisterHandlerTypeInternal<THandler>();
 
@@ -20,7 +21,8 @@ public static class IteratorHandlerTypeServiceRegistry
     }
 
     private static void RegisterHandlerTypeInternal<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        THandler
     >()
         where THandler : class, IIteratorHandler => RegistrationActions.Add(r => r.Register<THandler>());
 }

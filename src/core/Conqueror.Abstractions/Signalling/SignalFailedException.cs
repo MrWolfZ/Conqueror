@@ -3,10 +3,14 @@ namespace Conqueror;
 public abstract class SignalFailedException : Exception
 {
     protected SignalFailedException(string? message, Exception innerException)
-        : base(message, innerException) { }
+        : base(message, innerException)
+    {
+    }
 
     protected SignalFailedException(string? message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     protected SignalFailedException() { }
 

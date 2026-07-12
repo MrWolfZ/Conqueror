@@ -17,7 +17,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 {
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Handled message of type '{MessageTypeName}' and got response {@ResponsePayload:l} in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handled message of type '{MessageTypeName}' and got response {@ResponsePayload:l} in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageResponseOnReceiver(
         this ILogger logger,
@@ -31,7 +32,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Sent in-process message of type '{MessageTypeName}' and got response {@ResponsePayload:l} in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sent in-process message of type '{MessageTypeName}' and got response {@ResponsePayload:l} in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageResponseOnSender(
         this ILogger logger,
@@ -45,7 +47,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Handled {TransportTypeName:l} message of type '{MessageTypeName}' and got response {@ResponsePayload:l} in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handled {TransportTypeName:l} message of type '{MessageTypeName}' and got response {@ResponsePayload:l} in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageResponseForTransportOnReceiver(
         this ILogger logger,
@@ -60,7 +63,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Sent {TransportTypeName:l} message of type '{MessageTypeName}' and got response {@ResponsePayload:l} in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sent {TransportTypeName:l} message of type '{MessageTypeName}' and got response {@ResponsePayload:l} in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageResponseForTransportOnSender(
         this ILogger logger,
@@ -101,7 +105,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Handled {TransportTypeName:l} message of type '{MessageTypeName}' in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handled {TransportTypeName:l} message of type '{MessageTypeName}' in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageResponseWithoutPayloadForTransportOnReceiver(
         this ILogger logger,
@@ -115,7 +120,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Sent {TransportTypeName:l} message of type '{MessageTypeName}' in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sent {TransportTypeName:l} message of type '{MessageTypeName}' in {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     public static partial void LogMessageResponseWithoutPayloadForTransportOnSender(
         this ILogger logger,
@@ -271,7 +277,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Handled message of type '{MessageTypeName}' and got response\n{@ResponsePayload:l}\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handled message of type '{MessageTypeName}' and got response\n{@ResponsePayload:l}\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageResponseWithPayloadAsIndentedJsonUnixOnReceiver(
         this ILogger logger,
@@ -285,7 +292,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Sent in-process message of type '{MessageTypeName}' and got response\n{@ResponsePayload:l}\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sent in-process message of type '{MessageTypeName}' and got response\n{@ResponsePayload:l}\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageResponseWithPayloadAsIndentedJsonUnixOnSender(
         this ILogger logger,
@@ -299,7 +307,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Handled message of type '{MessageTypeName}' and got response\r\n{@ResponsePayload:l}\r\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handled message of type '{MessageTypeName}' and got response\r\n{@ResponsePayload:l}\r\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageResponseWithPayloadAsIndentedJsonNonUnixOnReceiver(
         this ILogger logger,
@@ -313,7 +322,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Sent in-process message of type '{MessageTypeName}' and got response\r\n{@ResponsePayload:l}\r\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sent in-process message of type '{MessageTypeName}' and got response\r\n{@ResponsePayload:l}\r\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageResponseWithPayloadAsIndentedJsonNonUnixOnSender(
         this ILogger logger,
@@ -327,7 +337,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Handled {TransportTypeName:l} message of type '{MessageTypeName}' and got response\n{@ResponsePayload:l}\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handled {TransportTypeName:l} message of type '{MessageTypeName}' and got response\n{@ResponsePayload:l}\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageResponseWithPayloadAsIndentedJsonForTransportUnixOnReceiver(
         this ILogger logger,
@@ -342,7 +353,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Sent {TransportTypeName:l} message of type '{MessageTypeName}' and got response\n{@ResponsePayload:l}\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sent {TransportTypeName:l} message of type '{MessageTypeName}' and got response\n{@ResponsePayload:l}\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageResponseWithPayloadAsIndentedJsonForTransportUnixOnSender(
         this ILogger logger,
@@ -357,7 +369,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Handled {TransportTypeName:l} message of type '{MessageTypeName}' and got response\r\n{@ResponsePayload:l}\r\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Handled {TransportTypeName:l} message of type '{MessageTypeName}' and got response\r\n{@ResponsePayload:l}\r\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageResponseWithPayloadAsIndentedJsonForTransportNonUnixOnReceiver(
         this ILogger logger,
@@ -372,7 +385,8 @@ internal static partial class MessagingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-response",
-        Message = "Sent {TransportTypeName:l} message of type '{MessageTypeName}' and got response\r\n{@ResponsePayload:l}\r\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
+        Message =
+            "Sent {TransportTypeName:l} message of type '{MessageTypeName}' and got response\r\n{@ResponsePayload:l}\r\nin {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})"
     )]
     private static partial void LogMessageResponseWithPayloadAsIndentedJsonForTransportNonUnixOnSender(
         this ILogger logger,

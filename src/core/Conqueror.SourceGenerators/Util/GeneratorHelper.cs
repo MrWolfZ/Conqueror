@@ -21,11 +21,11 @@ internal static class GeneratorHelper
         return new TypeDescriptor(
             symbol.Name,
             symbol.Name
-                + (
-                    typeArguments.Length > 0
-                        ? "<" + string.Join(", ", typeArguments.Select(t => t.ToString())) + ">"
-                        : ""
-                ),
+            + (
+                typeArguments.Length > 0
+                    ? "<" + string.Join(", ", typeArguments.Select(t => t.ToString())) + ">"
+                    : ""
+            ),
             symbol.ContainingNamespace?.IsGlobalNamespace ?? false ? "" : symbol.ContainingNamespace?.ToString() ?? "",
             symbol.ToString(),
             symbol.DeclaredAccessibility,
@@ -283,14 +283,14 @@ internal static class GeneratorHelper
     private static bool IsPrimitive(ITypeSymbol symbol) =>
         symbol.SpecialType
             is SpecialType.System_String
-                or SpecialType.System_Boolean
-                or SpecialType.System_Byte
-                or SpecialType.System_Int16
-                or SpecialType.System_Int32
-                or SpecialType.System_Int64
-                or SpecialType.System_Single
-                or SpecialType.System_Double
-                or SpecialType.System_Decimal;
+            or SpecialType.System_Boolean
+            or SpecialType.System_Byte
+            or SpecialType.System_Int16
+            or SpecialType.System_Int32
+            or SpecialType.System_Int64
+            or SpecialType.System_Single
+            or SpecialType.System_Double
+            or SpecialType.System_Decimal;
 
     private static bool IsNullable(ITypeSymbol symbol) => symbol.IsReferenceType;
 }

@@ -2,7 +2,7 @@
 
 public sealed class HttpMessageConformityExecutionErrorTestCase
     : HttpMessageConformityExecutionTestCase,
-        IMessageTransportConformityExecutionErrorTestCase<HttpMessageTransportConformityTestHost>
+      IMessageTransportConformityExecutionErrorTestCase<HttpMessageTransportConformityTestHost>
 {
     public required IReadOnlyCollection<Exception?> ConfigurationExceptions { get; init; }
     public Exception? ReceiverConfigurationException => ConfigurationExceptions.OfType<Exception>().FirstOrDefault();

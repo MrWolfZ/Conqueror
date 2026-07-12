@@ -47,7 +47,8 @@ public sealed partial class MessageHandlerRegistrationTests
     [Test]
     [Combinatorial]
     public void GivenServiceCollection_WhenAddingMessageHandlers_AddsCorrectHandlerRegistrations(
-        [Values("type", "factory", "instance", "delegate", "sync_delegate")] string registrationMethod
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
+        string registrationMethod
     )
     {
         var services = new ServiceCollection();
@@ -132,7 +133,8 @@ public sealed partial class MessageHandlerRegistrationTests
     [Test]
     [Combinatorial]
     public void GivenServiceCollection_WhenAddingMessageHandlerForMultipleMessageTypes_AddsCorrectHandlerRegistrations(
-        [Values("type", "factory", "instance")] string registrationMethod
+        [Values("type", "factory", "instance")]
+        string registrationMethod
     )
     {
         var services = new ServiceCollection();
@@ -157,11 +159,7 @@ public sealed partial class MessageHandlerRegistrationTests
             .Select(r => (r.MessageType, r.HandlerType))
             .ToList();
 
-        var expectedRegistrations = new[]
-        {
-            (typeof(TestMessage), typeof(MultiTestMessageHandler)),
-            (typeof(TestMessage2), typeof(MultiTestMessageHandler)),
-        };
+        var expectedRegistrations = new[] { (typeof(TestMessage), typeof(MultiTestMessageHandler)), (typeof(TestMessage2), typeof(MultiTestMessageHandler)), };
 
         Assert.That(handlerRegistrations, Is.EquivalentTo(expectedRegistrations));
     }
@@ -170,11 +168,13 @@ public sealed partial class MessageHandlerRegistrationTests
     [Combinatorial]
     public void GivenRegisteredHandler_WhenRegisteringSameHandlerDifferently_OverwritesRegistration(
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? initialLifetime,
-        [Values("type", "factory", "instance")] string initialRegistrationMethod,
+        ServiceLifetime? initialLifetime,
+        [Values("type", "factory", "instance")]
+        string initialRegistrationMethod,
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? overwrittenLifetime,
-        [Values("type", "factory", "instance")] string overwrittenRegistrationMethod
+        ServiceLifetime? overwrittenLifetime,
+        [Values("type", "factory", "instance")]
+        string overwrittenRegistrationMethod
     )
     {
         var services = new ServiceCollection();
@@ -250,11 +250,13 @@ public sealed partial class MessageHandlerRegistrationTests
     [Combinatorial]
     public void GivenRegisteredHandlerWithoutResponse_WhenRegisteringSameHandlerDifferently_OverwritesRegistration(
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? initialLifetime,
-        [Values("type", "factory", "instance")] string initialRegistrationMethod,
+        ServiceLifetime? initialLifetime,
+        [Values("type", "factory", "instance")]
+        string initialRegistrationMethod,
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? overwrittenLifetime,
-        [Values("type", "factory", "instance")] string overwrittenRegistrationMethod
+        ServiceLifetime? overwrittenLifetime,
+        [Values("type", "factory", "instance")]
+        string overwrittenRegistrationMethod
     )
     {
         var services = new ServiceCollection();
@@ -334,11 +336,13 @@ public sealed partial class MessageHandlerRegistrationTests
     [Combinatorial]
     public void GivenRegisteredHandler_WhenRegisteringDifferentHandlerForSameMessageType_OverwritesRegistration(
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? initialLifetime,
-        [Values("type", "factory", "instance", "delegate", "sync_delegate")] string initialRegistrationMethod,
+        ServiceLifetime? initialLifetime,
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
+        string initialRegistrationMethod,
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? overwrittenLifetime,
-        [Values("type", "factory", "instance", "delegate", "sync_delegate")] string overwrittenRegistrationMethod
+        ServiceLifetime? overwrittenLifetime,
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
+        string overwrittenRegistrationMethod
     )
     {
         var services = new ServiceCollection();
@@ -465,11 +469,13 @@ public sealed partial class MessageHandlerRegistrationTests
     [Combinatorial]
     public void GivenRegisteredHandlerWithoutResponse_WhenRegisteringDifferentHandlerForSameMessageType_OverwritesRegistration(
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? initialLifetime,
-        [Values("type", "factory", "instance", "delegate", "sync_delegate")] string initialRegistrationMethod,
+        ServiceLifetime? initialLifetime,
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
+        string initialRegistrationMethod,
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-            ServiceLifetime? overwrittenLifetime,
-        [Values("type", "factory", "instance", "delegate", "sync_delegate")] string overwrittenRegistrationMethod
+        ServiceLifetime? overwrittenLifetime,
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
+        string overwrittenRegistrationMethod
     )
     {
         var services = new ServiceCollection();

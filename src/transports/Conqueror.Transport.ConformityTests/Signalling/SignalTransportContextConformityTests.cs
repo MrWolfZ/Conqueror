@@ -5,7 +5,7 @@ using static TestContextData;
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "by design")]
 public abstract class SignalTransportContextConformityTests<TTestClass, TTestHost, TTestCase>
     where TTestClass : SignalTransportContextConformityTests<TTestClass, TTestHost, TTestCase>,
-        ISignalTransportContextConformityTests<TTestHost, TTestCase>
+    ISignalTransportContextConformityTests<TTestHost, TTestCase>
     where TTestHost : ISignalTransportConformityTestHost
     where TTestCase : ISignalTransportConformityContextTestCase<TTestHost>
 {

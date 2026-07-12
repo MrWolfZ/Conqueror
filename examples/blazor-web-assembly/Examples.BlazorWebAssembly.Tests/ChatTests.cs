@@ -23,7 +23,11 @@ internal sealed class ChatTests
         var broadcastHandler = host.CreateMessageHttpSender(BroadcastChatEntry.T);
         var getHandler = host.CreateMessageHttpSender(GetChat.T);
 
-        await broadcastHandler.Handle(new() { User = "User", Content = "Content" }, host.TimeoutToken);
+        await broadcastHandler.Handle(new()
+        {
+            User = "User",
+            Content = "Content",
+        }, host.TimeoutToken);
 
         var entries = await getHandler.Handle(new(), host.TimeoutToken);
 
