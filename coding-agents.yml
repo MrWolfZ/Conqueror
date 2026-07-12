@@ -1,0 +1,3 @@
+tools:
+  dotnet8: ((system))
+  dotnet10: ((system))
