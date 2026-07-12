@@ -993,8 +993,8 @@ public static partial class HttpMessageTestCases
             ],
             ExpectedResponses =
             [
-                new TestMessageResponse[] { new() { Payload = 11 }, new() { Payload = 12 }, },
-                new TestMessageResponse[] { new() { Payload = 21 }, new() { Payload = 22 }, },
+                new TestMessageResponse[] { new() { Payload = 11 }, new() { Payload = 12 } },
+                new TestMessageResponse[] { new() { Payload = 21 }, new() { Payload = 22 } },
             ],
             RegisterHandler = s => s.AddMessageHandler<TestMessageWithArrayResponseHandler>(),
             SendMessages = async (s, ct) =>
@@ -2404,10 +2404,7 @@ public static partial class HttpMessageTestCases
         > IHttpMessage<
             TestMessageWithCustomSerializer,
             TestMessageWithCustomSerializerResponse
-        >.HttpMessageSerializer
-        {
-            get;
-        } = new TestMessageCustomSerializer();
+        >.HttpMessageSerializer { get; } = new TestMessageCustomSerializer();
 
         static IHttpMessageResponseSerializer<
             TestMessageWithCustomSerializer,
@@ -2415,10 +2412,7 @@ public static partial class HttpMessageTestCases
         > IHttpMessage<
             TestMessageWithCustomSerializer,
             TestMessageWithCustomSerializerResponse
-        >.HttpMessageResponseSerializer
-        {
-            get;
-        } = new TestMessageCustomSerializer();
+        >.HttpMessageResponseSerializer { get; } = new TestMessageCustomSerializer();
     }
 
     public sealed record TestMessageWithCustomSerializerResponse
@@ -2945,10 +2939,7 @@ public static partial class HttpMessageTestCases
         static IHttpMessageSerializer<ThrowingTestMessage, TestMessageResponse> IHttpMessage<
             ThrowingTestMessage,
             TestMessageResponse
-        >.HttpMessageSerializer
-        {
-            get;
-        } = new ThrowingTestMessageSerializer();
+        >.HttpMessageSerializer { get;} = new ThrowingTestMessageSerializer();
     }
 
     private sealed class ThrowingTestMessageSerializer
