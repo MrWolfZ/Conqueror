@@ -14,7 +14,7 @@ public partial record TestIterator
 
 public partial record TestIterator
 {
-    public string Property2 { get; init; }
+    public required string Property2 { get; init; }
 }
 
 public record TestItem;
