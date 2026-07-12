@@ -52,7 +52,6 @@ task benchmarks:run -- --filter "*Http*"
 
 ```bash
 task fmt              # Format all files in current scope
-task fmt:check        # Check formatting (for CI)
 ```
 
 **IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. The task commands use the correct solution files (`Transports.sln` for aggregate, module-specific `.sln` for individual transports) with all required dependencies.
@@ -113,6 +112,7 @@ REST/SSE/WebSockets transport using ASP.NET Core.
 - `Conqueror.Transport.Http.Server.AspNetCore` - ASP.NET Core server
 
 **Projects:**
+
 - `Conqueror.Transport.Http.Abstractions` - Core abstractions
 - `Conqueror.Transport.Http.Client` - Client implementation
 - `Conqueror.Transport.Http.Server.AspNetCore` - Server implementation
@@ -140,6 +140,7 @@ File-based transport for testing and local IPC. Not for production use.
 - `Conqueror.Transport.FileSystem` - Implementation
 
 **Projects:**
+
 - `Conqueror.Transport.FileSystem.Abstractions` - Core abstractions
 - `Conqueror.Transport.FileSystem` - Implementation
 - `Conqueror.Transport.FileSystem.Tests` - Test suite

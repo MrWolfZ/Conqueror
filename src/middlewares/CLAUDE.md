@@ -56,7 +56,6 @@ task benchmarks:run -- --filter "*Authorization*"
 
 ```bash
 task fmt              # Format all files in current scope
-task fmt:check        # Check formatting (for CI)
 ```
 
 **IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. The task commands use the correct solution files (`Middlewares.sln` for aggregate, module-specific `.sln` for individual middlewares) with all required dependencies.
@@ -87,6 +86,7 @@ Claim-based authorization checks before handler execution. Supports multiple nam
 **Note**: Only supports messages (not signals). Signal authorization is planned.
 
 **Projects**:
+
 - `Conqueror.Middleware.Authorization` - Core middleware implementation
 - `Conqueror.Middleware.Authorization.Tests` - Test suite
 - `Conqueror.Middleware.Authorization.Benchmarks` - Performance benchmarks
@@ -101,6 +101,7 @@ See `authorization/CLAUDE.md` for details.
 Structured logging of message/signal lifecycle (pre-execution, post-execution, exceptions). Configurable log levels, payload serialization strategies (Omit, Raw, MinimalJson, IndentedJson), and custom hooks. Performance-optimized with log level checks and AOT-compatible JSON serialization.
 
 **Projects**:
+
 - `Conqueror.Middleware.Logging` - Core middleware implementation
 - `Conqueror.Middleware.Logging.Tests` - Test suite
 - `Conqueror.Middleware.Logging.Benchmarks` - Performance benchmarks
@@ -115,6 +116,7 @@ See `logging/CLAUDE.md` for details.
 Wraps handler execution with Polly resilience patterns (retry, timeout, circuit-breaker, hedging, rate limiting). Uses Polly's `ResiliencePipelineBuilder<TResponse>` for configuration. Middleware placement in pipeline determines which operations are wrapped (place before logging to log each retry attempt, after to log only final result).
 
 **Projects**:
+
 - `Conqueror.Middleware.Polly` - Core middleware implementation
 - `Conqueror.Middleware.Polly.Tests` - Test suite
 - `Conqueror.Middleware.Polly.Benchmarks` - Performance benchmarks

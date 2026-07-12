@@ -472,7 +472,6 @@ All Taskfiles include formatting tasks using CSharpier:
 
 ```bash
 task fmt              # Format all files in current scope
-task fmt:check        # Check formatting (for CI)
 ```
 
 Formatting commands respect the same hierarchical structure as build/test commands and operate on all files in the current directory scope.

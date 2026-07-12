@@ -38,7 +38,6 @@ task benchmarks:run -- "message-bench"
 
 ```bash
 task fmt              # Format all files in current scope
-task fmt:check        # Check formatting (for CI)
 ```
 
 **IMPORTANT:** DO NOT use `dotnet build` or `dotnet test` directly. The task commands use the correct solution file (`core.sln`) with all required dependencies.

@@ -2,6 +2,11 @@ version: '3'
 
 # Base Taskfile with common tasks for all modules
 # Include this file and set the SOLUTION_FILE and DESC_PREFIX variables
+vars:
+  DOTNET_SDK_DIR:
+    sh: |
+      ver=$(dotnet --version)
+      echo "$(dotnet --list-sdks | grep "^$ver " | sed 's/.*\[\(.*\)\]/\1/')/$ver"
 
 tasks:
   build:
@@ -15,14 +20,56 @@ tasks:
       - dotnet test {{.SOLUTION_FILE}} {{.CLI_ARGS}}
 
   fmt:
-    desc: Format files with csharpier
+    desc: Format changed files with JetBrains tools
+    silent: true
+    vars:
+      CHANGED_FILES:
+        sh: |
+          repo_root=$(git rev-parse --show-toplevel)
+          while IFS= read -r file; do
+            rel_path=$(realpath --relative-to=. "$repo_root/$file")
+            echo "'$rel_path'"
+          done < <(git status --porcelain . | awk '{print $2}')
+      NUM_CHANGED_FILES: '{{if gt (.CHANGED_FILES | len) 0}}{{.CHANGED_FILES | splitList "\n" | len}}{{else}}0{{end}}'
     cmds:
-      - dotnet csharpier format . {{.CLI_ARGS}}
+      - if: '{{eq (int .NUM_CHANGED_FILES) 0}}'
+        cmd: echo "no files changed, skipping formatting"
+      - if: '{{eq (int .NUM_CHANGED_FILES) 1}}'
+        cmd: echo "formatting {{.NUM_CHANGED_FILES}} file..."
+      - if: '{{gt (int .NUM_CHANGED_FILES) 1}}'
+        cmd: echo "formatting {{.NUM_CHANGED_FILES}} files..."
+      - task: _fmt
+        if: '{{gt (int .NUM_CHANGED_FILES) 0}}'
+        vars:
+          PATHS: '{{.CHANGED_FILES | splitList "\n" | join " " }}'
 
-  fmt:check:
-    desc: Check formatting with csharpier (for CI)
+  fmt:solution:
+    desc: Format files with JetBrains tools
+    silent: true
     cmds:
-      - dotnet csharpier check . {{.CLI_ARGS}}
+      - echo "formatting solution {{.SOLUTION_FILE}}"
+      - task: _fmt
+        vars:
+          PATHS: '{{.SOLUTION_FILE}}'
+
+  _fmt:
+    desc: Format a list of paths with JetBrains tools
+    silent: true
+    internal: true
+    requires:
+      vars:
+        - PATHS
+    cmds:
+      - |
+        dotnet jb cleanupcode {{.PATHS}} \
+          --toolset-path="{{.DOTNET_SDK_DIR}}/MSBuild.dll" \
+          --dotnetcore="{{.DOTNET_SDK_DIR}}/../../dotnet" \
+          --settings="{{.TASKFILE_DIR}}/../.editorconfig" \
+          --no-buildin-settings \
+          --no-build \
+          --profile="Built-in: Reformat Code" \
+          --exclude="**/Generated/**" \
+          {{.CLI_ARGS}}
 
   benchmarks:run:
     desc: Run benchmarks for {{.DESC_PREFIX}}
