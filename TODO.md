@@ -40,7 +40,6 @@ This file contains all the open points for extensions and improvements to the **
 ### Signalling
 
 - [ ] add tests for cancellation that assert a `Handle` throws early if passed a canceled token, and also cancels after every middleware
-- [ ] refactor `UseInProcess()` to return builder for setting broadcast strategy instead of overloads
 - [ ] add parameter for sequential strategy that configures whether to abort early on cancellation
 - [ ] implement fire & forget strategy
 - [ ] add aggregate publisher that takes a broadcast strategy
