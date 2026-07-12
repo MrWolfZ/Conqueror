@@ -28,7 +28,7 @@ public interface ITestTransportSignalHandler<TSignal, TIHandler> : ISignalHandle
 
 internal interface ITestTransportSignalHandlerTypesInjector : ISignalHandlerTypesInjector
 {
-    TResult Create<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable);
+    TResult Inject<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable);
 }
 
 file sealed class TestTransportSignalHandlerTypesInjector<TSignal, TIHandler, THandler>
@@ -41,7 +41,7 @@ file sealed class TestTransportSignalHandlerTypesInjector<TSignal, TIHandler, TH
 
     public Type SignalType { get; } = typeof(TSignal);
 
-    public TResult Create<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable) =>
+    public TResult Inject<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable) =>
         injectable.WithInjectedTypes<TSignal, TIHandler, THandler>();
 }
 

@@ -26,7 +26,6 @@ This file contains all the open points for extensions and improvements to the **
 ### Messaging
 
 - [ ] recipe for testing handlers: use test host instead of test base (composition over inheritance)
-- [ ] in types injectors rename the `Create` method to `Inject`
 - [ ] add tests for cancellation that assert a `Handle` throws early if passed a canceled token, and also cancels after every middleware
 - [ ] add test that pipeline can be safely forked
 - [ ] add sender to context data test location
@@ -40,7 +39,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ### Signalling
 
-- [ ] in types injectors rename the `Create` method to `Inject`
 - [ ] add tests for cancellation that assert a `Handle` throws early if passed a canceled token, and also cancels after every middleware
 - [ ] refactor `UseInProcess()` to return builder for setting broadcast strategy instead of overloads
 - [ ] add parameter for sequential strategy that configures whether to abort early on cancellation

@@ -416,7 +416,7 @@ file sealed class TestSignalTransportReceiverHost(IServiceProvider serviceProvid
 
         foreach (var invoker in typesInjectors)
         {
-            var receiver = await invoker.TypesInjector.Create(new Injectable(invoker, serviceProvider));
+            var receiver = await invoker.TypesInjector.Inject(new Injectable(invoker, serviceProvider));
 
             if (receiver.Configuration is not null)
             {
@@ -479,7 +479,7 @@ file sealed class TestSignalTransport2ReceiverHost(IServiceProvider serviceProvi
 
         foreach (var invoker in typesInjectors)
         {
-            var receiver = invoker.TypesInjector.Create(
+            var receiver = invoker.TypesInjector.Inject(
                 new Injectable(invoker, serviceProvider, receiverByHandlerType)
             );
 
@@ -591,7 +591,7 @@ public interface ITestTransportSignalReceiver
 
 internal interface ITestTransportSignalHandlerTypesInjector : ISignalHandlerTypesInjector
 {
-    TResult Create<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable);
+    TResult Inject<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable);
 }
 
 file sealed class TestTransportSignalHandlerTypesInjector<TSignal, TIHandler, THandler>
@@ -604,7 +604,7 @@ file sealed class TestTransportSignalHandlerTypesInjector<TSignal, TIHandler, TH
 
     public Type SignalType { get; } = typeof(TSignal);
 
-    public TResult Create<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable) =>
+    public TResult Inject<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable) =>
         injectable.WithInjectedTypes<TSignal, TIHandler, THandler>();
 }
 
@@ -722,7 +722,7 @@ public interface ITestTransport2SignalReceiver
 
 public interface ITestTransport2SignalHandlerTypesInjector : ISignalHandlerTypesInjector
 {
-    TResult Create<TResult>(ITestTransport2TypesInjectable<TResult> injectable);
+    TResult Inject<TResult>(ITestTransport2TypesInjectable<TResult> injectable);
 }
 
 file sealed class TestTransport2SignalHandlerTypesInjector<TSignal, TIHandler, THandler>
@@ -735,7 +735,7 @@ file sealed class TestTransport2SignalHandlerTypesInjector<TSignal, TIHandler, T
 
     public Type SignalType { get; } = typeof(TSignal);
 
-    public TResult Create<TResult>(ITestTransport2TypesInjectable<TResult> injectable) =>
+    public TResult Inject<TResult>(ITestTransport2TypesInjectable<TResult> injectable) =>
         injectable.WithInjectedTypes<TSignal, TIHandler, THandler>();
 }
 

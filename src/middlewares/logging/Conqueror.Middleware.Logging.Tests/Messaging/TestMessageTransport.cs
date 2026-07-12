@@ -39,7 +39,7 @@ public interface ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
 
 internal interface ITestTransportMessageHandlerTypesInjector : IMessageHandlerTypesInjector
 {
-    TResult Create<TResult>(ITestTransportMessageHandlerTypesInjectable<TResult> injectable);
+    TResult Inject<TResult>(ITestTransportMessageHandlerTypesInjectable<TResult> injectable);
 }
 
 file sealed class TestTransportMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, THandler>
@@ -53,7 +53,7 @@ file sealed class TestTransportMessageHandlerTypesInjector<TMessage, TResponse, 
 
     public Type MessageType { get; } = typeof(TMessage);
 
-    public TResult Create<TResult>(ITestTransportMessageHandlerTypesInjectable<TResult> injectable) =>
+    public TResult Inject<TResult>(ITestTransportMessageHandlerTypesInjectable<TResult> injectable) =>
         injectable.WithInjectedTypes<TMessage, TResponse, TIHandler, THandler>();
 }
 
