@@ -695,7 +695,7 @@ public abstract class SignalHandlerFunctionalityPublisherTests : SignalHandlerFu
             .OfType<TestSignalPublisherOptions>()
             .FirstOrDefault();
         _ = services.Replace(
-            ServiceDescriptor.Singleton(new TestSignalPublisherOptions(existingOptions?.HandlerCount + 1 ?? 1))
+            ServiceDescriptor.Singleton(new TestSignalPublisherOptions((existingOptions?.HandlerCount + 1) ?? 1))
         );
         services.TryAddSingleton(typeof(TestSignalPublisher<>));
 
