@@ -242,7 +242,7 @@ public sealed partial class IteratorHandlerFunctionalityDefaultTests : IteratorH
 
                 if (configurePerIterator)
                 {
-                    _ = r.ConfigureOnEveryIteration();
+                    r.ConfigureOnEveryIteration();
                 }
 
                 if (isDisabled)

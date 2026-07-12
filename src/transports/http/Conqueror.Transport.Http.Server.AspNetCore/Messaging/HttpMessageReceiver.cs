@@ -14,10 +14,8 @@ internal sealed class HttpMessageReceiver<TMessage, TResponse>(Type? handlerType
 
     public void Disable() => IsEnabled = false;
 
-    public IHttpMessageReceiver OmitFromApiDescription()
+    public void OmitFromApiDescription()
     {
         IsOmittedFromApiDescription = true;
-
-        return this;
     }
 }

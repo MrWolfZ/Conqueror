@@ -321,7 +321,7 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
 
                 if (configurePerMessage)
                 {
-                    _ = r.ConfigureOnEveryMessage();
+                    r.ConfigureOnEveryMessage();
                 }
 
                 if (isDisabled)
@@ -374,7 +374,7 @@ public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHan
 
                 if (configurePerMessage)
                 {
-                    _ = r.ConfigureOnEveryMessage();
+                    r.ConfigureOnEveryMessage();
                 }
 
                 if (isDisabled)

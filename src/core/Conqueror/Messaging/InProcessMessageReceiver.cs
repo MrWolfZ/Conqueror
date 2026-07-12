@@ -13,11 +13,9 @@ internal sealed class InProcessMessageReceiver<TMessage, TResponse>(IServiceProv
 
     public void Disable() => IsEnabled = false;
 
-    public IInProcessMessageReceiver ConfigureOnEveryMessage()
+    public void ConfigureOnEveryMessage()
     {
         MustBeConfiguredOnEveryMessage = true;
-
-        return this;
     }
 
     public IInProcessMessageReceiver Enable()

@@ -26,7 +26,6 @@ This file contains all the open points for extensions and improvements to the **
 ### Messaging
 
 - [ ] recipe for testing handlers: use test host instead of test base (composition over inheritance)
-- [ ] align receiver configs to not return itself, but either void or a configuration object
 - [ ] in types injectors rename the `Create` method to `Inject`
 - [ ] add tests for cancellation that assert a `Handle` throws early if passed a canceled token, and also cancels after every middleware
 - [ ] add test that pipeline can be safely forked

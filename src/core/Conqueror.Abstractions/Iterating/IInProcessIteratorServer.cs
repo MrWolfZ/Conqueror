@@ -13,5 +13,5 @@ public interface IInProcessIteratorServer
 
     void Disable();
 
-    IInProcessIteratorServer ConfigureOnEveryIteration();
+    void ConfigureOnEveryIteration();
 }

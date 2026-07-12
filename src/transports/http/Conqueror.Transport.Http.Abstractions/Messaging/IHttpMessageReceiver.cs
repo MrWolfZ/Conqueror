@@ -15,5 +15,5 @@ public interface IHttpMessageReceiver
 
     void Disable();
 
-    IHttpMessageReceiver OmitFromApiDescription();
+    void OmitFromApiDescription();
 }

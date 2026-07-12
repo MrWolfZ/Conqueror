@@ -13,17 +13,8 @@ internal sealed class InProcessIteratorServer<TIterator, TItem>(IServiceProvider
 
     public void Disable() => IsEnabled = false;
 
-    public IInProcessIteratorServer ConfigureOnEveryIteration()
+    public void ConfigureOnEveryIteration()
     {
         MustBeConfiguredOnEveryIteration = true;
-
-        return this;
-    }
-
-    public IInProcessIteratorServer Enable()
-    {
-        IsEnabled = true;
-
-        return this;
     }
 }

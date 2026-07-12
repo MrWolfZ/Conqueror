@@ -13,5 +13,5 @@ public interface IInProcessMessageReceiver
 
     void Disable();
 
-    IInProcessMessageReceiver ConfigureOnEveryMessage();
+    void ConfigureOnEveryMessage();
 }
