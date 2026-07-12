@@ -40,6 +40,7 @@ internal static partial class LogOutputNormalizationStringExtensions
 
         return logOutput
             .Replace(@"src\", "src/", StringComparison.Ordinal)
+            .Replace(@"core\", "core/", StringComparison.Ordinal)
             .Replace(@"Conqueror\", "Conqueror/", StringComparison.Ordinal)
             .Replace(@"Messaging\", "Messaging/", StringComparison.Ordinal)
             .Replace(@"MessageTypeGenerator\", "MessageTypeGenerator/", StringComparison.Ordinal)
