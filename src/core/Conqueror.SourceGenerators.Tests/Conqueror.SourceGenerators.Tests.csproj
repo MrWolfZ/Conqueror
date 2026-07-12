@@ -2,6 +2,12 @@
   <Import Project="../../.targets/test.targets" />
   <PropertyGroup>
     <ImplicitUsings>false</ImplicitUsings>
+    <!--
+      SYSLIB1032 warns about types with JSON source generator annotations not being partial,
+      but for our tests we don't use the JSON source generator, and instead, we mock it by
+      specifying the generated type directly in the tests
+    -->
+    <NoWarn>$(NoWarn);SYSLIB1032</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
