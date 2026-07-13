@@ -20,7 +20,7 @@
     <!-- Package the generator in the analyzer directory of the nuget package -->
     <None Remove="$(OutputPath)/Conqueror.SourceGenerators.dll" />
     <None
-      Include="$(MSBuildProjectDirectory)/../../build/.publish/Conqueror.SourceGenerators/Conqueror.SourceGenerators.dll"
+      Include="$(MSBuildProjectDirectory)/../../../build/.publish/Conqueror.SourceGenerators/Conqueror.SourceGenerators.dll"
       Pack="true"
       PackagePath="analyzers/dotnet/cs"
       Visible="false"

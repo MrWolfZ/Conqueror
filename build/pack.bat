@@ -16,12 +16,12 @@ for /D %%p in (%srcDir%\Conqueror*) Do (
 
 REM pack
 
-echo packing projects...
+echo packaging projects...
 
 mkdir .publish
-dotnet publish %srcDir%\Conqueror.SourceGenerators -c Release --framework netstandard2.0 -o %publishDir%/Conqueror.SourceGenerators
-dotnet pack %srcDir%\Conqueror.Abstractions -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror -c Release -o %publishDir% --include-symbols
+dotnet publish %srcDir%\core\Conqueror.SourceGenerators -c Release --framework netstandard2.0 -o %publishDir%/Conqueror.SourceGenerators
+dotnet pack %srcDir%\core\Conqueror.Abstractions -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\core\Conqueror -c Release -o %publishDir% --include-symbols
 
 REM middlewares
 dotnet pack %srcDir%\middlewares\authorization\Conqueror.Middleware.Authorization -c Release -o %publishDir% --include-symbols
