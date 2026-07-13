@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <ConquerorBaseVersion>0.8.2</ConquerorBaseVersion>
-    <ConquerorPreReleaseVersionCount>.3</ConquerorPreReleaseVersionCount>
+    <ConquerorBaseVersion>0.8.3</ConquerorBaseVersion>
+    <ConquerorPreReleaseVersionCount>.1</ConquerorPreReleaseVersionCount>
     <ConquerorPreReleaseVersion>-beta</ConquerorPreReleaseVersion>
     <ConquerorPreReleaseVersion Condition="'$(IsExperimental)' == 'true'">-experimental</ConquerorPreReleaseVersion>
     <ConquerorPreReleaseVersion Condition="'$(IsDeprecated)' == 'true'">-deprecated</ConquerorPreReleaseVersion>
