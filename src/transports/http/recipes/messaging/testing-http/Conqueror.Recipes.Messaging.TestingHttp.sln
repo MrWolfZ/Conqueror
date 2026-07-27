@@ -1,0 +1,45 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingHttp", "Conqueror.Recipes.Messaging.TestingHttp\Conqueror.Recipes.Messaging.TestingHttp.csproj", "{D91F4FA2-C3C5-40B5-B90A-94173767DB3F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingHttp.Tests", "Conqueror.Recipes.Messaging.TestingHttp.Tests\Conqueror.Recipes.Messaging.TestingHttp.Tests.csproj", "{FE486A30-7445-49D2-9D91-CEDFB20AA11E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".completed", ".completed", "{C4408FE9-1DE7-4707-8E45-B1EC363E6FBC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingHttp", ".completed\Conqueror.Recipes.Messaging.TestingHttp\Conqueror.Recipes.Messaging.TestingHttp.csproj", "{6C45F628-5B97-4CCE-AF5B-2D05F048AEDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingHttp.Tests", ".completed\Conqueror.Recipes.Messaging.TestingHttp.Tests\Conqueror.Recipes.Messaging.TestingHttp.Tests.csproj", "{CE2FD001-3708-45A9-88E4-2A8067F0A47D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D91F4FA2-C3C5-40B5-B90A-94173767DB3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D91F4FA2-C3C5-40B5-B90A-94173767DB3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D91F4FA2-C3C5-40B5-B90A-94173767DB3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D91F4FA2-C3C5-40B5-B90A-94173767DB3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE486A30-7445-49D2-9D91-CEDFB20AA11E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE486A30-7445-49D2-9D91-CEDFB20AA11E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE486A30-7445-49D2-9D91-CEDFB20AA11E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE486A30-7445-49D2-9D91-CEDFB20AA11E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C45F628-5B97-4CCE-AF5B-2D05F048AEDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C45F628-5B97-4CCE-AF5B-2D05F048AEDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C45F628-5B97-4CCE-AF5B-2D05F048AEDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C45F628-5B97-4CCE-AF5B-2D05F048AEDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE2FD001-3708-45A9-88E4-2A8067F0A47D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE2FD001-3708-45A9-88E4-2A8067F0A47D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE2FD001-3708-45A9-88E4-2A8067F0A47D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE2FD001-3708-45A9-88E4-2A8067F0A47D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6C45F628-5B97-4CCE-AF5B-2D05F048AEDE} = {C4408FE9-1DE7-4707-8E45-B1EC363E6FBC}
+		{CE2FD001-3708-45A9-88E4-2A8067F0A47D} = {C4408FE9-1DE7-4707-8E45-B1EC363E6FBC}
+	EndGlobalSection
+EndGlobal

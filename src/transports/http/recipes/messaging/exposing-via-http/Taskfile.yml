@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build recipe projects
+    cmds:
+      - dotnet build Conqueror.Recipes.Messaging.ExposingViaHttp.sln {{.CLI_ARGS}}
+
+  run:completed:
+    desc: Run completed recipe app
+    cmds:
+      - dotnet run --project .completed/Conqueror.Recipes.Messaging.ExposingViaHttp -- {{.CLI_ARGS}}

@@ -148,7 +148,7 @@ await senders.For(CreateOrder.T)
     .Handle(new CreateOrder());
 
 // Messages - Server-side (automatic)
-app.MapConquerorHttpEndpoints(); // Discovers all IHttpMessage handlers
+app.MapMessageEndpoints(); // Discovers all IHttpMessage handlers
 
 // Iterators - Client-side
 await foreach (var line in iterators.For(GetLogLines.T)

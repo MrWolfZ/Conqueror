@@ -847,46 +847,46 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 #### Messaging Basics
 
 - [getting started](src/core/recipes/messaging/getting-started#readme)
-- [testing command and query handlers](recipes/cqs/basics/testing-handlers#readme)
-- [solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)](recipes/cqs/basics/solving-cross-cutting-concerns#readme)
-- [testing command and query handlers that have middleware pipelines](recipes/cqs/basics/testing-handlers-with-pipelines#readme)
-- [testing middlewares and reusable pipelines](recipes/cqs/basics/testing-middlewares#readme)
+- [testing handlers](src/core/recipes/messaging/testing-handlers#readme)
+- [solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)](src/core/recipes/messaging/solving-cross-cutting-concerns#readme)
+- [testing handlers that have middleware pipelines](src/core/recipes/messaging/testing-handlers-with-pipelines#readme)
+- [testing middlewares and reusable pipelines](src/core/recipes/messaging/testing-middlewares#readme)
 
 #### Messaging Advanced
 
-- [exposing commands and queries via HTTP](recipes/cqs/advanced/exposing-via-http#readme)
-- [testing HTTP commands and queries](recipes/cqs/advanced/testing-http#readme)
-- [calling HTTP commands and queries from another application](recipes/cqs/advanced/calling-http#readme)
-- [testing code which calls HTTP commands and queries](recipes/cqs/advanced/testing-calling-http#readme)
-- [creating a clean architecture and modular monolith with commands and queries](recipes/cqs/advanced/clean-architecture#readme)
-- [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme)
-- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/cqs/advanced/different-dependency-injection#readme) _(to-be-written)_
-- [customizing OpenAPI specification for HTTP commands and queries](recipes/cqs/advanced/custom-openapi-http#readme) _(to-be-written)_
-- [re-use middleware pipelines to solve cross-cutting concerns when calling external systems (e.g. logging or retrying failed calls)](recipes/cqs/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
+- [exposing messages via HTTP](src/transports/http/recipes/messaging/exposing-via-http#readme)
+- [testing HTTP messages](src/transports/http/recipes/messaging/testing-http#readme)
+- [calling HTTP messages from another application](src/transports/http/recipes/messaging/calling-http#readme)
+- [testing code which calls HTTP messages](src/transports/http/recipes/messaging/testing-calling-http#readme)
+- [creating a clean architecture and modular monolith with messages](src/core/recipes/messaging/clean-architecture#readme)
+- [moving from a modular monolith to a distributed system](src/core/recipes/messaging/monolith-to-distributed#readme)
+- using a different dependency injection container (e.g. Autofac or Ninject) _(to-be-written)_
+- customizing OpenAPI specification for HTTP messages _(to-be-written)_
+- re-use middleware pipelines to solve cross-cutting concerns when calling external systems (e.g. logging or retrying failed calls) _(to-be-written)_
 <!-- 
-- [enforce that all command and query handlers declare a pipeline](recipes/cqs/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
-- [using commands and queries in a Blazor app (server-side or web-assembly)](recipes/cqs/advanced/blazor-server#readme) _(to-be-written)_
-- [building a CLI using commands and queries](recipes/cqs/advanced/building-cli#readme) _(to-be-written)_
+- enforce that all message handlers declare a pipeline _(to-be-written)_
+- using messages in a Blazor app (server-side or web-assembly) _(to-be-written)_
+- building a CLI using messages _(to-be-written)_
 -->
 
 #### Messaging Expert
 
-- [store and access background context information in the scope of a single command or query](recipes/cqs/expert/command-query-context#readme) _(to-be-written)_
-- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/cqs/expert/conqueror-context#readme) _(to-be-written)_
-- [accessing properties of commands and queries in middlewares](recipes/cqs/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
-- [exposing and calling commands and queries via other transports (e.g. gRPC)](recipes/cqs/expert/exposing-via-other-transports#readme) _(to-be-written)_
+- store and access background context information in the scope of a single message _(to-be-written)_
+- propagate background context information (e.g. trace ID) across multiple messages, signals, and iterators _(to-be-written)_
+- accessing properties of messages in middlewares _(to-be-written)_
+- exposing and calling messages via other transports (e.g. gRPC) _(to-be-written)_
 
 #### Messaging Cross-Cutting Concerns
 
-- [authenticating and authorizing commands and queries](recipes/cqs/cross-cutting-concerns/auth#readme) _(to-be-written)_
-- [logging commands and queries](recipes/cqs/cross-cutting-concerns/logging#readme) _(to-be-written)_
-- [validating commands and queries](recipes/cqs/cross-cutting-concerns/validation#readme) _(to-be-written)_
-- [caching query results for improved performance](recipes/cqs/cross-cutting-concerns/caching#readme) _(to-be-written)_
-- [making commands and queries more resilient (e.g. through retries, circuit breakers, fallbacks etc.)](recipes/cqs/cross-cutting-concerns/resiliency#readme) _(to-be-written)_
-- [executing commands and queries in a database transaction](recipes/cqs/cross-cutting-concerns/db-transaction#readme) _(to-be-written)_
-- [timeouts for commands and queries](recipes/cqs/cross-cutting-concerns/timeouts#readme) _(to-be-written)_
-- [metrics for commands and queries](recipes/cqs/cross-cutting-concerns/metrics#readme) _(to-be-written)_
-- [tracing commands and queries](recipes/cqs/cross-cutting-concerns/tracing#readme) _(to-be-written)_
+- authenticating and authorizing messages _(to-be-written)_
+- logging messages _(to-be-written)_
+- validating messages _(to-be-written)_
+- caching message results for improved performance _(to-be-written)_
+- making messages more resilient (e.g. through retries, circuit breakers, fallbacks etc.) _(to-be-written)_
+- executing messages in a database transaction _(to-be-written)_
+- timeouts for messages _(to-be-written)_
+- metrics for messages _(to-be-written)_
+- tracing messages _(to-be-written)_
 
 </details>
 
@@ -899,39 +899,39 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 [![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror/)
 
-Signalling is a way to refer to the publishing and observing of signals via the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Signalling is a good way to decouple or loosely couple different parts of your application by making an event publisher agnostic to the observers of signals it publishes. In addition to this basic idea, **Conqueror** allows solving cross-cutting concerns on both the publisher as well as the observer side.
+Signalling is a way to refer to the publishing and observing of signals via the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Signalling is a good way to decouple or loosely couple different parts of your application by making a signal publisher agnostic to the observers of signals it publishes. In addition to this basic idea, **Conqueror** allows solving cross-cutting concerns on both the publisher as well as the observer side.
 
 #### Signalling Basics
 
-- [getting started](recipes/eventing/basics/getting-started#readme) _(to-be-written)_
-- [testing event observers](recipes/eventing/basics/testing-observers#readme) _(to-be-written)_
-- [testing code that publishes events](recipes/eventing/basics/testing-publish#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. logging or retrying on failure)](recipes/eventing/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing event observers with pipelines](recipes/eventing/basics/testing-observers-with-pipelines#readme) _(to-be-written)_
-- [testing event publisher pipeline](recipes/eventing/basics/testing-publisher-pipeline#readme) _(to-be-written)_
-- [testing middlewares](recipes/eventing/basics/testing-middlewares#readme) _(to-be-written)_
+- [getting started](src/core/recipes/signalling/getting-started#readme)
+- [testing signal handlers](src/core/recipes/signalling/testing-handlers#readme)
+- testing code that publishes signals _(to-be-written)_
+- solving cross-cutting concerns with middlewares (e.g. logging or retrying on failure) _(to-be-written)_
+- testing signal handlers with pipelines _(to-be-written)_
+- testing signal publisher pipeline _(to-be-written)_
+- testing middlewares _(to-be-written)_
 
 #### Signalling Advanced
 
-- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/eventing/advanced/different-dependency-injection#readme) _(to-be-written)_
-- [execute event observers with a different strategy (e.g. parallel execution)](recipes/eventing/advanced/publishing-strategy#readme) _(to-be-written)_
-- [enforce that all event observers declare a pipeline](recipes/eventing/advanced/enforce-observer-pipeline#readme) _(to-be-written)_
-- [creating a clean architecture with loose coupling via events](recipes/eventing/advanced/clean-architecture#readme) _(to-be-written)_
-- [moving from a modular monolith to a distributed system](recipes/eventing/advanced/monolith-to-distributed#readme) _(to-be-written)_
+- using a different dependency injection container (e.g. Autofac or Ninject) _(to-be-written)_
+- execute signal handlers with a different strategy (e.g. parallel execution) _(to-be-written)_
+- enforce that all signal handlers declare a pipeline _(to-be-written)_
+- creating a clean architecture with loose coupling via signals _(to-be-written)_
+- moving from a modular monolith to a distributed system _(to-be-written)_
 
 #### Signalling Expert
 
-- [store and access background context information in the scope of a single event](recipes/eventing/expert/event-context#readme) _(to-be-written)_
-- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/eventing/expert/conqueror-context#readme) _(to-be-written)_
-- [accessing properties of events in middlewares](recipes/eventing/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
+- store and access background context information in the scope of a single signal _(to-be-written)_
+- propagate background context information (e.g. trace ID) across multiple messages, signals, and iterators _(to-be-written)_
+- accessing properties of signals in middlewares _(to-be-written)_
 
 #### Signalling Cross-Cutting Concerns
 
-- [logging events](recipes/eventing/cross-cutting-concerns/logging#readme) _(to-be-written)_
-- [retrying failed event observers](recipes/eventing/cross-cutting-concerns/retry#readme) _(to-be-written)_
-- [executing event observers in a database transaction](recipes/eventing/cross-cutting-concerns/db-transaction#readme) _(to-be-written)_
-- [metrics for events](recipes/eventing/cross-cutting-concerns/metrics#readme) _(to-be-written)_
-- [tracing events](recipes/eventing/cross-cutting-concerns/tracing#readme) _(to-be-written)_
+- logging signals _(to-be-written)_
+- retrying failed signal handlers _(to-be-written)_
+- executing signal handlers in a database transaction _(to-be-written)_
+- metrics for signals _(to-be-written)_
+- tracing signals _(to-be-written)_
 
 ### Iterating Introduction
 
@@ -941,43 +941,43 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) **Conqueror** us
 
 #### Iterating Basics
 
-- [getting started](recipes/streaming/basics/getting-started#readme) _(to-be-written)_
-- [testing streaming request handlers](recipes/streaming/basics/testing-handlers#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)](recipes/streaming/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing streaming request handlers that have middleware pipelines](recipes/streaming/basics/testing-handlers-with-pipelines#readme) _(to-be-written)_
-- [testing middlewares](recipes/streaming/basics/testing-middlewares#readme) _(to-be-written)_
+- [getting started](src/core/recipes/iterating/getting-started#readme)
+- testing iterator handlers _(to-be-written)_
+- solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure) _(to-be-written)_
+- testing iterator handlers that have middleware pipelines _(to-be-written)_
+- testing middlewares _(to-be-written)_
 
 #### Iterating Advanced
 
-- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/streaming/advanced/different-dependency-injection#readme) _(to-be-written)_
-- [reading streams from a messaging system (e.g. Kafka or RabbitMQ)](recipes/streaming/advanced/reading-from-messaging-system#readme) _(to-be-written)_
-- [exposing streams via HTTP](recipes/streaming/advanced/exposing-via-http#readme) _(to-be-written)_
-- [testing HTTP streams](recipes/streaming/advanced/testing-http#readme) _(to-be-written)_
-- [consuming HTTP streams from another application](recipes/streaming/advanced/consuming-http#readme) _(to-be-written)_
-- [using middlewares for streaming HTTP clients](recipes/streaming/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
-- [optimize HTTP streaming performance with pre-fetching](recipes/streaming/advanced/optimize-http-performance#readme) _(to-be-written)_
-- [enforce that all streaming request handlers declare a pipeline](recipes/streaming/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
-- [re-use middleware pipelines to solve cross-cutting concerns when consuming streams from external systems (e.g. logging or retrying failed calls)](recipes/streaming/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
-- [authenticating and authorizing streaming requests](recipes/streaming/advanced/auth#readme) _(to-be-written)_
-- [moving from a modular monolith to a distributed system](recipes/streaming/advanced/monolith-to-distributed#readme) _(to-be-written)_
+- using a different dependency injection container (e.g. Autofac or Ninject) _(to-be-written)_
+- reading iterators from a messaging system (e.g. Kafka or RabbitMQ) _(to-be-written)_
+- exposing iterators via HTTP _(to-be-written)_
+- testing HTTP iterators _(to-be-written)_
+- consuming HTTP iterators from another application _(to-be-written)_
+- using middlewares for iterator HTTP clients _(to-be-written)_
+- optimize HTTP iterating performance with pre-fetching _(to-be-written)_
+- enforce that all iterator handlers declare a pipeline _(to-be-written)_
+- re-use middleware pipelines to solve cross-cutting concerns when consuming iterators from external systems (e.g. logging or retrying failed calls) _(to-be-written)_
+- authenticating and authorizing iterators _(to-be-written)_
+- moving from a modular monolith to a distributed system _(to-be-written)_
 
 #### Iterating Expert
 
-- [store and access background context information in the scope of a single streaming request](recipes/streaming/expert/streaming-request-context#readme) _(to-be-written)_
-- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/streaming/expert/conqueror-context#readme) _(to-be-written)_
-- [accessing properties of streaming requests in middlewares](recipes/streaming/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
-- [exposing and consuming streams via other transports (e.g. SignalR)](recipes/streaming/expert/exposing-via-other-transports#readme) _(to-be-written)_
-- [building test assertions that work for HTTP and non-HTTP streams](recipes/streaming/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
+- store and access background context information in the scope of a single iterator _(to-be-written)_
+- propagate background context information (e.g. trace ID) across multiple messages, signals, and iterators _(to-be-written)_
+- accessing properties of iterators in middlewares _(to-be-written)_
+- exposing and consuming iterators via other transports (e.g. SignalR) _(to-be-written)_
+- building test assertions that work for HTTP and non-HTTP iterators _(to-be-written)_
 
 #### Iterating Cross-Cutting Concerns
 
-- [authenticating and authorizing streaming requests](recipes/streaming/cross-cutting-concerns/auth#readme) _(to-be-written)_
-- [logging streaming requests and items](recipes/streaming/cross-cutting-concerns/logging#readme) _(to-be-written)_
-- [validating streaming requests](recipes/streaming/cross-cutting-concerns/validation#readme) _(to-be-written)_
-- [retrying failed streaming requests](recipes/streaming/cross-cutting-concerns/retry#readme) _(to-be-written)_
-- [timeouts for streaming requests and items](recipes/streaming/cross-cutting-concerns/timeouts#readme) _(to-be-written)_
-- [metrics for streaming requests and items](recipes/streaming/cross-cutting-concerns/metrics#readme) _(to-be-written)_
-- [tracing streaming requests and items](recipes/streaming/cross-cutting-concerns/tracing#readme) _(to-be-written)_
+- authenticating and authorizing iterators _(to-be-written)_
+- logging iterators and items _(to-be-written)_
+- validating iterators _(to-be-written)_
+- retrying failed iterators _(to-be-written)_
+- timeouts for iterators and items _(to-be-written)_
+- metrics for iterators and items _(to-be-written)_
+- tracing iterators and items _(to-be-written)_
 
 </details>
 
@@ -999,7 +999,7 @@ In summary, these are some of the strengths of **Conqueror**:
 
 - **Excellent use-case-driven documentation:** A lot of effort went into writing our [recipes](#recipes). While most other libraries have documentation that is centered around explaining _what_ they do, our use-case-driven documentation is focused on showing you how **Conqueror** _helps you to solve the concrete challenges_ your are likely to encounter during application development.
 
-- **Strong focus on testability:** Testing is a very important topic that is sadly often neglected. **Conqueror** takes testability very seriously and makes sure that you know how you can test the code you have written using it (you may have noticed that the **Conqueror.CQS** recipe immediately following [getting started](src/core/recipes/messagign/getting-started#readme) shows you how you can [test the handlers](recipes/cqs/basics/testing-handlers#readme) we built in the first recipe).
+- **Strong focus on testability:** Testing is a very important topic that is sadly often neglected. **Conqueror** takes testability very seriously and makes sure that you know how you can test the code you have written using it (you may have noticed that the **Conqueror.CQS** recipe immediately following [getting started](src/core/recipes/messaging/getting-started#readme) shows you how you can [test the handlers](src/core/recipes/messaging/testing-handlers#readme) we built in the first recipe).
 
 - **Out-of-the-box solutions for many common yet often complex cross-cutting concerns:** Many development teams spend valuable time on solving common cross-cutting concerns like validation, logging, error handling etc. over and over again. **Conqueror** provides a variety of pre-built middlewares that help you address those concerns with minimal effort.
 

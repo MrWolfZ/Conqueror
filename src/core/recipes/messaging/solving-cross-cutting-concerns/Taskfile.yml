@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build recipe projects
+    cmds:
+      - dotnet build Conqueror.Recipes.Messaging.SolvingCrossCuttingConcerns.sln {{.CLI_ARGS}}
+
+  test:
+    desc: Run recipe tests
+    cmds:
+      - dotnet test Conqueror.Recipes.Messaging.SolvingCrossCuttingConcerns.sln {{.CLI_ARGS}}
+
+  run:completed:
+    desc: Run completed recipe app
+    cmds:
+      - dotnet run --project .completed/Conqueror.Recipes.Messaging.SolvingCrossCuttingConcerns -- {{.CLI_ARGS}}

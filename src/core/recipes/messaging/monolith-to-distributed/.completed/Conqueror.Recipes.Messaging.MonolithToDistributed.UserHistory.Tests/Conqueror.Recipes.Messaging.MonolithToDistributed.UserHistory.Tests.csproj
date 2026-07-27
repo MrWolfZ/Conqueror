@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+
+        <!-- reference packages if this project is opened in the recipe solution, otherwise reference projects -->
+        <ShouldReferencePackages Condition="'$(SolutionName)'=='Conqueror.Recipes.Messaging.MonolithToDistributed'">true</ShouldReferencePackages>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- conditional Conqueror project references -->
+        <ProjectReference Include="../../../../../../transports/http/Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" Condition="'$(ShouldReferencePackages)'!='true'" />
+
+        <!-- conditional Conqueror package references -->
+        <PackageReference Include="Conqueror.Transport.Http.Client" Version="0.8.2-beta.3" Condition="'$(ShouldReferencePackages)'=='true'" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.19" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+        <PackageReference Include="NUnit" Version="4.2.2" />
+        <PackageReference Include="NUnit.Analyzers" Version="4.3.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Recipes.Messaging.MonolithToDistributed.UserHistory.EntryPoint.WebApi\Conqueror.Recipes.Messaging.MonolithToDistributed.UserHistory.EntryPoint.WebApi.csproj" />
+    </ItemGroup>
+
+</Project>

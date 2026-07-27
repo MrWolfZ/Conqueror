@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+        <!-- reference packages if this project is opened in the recipe solution, otherwise reference projects -->
+        <ShouldReferencePackages Condition="'$(SolutionName)'=='Conqueror.Recipes.Messaging.MonolithToDistributed'">true</ShouldReferencePackages>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- conditional Conqueror project references -->
+        <ProjectReference Include="../../../../Conqueror/Conqueror.csproj" Condition="'$(ShouldReferencePackages)'!='true'" />
+        <ProjectReference Include="../../../../Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" Condition="'$(ShouldReferencePackages)'!='true'" />
+
+        <!-- conditional Conqueror package references -->
+        <PackageReference Include="Conqueror" Version="0.8.2-beta.3" Condition="'$(ShouldReferencePackages)'=='true'" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Recipes.Messaging.MonolithToDistributed.Counters.Contracts\Conqueror.Recipes.Messaging.MonolithToDistributed.Counters.Contracts.csproj" />
+        <ProjectReference Include="..\Conqueror.Recipes.Messaging.MonolithToDistributed.Core.Application\Conqueror.Recipes.Messaging.MonolithToDistributed.Core.Application.csproj" />
+        <ProjectReference Include="..\Conqueror.Recipes.Messaging.MonolithToDistributed.UserHistory.Contracts\Conqueror.Recipes.Messaging.MonolithToDistributed.UserHistory.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>

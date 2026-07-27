@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- reference packages if this project is opened in the recipe solution, otherwise reference projects -->
+    <ShouldReferencePackages Condition="'$(SolutionName)'=='Conqueror.Recipes.Messaging.TestingCallingHttp'"
+      >true</ShouldReferencePackages
+    >
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- conditional Conqueror project references -->
+    <ProjectReference
+      Include="../../../../../Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj"
+      Condition="'$(ShouldReferencePackages)'!='true'"
+    />
+    <!-- conditional Conqueror package references -->
+    <PackageReference
+      Include="Conqueror.Transport.Http.Client"
+      Version="0.8.2-beta.3"
+      Condition="'$(ShouldReferencePackages)'=='true'"
+    />
+    <!-- third-party packages -->
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference
+      Include="../Conqueror.Recipes.Messaging.TestingCallingHttp.Contracts/Conqueror.Recipes.Messaging.TestingCallingHttp.Contracts.csproj"
+    />
+    <ProjectReference
+      Include="../Conqueror.Recipes.Messaging.TestingCallingHttp.Middlewares/Conqueror.Recipes.Messaging.TestingCallingHttp.Middlewares.csproj"
+    />
+  </ItemGroup>
+</Project>

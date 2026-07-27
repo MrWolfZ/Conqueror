@@ -1,0 +1,13 @@
+global using System.Net;
+global using Conqueror.Recipes.Messaging.TestingCallingHttp.Contracts;
+global using Conqueror.Recipes.Messaging.TestingCallingHttp.Server;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Mvc.Testing;
+global using Microsoft.AspNetCore.TestHost;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Hosting;
+global using NSubstitute;
+global using NSubstitute.ExceptionExtensions;
+global using NUnit.Framework;

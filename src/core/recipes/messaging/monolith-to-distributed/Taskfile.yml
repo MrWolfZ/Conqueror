@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build recipe projects
+    cmds:
+      - dotnet build Conqueror.Recipes.Messaging.MonolithToDistributed.sln {{.CLI_ARGS}}
+
+  test:
+    desc: Run recipe tests
+    cmds:
+      - dotnet test Conqueror.Recipes.Messaging.MonolithToDistributed.sln {{.CLI_ARGS}}
+
+  run:completed:counters:
+    desc: Run completed Counters web API
+    cmds:
+      - dotnet run --project .completed/Conqueror.Recipes.Messaging.MonolithToDistributed.Counters.EntryPoint.WebApi -- {{.CLI_ARGS}}
+
+  run:completed:user-history:
+    desc: Run completed UserHistory web API
+    cmds:
+      - dotnet run --project .completed/Conqueror.Recipes.Messaging.MonolithToDistributed.UserHistory.EntryPoint.WebApi -- {{.CLI_ARGS}}

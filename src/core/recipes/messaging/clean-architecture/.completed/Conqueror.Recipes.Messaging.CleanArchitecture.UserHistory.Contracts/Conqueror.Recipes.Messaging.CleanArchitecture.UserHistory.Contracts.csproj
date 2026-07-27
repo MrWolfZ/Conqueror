@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+        <!-- reference packages if this project is opened in the recipe solution, otherwise reference projects -->
+        <ShouldReferencePackages Condition="'$(SolutionName)'=='Conqueror.Recipes.Messaging.CleanArchitecture'">true</ShouldReferencePackages>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- conditional Conqueror project references -->
+        <ProjectReference Include="../../../../../Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" Condition="'$(ShouldReferencePackages)'!='true'" />
+        <ProjectReference Include="../../../../../../transports/http/Conqueror.Transport.Http.Abstractions/Conqueror.Transport.Http.Abstractions.csproj" Condition="'$(ShouldReferencePackages)'!='true'" />
+
+        <!-- conditional Conqueror package references -->
+        <PackageReference Include="Conqueror.Transport.Http.Abstractions" Version="0.8.2-beta.3" Condition="'$(ShouldReferencePackages)'=='true'" />
+    </ItemGroup>
+
+</Project>

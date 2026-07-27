@@ -1,0 +1,35 @@
+var services = new ServiceCollection();
+
+await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+
+if (args.Length is < 1 or > 2)
+{
+    Console.WriteLine("input commands in format '<op> <counterName>' (e.g. 'inc test' or 'get test')");
+    Console.WriteLine("available operations: inc, get");
+    return;
+}
+
+var op = args[0];
+var counterName = args.Skip(1).FirstOrDefault() ?? "";
+
+try
+{
+    switch (op)
+    {
+        case "inc":
+            // TODO: call increment message on server
+            break;
+
+        case "get":
+            // TODO: get counter value from server
+            break;
+
+        default:
+            Console.WriteLine($"invalid operation '{op}'");
+            break;
+    }
+}
+catch (ValidationException validationException)
+{
+    Console.WriteLine(validationException.Message);
+}

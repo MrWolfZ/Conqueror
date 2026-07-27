@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build recipe projects
+    cmds:
+      - dotnet build Conqueror.Recipes.Messaging.CallingHttp.sln {{.CLI_ARGS}}
+
+  run:completed:server:
+    desc: Run the completed server app
+    cmds:
+      - dotnet run --project .completed/Conqueror.Recipes.Messaging.CallingHttp.Server {{.CLI_ARGS}}
+
+  run:completed:client:
+    desc: Run the completed client app (pass operation and counter name as args)
+    cmds:
+      - dotnet run --project .completed/Conqueror.Recipes.Messaging.CallingHttp.Client -- {{.CLI_ARGS}}

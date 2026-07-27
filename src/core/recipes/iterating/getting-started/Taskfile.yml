@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build recipe projects
+    cmds:
+      - dotnet build Conqueror.Recipes.Iterating.GettingStarted.sln {{.CLI_ARGS}}
+
+  run:completed:
+    desc: Run completed recipe app
+    cmds:
+      - dotnet run --project .completed/Conqueror.Recipes.Iterating.GettingStarted -- {{.CLI_ARGS}}

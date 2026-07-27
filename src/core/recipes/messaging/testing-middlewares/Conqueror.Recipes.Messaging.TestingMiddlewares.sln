@@ -1,0 +1,46 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingMiddlewares", "Conqueror.Recipes.Messaging.TestingMiddlewares\Conqueror.Recipes.Messaging.TestingMiddlewares.csproj", "{9B7A398B-D369-4E96-A1BC-E65C05772060}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingMiddlewares.Tests", "Conqueror.Recipes.Messaging.TestingMiddlewares.Tests\Conqueror.Recipes.Messaging.TestingMiddlewares.Tests.csproj", "{30DE57E6-91F5-4352-8FDD-7C15B20B573A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".completed", ".completed", "{509420FB-4A89-4A92-82E6-7AB91108E68A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingMiddlewares", ".completed\Conqueror.Recipes.Messaging.TestingMiddlewares\Conqueror.Recipes.Messaging.TestingMiddlewares.csproj", "{712ADB60-6F62-4A66-ACED-F31A09638697}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.Messaging.TestingMiddlewares.Tests", ".completed\Conqueror.Recipes.Messaging.TestingMiddlewares.Tests\Conqueror.Recipes.Messaging.TestingMiddlewares.Tests.csproj", "{C73744D6-0C26-4390-AC62-EBA6F9791EA5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9B7A398B-D369-4E96-A1BC-E65C05772060}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B7A398B-D369-4E96-A1BC-E65C05772060}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B7A398B-D369-4E96-A1BC-E65C05772060}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B7A398B-D369-4E96-A1BC-E65C05772060}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30DE57E6-91F5-4352-8FDD-7C15B20B573A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30DE57E6-91F5-4352-8FDD-7C15B20B573A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30DE57E6-91F5-4352-8FDD-7C15B20B573A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30DE57E6-91F5-4352-8FDD-7C15B20B573A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{712ADB60-6F62-4A66-ACED-F31A09638697}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{712ADB60-6F62-4A66-ACED-F31A09638697}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{712ADB60-6F62-4A66-ACED-F31A09638697}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{712ADB60-6F62-4A66-ACED-F31A09638697}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C73744D6-0C26-4390-AC62-EBA6F9791EA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C73744D6-0C26-4390-AC62-EBA6F9791EA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C73744D6-0C26-4390-AC62-EBA6F9791EA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C73744D6-0C26-4390-AC62-EBA6F9791EA5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{712ADB60-6F62-4A66-ACED-F31A09638697} = {509420FB-4A89-4A92-82E6-7AB91108E68A}
+		{C73744D6-0C26-4390-AC62-EBA6F9791EA5} = {509420FB-4A89-4A92-82E6-7AB91108E68A}
+	EndGlobalSection
+EndGlobal
